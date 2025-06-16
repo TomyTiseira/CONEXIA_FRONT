@@ -3,9 +3,9 @@ const ENV = {
   development: {
     API_URL: 'http://localhost:8080/api'
   },
-  // production: {
-  //   API_URL: process.env.REACT_APP_API_URL || 'https://api.tudominio.com/api'
-  // }
+  production: {
+    API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+  }
 };
 
 // Determinar el entorno actual
