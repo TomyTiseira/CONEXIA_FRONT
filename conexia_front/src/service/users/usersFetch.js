@@ -1,9 +1,8 @@
 import { config } from '../../config';
 
-// obtener ping desde el backend
 export const fetchPing = async() => {
   const response = await fetch(`${config.API_URL}/users/ping`, {
-    cache: 'no-store', // Para evitar el caché en desarrollo
+    cache: 'no-store', 
     headers: {
       'Content-Type': 'application/json',
     },
@@ -12,7 +11,8 @@ export const fetchPing = async() => {
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  
-  return response.json();
+
+  const { data } = (await response.json());
+  return data;
 };
 

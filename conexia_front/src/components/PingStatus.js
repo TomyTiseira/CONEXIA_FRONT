@@ -9,5 +9,5 @@ export default function PingStatus() {
   if (isLoading) return <span>Cargando...</span>;
   if (error) return <span>Error: {error}</span>;
   
-  return <span>{JSON.stringify(data)}</span>;
+  return <span>{data.response}</span>;
 } 

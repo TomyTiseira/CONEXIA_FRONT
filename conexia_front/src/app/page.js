@@ -1,7 +1,5 @@
-import Image from "next/image";
-import { useFetch } from "../hooks";
-import { fetchPing } from "../service/users/usersFetch";
-import PingStatus from "../components/PingStatus";
+  import Image from "next/image";
+  import { PingStatus } from "../components";
 
 export default function Home() {
   return (
@@ -98,8 +96,8 @@ export default function Home() {
             width={16}
             height={16}
           />
-          <PingStatus />
         </a>
+        <PingStatus />
       </footer>
     </div>
   );

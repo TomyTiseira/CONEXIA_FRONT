@@ -28,6 +28,6 @@ export const useFetch = (fetchFunction) => {
     data, 
     isLoading, 
     error,
-    refetch: fetchData
+    refetch: fetchData,
   };
 };
