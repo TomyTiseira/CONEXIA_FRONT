@@ -23,7 +23,7 @@ export function Hero() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">Conectamos talentos <br /> con oportunidades</h1>
           <div className="flex flex-col sm:flex-row gap-4">
             <a href="#buscar" className="rounded bg-conexia-coral px-6 py-3 text-base sm:text-lg font-semibold text-center hover:bg-white hover:text-conexia-green">Busca un Profesional</a>
-            <a href="#publicar" className="rounded bg-white px-6 py-3 text-base sm:text-lg font-semibold text-conexia-green text-center hover:bg-conexia-soft">Ofrece tu servicio</a>
+            <a href="#publicar" className="rounded bg-conexia-soft px-6 py-3 text-base sm:text-lg font-semibold text-conexia-green text-center hover:bg-white">Ofrece tu servicio</a>
           </div>
         </div>
       </div>

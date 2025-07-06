@@ -58,7 +58,7 @@ export default function LoginPage() {
                   />
               <div className="z-10">
             <h2 className="text-4xl font-extrabold mb-4 text-white">
-              ¡Volvé a conectarte con tu comunidad digital!
+              ¡Volve a conectarte con tu comunidad digital!
             </h2>
             <p className="text-lg text-white">
               Tu perfil, tus servicios, tus proyectos. Todo en un solo lugar.
