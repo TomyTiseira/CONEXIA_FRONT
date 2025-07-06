@@ -1,5 +1,5 @@
-import RegisterHero from "./RegisterHero";
-import RegisterForm from "./RegisterForm";
+import RegisterHero from "@/components/register/RegisterHero";
+import RegisterForm from "@/components/register/RegisterForm";
 import { Footer } from "@/components/Footer";
 
 export default function RegisterPage() {
