@@ -1,7 +1,7 @@
 'use client';
 
 import { useFetch } from "../hooks";
-import { fetchPing } from "../service/users/usersFetch";
+import { fetchPing } from "../service/user/userFetch";
 import { colors } from "../constants";
 
 export default function PingStatus() {

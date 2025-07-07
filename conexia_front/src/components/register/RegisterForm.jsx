@@ -80,7 +80,11 @@ export default function RegisterForm() {
         router.push(`/verify-code?email=${encodeURIComponent(form.email)}`);
       }, 800);
     } catch (error) {
-      setMsg({ ok: false, text: error.message });
+      if (error.message.includes("already exists")) {
+        setMsg({ ok: false, text: "Este correo ya está registrado. Intenta con otro." });
+      } else {
+        setMsg({ ok: false, text: "Ocurrió un error al registrarte. Intenta nuevamente." });
+      }
     }
   };
 
@@ -147,18 +151,22 @@ export default function RegisterForm() {
           </button>
         </form>
 
-        {msg && (
-          <p className={`mt-4 text-center text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>
-            {msg.text}
-          </p>
-        )}
-
         <div className="mt-6 text-center text-sm">
           ¿Ya estás en Conexia?{" "}
           <Link href="/login" className="text-conexia-coral hover:underline font-semibold">
             Iniciar sesión
           </Link>
         </div>
+
+        <div className="min-h-[24px] mt-4 text-center text-sm transition-all duration-300">
+          {msg && (
+            <p className={`${msg.ok ? "text-green-600" : "text-red-600"}`}>
+              {msg.text}
+            </p>
+          )}
+        </div>
+
+
       </div>
     </div>
   );

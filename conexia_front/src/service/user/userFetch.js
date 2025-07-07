@@ -37,3 +37,37 @@ export const registerUser = async ({ email, password, repeatPwd }) => {
 
   return response;
 };
+
+// service/user/userFetch.js
+export async function verifyUser(data) {
+  const res = await fetch(`${config.API_URL}/users/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "No se pudo verificar el código.");
+  }
+
+  return res.json();
+}
+
+export async function resendVerification(email) {
+  const response = await fetch(`${config.API_URL}/users/resend-verification`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "No se pudo reenviar el código");
+  }
+
+  return data;
+}
