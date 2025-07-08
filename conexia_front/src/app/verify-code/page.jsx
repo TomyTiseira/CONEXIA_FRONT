@@ -1,6 +1,7 @@
 import VerifyForm from "@/components/verify-code/VerifyForm";
 import { Footer } from "@/components/Footer";
 import HeroPanel from "@/components/common/HeroPanel";
+import { Suspense } from "react";
 
 export default function VerifyCodePage() {
   return (
@@ -10,7 +11,13 @@ export default function VerifyCodePage() {
             title="¡Crea tu cuenta y súmate!"
             subtitle="Conecta con talentos, proyectos y oportunidades reales."
         />
-        <VerifyForm />
+        <Suspense fallback={
+          <div className="flex items-center justify-center w-full h-full">
+            <div className="loader"></div>
+          </div>
+        }>
+          <VerifyForm />
+        </Suspense>
       </section>
       <Footer />
     </main>
