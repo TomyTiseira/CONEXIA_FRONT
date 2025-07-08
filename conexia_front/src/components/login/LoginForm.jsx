@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { loginUser } from "@/service/auth/authService";
 
 export default function LoginForm() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -21,14 +22,23 @@ export default function LoginForm() {
   const getEmailError = () =>
     !touched.email || focused.email ? "" : validateEmail(form.email);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setTouched({ email: true });
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setTouched({ email: true });
 
-    const emailError = validateEmail(form.email);
-    if (emailError) return setMsg(null);
+  const emailError = validateEmail(form.email);
+  if (emailError) return setMsg(null);
+
+  try {
+    await loginUser({ email: form.email, password: form.password });
 
     setMsg({ ok: true, text: "Sesión iniciada con éxito." });
+
+    // Redirigir al usuario a la página principal o dashboard
+    window.location.href = "/";
+  } catch (err) {
+    setMsg({ ok: false, text: err.message });
+  }
   };
 
   return (
