@@ -37,8 +37,21 @@ export default function LoginForm() {
     // Redirigir al usuario a la página principal o dashboard
     window.location.href = "/";
   } catch (err) {
-    setMsg({ ok: false, text: err.message });
+  let friendlyMsg = "Ocurrió un error al iniciar sesión.";
+
+  if (err.message.includes("not verified")) {
+    friendlyMsg = "Tu cuenta aún no fue verificada. Revisa tu correo electrónico.";
+  } else if (err.message.includes("Invalid credentials")) {
+    friendlyMsg = "El correo y la contraseña no coinciden. Verificalos e intentalo de nuevo.";
+  } else if (err.message.includes("not found")) {
+    friendlyMsg = "El correo ingresado no pertenece a ninguna cuenta registrada.";
+  } else {
+    friendlyMsg = err.message; // fallback
   }
+
+  setMsg({ ok: false, text: friendlyMsg });
+  }
+
   };
 
   return (
@@ -93,7 +106,13 @@ export default function LoginForm() {
               </button>
             </div>
           </div>
-
+          <div className="min-h-[0px] mt-4">
+          {msg && (
+            <p className={`text-center text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>
+              {msg.text}
+            </p>
+          )}
+        </div>
           <div className="text-right text-sm">
             <Link href="#" className="text-conexia-green hover:underline">¿Has olvidado tu contraseña?</Link>
           </div>
@@ -106,12 +125,7 @@ export default function LoginForm() {
           </button>
         </form>
 
-        {msg && (
-          <p className={`mt-4 text-center text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>
-            {msg.text}
-          </p>
-        )}
-
+        
         <div className="mt-6 text-center">
           <Link
             href="/register"
