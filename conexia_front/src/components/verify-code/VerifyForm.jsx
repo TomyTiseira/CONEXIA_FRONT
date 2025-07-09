@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { verifyUser } from "@/service/user/userFetch"; // Asegurate de tener esta función en el fetch
 import ResendCodeButton from "./ResendCodeButton"; // Asegurate de tener este componente para reenviar el código
 
+
 export default function VerifyForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
@@ -15,15 +16,51 @@ export default function VerifyForm() {
   const router = useRouter();
 
   const handleChange = (index, value) => {
-    if (/^\d?$/.test(value)) {
-      const newCode = [...code];
-      newCode[index] = value;
-      setCode(newCode);
-
-      if (value && index < 5) {
-        document.getElementById(`code-${index + 1}`)?.focus();
-      }
+  if (/^\d$/.test(value)) {
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
+    if (index < 5) {
+      document.getElementById(`code-${index + 1}`)?.focus();
     }
+  } else if (value === "") {
+    const newCode = [...code];
+    newCode[index] = "";
+    setCode(newCode);
+  }
+  };
+
+const handleKeyDown = (e, index) => {
+  if (e.key === "Backspace") {
+    e.preventDefault();
+    if (code[index]) {
+      const newCode = [...code];
+      newCode[index] = "";
+      setCode(newCode);
+    } else if (index > 0) {
+      document.getElementById(`code-${index - 1}`)?.focus();
+    }
+  }
+
+  if (e.key === "ArrowLeft" && index > 0) {
+    e.preventDefault();
+    document.getElementById(`code-${index - 1}`)?.focus();
+  }
+
+  if (e.key === "ArrowRight" && index < 5) {
+    e.preventDefault();
+    document.getElementById(`code-${index + 1}`)?.focus();
+  }
+  };
+
+const handlePaste = (e) => {
+  const pasted = e.clipboardData.getData("Text").replace(/\D/g, "").slice(0, 6);
+  if (pasted.length === 6) {
+    const newCode = pasted.split("");
+    setCode(newCode);
+    document.getElementById(`code-5`)?.focus();
+    e.preventDefault();
+  }
   };
 
   const handleSubmit = async (e) => {
@@ -39,7 +76,22 @@ export default function VerifyForm() {
       setMsg({ ok: true, text: "¡Usuario verificado con éxito!" });
       setTimeout(() => router.push("/login"), 1500);
     } catch (err) {
-      setMsg({ ok: false, text: err.message });
+      if (
+        err.message.includes("is already active") ||
+        err.message.includes("already verified")
+      ) {
+        setMsg({
+          ok: false,
+          text: "Tu cuenta ya fue verificada anteriormente.",
+        });
+      } else if (err.message.includes("Invalid verification code")) {
+        setMsg({ ok: false, text: "El código ingresado es incorrecto." });
+      } else {
+        setMsg({
+          ok: false,
+          text: err.message || "Ocurrió un error al verificar tu cuenta.",
+        });
+      }
     }
   };
 
@@ -66,6 +118,8 @@ export default function VerifyForm() {
                 maxLength="1"
                 value={digit}
                 onChange={(e) => handleChange(i, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, i)}
+                onPaste={(e) => handlePaste(e)}
                 className="w-8 h-8 text-center border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-conexia-green sm:w-10 sm:h-10 sm:text-lg md:w-12 md:h-12"
               />
             ))}
