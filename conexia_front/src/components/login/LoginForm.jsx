@@ -114,9 +114,10 @@ export default function LoginForm() {
           )}
         </div>
           <div className="text-right text-sm">
-            <Link href="#" className="text-conexia-green hover:underline">¿Has olvidado tu contraseña?</Link>
+            <Link href="/forgot-password" className="text-conexia-green hover:underline">
+              ¿Has olvidado tu contraseña?
+            </Link>
           </div>
-
           <button
             type="submit"
             className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"

@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { registerUser } from "@/service/user/userFetch";
-import { Eye, EyeOff } from "lucide-react";
+import InputField from "@/components/form/InputField";
+
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function RegisterForm() {
       await registerUser(form);
       setMsg({ ok: true, text: "Código enviado a tu correo. Por favor revísalo." });
       setTimeout(() => {
-        router.push(`/verify-code?email=${encodeURIComponent(form.email)}`);
+        router.push(`/verify-account?email=${encodeURIComponent(form.email)}`);
       }, 800);
     } catch (error) {
       if (error.message.includes("already exists")) {
@@ -161,7 +162,7 @@ export default function RegisterForm() {
         </form>
 
         <div className="mt-6 text-center text-sm">
-          ¿Ya estás en Conexia?{" "}
+          ¿Ya sos parte de Conexia?{" "}
           <Link href="/login" className="text-conexia-coral hover:underline font-semibold">
             Iniciar sesión
           </Link>
@@ -181,44 +182,3 @@ export default function RegisterForm() {
   );
 }
 
-
-function InputField({
-  type,
-  placeholder,
-  value,
-  onChange,
-  onFocus,
-  onBlur,
-  error,
-  showToggle = false,
-  show = false,
-  onToggle,
-}) {
-  return (
-    <div className="min-h-[64px] relative">
-      <input
-        type={show && type === "password" ? "text" : type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring pr-10 ${
-          error
-            ? "border-red-500 ring-red-300"
-            : "border-gray-300 focus:ring-conexia-green/40"
-        }`}
-      />
-      {showToggle && (
-        <button
-          type="button"
-          onClick={onToggle}
-          className="absolute right-3 top-2.5 text-conexia-green"
-        >
-          {show ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-      )}
-      <p className="text-xs text-red-600 mt-1 h-[14px]">{error}</p>
-    </div>
-  );
-}
