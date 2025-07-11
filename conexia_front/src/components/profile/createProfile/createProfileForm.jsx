@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createUserProfile } from "@/service/profiles/profilesFetch";
+import { validateImage } from "@/components/utils/validations/archivos";
+import { calculateAge } from "@/components/utils/validations/fechas";
 
 export default function CreateProfileForm() {
   const router = useRouter();
@@ -24,25 +26,21 @@ export default function CreateProfileForm() {
   const [msg, setMsg] = useState(null);
   const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
 
-  const handleFileChange = (e, campo) => {
-    const file = e.target.files[0];
-    if (file && file.size <= 5 * 1024 * 1024 && /image\/(jpeg|png)/.test(file.type)) {
-      setForm({ ...form, [campo]: file });
-    } else {
-      setMsg({ ok: false, text: "Solo se permiten imágenes JPG/PNG de hasta 5MB." });
-    }
-  };
 
-  const calcularEdad = (fecha) => {
-    const hoy = new Date();
-    const nacimiento = new Date(fecha);
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const m = hoy.getMonth() - nacimiento.getMonth();
-    if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) {
-      edad--;
-    }
-    return edad;
-  };
+const handleFileChange = (e, campo) => {
+  const file = e.target.files[0];
+  if (validateImage(file)) {
+    setForm({ ...form, [campo]: file });
+  } else {
+    setMsg({ ok: false, text: "Solo se permiten imágenes JPG/PNG de hasta 5MB." });
+  }
+};
+
+// ...
+
+if (calculateAge(form.fechaNacimiento) < 18) {
+  return setMsg({ ok: false, text: "Debes tener al menos 18 años para registrarte." });
+}
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -82,20 +80,33 @@ export default function CreateProfileForm() {
   };
 
   return (
-    <div className="relative flex flex-col justify-center items-center w-full md:w-[40%] px-6 pt-10 pb-12 bg-conexia-soft">
+    <div className="relative flex flex-col justify-center items-center w-full md:w-[60%] px-6 pt-10 pb-12 bg-conexia-soft">
       <div className="flex justify-end mb-4">
         <Image src="/logo-conexia.png" alt="Logo" width={100} height={40} />
       </div>
 
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-conexia-green mb-4">Completa tu perfil</h1>
+      <div className="w-full bg-white p-8 rounded-lg shadow-md">
+        <h1 className=" text-center text-2xl font-bold text-conexia-green mb-4">Completa tu perfil</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <InputField label="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
-          <InputField label="Apellido" value={form.apellido} onChange={(e) => setForm({ ...form, apellido: e.target.value })} required />
-          <InputField label="Fecha de nacimiento" type="date" value={form.fechaNacimiento} onChange={(e) => setForm({ ...form, fechaNacimiento: e.target.value })} required />
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <InputField label="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
+            </div>
+            <div className="w-1/2">
+              <InputField label="Apellido" value={form.apellido} onChange={(e) => setForm({ ...form, apellido: e.target.value })} required />
+            </div>
+          </div> 
 
-          <FileInput label="Foto de perfil" onChange={(e) => handleFileChange(e, "fotoPerfil")} />
-          <FileInput label="Foto de portada" onChange={(e) => handleFileChange(e, "fotoPortada")} />
+           <InputField label="Fecha de nacimiento" type="date" value={form.fechaNacimiento} onChange={(e) => setForm({ ...form, fechaNacimiento: e.target.value })} required />
+
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <FileInput label="Foto de perfil" onChange={(e) => handleFileChange(e, "fotoPerfil")} />
+            </div>
+            <div className="w-1/2">
+              <FileInput label="Foto de portada" onChange={(e) => handleFileChange(e, "fotoPortada")} />
+            </div>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Habilidades</label>
