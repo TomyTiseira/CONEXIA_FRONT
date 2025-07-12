@@ -12,7 +12,7 @@ export default function HeroPanel({ title, subtitle }) {
       />
       <div className="z-10">
         <h2 className="text-4xl font-extrabold mb-4 text-white">{title}</h2>
-        <p className="text-lg text-white">{subtitle}</p>
+        <p className="text-xl text-white">{subtitle}</p>
       </div>
     </div>
   );
