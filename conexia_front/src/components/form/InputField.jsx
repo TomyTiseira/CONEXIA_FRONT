@@ -14,7 +14,7 @@ export default function InputField({
   onToggle,
 }) {
   return (
-    <div className="min-h-[64px] relative">
+    <div className="min-h-[64/px] relative">
       <input
         type={show && type === "password" ? "text" : type}
         placeholder={placeholder}
@@ -37,7 +37,7 @@ export default function InputField({
           {show ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
       )}
-      <p className="text-xs text-red-600 mt-1 h-[14px]">{error}</p>
+      <p className="text-xs text-red-600 mt-1 h-[30px]">{error}</p>
     </div>
   );
 }
