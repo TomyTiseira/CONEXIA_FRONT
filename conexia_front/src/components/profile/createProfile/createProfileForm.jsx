@@ -11,17 +11,19 @@ import { calculateAge } from "@/components/utils/validations/fechas";
 export default function CreateProfileForm() {
   const router = useRouter();
 
-  const [form, setForm] = useState({
-    nombre: "",
-    apellido: "",
-    fechaNacimiento: "",
-    descripcion: "",
-    habilidades: [],
-    experiencia: "",
-    redes: "",
-    fotoPerfil: null,
-    fotoPortada: null,
-  });
+const [form, setForm] = useState({
+  nombre: "",
+  apellido: "",
+  fechaNacimiento: "",
+  tipoDocumento: "",
+  numeroDocumento: "",
+  descripcion: "",
+  habilidades: [],
+  experiencia: "",
+  redes: "",
+  fotoPerfil: null,
+  fotoPortada: null,
+});
 
   const [msg, setMsg] = useState(null);
   const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
@@ -58,7 +60,7 @@ if (calculateAge(form.fechaNacimiento) < 18) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (calcularEdad(form.fechaNacimiento) < 18) {
+    if (calculateAge(form.fechaNacimiento) < 18) {
       return setMsg({ ok: false, text: "Debes tener al menos 18 años para registrarte." });
     }
 

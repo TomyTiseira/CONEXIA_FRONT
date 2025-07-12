@@ -1,16 +1,16 @@
 // service/profiles/profilesFetch.js
 import { config } from "@/config";
 
-export async function createUserProfile(formData) {
-  const res = await fetch(`${config.API_URL}/users/profile`, {
+export async function createUserProfile(userId, formData) {
+  const res = await fetch(`${config.API_URL}/users/${userId}/profile`, {
     method: "POST",
-    body: formData, // No usar headers para multipart/form-data
+    body: formData,
   });
 
   const response = await res.json();
 
   if (!res.ok) {
-    throw new Error(response.message || "No se pudo crear el perfil");
+    throw new Error(response.message || "Error al crear perfil");
   }
 
   return response;
