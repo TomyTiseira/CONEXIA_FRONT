@@ -58,10 +58,6 @@ if (calculateAge(form.fechaNacimiento) < 18) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.nombre || !form.apellido || !form.fechaNacimiento) {
-      return setMsg({ ok: false, text: "Nombre, apellido y fecha de nacimiento son obligatorios." });
-    }
-
     if (calcularEdad(form.fechaNacimiento) < 18) {
       return setMsg({ ok: false, text: "Debes tener al menos 18 años para registrarte." });
     }
@@ -77,6 +73,10 @@ if (calculateAge(form.fechaNacimiento) < 18) {
       } else {
         formData.append(key, form[key]);
       }
+    }
+
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ": " + pair[1]);
     }
 
     try {
