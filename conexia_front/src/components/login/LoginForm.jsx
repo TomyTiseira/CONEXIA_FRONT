@@ -8,13 +8,13 @@ import { loginUser } from "@/service/auth/authService";
 
 export default function LoginForm() {
   const [form, setForm] = useState({ email: "", password: "" });
-  const [touched, setTouched] = useState({ email: false });
-  const [focused, setFocused] = useState({ email: false });
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const [focused, setFocused] = useState({ email: false, password: false });
   const [showPwd, setShowPwd] = useState(false);
   const [msg, setMsg] = useState(null);
 
   const validateEmail = (value) => {
-    if (!value) return "";
+    if (!value) return "Ingrese un correo electrónico.";
     if (!/^\S+@\S+\.\S+$/.test(value)) return "Email inválido.";
     return "";
   };
@@ -22,36 +22,42 @@ export default function LoginForm() {
   const getEmailError = () =>
     !touched.email || focused.email ? "" : validateEmail(form.email);
 
+  const getPasswordError = () =>
+    !touched.password || focused.password
+      ? ""
+      : !form.password
+      ? "Ingrese una contraseña."
+      : "";
+
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setTouched({ email: true });
+    e.preventDefault();
+    setTouched({ email: true, password: true });
 
-  const emailError = validateEmail(form.email);
-  if (emailError) return setMsg(null);
+    const emailError = validateEmail(form.email);
+    const passwordError = !form.password ? "Ingrese una contraseña." : "";
 
-  try {
-    await loginUser({ email: form.email, password: form.password });
+    if (emailError || passwordError) {
+      return setMsg({ ok: false, text: "" });
+    }
 
-    setMsg({ ok: true, text: "Sesión iniciada con éxito." });
+    try {
+      await loginUser({ email: form.email, password: form.password });
+      setMsg({ ok: true, text: "Sesión iniciada con éxito." });
+      window.location.href = "/";
+    } catch (err) {
+      let friendlyMsg = "Ocurrió un error al iniciar sesión.";
+      if (err.message.includes("not verified")) {
+        friendlyMsg = "Tu cuenta aún no fue verificada. Revisa tu correo electrónico.";
+      } else if (err.message.includes("Invalid credentials")) {
+        friendlyMsg = "El correo y la contraseña no coinciden. Verificalos e intentalo de nuevo.";
+      } else if (err.message.includes("not found")) {
+        friendlyMsg = "El correo ingresado no pertenece a ninguna cuenta registrada.";
+      } else {
+        friendlyMsg = err.message;
+      }
 
-    // Redirigir al usuario a la página principal o dashboard
-    window.location.href = "/";
-  } catch (err) {
-  let friendlyMsg = "Ocurrió un error al iniciar sesión.";
-
-  if (err.message.includes("not verified")) {
-    friendlyMsg = "Tu cuenta aún no fue verificada. Revisa tu correo electrónico.";
-  } else if (err.message.includes("Invalid credentials")) {
-    friendlyMsg = "El correo y la contraseña no coinciden. Verificalos e intentalo de nuevo.";
-  } else if (err.message.includes("not found")) {
-    friendlyMsg = "El correo ingresado no pertenece a ninguna cuenta registrada.";
-  } else {
-    friendlyMsg = err.message; // fallback
-  }
-
-  setMsg({ ok: false, text: friendlyMsg });
-  }
-
+      setMsg({ ok: false, text: friendlyMsg });
+    }
   };
 
   return (
@@ -63,7 +69,7 @@ export default function LoginForm() {
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-conexia-green mb-4">Iniciar sesión</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
           {/* Campo email */}
           <div className="min-h-[64px]">
             <label className="block text-sm font-medium text-conexia-green mb-1">Correo</label>
@@ -72,10 +78,10 @@ export default function LoginForm() {
               placeholder="Correo electrónico"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              onFocus={() => setFocused({ email: true })}
+              onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}
               onBlur={() => {
-                setFocused({ email: false });
-                setTouched({ email: true });
+                setFocused((prev) => ({ ...prev, email: false }));
+                setTouched((prev) => ({ ...prev, email: true }));
               }}
               className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring ${
                 getEmailError()
@@ -87,7 +93,7 @@ export default function LoginForm() {
           </div>
 
           {/* Campo contraseña */}
-          <div>
+          <div className="min-h-[64px]">
             <label className="block text-sm font-medium text-conexia-green mb-1">Contraseña</label>
             <div className="relative">
               <input
@@ -95,7 +101,16 @@ export default function LoginForm() {
                 placeholder="Contraseña"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring focus:ring-conexia-green/40"
+                onFocus={() => setFocused((prev) => ({ ...prev, password: true }))}
+                onBlur={() => {
+                  setFocused((prev) => ({ ...prev, password: false }));
+                  setTouched((prev) => ({ ...prev, password: true }));
+                }}
+                className={`w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring ${
+                  getPasswordError()
+                    ? "border-red-500 ring-red-300"
+                    : "border-gray-300 focus:ring-conexia-green/40"
+                }`}
               />
               <button
                 type="button"
@@ -105,16 +120,13 @@ export default function LoginForm() {
                 {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            <p className="text-xs text-red-600 mt-1 h-[14px]">{getPasswordError()}</p>
           </div>
-          <div className="min-h-[0px] mt-4">
-          {msg && (
-            <p className={`text-center text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>
-              {msg.text}
-            </p>
-          )}
-        </div>
-          <div className="text-right text-sm">
-            <Link href="#" className="text-conexia-green hover:underline">¿Has olvidado tu contraseña?</Link>
+
+          <div className="text-right text-sm mt-1 mb-2">
+            <Link href="/forgot-password" className="text-conexia-green hover:underline">
+              ¿Has olvidado tu contraseña?
+            </Link>
           </div>
 
           <button
@@ -125,7 +137,6 @@ export default function LoginForm() {
           </button>
         </form>
 
-        
         <div className="mt-6 text-center">
           <Link
             href="/register"
@@ -133,6 +144,14 @@ export default function LoginForm() {
           >
             Crea una cuenta nueva
           </Link>
+        </div>
+
+        <div className="min-h-[60px] mt-4">
+          {msg && (
+            <p className={`text-center text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>
+              {msg.text}
+            </p>
+          )}
         </div>
       </div>
     </div>

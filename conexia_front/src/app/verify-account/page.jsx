@@ -1,9 +1,9 @@
-import VerifyForm from "@/components/verify-code/VerifyForm";
+import VerifyForm from "@/components/verify-account/VerifyForm";
 import { Footer } from "@/components/Footer";
 import HeroPanel from "@/components/common/HeroPanel";
 import { Suspense } from "react";
 
-export default function VerifyCodePage() {
+export default function VerifyAccountPage() {
   return (
     <main className="min-h-screen flex flex-col">
       <section className="flex flex-col md:flex-row flex-grow min-h-[720px] bg-conexia-soft md:bg-transparent">
