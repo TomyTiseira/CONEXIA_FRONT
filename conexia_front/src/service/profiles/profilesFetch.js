@@ -15,3 +15,17 @@ export async function createUserProfile(formData) {
 
   return response;
 }
+
+export async function getDocumentTypes() {
+  const res = await fetch(`${config.API_URL}/users/documentType`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("No se pudieron obtener los tipos de documento");
+  }
+
+  return res.json();
+}

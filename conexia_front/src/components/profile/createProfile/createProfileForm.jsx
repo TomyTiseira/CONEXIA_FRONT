@@ -1,10 +1,10 @@
 // app/create-profile/page.js
 "use client";
 
-import { useState } from "react";
+import { useState , useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { createUserProfile } from "@/service/profiles/profilesFetch";
+import { createUserProfile , getDocumentTypes } from "@/service/profiles/profilesFetch";
 import { validateImage } from "@/components/utils/validations/archivos";
 import { calculateAge } from "@/components/utils/validations/fechas";
 
@@ -25,7 +25,20 @@ export default function CreateProfileForm() {
 
   const [msg, setMsg] = useState(null);
   const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
+  const [documentTypes, setDocumentTypes] = useState([]);
 
+useEffect(() => {
+  const fetchDocs = async () => {
+    try {
+      const tipos = await getDocumentTypes();
+      setDocumentTypes(tipos);
+    } catch (error) {
+      console.error("Error al cargar tipos de documento", error);
+    }
+  };
+
+  fetchDocs();
+}, []);
 
 const handleFileChange = (e, campo) => {
   const file = e.target.files[0];
@@ -51,6 +64,10 @@ if (calculateAge(form.fechaNacimiento) < 18) {
 
     if (calcularEdad(form.fechaNacimiento) < 18) {
       return setMsg({ ok: false, text: "Debes tener al menos 18 años para registrarte." });
+    }
+
+    if (!form.nombre || !form.apellido || !form.fechaNacimiento || !form.tipoDocumento || !form.numeroDocumento) {
+      return setMsg({ ok: false, text: "Por favor completá todos los campos obligatorios." });
     }
 
     const formData = new FormData();
@@ -98,6 +115,32 @@ if (calculateAge(form.fechaNacimiento) < 18) {
           </div> 
 
            <InputField label="Fecha de nacimiento" type="date" value={form.fechaNacimiento} onChange={(e) => setForm({ ...form, fechaNacimiento: e.target.value })} required />
+
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="w-full md:w-1/2">
+              <label className="block text-sm font-medium text-conexia-green mb-1">Tipo de documento</label>
+              <select
+                value={form.tipoDocumento}
+                onChange={(e) => setForm({ ...form, tipoDocumento: e.target.value })}
+                required
+                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40"
+              >
+                <option value="">Seleccionar</option>
+                {documentTypes.map((tipo) => (
+                  <option key={tipo} value={tipo}>{tipo}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-full md:w-1/2">
+              <InputField
+                label="Número de documento"
+                value={form.numeroDocumento}
+                onChange={(e) => setForm({ ...form, numeroDocumento: e.target.value })}
+                required
+              />
+            </div>
+          </div>
 
           <div className="flex gap-4">
             <div className="w-1/2">
