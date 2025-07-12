@@ -17,7 +17,7 @@ export async function createUserProfile(formData) {
 }
 
 export async function getDocumentTypes() {
-  const res = await fetch(`${config.API_URL}/users/documentType`, {
+  const res = await fetch(`${config.API_URL}/users/document-types`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",

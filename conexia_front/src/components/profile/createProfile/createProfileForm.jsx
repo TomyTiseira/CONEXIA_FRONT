@@ -32,6 +32,7 @@ useEffect(() => {
     try {
       const tipos = await getDocumentTypes();
       setDocumentTypes(tipos);
+      console.log(documentTypes);
     } catch (error) {
       console.error("Error al cargar tipos de documento", error);
     }
@@ -58,10 +59,6 @@ if (calculateAge(form.fechaNacimiento) < 18) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.nombre || !form.apellido || !form.fechaNacimiento) {
-      return setMsg({ ok: false, text: "Nombre, apellido y fecha de nacimiento son obligatorios." });
-    }
-
     if (calcularEdad(form.fechaNacimiento) < 18) {
       return setMsg({ ok: false, text: "Debes tener al menos 18 años para registrarte." });
     }
@@ -77,6 +74,10 @@ if (calculateAge(form.fechaNacimiento) < 18) {
       } else {
         formData.append(key, form[key]);
       }
+    }
+
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ": " + pair[1]);
     }
 
     try {
@@ -126,8 +127,8 @@ if (calculateAge(form.fechaNacimiento) < 18) {
                 className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40"
               >
                 <option value="">Seleccionar</option>
-                {documentTypes.map((tipo) => (
-                  <option key={tipo} value={tipo}>{tipo}</option>
+                {Array.isArray(documentTypes) && documentTypes.map((tipo) => (
+                  <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
                 ))}
               </select>
             </div>
