@@ -30,8 +30,8 @@ export default function CreateProfileForm() {
 useEffect(() => {
   const fetchDocs = async () => {
     try {
-      const tipos = await getDocumentTypes();
-      setDocumentTypes(tipos);
+      const tipo = await getDocumentTypes();
+      setDocumentTypes(tipo.data);
     } catch (error) {
       console.error("Error al cargar tipos de documento", error);
     }
@@ -125,10 +125,19 @@ if (calculateAge(form.fechaNacimiento) < 18) {
                 required
                 className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40"
               >
-                <option value="">Seleccionar</option>
-                {documentTypes.map((tipo) => (
-                  <option key={tipo} value={tipo}>{tipo}</option>
-                ))}
+                {
+                  documentTypes.length === 0 ? (
+                    <option value="" disabled>Cargando tipos de documento...</option>
+                  ) : (
+                    <>
+                      <option value="">Seleccionar</option>
+                      {
+                      documentTypes.map((tipo) => (
+                        <option key={tipo.id} value={tipo.name}>{tipo.name}</option>
+                      ))}
+                    </>
+                  )
+                }
               </select>
             </div>
 
