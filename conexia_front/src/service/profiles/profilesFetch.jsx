@@ -6,6 +6,7 @@ export async function getProfileById(id) {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
 
   if (!res.ok) {

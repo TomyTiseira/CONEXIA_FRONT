@@ -12,13 +12,14 @@ export default function UserProfile({ currentUserId }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const isOwnProfile = currentUserId === id;
+  // Ahora isOwner viene del backend
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await getProfileById(id);
-        setProfile(data);
+        setProfile(data.data);
+        console.log('Datos recibidos del backend:', data);
       } catch (err) {
         console.error("Error al obtener el perfil", err);
       } finally {
@@ -32,85 +33,117 @@ export default function UserProfile({ currentUserId }) {
   if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
   if (!profile) return <p className="text-center mt-10 text-red-500">Perfil no encontrado.</p>;
 
+  // Extraer datos según nueva estructura
+  const isOwner = profile.isOwner;
+  const user = profile.profile;
   return (
     <div className="bg-conexia-soft min-h-screen py-10">
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-6">
         {/* Portada y foto de perfil */}
-        <div className="relative h-48 rounded overflow-hidden bg-gray-100">
-          {profile.fotoPortada && (
+        <div className="relative h-48 rounded overflow-hidden bg-gray-100 mb-8">
+          {user.coverPicture && (
             <Image
-              src={profile.fotoPortada}
+              src={user.coverPicture}
               alt="Foto de portada"
               layout="fill"
               objectFit="cover"
               className="object-cover"
+              priority
             />
           )}
         </div>
-        <div className="relative -mt-16 ml-6">
-          {profile.fotoPerfil && (
-            <Image
-              src={profile.fotoPerfil}
-              alt="Foto de perfil"
-              width={128}
-              height={128}
-              className="rounded-full border-4 border-white shadow-md"
-            />
-          )}
-        </div>
-
-        {/* Datos básicos */}
-        <div className="mt-4 ml-6">
-          <h2 className="text-2xl font-bold text-conexia-green">
-            {profile.nombre} {profile.apellido}
-          </h2>
-          <p className="text-gray-600">{profile.ciudad}, {profile.pais}</p>
+        <div className="relative flex items-center mb-4" style={{ minHeight: 64 }}>
+          <div className="w-32 h-32">
+            {user.profilePicture ? (
+              <Image
+                src={user.profilePicture}
+                alt="Foto de perfil"
+                width={128}
+                height={128}
+                className="rounded-full border-4 border-white shadow-md bg-gray-200"
+                priority
+              />
+            ) : (
+              <div className="w-full h-full rounded-full border-4 border-white shadow-md bg-gray-200 flex items-center justify-center">
+                {/* Espacio gris, puedes agregar un ícono SVG si lo deseas */}
+              </div>
+            )}
+          </div>
+          <div className="ml-6">
+            <h2 className="text-2xl font-bold text-conexia-green">
+              {user.name} {user.lastName}
+            </h2>
+            {(user.state || user.country) && (
+              <p className="text-gray-600">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
+            )}
+          </div>
         </div>
 
         {/* Información en bloques */}
         <div className="mt-6 space-y-6">
-
-          {profile.descripcion && (
+          {user.description && (
             <Section title="Descripción">
-              <p>{profile.descripcion}</p>
+              <p>{user.description}</p>
             </Section>
           )}
 
-          {profile.habilidades?.length > 0 && (
+          {Array.isArray(user.skills) && user.skills.length > 0 && (
             <Section title="Habilidades">
               <div className="flex flex-wrap gap-2">
-                {profile.habilidades.map((h, idx) => (
-                  <span key={idx} className="bg-conexia-soft text-conexia-green px-3 py-1 rounded-full text-sm">
-                    {h}
-                  </span>
-                ))}
+                {user.skills.map((h, idx) => {
+                  let skillText = h;
+                  // Si es string, limpiar llaves y comillas
+                  if (typeof h === 'string') {
+                    skillText = h.replace(/[{\}"]/g, '').trim();
+                  } else if (h.name) {
+                    skillText = h.name;
+                  }
+                  return (
+                    <span key={idx} className="bg-conexia-soft text-conexia-green px-3 py-1 rounded-full text-sm">
+                      {skillText}
+                    </span>
+                  );
+                })}
               </div>
             </Section>
           )}
 
-          {profile.experiencia && (
+          {Array.isArray(user.experience) && user.experience.length > 0 && (
             <Section title="Experiencia">
-              <p>{profile.experiencia}</p>
+              <ul className="list-disc ml-6">
+                {user.experience.map((exp, idx) => (
+                  <li key={idx}>
+                    {exp.title} ({exp.years} año{exp.years > 1 ? 's' : ''})
+                  </li>
+                ))}
+              </ul>
             </Section>
           )}
 
-          {profile.fechaNacimiento && (
+          {user.birthDate && (
             <Section title="Fecha de nacimiento">
-              <p>{new Date(profile.fechaNacimiento).toLocaleDateString()}</p>
+              <p>{new Date(user.birthDate).toLocaleDateString()}</p>
             </Section>
           )}
 
-          {profile.redes && (
+          {user.socialLinks && Array.isArray(user.socialLinks) && user.socialLinks.length > 0 && (
             <Section title="Redes sociales">
-              <a href={profile.redes} target="_blank" className="text-conexia-coral underline">
-                {profile.redes}
-              </a>
+              <ul className="list-disc ml-6">
+                {user.socialLinks.map((link, idx) => (
+                  <li key={idx}>
+                    <span className="font-semibold mr-2">{link.platform}:</span>
+                    <a href={link.url} target="_blank" className="text-conexia-coral underline">
+                      {link.url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </Section>
           )}
 
-          {isOwnProfile && profile.telefono && (
+          {isOwner && user.phoneNumber && (
             <Section title="Número de teléfono">
-              <p>{profile.telefono}</p>
+              <p>{user.phoneNumber}</p>
             </Section>
           )}
         </div>
