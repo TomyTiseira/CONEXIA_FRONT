@@ -1,13 +1,11 @@
 import { config } from "@/config";
 
 export async function getProfileById(id) {
-  const res = await fetch(`${config.API_URL}/users/${id}`, {
+  const res = await fetch(`${config.API_URL}/users/profile/${id}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      // Si usás tokens, agregá: Authorization: `Bearer ${token}`
     },
-    cache: "no-store", // importante para SSR
   });
 
   if (!res.ok) {
@@ -16,3 +14,4 @@ export async function getProfileById(id) {
 
   return res.json();
 }
+
