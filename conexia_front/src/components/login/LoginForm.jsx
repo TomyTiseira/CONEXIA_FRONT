@@ -43,7 +43,7 @@ export default function LoginForm() {
     try {
       await loginUser({ email: form.email, password: form.password });
       setMsg({ ok: true, text: "Sesión iniciada con éxito." });
-      window.location.href = "/";
+      window.location.href = "/community";
     } catch (err) {
       let friendlyMsg = "Ocurrió un error al iniciar sesión.";
       if (err.message.includes("not verified")) {
