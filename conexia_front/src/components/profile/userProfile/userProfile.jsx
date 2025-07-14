@@ -5,12 +5,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getProfileById } from "@/service/profiles/profilesFetch";
 import Image from "next/image";
+import { config } from "@/config";
 
-export default function UserProfile({ currentUserId }) {
+export default function UserProfile() {
   const { id } = useParams();
-  console.log("User ID from params:", id);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // TODO: Manejo de errores
 
   // Ahora isOwner viene del backend
 
@@ -19,9 +20,9 @@ export default function UserProfile({ currentUserId }) {
       try {
         const data = await getProfileById(id);
         setProfile(data.data);
-        console.log('Datos recibidos del backend:', data);
+        setIsOwner(data.isOwner);
       } catch (err) {
-        console.error("Error al obtener el perfil", err);
+        setError(err.message || "Error al cargar el perfil");
       } finally {
         setLoading(false);
       }
@@ -43,7 +44,7 @@ export default function UserProfile({ currentUserId }) {
         <div className="relative h-48 rounded overflow-hidden bg-gray-100 mb-8">
           {user.coverPicture && (
             <Image
-              src={user.coverPicture}
+              src={`${config.IMAGE_URL}/${user.coverPicture}`}
               alt="Foto de portada"
               layout="fill"
               objectFit="cover"
@@ -56,7 +57,7 @@ export default function UserProfile({ currentUserId }) {
           <div className="w-32 h-32">
             {user.profilePicture ? (
               <Image
-                src={user.profilePicture}
+                src={`${config.IMAGE_URL}/${user.profilePicture}`}
                 alt="Foto de perfil"
                 width={128}
                 height={128}
