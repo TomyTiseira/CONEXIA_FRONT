@@ -2,14 +2,10 @@
 import { config } from "@/config";
 
 export async function createUserProfile(formData) {
-  const token = localStorage.getItem("token"); // o sessionStorage.getItem("token")
-
   const res = await fetch(`${config.API_URL}/users/profile`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData, // ¡No pongas Content-Type con FormData!
+    body: formData,
+    credentials: "include", // importante para que se mande la cookie con el JWT
   });
 
   const response = await res.json();
@@ -20,6 +16,7 @@ export async function createUserProfile(formData) {
 
   return response;
 }
+
 export async function getDocumentTypes() {
   const res = await fetch(`${config.API_URL}/users/document-types`, {
     method: "GET",

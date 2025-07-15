@@ -1,84 +1,115 @@
 // app/create-profile/page.js
 "use client";
 
-import { useState , useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { createUserProfile , getDocumentTypes } from "@/service/profiles/profilesFetch";
+import { createUserProfile, getDocumentTypes } from "@/service/profiles/profilesFetch";
 import { validateImage } from "@/components/utils/validations/archivos";
 import { calculateAge } from "@/components/utils/validations/fechas";
 
 export default function CreateProfileForm() {
   const router = useRouter();
 
-const [form, setForm] = useState({
-  nombre: "",
-  apellido: "",
-  fechaNacimiento: "",
-  tipoDocumento: "",
-  numeroDocumento: "",
-  descripcion: "",
-  habilidades: [],
-  experiencia: "",
-  redes: "",
-  fotoPerfil: null,
-  fotoPortada: null,
-});
+  const [form, setForm] = useState({
+    name: "",
+    lastName: "",
+    birthDate: "",
+    documentTypeId: "",
+    documentNumber: "",
+    phoneNumber: "",
+    country: "",
+    state: "",
+    description: "",
+    skills: [],
+    experience: "",
+    socialLinks: "",
+    profilePicture: null,
+    coverPicture: null,
+  });
 
   const [msg, setMsg] = useState(null);
-  const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
   const [documentTypes, setDocumentTypes] = useState([]);
+  const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
 
-useEffect(() => {
-  const fetchDocs = async () => {
-    try {
-      const tipo = await getDocumentTypes();
-      setDocumentTypes(tipo.data);
-    } catch (error) {
-      console.error("Error al cargar tipos de documento", error);
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const tipos = await getDocumentTypes();
+        setDocumentTypes(tipos.data);
+      } catch (error) {
+        console.error("Error al cargar tipos de documento", error);
+      }
+    };
+    fetchDocs();
+  }, []);
+
+  const handleFileChange = (e, campo) => {
+    const file = e.target.files[0];
+    if (validateImage(file)) {
+      setForm({ ...form, [campo]: file });
+    } else {
+      setMsg({ ok: false, text: "Solo se permiten imágenes JPG/PNG de hasta 5MB." });
     }
   };
-
-  fetchDocs();
-}, []);
-
-const handleFileChange = (e, campo) => {
-  const file = e.target.files[0];
-  if (validateImage(file)) {
-    setForm({ ...form, [campo]: file });
-  } else {
-    setMsg({ ok: false, text: "Solo se permiten imágenes JPG/PNG de hasta 5MB." });
-  }
-};
-
-// ...
-
-if (calculateAge(form.fechaNacimiento) < 18) {
-  return setMsg({ ok: false, text: "Debes tener al menos 18 años para registrarte." });
-}
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (calculateAge(form.fechaNacimiento) < 18) {
+    if (calculateAge(form.birthDate) < 18) {
       return setMsg({ ok: false, text: "Debes tener al menos 18 años para registrarte." });
     }
 
-    if (!form.nombre || !form.apellido || !form.fechaNacimiento || !form.tipoDocumento || !form.numeroDocumento) {
+    if (!form.name || !form.lastName || !form.birthDate || !form.documentTypeId || !form.documentNumber) {
       return setMsg({ ok: false, text: "Por favor completá todos los campos obligatorios." });
     }
 
     const formData = new FormData();
-    for (const key in form) {
-      if (Array.isArray(form[key])) {
-        form[key].forEach((item) => formData.append(key, item));
-      } else {
-        formData.append(key, form[key]);
+
+    // Campos simples
+    for (const key of [
+      "name",
+      "lastName",
+      "birthDate",
+      "documentTypeId",
+      "documentNumber",
+      "phoneNumber",
+      "country",
+      "state",
+      "description",
+    ]) {
+      if (form[key]) formData.append(key, form[key]);
+    }
+
+    // Archivos
+    if (form.profilePicture) formData.append("profilePicture", form.profilePicture);
+    if (form.coverPicture) formData.append("coverPicture", form.coverPicture);
+
+    // Arrays
+    form.skills.forEach((s) => formData.append("skills", s));
+
+    // experiencia como array de objetos { title, project }
+    if (form.experience) {
+      try {
+        const parsedExp = JSON.parse(form.experience);
+        parsedExp.forEach((exp) => {
+          formData.append("experience", JSON.stringify(exp));
+        });
+      } catch {
+        console.warn("Formato inválido en experiencia");
       }
     }
 
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ": " + pair[1]);
+    // socialLinks como array de objetos { platform, url }
+    if (form.socialLinks) {
+      try {
+        const parsedLinks = JSON.parse(form.socialLinks);
+        parsedLinks.forEach((link) => {
+          formData.append("socialLinks", JSON.stringify(link));
+        });
+      } catch {
+        console.warn("Formato inválido en redes sociales");
+      }
     }
 
     try {
@@ -86,16 +117,17 @@ if (calculateAge(form.fechaNacimiento) < 18) {
       setMsg({ ok: true, text: "Perfil creado con éxito." });
       setTimeout(() => router.push("/dashboard"), 1000);
     } catch (err) {
-      setMsg({ ok: false, text: "Error al crear el perfil. Intentá nuevamente." });
+      setMsg({ ok: false, text: err.message || "Error al crear el perfil." });
     }
   };
 
-  const toggleHabilidad = (habilidad) => {
-    if (form.habilidades.includes(habilidad)) {
-      setForm({ ...form, habilidades: form.habilidades.filter((h) => h !== habilidad) });
-    } else {
-      setForm({ ...form, habilidades: [...form.habilidades, habilidad] });
-    }
+  const toggleHabilidad = (h) => {
+    setForm((prev) => ({
+      ...prev,
+      skills: prev.skills.includes(h)
+        ? prev.skills.filter((skill) => skill !== h)
+        : [...prev.skills, h],
+    }));
   };
 
   return (
@@ -105,71 +137,53 @@ if (calculateAge(form.fechaNacimiento) < 18) {
       </div>
 
       <div className="w-full bg-white p-8 rounded-lg shadow-md">
-        <h1 className=" text-center text-2xl font-bold text-conexia-green mb-4">Completa tu perfil</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto p-6 bg-white rounded shadow space-y-4">
+          <div className="flex gap-4">
+            <InputField label="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            <InputField label="Apellido" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
+          </div>
+
+          <InputField label="Fecha de nacimiento" type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} required />
+
           <div className="flex gap-4">
             <div className="w-1/2">
-              <InputField label="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
-            </div>
-            <div className="w-1/2">
-              <InputField label="Apellido" value={form.apellido} onChange={(e) => setForm({ ...form, apellido: e.target.value })} required />
-            </div>
-          </div> 
-
-           <InputField label="Fecha de nacimiento" type="date" value={form.fechaNacimiento} onChange={(e) => setForm({ ...form, fechaNacimiento: e.target.value })} required />
-
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="w-full md:w-1/2">
               <label className="block text-sm font-medium text-conexia-green mb-1">Tipo de documento</label>
               <select
-                value={form.tipoDocumento}
-                onChange={(e) => setForm({ ...form, tipoDocumento: e.target.value })}
+                value={form.documentTypeId}
+                onChange={(e) => setForm({ ...form, documentTypeId: e.target.value })}
+                className="w-full border rounded px-3 py-2"
                 required
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40"
               >
-                {
-                  documentTypes.length === 0 ? (
-                    <option value="" disabled>Cargando tipos de documento...</option>
-                  ) : (
-                    <>
-                      <option value="">Seleccionar</option>
-                      {
-                      documentTypes.map((tipo) => (
-                        <option key={tipo.id} value={tipo.name}>{tipo.name}</option>
-                      ))}
-                    </>
-                  )
-                }
+                <option value="">Seleccionar</option>
+                {documentTypes.map((tipo) => (
+                  <option key={tipo.id} value={tipo.id}>
+                    {tipo.name}
+                  </option>
+                ))}
               </select>
             </div>
-
-            <div className="w-full md:w-1/2">
-              <InputField
-                label="Número de documento"
-                value={form.numeroDocumento}
-                onChange={(e) => setForm({ ...form, numeroDocumento: e.target.value })}
-                required
-              />
-            </div>
+            <InputField label="Número" value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} required />
           </div>
 
           <div className="flex gap-4">
-            <div className="w-1/2">
-              <FileInput label="Foto de perfil" onChange={(e) => handleFileChange(e, "fotoPerfil")} />
-            </div>
-            <div className="w-1/2">
-              <FileInput label="Foto de portada" onChange={(e) => handleFileChange(e, "fotoPortada")} />
-            </div>
+            <InputField label="Teléfono" value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} />
+            <InputField label="País" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+            <InputField label="Provincia" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+          </div>
+
+          <div className="flex gap-4">
+            <FileInput label="Foto perfil" onChange={(e) => handleFileChange(e, "profilePicture")} />
+            <FileInput label="Foto portada" onChange={(e) => handleFileChange(e, "coverPicture")} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">Habilidades</label>
-            <div className="flex flex-wrap gap-2">
+            <label className="text-conexia-green text-sm font-medium">Habilidades</label>
+            <div className="flex flex-wrap gap-2 mt-2">
               {habilidadesDisponibles.map((h) => (
                 <button
-                  key={h}
                   type="button"
-                  className={`px-3 py-1 rounded border text-sm font-medium ${form.habilidades.includes(h) ? "bg-conexia-green text-white" : "bg-gray-100 text-gray-700"}`}
+                  key={h}
+                  className={`px-3 py-1 rounded text-sm ${form.skills.includes(h) ? "bg-conexia-green text-white" : "bg-gray-200 text-gray-700"}`}
                   onClick={() => toggleHabilidad(h)}
                 >
                   {h}
@@ -178,16 +192,25 @@ if (calculateAge(form.fechaNacimiento) < 18) {
             </div>
           </div>
 
-          <TextArea label="Descripción personal" maxLength={500} value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
+          <TextArea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
 
-          <InputField label="Experiencia" value={form.experiencia} onChange={(e) => setForm({ ...form, experiencia: e.target.value })} />
-          <InputField label="Redes sociales (opcional)" value={form.redes} onChange={(e) => setForm({ ...form, redes: e.target.value })} />
+          <TextArea
+            label='Experiencia'
+            value={form.experience}
+            onChange={(e) => setForm({ ...form, experience: e.target.value })}
+          />
 
-          <button type="submit" className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90">
+          <TextArea
+            label='Redes sociales'
+            value={form.socialLinks}
+            onChange={(e) => setForm({ ...form, socialLinks: e.target.value })}
+          />
+
+          <button type="submit" className="w-full bg-conexia-green text-white py-2 rounded hover:bg-conexia-green/90">
             Crear perfil
           </button>
 
-          {msg && <p className={`mt-2 text-sm text-center ${msg.ok ? "text-green-600" : "text-red-600"}`}>{msg.text}</p>}
+          {msg && <p className={`text-center mt-2 text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>{msg.text}</p>}
         </form>
       </div>
     </div>
@@ -196,22 +219,18 @@ if (calculateAge(form.fechaNacimiento) < 18) {
 
 function InputField({ label, type = "text", ...props }) {
   return (
-    <div>
+    <div className="w-full">
       <label className="block text-sm font-medium text-conexia-green mb-1">{label}</label>
-      <input
-        type={type}
-        className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40"
-        {...props}
-      />
+      <input type={type} className="w-full border px-4 py-2 rounded" {...props} />
     </div>
   );
 }
 
 function FileInput({ label, ...props }) {
   return (
-    <div>
+    <div className="w-full">
       <label className="block text-sm font-medium text-conexia-green mb-1">{label}</label>
-      <input type="file" accept="image/png, image/jpeg" className="w-full" {...props} />
+      <input type="file" accept="image/jpeg,image/png" className="w-full" {...props} />
     </div>
   );
 }
@@ -220,10 +239,7 @@ function TextArea({ label, ...props }) {
   return (
     <div>
       <label className="block text-sm font-medium text-conexia-green mb-1">{label}</label>
-      <textarea
-        className="w-full p-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40"
-        {...props}
-      />
+      <textarea className="w-full border p-2 rounded" {...props} />
     </div>
   );
 }
