@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { requestPasswordReset } from "@/service/auth/recoveryService";
 import { useResetPasswordStore } from "@/store/useResetPasswordStore";
-import InputField from "@/components/form/InputField"; 
+import InputField from "@/components/form/InputField";
 import { validateEmail } from "@/utils/validation";
 
 export default function EmailForm() {
@@ -90,6 +91,14 @@ export default function EmailForm() {
           </button>
         </form>
 
+        <div className="mt-3 text-center">
+          <Link
+            href="/login"
+            className="text-conexia-green font-semibold text-sm hover:underline"
+          >
+            ← Volver al inicio de sesión
+          </Link>
+        </div>
         <div className="min-h-[40px] mt-4 text-center text-sm">
           {msg && (
             <p className={msg.ok ? "text-green-600" : "text-red-600"}>
@@ -97,7 +106,9 @@ export default function EmailForm() {
             </p>
           )}
         </div>
+
       </div>
     </div>
   );
 }
+

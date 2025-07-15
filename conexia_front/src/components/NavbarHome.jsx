@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-export function Navbar() {
+export function NavbarHome() {
   const [open, setOpen] = useState(false);
   const navItems = [
     { label: "Inicio", href: "/" },
@@ -17,10 +17,10 @@ export function Navbar() {
     <header className="bg-white shadow sticky top-0 z-50">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        <div className="flex items-center gap-2 select-none">
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
-          <span className="font-bold text-xl md:text-1xl text-conexia-coral">CONEXIA</span>
-        </Link>
+          <span className="font-bold text-xl text-conexia-coral">CONEXIA</span>
+        </div>
 
         {/* Mobile menu toggle */}
         <button onClick={() => setOpen(!open)} className="md:hidden p-2 text-conexia-green" aria-label="Toggle menu">
