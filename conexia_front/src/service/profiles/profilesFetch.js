@@ -1,10 +1,15 @@
 // service/profiles/profilesFetch.js
 import { config } from "@/config";
 
-export async function createUserProfile(userId, formData) {
-  const res = await fetch(`${config.API_URL}/users/${userId}/profile`, {
+export async function createUserProfile(formData) {
+  const token = localStorage.getItem("token"); // o sessionStorage.getItem("token")
+
+  const res = await fetch(`${config.API_URL}/users/profile`, {
     method: "POST",
-    body: formData,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData, // ¡No pongas Content-Type con FormData!
   });
 
   const response = await res.json();
@@ -15,7 +20,6 @@ export async function createUserProfile(userId, formData) {
 
   return response;
 }
-
 export async function getDocumentTypes() {
   const res = await fetch(`${config.API_URL}/users/document-types`, {
     method: "GET",
