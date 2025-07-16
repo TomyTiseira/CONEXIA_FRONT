@@ -115,7 +115,7 @@ export default function CreateProfileForm() {
     try {
       await createUserProfile(formData);
       setMsg({ ok: true, text: "Perfil creado con éxito." });
-      setTimeout(() => router.push("/dashboard"), 1000);
+      setTimeout(() => router.push("/login"), 1000);
     } catch (err) {
       setMsg({ ok: false, text: err.message || "Error al crear el perfil." });
     }

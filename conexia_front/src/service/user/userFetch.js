@@ -44,6 +44,7 @@ export async function verifyUser(data) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+    credentials: 'include',
   });
 
   if (!res.ok) {
@@ -61,6 +62,7 @@ export async function resendVerification(email) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email }),
+    credentials: 'include',
   });
 
   const data = await response.json();
