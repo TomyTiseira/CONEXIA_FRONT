@@ -8,6 +8,7 @@ import { createUserProfile, getDocumentTypes } from "@/service/profiles/profiles
 import { validateImage } from "@/components/utils/validations/archivos";
 import { calculateAge } from "@/components/utils/validations/fechas";
 import { isValidPhoneNumber } from "@/components/utils/validations/phones";
+import { handleDynamicFieldChange, validateDynamicField } from "@/components/utils/validations/addElement";
 
 export default function CreateProfileForm() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function CreateProfileForm() {
   const [documentTypes, setDocumentTypes] = useState([]);
   const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
   const plataformas = ["LinkedIn", "GitHub", "Twitter", "Portfolio", "Otro"];
+  const [fieldErrors, setFieldErrors] = useState({ experience: "", socialLinks: "",});
 
   useEffect(() => {
     const fetchDocs = async () => {
@@ -63,23 +65,36 @@ export default function CreateProfileForm() {
     setForm({ ...form, skills: updated });
   };
 
-  const removeItemFromFormArray = (field, index) => {
-    const updatedArray = form[field].filter((_, i) => i !== index);
-    setForm({ ...form, [field]: updatedArray });
-  };
-
-  const handleFormArrayChange = (field, index, key, value) => {
-    const updated = [...form[field]];
-    updated[index][key] = value;
-    setForm({ ...form, [field]: updated });
-  };
-
-  const addExperience = () => {
+  const handleAddExperience = () => {
+    const last = form.experience.at(-1);
+    if (!validateDynamicField(last, ["title", "project"])) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        experience: "Completá título y proyecto antes de agregar una nueva experiencia.",
+      }));
+      return;
+    }
+    setFieldErrors((prev) => ({ ...prev, experience: "" }));
     setForm({ ...form, experience: [...form.experience, { title: "", project: "" }] });
   };
 
-  const addSocialLink = () => {
+  const handleAddSocialLink = () => {
+    const last = form.socialLinks.at(-1);
+    if (!validateDynamicField(last, ["platform", "url"])) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        socialLinks: "Completá plataforma y URL antes de agregar una nueva red social.",
+      }));
+      return;
+    }
+    setFieldErrors((prev) => ({ ...prev, socialLinks: "" }));
     setForm({ ...form, socialLinks: [...form.socialLinks, { platform: "", url: "" }] });
+  };
+
+  // Eliminar genérico
+  const removeItemFromFormArray = (field, index) => {
+    const updated = form[field].filter((_, i) => i !== index);
+    setForm({ ...form, [field]: updated });
   };
 
   const handleSubmit = async (e) => {
@@ -193,17 +208,17 @@ export default function CreateProfileForm() {
               <Input
                 label="Título"
                 value={exp.title}
-                onChange={(e) => handleFormArrayChange("experience", i, "title", e.target.value)}
+                onChange={(e) => handleDynamicFieldChange(form, setForm, "experience", i, "title", e.target.value)}
               />
               <Input
                 label="Proyecto"
                 value={exp.project}
-                onChange={(e) => handleFormArrayChange("experience", i, "project", e.target.value)}
+                onChange={(e) => handleDynamicFieldChange(form, setForm, "experience", i, "project", e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => removeItemFromFormArray("experience", i)}
-                className="absolute top-0 right-0 text-red-500 text-xs hover:underline"
+                className="absolute right-0 top-0 text-sm text-red-500 hover:underline"
               >
                 Eliminar
               </button>
@@ -211,11 +226,14 @@ export default function CreateProfileForm() {
           ))}
           <button
             type="button"
-            onClick={addExperience}
+            onClick={handleAddExperience}
             className="mt-2 text-sm text-conexia-green hover:underline"
           >
             + Agregar experiencia
           </button>
+          {fieldErrors.experience && (
+            <p className="text-sm text-red-500 mt-1">{fieldErrors.experience}</p>
+          )}
         </div>
 
         {/* Redes Sociales */}
@@ -225,25 +243,23 @@ export default function CreateProfileForm() {
             <div key={i} className="grid md:grid-cols-2 gap-2 mt-2 relative">
               <select
                 value={link.platform}
-                onChange={(e) => handleFormArrayChange("socialLinks", i, "platform", e.target.value)}
+                onChange={(e) => handleDynamicFieldChange(form, setForm, "socialLinks", i, "platform", e.target.value)}
                 className="border p-2 rounded"
               >
                 <option value="">Seleccionar plataforma</option>
                 {plataformas.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
+                  <option key={p} value={p}>{p}</option>
                 ))}
               </select>
               <Input
                 label="URL"
                 value={link.url}
-                onChange={(e) => handleFormArrayChange("socialLinks", i, "url", e.target.value)}
+                onChange={(e) => handleDynamicFieldChange(form, setForm, "socialLinks", i, "url", e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => removeItemFromFormArray("socialLinks", i)}
-                className="absolute top-0 right-0 text-red-500 text-xs hover:underline"
+                className="absolute right-0 top-0 text-sm text-red-500 hover:underline"
               >
                 Eliminar
               </button>
@@ -251,12 +267,16 @@ export default function CreateProfileForm() {
           ))}
           <button
             type="button"
-            onClick={addSocialLink}
+            onClick={handleAddSocialLink}
             className="mt-2 text-sm text-conexia-green hover:underline"
           >
             + Agregar red social
           </button>
+          {fieldErrors.socialLinks && (
+            <p className="text-sm text-red-500 mt-1">{fieldErrors.socialLinks}</p>
+          )}
         </div>
+
 
         <button type="submit" className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90">
           Crear perfil
