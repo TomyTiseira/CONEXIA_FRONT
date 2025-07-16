@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { logoutUser } from '@/service/auth/authService';
 
-const INACTIVITY_LIMIT = 1 * 60 * 1000; // 15 minutos
+const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutos
 
 export default function useSessionTimeout() {
   useEffect(() => {

@@ -4,10 +4,10 @@ import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { registerUser } from "@/service/user/userFetch";
 import InputField from "@/components/form/InputField";
-import { validateEmail, validatePassword, validateRepeatPwd} from "@/utils/validation";
+import { validateEmail, validatePassword, validateRepeatPwd } from "@/utils/validation";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -23,20 +23,19 @@ export default function RegisterForm() {
   const [showPwd, setShowPwd] = useState(false);
   const [showRepeatPwd, setShowRepeatPwd] = useState(false);
 
+  const getError = (field) => {
+    const value = form[field];
+    if (!touched[field]) return "";
 
-const getError = (field) => {
-  const value = form[field];
-  if (!touched[field]) return "";
+    if (field === "repeatPwd") {
+      return validateRepeatPwd(form.password, form.repeatPwd);
+    }
 
-  if (field === "repeatPwd") {
-    return validateRepeatPwd(form.password, form.repeatPwd);
-  }
-
-  return {
-    email: validateEmail,
-    password: validatePassword,
-  }[field](value);
-};
+    return {
+      email: validateEmail,
+      password: validatePassword,
+    }[field](value);
+  };
 
   const handleBlur = (field) => {
     setFocused((prev) => ({ ...prev, [field]: false }));
@@ -58,19 +57,29 @@ const getError = (field) => {
     const passwordError = validatePassword(form.password);
     const repeatPwdError = validateRepeatPwd(form.password, form.repeatPwd);
 
-    if (emailError || passwordError || repeatPwdError) return setMsg({ ok: false, text: "" });
+    if (emailError || passwordError || repeatPwdError)
+      return setMsg({ ok: false, text: "" });
 
     try {
       await registerUser(form);
-      setMsg({ ok: true, text: "Código enviado a tu correo. Por favor revísalo." });
+      setMsg({
+        ok: true,
+        text: "Código enviado a tu correo. Por favor revísalo.",
+      });
       setTimeout(() => {
         router.push(`/verify-account?email=${encodeURIComponent(form.email)}`);
       }, 800);
     } catch (error) {
       if (error.message.includes("already exists")) {
-        setMsg({ ok: false, text: "Este correo ya está registrado. Intenta con otro." });
+        setMsg({
+          ok: false,
+          text: "Este correo ya está registrado. Intenta con otro.",
+        });
       } else {
-        setMsg({ ok: false, text: "Ocurrió un error al registrarte. Intenta nuevamente." });
+        setMsg({
+          ok: false,
+          text: "Ocurrió un error al registrarte. Intenta nuevamente.",
+        });
       }
     }
   };
@@ -87,42 +96,60 @@ const getError = (field) => {
           Ingresa tu correo y crea una contraseña. Te enviaremos un código por email para verificar tu identidad antes de completar el registro.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
-          <InputField
-            type="email"
-            placeholder="Correo electrónico"
-            value={form.email}
-            onChange={(e) => handleChange("email", e.target.value)}
-            onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}
-            onBlur={() => handleBlur("email")}
-            error={getError("email")}
-          />
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {/* Campo Correo */}
+          <div>
+            <label className="block text-sm font-medium text-conexia-green mb-1">
+              Correo electrónico
+            </label>
+            <InputField
+              type="email"
+              placeholder="Correo electrónico"
+              value={form.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}
+              onBlur={() => handleBlur("email")}
+              error={getError("email")}
+            />
+          </div>
 
-          <InputField
-            type="password"
-            placeholder="Contraseña"
-            value={form.password}
-            onChange={(e) => handleChange("password", e.target.value)}
-            onFocus={() => setFocused((prev) => ({ ...prev, password: true }))}
-            onBlur={() => handleBlur("password")}
-            error={getError("password")}
-            showToggle={true}
-            show={showPwd}
-            onToggle={() => setShowPwd(!showPwd)}
-          />
+          {/* Campo Contraseña */}
+          <div>
+            <label className="block text-sm font-medium text-conexia-green mb-1">
+              Contraseña
+            </label>
+            <InputField
+              type="password"
+              placeholder="Contraseña"
+              value={form.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              onFocus={() => setFocused((prev) => ({ ...prev, password: true }))}
+              onBlur={() => handleBlur("password")}
+              error={getError("password")}
+              showToggle={true}
+              show={showPwd}
+              onToggle={() => setShowPwd(!showPwd)}
+            />
+          </div>
 
-          <InputField
-            type="password"
-            placeholder="Repetir contraseña"
-            value={form.repeatPwd}
-            onChange={(e) => handleChange("repeatPwd", e.target.value)}
-            onFocus={() => setFocused((prev) => ({ ...prev, repeatPwd: true }))}
-            onBlur={() => handleBlur("repeatPwd")}
-            error={getError("repeatPwd")}
-            showToggle={true}
-            show={showRepeatPwd}
-            onToggle={() => setShowRepeatPwd(!showRepeatPwd)}
-          />
+          {/* Campo Repetir Contraseña */}
+          <div>
+            <label className="block text-sm font-medium text-conexia-green mb-1">
+              Repetir contraseña
+            </label>
+            <InputField
+              type="password"
+              placeholder="Repetir contraseña"
+              value={form.repeatPwd}
+              onChange={(e) => handleChange("repeatPwd", e.target.value)}
+              onFocus={() => setFocused((prev) => ({ ...prev, repeatPwd: true }))}
+              onBlur={() => handleBlur("repeatPwd")}
+              error={getError("repeatPwd")}
+              showToggle={true}
+              show={showRepeatPwd}
+              onToggle={() => setShowRepeatPwd(!showRepeatPwd)}
+            />
+          </div>
 
           <button
             type="submit"
