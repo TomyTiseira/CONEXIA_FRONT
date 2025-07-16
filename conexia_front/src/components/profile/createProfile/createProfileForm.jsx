@@ -38,7 +38,7 @@ export default function CreateProfileForm() {
         const tipos = await getDocumentTypes();
         setDocumentTypes(tipos.data);
       } catch (error) {
-        console.error("Error al cargar tipos de documento", error);
+        setMsg("Error al cargar los tipos de documento");
       }
     };
     fetchDocs();
@@ -96,7 +96,7 @@ export default function CreateProfileForm() {
           formData.append("experience", JSON.stringify(exp));
         });
       } catch {
-        console.warn("Formato inválido en experiencia");
+        setMsg("Formato inválido en experiencia");
       }
     }
 
@@ -108,7 +108,7 @@ export default function CreateProfileForm() {
           formData.append("socialLinks", JSON.stringify(link));
         });
       } catch {
-        console.warn("Formato inválido en redes sociales");
+        setMsg("Formato inválido en redes sociales");
       }
     }
 
