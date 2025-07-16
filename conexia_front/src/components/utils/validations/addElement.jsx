@@ -5,6 +5,10 @@ export const handleDynamicFieldChange = (form, setForm, fieldName, index, key, v
   setForm({ ...form, [fieldName]: updatedArray });
 };
 
-export const validateDynamicField = (item, requiredFields) => {
-  return requiredFields.every((field) => item[field]?.trim());
+export const validateDynamicField = (array, requiredFields = []) => {
+  if (!array || array.length === 0) return false;
+
+  return array.every((item) =>
+    requiredFields.every((field) => item[field] && item[field].trim() !== "")
+  );
 };

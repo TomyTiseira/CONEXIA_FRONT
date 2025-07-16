@@ -9,6 +9,7 @@ import { validateImage } from "@/components/utils/validations/archivos";
 import { calculateAge } from "@/components/utils/validations/fechas";
 import { isValidPhoneNumber } from "@/components/utils/validations/phones";
 import { handleDynamicFieldChange, validateDynamicField } from "@/components/utils/validations/addElement";
+import { isValidURL } from "@/components/utils/validations/urls";
 
 export default function CreateProfileForm() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function CreateProfileForm() {
     socialLinks: [{ platform: "", url: "" }],
   });
 
+  const [errors, setErrors] = useState({});
   const [msg, setMsg] = useState(null);
   const [documentTypes, setDocumentTypes] = useState([]);
   const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
@@ -65,18 +67,26 @@ export default function CreateProfileForm() {
     setForm({ ...form, skills: updated });
   };
 
-  const handleAddExperience = () => {
-    const last = form.experience.at(-1);
-    if (!validateDynamicField(last, ["title", "project"])) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        experience: "Completá título y proyecto antes de agregar una nueva experiencia.",
-      }));
-      return;
-    }
-    setFieldErrors((prev) => ({ ...prev, experience: "" }));
-    setForm({ ...form, experience: [...form.experience, { title: "", project: "" }] });
-  };
+const handleAddExperience = () => {
+  if (!form.experience || form.experience.length === 0) {
+    return setForm({
+      ...form,
+      experience: [{ title: "", project: "" }],
+    });
+  }
+
+  const isValid = validateDynamicField(form.experience, ["title", "project"]);
+  if (!isValid) {
+    setErrors({ ...errors, experience: "Completá título y proyecto antes de agregar una nueva experiencia." });
+    return;
+  }
+
+  setErrors({ ...errors, experience: "" });
+  setForm({
+    ...form,
+    experience: [...form.experience, { title: "", project: "" }],
+  });
+};
 
   const handleAddSocialLink = () => {
     const last = form.socialLinks.at(-1);
@@ -123,6 +133,10 @@ export default function CreateProfileForm() {
     for (let link of form.socialLinks) {
       if ((link.platform && !link.url) || (!link.platform && link.url)) {
         return setMsg({ ok: false, text: "Completá plataforma y URL en cada red social." });
+      }
+
+      if (link.url && !isValidURL(link.url)) {
+        return setMsg({ ok: false, text: "Ingresá una URL válida en las redes sociales." });
       }
     }
 
@@ -204,7 +218,7 @@ export default function CreateProfileForm() {
         <div>
           <h4 className="font-semibold text-conexia-green">Experiencia</h4>
           {form.experience.map((exp, i) => (
-            <div key={i} className="grid md:grid-cols-2 gap-2 mt-2 relative">
+            <div key={i} className="grid md:grid-cols-3 gap-2 mt-2 items-center">
               <Input
                 label="Título"
                 value={exp.title}
@@ -215,13 +229,16 @@ export default function CreateProfileForm() {
                 value={exp.project}
                 onChange={(e) => handleDynamicFieldChange(form, setForm, "experience", i, "project", e.target.value)}
               />
-              <button
-                type="button"
-                onClick={() => removeItemFromFormArray("experience", i)}
-                className="absolute right-0 top-0 text-sm text-red-500 hover:underline"
-              >
-                Eliminar
-              </button>
+              <div className="flex justify-start items-end pt-6">
+                <button
+                  type="button"
+                  onClick={() => removeItemFromFormArray("experience", i)}
+                  className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded flex items-center justify-center ml-2"
+                  title="Eliminar"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           ))}
           <button
@@ -237,32 +254,43 @@ export default function CreateProfileForm() {
         </div>
 
         {/* Redes Sociales */}
+        {/* Redes Sociales */}
         <div>
           <h4 className="font-semibold text-conexia-green">Redes Sociales</h4>
           {form.socialLinks.map((link, i) => (
-            <div key={i} className="grid md:grid-cols-2 gap-2 mt-2 relative">
-              <select
-                value={link.platform}
-                onChange={(e) => handleDynamicFieldChange(form, setForm, "socialLinks", i, "platform", e.target.value)}
-                className="border p-2 rounded"
-              >
-                <option value="">Seleccionar plataforma</option>
-                {plataformas.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-              <Input
-                label="URL"
-                value={link.url}
-                onChange={(e) => handleDynamicFieldChange(form, setForm, "socialLinks", i, "url", e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => removeItemFromFormArray("socialLinks", i)}
-                className="absolute right-0 top-0 text-sm text-red-500 hover:underline"
-              >
-                Eliminar
-              </button>
+            <div key={i} className="grid md:grid-cols-3 gap-2 items-center mt-2">
+              <div className="flex flex-col">
+                <label className="block font-semibold text-conexia-green mb-1 text-sm">Plataforma</label>
+                <select
+                  value={link.platform}
+                  onChange={(e) => handleDynamicFieldChange("socialLinks", i, "platform", e.target.value)}
+                  className="border p-2 rounded w-full h-[42px]"
+                >
+                  <option value="">Seleccionar plataforma</option>
+                  {plataformas.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col">
+                <label className="block font-semibold text-conexia-green mb-1 text-sm">URL</label>
+                <Input
+                  value={link.url}
+                  onChange={(e) => handleDynamicFieldChange("socialLinks", i, "url", e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex justify-start items-end pt-6">
+                <button
+                  type="button"
+                  onClick={() => removeItemFromFormArray("socialLinks", i)}
+                  className="w-6 h-6 bg-red-500 text-white rounded hover:bg-red-600 flex items-center justify-center ml-2"
+                  title="Eliminar"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           ))}
           <button
@@ -272,10 +300,12 @@ export default function CreateProfileForm() {
           >
             + Agregar red social
           </button>
-          {fieldErrors.socialLinks && (
-            <p className="text-sm text-red-500 mt-1">{fieldErrors.socialLinks}</p>
+
+          {errors.socialLinks && (
+            <p className="text-red-600 text-sm mt-1">{errors.socialLinks}</p>
           )}
         </div>
+
 
 
         <button type="submit" className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90">
