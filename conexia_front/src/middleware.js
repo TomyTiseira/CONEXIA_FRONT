@@ -5,7 +5,9 @@ export function middleware(request) {
   const accessToken = request.cookies.get('access_token');
   const refreshToken = request.cookies.get('refresh_token');
 
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/community');
+  const isProtectedRoute =
+    request.nextUrl.pathname.startsWith('/community') ||
+    request.nextUrl.pathname.startsWith('/settings');
 
   if (isProtectedRoute && !accessToken && !refreshToken) {
     const loginUrl = new URL('/login', request.url);
@@ -16,7 +18,6 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
-// El matcher especifica qué rutas están protegidas
 export const config = {
-  matcher: ['/community'],
+  matcher: ['/community', '/community/(.*)', '/settings', '/settings/(.*)'],
 };

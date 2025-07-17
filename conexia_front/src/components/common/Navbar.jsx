@@ -2,13 +2,23 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { logoutUser } from '@/service/auth/authService';
-import { MessageCircle, Bell, Menu, X, ChevronDown } from 'lucide-react';
+import {
+  MessageCircle,
+  Bell,
+  Home,
+  Briefcase,
+  Layers,
+  ChevronDown,
+} from 'lucide-react';
+import DropdownUserMenu from '@/components/common/DropdownUserMenu';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileMenu, setMobileMenu] = useState(false);
+  const pathname = usePathname();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -21,129 +31,107 @@ export default function NavbarCommunity() {
   };
 
   const navItems = [
-    { label: 'Inicio', href: '/' },
-    { label: 'Servicios', href: '#servicios' },
-    { label: 'Proyectos', href: '#proyectos' },
-    { label: 'Conecta', href: '#conecta' },
+    { label: 'Inicio', href: '/community', icon: Home },
+    { label: 'Servicios', href: '#servicios', icon: Briefcase },
+    { label: 'Proyectos', href: '#proyectos', icon: Layers },
   ];
 
   return (
     <header className="bg-white shadow sticky top-0 z-50">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-        {/* Logo sin redirección */}
+      {/* Desktop Navbar */}
+      <nav className="hidden md:flex justify-between items-center px-4 py-3 max-w-7xl mx-auto h-[64px]">
+        {/* Logo */}
         <div className="flex items-center gap-2 select-none">
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
           <span className="font-bold text-xl text-conexia-coral">CONEXIA</span>
         </div>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
-          <ul className="flex items-center gap-6 font-semibold text-base text-conexia-green">
-            {navItems.map(({ label, href }) => (
-              <li key={label}>
-                <a href={href}>{label}</a>
-              </li>
-            ))}
-          </ul>
-
-          <div className="flex items-center gap-5 text-conexia-green text-sm">
-            <div className="flex items-center gap-1 cursor-pointer">
-              <MessageCircle size={20} />
-              <span>Mensajes</span>
-            </div>
-            <div className="flex items-center gap-1 cursor-pointer">
-              <Bell size={20} />
-              <span>Notificaciones</span>
-            </div>
-            {/* Perfil usuario */}
-            <div
-              className="relative flex items-center gap-1 cursor-pointer"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <div className="w-8 h-8 relative rounded-full overflow-hidden">
-                <Image
-                  src="/yo.png"
-                  alt="Perfil"
-                  fill
-                  className="object-cover"
+        {/* Navigation */}
+        <ul className="flex items-end gap-8 font-medium text-xs">
+          {navItems.map(({ label, href, icon: Icon }) => {
+            const isActive = pathname === href;
+            return (
+              <li key={label} className="flex flex-col items-center relative group cursor-pointer">
+                <Icon
+                  size={20}
+                  className={`mb-1 transition-colors ${
+                    isActive ? 'text-conexia-green' : 'text-conexia-green/70'
+                  } group-hover:text-conexia-green`}
                 />
+                <Link
+                  href={href}
+                  className={`transition-colors ${
+                    isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
+                  } group-hover:text-conexia-green`}
+                >
+                  {label}
+                </Link>
+                {isActive && (
+                  <span className="absolute -bottom-[6px] h-[2px] w-full bg-conexia-green rounded"></span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Actions */}
+        <div className="flex items-center gap-4 text-conexia-green">
+          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <div className="relative">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
+              <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                <Image src="/yo.png" alt="Perfil" fill className="object-cover" />
               </div>
               <ChevronDown size={16} />
-
-              {menuOpen && (
-                <div className="absolute right-0 top-12 w-36 bg-white border rounded shadow">
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
-                  >
-                    Cerrar sesión
-                  </button>
-                </div>
-              )}
-            </div>
+            </button>
+            {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
           </div>
         </div>
-
-        {/* Mobile toggle */}
-        <button
-          onClick={() => setMobileMenu(!mobileMenu)}
-          className="md:hidden p-2 text-conexia-green"
-          aria-label="Toggle menu"
-        >
-          {mobileMenu ? <X size={24} /> : <Menu size={24} />}
-        </button>
       </nav>
 
-      {/* Mobile nav */}
-      {mobileMenu && (
-        <div className="md:hidden flex flex-col gap-4 px-6 pb-6 text-conexia-green font-medium bg-white shadow-inner">
-          <ul className="flex flex-col gap-4 pt-2">
-            {navItems.map(({ label, href }) => (
-              <li key={label}>
-                <a href={href} onClick={() => setMobileMenu(false)}>
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          <div className="flex justify-around items-center gap-4 pt-4 border-t">
-            <div className="flex items-center gap-1 text-sm">
-              <MessageCircle size={18} />
-              <span>Mensajes</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm">
-              <Bell size={18} />
-              <span>Notificaciones</span>
-            </div>
-            <div
-              className="relative flex items-center gap-1 text-sm cursor-pointer"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <div className="w-8 h-8 relative rounded-full overflow-hidden">
-                <Image
-                  src="/yo.png"
-                  alt="Perfil"
-                  fill
-                  className="object-cover"
-                />
+      {/* Mobile Top Bar */}
+      <nav className="md:hidden flex justify-between items-center px-4 py-2 bg-white shadow h-[56px]">
+        <div className="flex items-center gap-2 select-none">
+          <Image src="/logo.png" alt="Conexia" width={30} height={30} />
+          <span className="font-bold text-xl text-conexia-coral">CONEXIA</span>
+        </div>
+        <div className="flex items-center gap-4 text-conexia-green">
+          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <div className="relative">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
+              <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                <Image src="/yo.png" alt="Perfil" fill className="object-cover" />
               </div>
               <ChevronDown size={16} />
-
-              {menuOpen && (
-                <div className="absolute top-14 right-0 w-36 bg-white border rounded shadow">
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
-                  >
-                    Cerrar sesión
-                  </button>
-                </div>
-              )}
-            </div>
+            </button>
+            {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
           </div>
         </div>
-      )}
+      </nav>
+
+      {/* Mobile Bottom Nav */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-md border-t flex justify-around py-2 z-40">
+        {navItems.map(({ label, href, icon: Icon }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={label}
+              href={href}
+              className={`flex flex-col items-center text-xs ${
+                isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
+              }`}
+            >
+              <Icon size={20} />
+              <span>{label}</span>
+              {isActive && (
+                <span className="mt-[2px] h-[2px] w-4 bg-conexia-green rounded"></span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
     </header>
   );
 }

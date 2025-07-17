@@ -1,4 +1,5 @@
 import { config } from '../../config';
+import { fetchWithRefresh } from '@/service/auth/fetchWithRefresh';
 
 export const fetchPing = async() => {
   const response = await fetch(`${config.API_URL}/users/ping`, {
@@ -70,4 +71,25 @@ export async function resendVerification(email) {
   }
 
   return data;
+}
+
+export async function updatePassword(data) {
+  const response = await fetchWithRefresh(`${config.API_URL}/users/update`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      actualPassword: data.currentPassword,
+      newPassword: data.newPassword,
+      confirmPassword: data.repeatPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'No se pudo actualizar la contraseña');
+  }
+
+  return await response.json();
 }
