@@ -158,7 +158,7 @@ const handleAddExperience = () => {
       setMsg({ ok: true, text: "Perfil creado con éxito." });
       setTimeout(() => router.push("/"), 1000); // Redirigir a inicio como logueado
     } catch (err) {
-      setMsg({ ok: false, "Error al crear el perfil." });
+      setMsg({ ok: false, text: "Error al crear el perfil." });
     }
   };
 
