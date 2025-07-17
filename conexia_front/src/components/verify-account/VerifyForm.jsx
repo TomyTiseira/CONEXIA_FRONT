@@ -74,7 +74,7 @@ const handlePaste = (e) => {
     try {
       await verifyUser({ email, verificationCode });
       setMsg({ ok: true, text: "¡Usuario verificado con éxito!" });
-      setTimeout(() => router.push("/login"), 1500);
+      setTimeout(() => router.push("/profile/Create"), 1500);
     } catch (err) {
       if (
         err.message.includes("is already active") ||
