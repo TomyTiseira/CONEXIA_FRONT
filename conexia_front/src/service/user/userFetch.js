@@ -93,3 +93,23 @@ export async function updatePassword(data) {
 
   return await response.json();
 }
+
+
+export const getRoleById = async (id) => {
+    try {
+      const res = await fetchWithRefresh(
+        `${config.API_URL}/users/get-role-by-id?id=${id}`,
+        { method: "GET" }
+      );
+
+      if (!res.ok) {
+        throw new Error("No se pudo obtener el rol");
+      }
+
+      const data = await res.json();
+      return data?.data?.role?.name; // ← Nombre del rol
+    } catch (error) {
+      console.error("Error al obtener el rol:", error);
+      return null;
+    }
+  };

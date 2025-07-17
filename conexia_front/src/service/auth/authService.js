@@ -1,4 +1,5 @@
 import { config } from '../../config';
+import { fetchWithRefresh } from "./fetchWithRefresh";
 
 // Iniciar sesión
 export const loginUser = async ({ email, password }) => {
@@ -43,4 +44,18 @@ export const logoutUser = async () => {
   }
 
   return res.json();
+};
+
+export const getProfile = async () => {
+  const res = await fetchWithRefresh(`${config.API_URL}/auth/me`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error("No se pudo obtener el perfil del usuario");
+  }
+
+  const data = await res.json();
+  return data.data.user;
 };

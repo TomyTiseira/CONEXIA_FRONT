@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { User, ShieldCheck, Eye } from 'lucide-react';
+import Button from '@/components/ui/Button';
 
 const sections = [
   { id: 'account', label: 'Cuenta', icon: User, path: '/settings/account' },
@@ -35,6 +36,15 @@ export default function SettingsSidebarMobile({ active, onChange }) {
           </li>
         ))}
       </ul>
+      <div className="mt-4 flex justify-center">
+        <Button
+          onClick={() => handleClick('/community')}
+          variant="informative"
+          className="w-fit"
+        >
+          Volver al inicio
+        </Button>
+      </div>
     </div>
   );
 }

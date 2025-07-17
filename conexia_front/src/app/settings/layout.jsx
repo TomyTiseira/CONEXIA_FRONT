@@ -13,7 +13,7 @@ export default function SettingsLayout({ children }) {
   const toggleMobileMenu = () => setMenuOpen((prev) => !prev);
 
   return (
-    <div className="min-h-screen bg-[#f3f9f8] flex flex-col">
+    <div className="min-h-screen bg-conexia-soft flex flex-col">
       <SettingsHeader onToggleMenu={toggleMobileMenu} />
 
       <div className="flex-1 flex flex-col md:flex-row relative">

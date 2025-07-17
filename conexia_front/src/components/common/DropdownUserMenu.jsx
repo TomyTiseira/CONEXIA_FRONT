@@ -3,6 +3,7 @@
 import { LogOut, Settings } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import Button from '@/components/ui/Button';
 
 export default function DropdownUserMenu({ onLogout }) {
     const router = useRouter();
@@ -15,12 +16,8 @@ export default function DropdownUserMenu({ onLogout }) {
             </div>
             <div className="flex flex-col justify-center">
             <span className="font-semibold text-sm">Alex Paredes</span>
-            <span className="text-xs text-conexia-green/80">Estudiante</span>
-            <button
-                className="mt-2 text-xs bg-conexia-green/80 text-white px-3 py-1 rounded-full hover:bg-conexia-green transition"
-            >
-                Ver perfil
-            </button>
+            <span className="text-xs text-conexia-green/80 mb-1">Estudiante</span>
+            <Button className="px-3 py-1 text-xs h-6">Ver perfil</Button>
             </div>
         </div>
 
@@ -36,7 +33,7 @@ export default function DropdownUserMenu({ onLogout }) {
         <button
             onClick={onLogout}
             className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
-        >
+            >
             <LogOut size={16} />
             Cerrar sesión
         </button>
