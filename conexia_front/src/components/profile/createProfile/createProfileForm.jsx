@@ -124,7 +124,7 @@ const handleAddExperience = () => {
 
     // Validar experiencia
     for (let exp of form.experience) {
-      if ((exp.title && !exp.project) || (!exp.title && exp.project)) {
+      if ((exp.title && !exp.project) || (!exp.title && exp.project) || (exp.title.trim() === "" && exp.project.trim() === "")) {
         return setMsg({ ok: false, text: "Completá título y proyecto en cada experiencia." });
       }
     }
@@ -141,23 +141,24 @@ const handleAddExperience = () => {
     }
 
     const formData = new FormData();
-    for (const key in form) {
-      const value = form[key];
+    Object.entries(form).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach((item) =>
-          formData.append(key, typeof item === "object" ? JSON.stringify(item) : item)
-        );
-      } else if (value) {
-        formData.append(key, value);
+        formData.set(key, JSON.stringify(value));
+      } else if (value instanceof File) {
+        formData.set(key, value);
+      } else if (typeof value === "number") {
+        formData.set(key, value.toString()); // evitar problemas de tipos
+      } else if (value !== null && value !== undefined) {
+        formData.set(key, value);
       }
-    }
+    });
 
     try {
       await createUserProfile(formData);
       setMsg({ ok: true, text: "Perfil creado con éxito." });
       setTimeout(() => router.push("/"), 1000); // Redirigir a inicio como logueado
     } catch (err) {
-      setMsg({ ok: false, text: err.message || "Error al crear el perfil." });
+      setMsg({ ok: false, "Error al crear el perfil." });
     }
   };
 
@@ -263,7 +264,7 @@ const handleAddExperience = () => {
                 <label className="block font-semibold text-conexia-green mb-1 text-sm">Plataforma</label>
                 <select
                   value={link.platform}
-                  onChange={(e) => handleDynamicFieldChange("socialLinks", i, "platform", e.target.value)}
+                  onChange={(e) => handleDynamicFieldChange(form, setForm, "socialLinks", i, "platform", e.target.value)}
                   className="border p-2 rounded w-full h-[42px]"
                 >
                   <option value="">Seleccionar plataforma</option>
@@ -277,7 +278,7 @@ const handleAddExperience = () => {
                 <label className="block font-semibold text-conexia-green mb-1 text-sm">URL</label>
                 <Input
                   value={link.url}
-                  onChange={(e) => handleDynamicFieldChange("socialLinks", i, "url", e.target.value)}
+                  onChange={(e) => handleDynamicFieldChange(form, setForm, "socialLinks", i, "url", e.target.value)}
                   className="w-full"
                 />
               </div>
@@ -349,8 +350,14 @@ function Select({ label, options = [], ...props }) {
   return (
     <div>
       {label && <label className="block text-sm font-medium text-conexia-green mb-1">{label}</label>}
-      <select {...props} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40">
-        {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+      <select
+        {...props}
+        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40"
+      >
+        <option value="" disabled hidden>Seleccioná una opción</option> {/* ← esta es la opción por defecto */}
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
       </select>
     </div>
   );
