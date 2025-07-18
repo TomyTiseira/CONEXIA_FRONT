@@ -45,7 +45,7 @@ export const ErrorDisplay = ({
             onClick={handleRedirect}
             className="flex-1 bg-conexia-soft text-conexia-green px-4 py-2 rounded-lg font-semibold hover:bg-conexia-green hover:text-white transition-colors"
           >
-            Ir al inicio
+            Iniciar Sesión
           </button>
         </div>
       </div>
