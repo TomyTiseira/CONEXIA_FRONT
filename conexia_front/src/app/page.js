@@ -2,10 +2,22 @@
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import ClientCommunity from "@/components/community/ClientCommunity";
 import Navbar from "@/components/common/Navbar";
+import { NavbarHome } from "@/components/NavbarHome";
+import { Hero } from "@/components/Hero";
+import { Footer } from "@/components/Footer";
 
 export default function Home() {
+  // Contenido público para usuarios no autenticados
+  const publicContent = (
+    <>
+      <NavbarHome />
+      <Hero />
+      <Footer />
+    </>
+  );
+
   return (
-    <ProtectedRoute>
+    <ProtectedRoute publicContent={publicContent}>
       <ProtectedRoute allowedRoles={['user']}>
         <div className="min-h-screen bg-[#f3f9f8]">
           <Navbar />

@@ -1,15 +1,12 @@
 import { useRoleValidation } from "@/hooks";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
-import { NavbarHome } from "@/components/NavbarHome";
-import { Hero } from "@/components/Hero";
-import { Footer } from "@/components/Footer";
+import { LoadingSpinner, ErrorDisplay } from "@/components/ui";
 
 export const ProtectedRoute = ({ 
   children, 
   allowedRoles = [], 
   fallbackComponent = null,
-  showPublicContent = true 
+  showPublicContent = true,
+  publicContent = null
 }) => {
   const {
     isAuthenticated,
@@ -39,14 +36,8 @@ export const ProtectedRoute = ({
 
   // Usuario no autenticado
   if (!isAuthenticated) {
-    if (showPublicContent) {
-      return (
-        <>
-          <NavbarHome />
-          <Hero />
-          <Footer />
-        </>
-      );
+    if (showPublicContent && publicContent) {
+      return publicContent;
     }
     return null;
   }
