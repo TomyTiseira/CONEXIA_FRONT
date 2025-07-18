@@ -50,7 +50,7 @@ export const ProtectedRoute = ({
     return (
       <ErrorDisplay 
         message="No tienes permisos para acceder a esta página"
-        redirectTo="/"
+        redirectTo="/login"
       />
     );
   }
