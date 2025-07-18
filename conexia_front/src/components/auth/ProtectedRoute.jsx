@@ -6,7 +6,8 @@ export const ProtectedRoute = ({
   allowedRoles = [], 
   fallbackComponent = null,
   showPublicContent = true,
-  publicContent = null
+  publicContent = null,
+  roleBasedContent = null // Nuevo prop para contenido específico por rol
 }) => {
   const {
     isAuthenticated,
@@ -14,20 +15,13 @@ export const ProtectedRoute = ({
     hasError,
     error,
     roleError,
-    hasAnyRole
+    hasAnyRole,
+    role
   } = useRoleValidation();
 
   // Estado de carga inicial
   if (isInitialLoading) {
     return <LoadingSpinner message="Verificando autenticación..." />;
-  }
-
-  // Usuario no autenticado
-  if (!isAuthenticated) {
-    if (showPublicContent && publicContent) {
-      return publicContent;
-    }
-    return null;
   }
 
   // Error de autenticación o rol
@@ -42,6 +36,14 @@ export const ProtectedRoute = ({
     );
   }
 
+  // Usuario no autenticado
+  if (!isAuthenticated) {
+    if (showPublicContent && publicContent) {
+      return publicContent;
+    }
+    return null;
+  }
+
   // Si se especificaron roles permitidos, verificar que el usuario tenga uno de ellos
   if (allowedRoles.length > 0 && !hasAnyRole(allowedRoles)) {
     if (fallbackComponent) {
@@ -53,6 +55,11 @@ export const ProtectedRoute = ({
         redirectTo="/login"
       />
     );
+  }
+
+  // Si se proporcionó contenido específico por rol, usarlo
+  if (roleBasedContent && roleBasedContent[role]) {
+    return roleBasedContent[role];
   }
 
   // Usuario autenticado y con permisos (o sin restricciones de rol)

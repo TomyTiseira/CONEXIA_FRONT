@@ -17,22 +17,35 @@ export default function Home() {
     </>
   );
 
+  // Contenido específico para cada rol
+  const roleBasedContent = {
+    [ROLES.USER]: (
+      <div className="min-h-screen bg-[#f3f9f8]">
+        <Navbar />
+        <ClientCommunity />
+      </div>
+    ),
+    [ROLES.ADMIN]: (
+      <div className="min-h-screen bg-[#f3f9f8] p-8">
+        <h1 className="text-3xl font-bold text-conexia-green mb-6">Panel de Administración</h1>
+        <p className="text-conexia-green/70">Bienvenido al panel de administración</p>
+        {/* Aquí irían los componentes específicos del admin */}
+      </div>
+    ),
+    [ROLES.MODERATOR]: (
+      <div className="min-h-screen bg-[#f3f9f8] p-8">
+        <h1 className="text-3xl font-bold text-conexia-green mb-6">Panel de Moderación</h1>
+        <p className="text-conexia-green/70">Bienvenido al panel de moderación</p>
+        {/* Aquí irían los componentes específicos del moderador */}
+      </div>
+    )
+  };
+
   return (
-    <ProtectedRoute publicContent={publicContent}>
-      <ProtectedRoute allowedRoles={[ROLES.USER]}>
-        <div className="min-h-screen bg-[#f3f9f8]">
-          <Navbar />
-          <ClientCommunity />
-        </div>
-      </ProtectedRoute>
-      
-      <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-        <div>Bienvenido, Admin</div> {/* insertar el componente de admin acá */}
-      </ProtectedRoute>
-      
-      <ProtectedRoute allowedRoles={[ROLES.MODERATOR]}>
-        <div>Bienvenido, Moderador</div> {/* insertar el componente de moderador acá */}
-      </ProtectedRoute>
+    <ProtectedRoute 
+      publicContent={publicContent}
+      roleBasedContent={roleBasedContent}
+    >
     </ProtectedRoute>
   );
 }
