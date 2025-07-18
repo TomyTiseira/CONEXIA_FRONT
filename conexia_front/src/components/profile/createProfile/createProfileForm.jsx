@@ -4,12 +4,17 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { createUserProfile, getDocumentTypes } from "@/service/profiles/profilesFetch";
-import { validateImage } from "@/components/utils/validations/archivos";
-import { calculateAge } from "@/components/utils/validations/fechas";
-import { isValidPhoneNumber } from "@/components/utils/validations/phones";
+import { getDocumentTypes } from "@/service/profiles/profilesFetch";
 import { handleDynamicFieldChange, validateDynamicField } from "@/components/utils/validations/addElement";
-import { isValidURL } from "@/components/utils/validations/urls";
+import { removeItemFromFormArray } from "@/components/utils/removeItemArray";
+import { toggleHabilidad } from "@/components/utils/toggleHabilidad";
+import {
+  handleAddExperience,
+  handleAddSocialLink,
+  handleFileChange,
+  handleSubmitProfile
+} from "@/components/utils/handlers";
+
 
 export default function CreateProfileForm() {
   const router = useRouter();
@@ -27,7 +32,7 @@ export default function CreateProfileForm() {
     coverPicture: null,
     skills: [],
     description: "",
-    experience: [{ title: "", project: "" }],
+    experience: [{ title: "", project: "", startDate: "", endDate: "", isCurrent: false }],
     socialLinks: [{ platform: "", url: "" }],
   });
 
@@ -37,6 +42,7 @@ export default function CreateProfileForm() {
   const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
   const plataformas = ["LinkedIn", "GitHub", "Twitter", "Portfolio", "Otro"];
   const [fieldErrors, setFieldErrors] = useState({ experience: "", socialLinks: "",});
+  
 
   useEffect(() => {
     const fetchDocs = async () => {
@@ -51,121 +57,10 @@ export default function CreateProfileForm() {
     fetchDocs();
   }, []);
 
-  const handleFileChange = (e, campo) => {
-    const file = e.target.files[0];
-    if (validateImage(file)) {
-      setForm({ ...form, [campo]: file });
-    } else {
-      setMsg({ ok: false, text: "Solo se permiten imágenes JPG/PNG de hasta 5MB." });
-    }
-  };
-
-  const toggleHabilidad = (habilidad) => {
-    const updated = form.skills.includes(habilidad)
-      ? form.skills.filter((h) => h !== habilidad)
-      : [...form.skills, habilidad];
-    setForm({ ...form, skills: updated });
-  };
-
-const handleAddExperience = () => {
-  if (!form.experience || form.experience.length === 0) {
-    return setForm({
-      ...form,
-      experience: [{ title: "", project: "" }],
-    });
-  }
-
-  const isValid = validateDynamicField(form.experience, ["title", "project"]);
-  if (!isValid) {
-    setErrors({ ...errors, experience: "Completá título y proyecto antes de agregar una nueva experiencia." });
-    return;
-  }
-
-  setErrors({ ...errors, experience: "" });
-  setForm({
-    ...form,
-    experience: [...form.experience, { title: "", project: "" }],
-  });
-};
-
-  const handleAddSocialLink = () => {
-    const last = form.socialLinks.at(-1);
-    if (!validateDynamicField(last, ["platform", "url"])) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        socialLinks: "Completá plataforma y URL antes de agregar una nueva red social.",
-      }));
-      return;
-    }
-    setFieldErrors((prev) => ({ ...prev, socialLinks: "" }));
-    setForm({ ...form, socialLinks: [...form.socialLinks, { platform: "", url: "" }] });
-  };
-
-  // Eliminar genérico
-  const removeItemFromFormArray = (field, index) => {
-    const updated = form[field].filter((_, i) => i !== index);
-    setForm({ ...form, [field]: updated });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const requiredFields = ["name", "lastName", "birthDate", "documentTypeId", "documentNumber"];
-    const missing = requiredFields.some((f) => !form[f]);
-    if (missing) return setMsg({ ok: false, text: "Completá todos los campos obligatorios." });
-
-    if (calculateAge(form.birthDate) < 18) {
-      return setMsg({ ok: false, text: "Debes tener al menos 18 años." });
-    }
-
-    if (form.phoneNumber && !isValidPhoneNumber(form.phoneNumber)) {
-      return setMsg({ ok: false, text: "El teléfono debe ser numérico y válido (ej: 351xxxxxxxx)." });
-    }
-
-    // Validar experiencia
-    for (let exp of form.experience) {
-      if ((exp.title && !exp.project) || (!exp.title && exp.project) || (exp.title.trim() === "" && exp.project.trim() === "")) {
-        return setMsg({ ok: false, text: "Completá título y proyecto en cada experiencia." });
-      }
-    }
-
-    // Validar redes Sociales
-    for (let link of form.socialLinks) {
-      if ((link.platform && !link.url) || (!link.platform && link.url)) {
-        return setMsg({ ok: false, text: "Completá plataforma y URL en cada red social." });
-      }
-
-      if (link.url && !isValidURL(link.url)) {
-        return setMsg({ ok: false, text: "Ingresá una URL válida en las redes sociales." });
-      }
-    }
-
-    const formData = new FormData();
-    Object.entries(form).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        formData.set(key, JSON.stringify(value));
-      } else if (value instanceof File) {
-        formData.set(key, value);
-      } else if (typeof value === "number") {
-        formData.set(key, value.toString()); // evitar problemas de tipos
-      } else if (value !== null && value !== undefined) {
-        formData.set(key, value);
-      }
-    });
-
-    try {
-      await createUserProfile(formData);
-      setMsg({ ok: true, text: "Perfil creado con éxito." });
-      setTimeout(() => router.push("/"), 1000); // Redirigir a inicio como logueado
-    } catch (err) {
-      setMsg({ ok: false, text: "Error al crear el perfil." });
-    }
-  };
-
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       <Image src="/logo-conexia.png" alt="Logo" width={100} height={40} className="mx-auto mb-6" />
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded shadow">
+      <form onSubmit={(e) => handleSubmitProfile(e, form, setMsg, router)} className="space-y-6 bg-white p-6 rounded shadow">
         <div className="grid md:grid-cols-2 gap-4">
           <Input label="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           <Input label="Apellido" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
@@ -192,8 +87,8 @@ const handleAddExperience = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <File label="Foto de perfil" onChange={(e) => handleFileChange(e, "profilePicture")} />
-          <File label="Foto de portada" onChange={(e) => handleFileChange(e, "coverPicture")} />
+          <File label="Foto de perfil" onChange={(e) => handleFileChange(e, "profilePicture", form, setForm, setMsg)} />
+          <File label="Foto de portada" onChange={(e) => handleFileChange(e, "coverPicture", form, setForm, setMsg)} />
         </div>
 
         <TextArea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
@@ -206,8 +101,10 @@ const handleAddExperience = () => {
               <button
                 key={h}
                 type="button"
-                onClick={() => toggleHabilidad(h)}
-                className={`px-3 py-1 rounded border text-sm font-medium ${form.skills.includes(h) ? "bg-conexia-green text-white" : "bg-gray-100 text-gray-700"}`}
+                onClick={() => toggleHabilidad(h, form, setForm)}
+                className={`px-3 py-1 rounded border text-sm font-medium ${
+                  form.skills.includes(h) ? "bg-conexia-green text-white" : "bg-gray-100 text-gray-700"
+                }`}
               >
                 {h}
               </button>
@@ -215,97 +112,160 @@ const handleAddExperience = () => {
           </div>
         </div>
 
-        {/* Experiencia */}
-        <div>
-          <h4 className="font-semibold text-conexia-green">Experiencia</h4>
-          {form.experience.map((exp, i) => (
-            <div key={i} className="grid md:grid-cols-3 gap-2 mt-2 items-center">
-              <Input
-                label="Título"
-                value={exp.title}
-                onChange={(e) => handleDynamicFieldChange(form, setForm, "experience", i, "title", e.target.value)}
+    {/* Experiencia */}
+    <div>
+      <h4 className="font-semibold text-conexia-green">Experiencia</h4>
+      {form.experience.map((exp, i) => (
+        <div key={i} className="grid gap-2 mt-2 border-b pb-4">
+          {/* Fila Título y Proyecto */}
+          <div className="grid md:grid-cols-2 gap-2">
+            <Input
+              label="Título"
+              value={exp.title}
+              onChange={(e) =>
+                handleDynamicFieldChange(form, setForm, "experience", i, "title", e.target.value)
+              }
+            />
+            <Input
+              label="Proyecto"
+              value={exp.project}
+              onChange={(e) =>
+                handleDynamicFieldChange(form, setForm, "experience", i, "project", e.target.value)
+              }
+            />
+          </div>
+
+          {/* Fila Fechas y Checkbox */}
+          <div className="grid md:grid-cols-3 gap-2 items-end">
+            <div className="flex flex-col">
+              <label className="text-sm text-conexia-green mb-1">Desde</label>
+              {/* Fecha DESDE */}
+              <input
+                type="date"
+                className="border rounded p-2"
+                value={exp.startDate}
+                onChange={(e) =>
+                  handleDynamicFieldChange(form, setForm, "experience", i, "startDate", e.target.value)
+                }
               />
-              <Input
-                label="Proyecto"
-                value={exp.project}
-                onChange={(e) => handleDynamicFieldChange(form, setForm, "experience", i, "project", e.target.value)}
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-sm text-conexia-green mb-1">Hasta</label>
+              {/* Fecha HASTA */}
+              <input
+                type="date"
+                className="border rounded p-2"
+                value={exp.endDate}
+                onChange={(e) =>
+                  handleDynamicFieldChange(form, setForm, "experience", i, "endDate", e.target.value)
+                }
+                disabled={exp.isCurrent}
               />
-              <div className="flex justify-start items-end pt-6">
-                <button
-                  type="button"
-                  onClick={() => removeItemFromFormArray("experience", i)}
-                  className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded flex items-center justify-center ml-2"
-                  title="Eliminar"
-                >
-                  ✕
-                </button>
-              </div>
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={handleAddExperience}
-            className="mt-2 text-sm text-conexia-green hover:underline"
-          >
-            + Agregar experiencia
-          </button>
-          {fieldErrors.experience && (
-            <p className="text-sm text-red-500 mt-1">{fieldErrors.experience}</p>
-          )}
+
+            <label className="text-sm text-conexia-green mb-1 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={exp.isCurrent}
+              onChange={(e) => {
+                const checked = e.target.checked;
+
+                const updatedExperience = [...form.experience];
+                updatedExperience[i] = {
+                  ...updatedExperience[i],
+                  isCurrent: checked,
+                  endDate: checked ? "" : updatedExperience[i].endDate // Limpia endDate si se activa
+                };
+
+                setForm({ ...form, experience: updatedExperience });
+              }}
+            />
+            Actualmente trabajo aquí
+            </label>
+          </div>
+
+          {/* Botón eliminar */}
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => removeItemFromFormArray(form, setForm, "experience", i)}
+              className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded flex items-center justify-center mt-2"
+              title="Eliminar"
+            >
+              ✕
+            </button>
+          </div>
         </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => handleAddExperience(form, setForm, setFieldErrors)}
+        className="mt-2 text-sm text-conexia-green hover:underline"
+      >
+        + Agregar experiencia
+      </button>
+      {fieldErrors.experience && (
+        <p className="text-sm text-red-500 mt-1">{fieldErrors.experience}</p>
+      )}
+    </div>
 
-        {/* Redes Sociales */}
-        {/* Redes Sociales */}
-        <div>
-          <h4 className="font-semibold text-conexia-green">Redes Sociales</h4>
-          {form.socialLinks.map((link, i) => (
-            <div key={i} className="grid md:grid-cols-3 gap-2 items-center mt-2">
-              <div className="flex flex-col">
-                <label className="block font-semibold text-conexia-green mb-1 text-sm">Plataforma</label>
-                <select
-                  value={link.platform}
-                  onChange={(e) => handleDynamicFieldChange(form, setForm, "socialLinks", i, "platform", e.target.value)}
-                  className="border p-2 rounded w-full h-[42px]"
-                >
-                  <option value="">Seleccionar plataforma</option>
-                  {plataformas.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </div>
+    {/* Redes Sociales */}
+    <div>
+      <h4 className="font-semibold text-conexia-green">Redes Sociales</h4>
+      {form.socialLinks.map((link, i) => (
+        <div key={i} className="grid md:grid-cols-3 gap-2 items-center mt-2">
+          <div className="flex flex-col">
+            <label className="block font-semibold text-conexia-green mb-1 text-sm">Plataforma</label>
+            <select
+              value={link.platform}
+              onChange={(e) =>
+                handleDynamicFieldChange(form, setForm, "socialLinks", i, "platform", e.target.value)
+              }
+              className="border p-2 rounded w-full h-[42px]"
+            >
+              <option value="">Seleccionar plataforma</option>
+              {plataformas.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
 
-              <div className="flex flex-col">
-                <label className="block font-semibold text-conexia-green mb-1 text-sm">URL</label>
-                <Input
-                  value={link.url}
-                  onChange={(e) => handleDynamicFieldChange(form, setForm, "socialLinks", i, "url", e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div className="flex justify-start items-end pt-6">
-                <button
-                  type="button"
-                  onClick={() => removeItemFromFormArray("socialLinks", i)}
-                  className="w-6 h-6 bg-red-500 text-white rounded hover:bg-red-600 flex items-center justify-center ml-2"
-                  title="Eliminar"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={handleAddSocialLink}
-            className="mt-2 text-sm text-conexia-green hover:underline"
-          >
-            + Agregar red social
-          </button>
+          <div className="flex flex-col">
+            <label className="block font-semibold text-conexia-green mb-1 text-sm">URL</label>
+            <Input
+              value={link.url}
+              onChange={(e) =>
+                handleDynamicFieldChange(form, setForm, "socialLinks", i, "url", e.target.value)
+              }
+              className="w-full"
+            />
+          </div>
 
-          {errors.socialLinks && (
-            <p className="text-red-600 text-sm mt-1">{errors.socialLinks}</p>
-          )}
+          <div className="flex justify-start items-end pt-6">
+            <button
+              type="button"
+              onClick={() => removeItemFromFormArray(form, setForm, "socialLinks", i)}
+              className="w-6 h-6 bg-red-500 text-white rounded hover:bg-red-600 flex items-center justify-center ml-2"
+              title="Eliminar"
+            >
+              ✕
+            </button>
+          </div>
         </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => handleAddSocialLink(form, setForm, setFieldErrors)}
+        className="mt-2 text-sm text-conexia-green hover:underline"
+      >
+        + Agregar red social
+      </button>
+
+      {errors.socialLinks && (
+        <p className="text-red-600 text-sm mt-1">{errors.socialLinks}</p>
+      )}
+    </div>
 
 
 
