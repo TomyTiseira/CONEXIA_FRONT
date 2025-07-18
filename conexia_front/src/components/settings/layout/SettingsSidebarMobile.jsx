@@ -38,7 +38,7 @@ export default function SettingsSidebarMobile({ active, onChange }) {
       </ul>
       <div className="mt-4 flex justify-center">
         <Button
-          onClick={() => handleClick('/community')}
+          onClick={() => handleClick('/')}
           variant="informative"
           className="w-fit"
         >

@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/common/DropdownUserMenu';
+import { useSessionStore } from '@/store';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -24,6 +25,7 @@ export default function NavbarCommunity() {
   const handleLogout = async () => {
     try {
       await logoutUser();
+      router.refresh();
       router.push('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
@@ -31,7 +33,7 @@ export default function NavbarCommunity() {
   };
 
   const navItems = [
-    { label: 'Inicio', href: '/community', icon: Home },
+    { label: 'Inicio', href: '/', icon: Home },
     { label: 'Servicios', href: '#servicios', icon: Briefcase },
     { label: 'Proyectos', href: '#proyectos', icon: Layers },
   ];

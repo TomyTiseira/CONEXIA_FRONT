@@ -11,7 +11,7 @@ export default function SettingsHeader({ onToggleMenu }) {
     <header className="w-full bg-white border-b border-gray-300 px-4 py-3 flex items-center justify-between">
       <div
         className="flex items-center gap-3 cursor-pointer"
-        onClick={() => router.push('/community')}
+        onClick={() => router.push('/')}
       >
         <Image src="/logo.png" alt="Conexia" width={32} height={32} />
         <span className="text-conexia-green font-semibold text-xl">Configuraciones</span>

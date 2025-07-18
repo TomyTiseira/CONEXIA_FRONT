@@ -33,7 +33,7 @@ export default function SettingsSidebarDesktop({ active }) {
       </ul>
       <div className="mt-8 flex justify-center">
         <Button
-          onClick={() => router.push('/community')}
+          onClick={() => router.push('/')}
           variant="informative"
           className="w-fit"
         >

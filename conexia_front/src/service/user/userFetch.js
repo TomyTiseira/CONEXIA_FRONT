@@ -107,7 +107,7 @@ export const getRoleById = async (id) => {
       }
 
       const data = await res.json();
-      return data?.data?.role?.name; // ← Nombre del rol
+      return data.data.name;
     } catch (error) {
       console.error("Error al obtener el rol:", error);
       return null;
