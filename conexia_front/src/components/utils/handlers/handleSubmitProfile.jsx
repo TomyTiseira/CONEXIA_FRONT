@@ -2,6 +2,7 @@ import { createUserProfile } from "@/service/profiles/profilesFetch";
 import { calculateAge } from "@/components/utils/validations/fechas";
 import { isValidPhoneNumber } from "@/components/utils/validations/phones";
 import { validateAllSocialLinks } from "@/components/utils/validations/socialLinks";
+import { validateAllExperiences } from "@/components/utils/validations/experience";
 
 export const handleSubmitProfile = async (e, form, setMsg, router) => {
   e.preventDefault();
@@ -20,53 +21,27 @@ export const handleSubmitProfile = async (e, form, setMsg, router) => {
     return setMsg({ ok: false, text: "El teléfono debe ser numérico y válido (ej: 351xxxxxxxx)." });
   }
 
-  const updatedExperience = form.experience.map((exp) => {
-    if (exp.isCurrent) {
-      return {
-        ...exp,
-        startDate: new Date().toISOString().split("T")[0],
-        endDate: undefined,
-      };
-    }
-    return exp;
-  });
+  // Experiencias con fechas corregidas
+  const updatedExperience = form.experience.map((exp) =>
+    exp.isCurrent
+      ? { ...exp, startDate: new Date().toISOString().split("T")[0], endDate: undefined }
+      : exp
+  );
 
-  for (const exp of updatedExperience) {
-    const { title, project, startDate, endDate, isCurrent } = exp;
-
-    if ((title && !project) || (!title && project)) {
-      return setMsg({ ok: false, text: "Completá título y proyecto en cada experiencia." });
-    }
-
-    if (!startDate || !isStartDateValid(startDate)) {
-      return setMsg({ ok: false, text: "La fecha desde debe estar presente y no ser futura." });
-    }
-
-    if (!isCurrent) {
-      if (!endDate || !isEndDateValid(endDate)) {
-        return setMsg({ ok: false, text: "Completá una fecha hasta válida (no futura)." });
-      }
-
-      if (!isExperienceChronologicallyValid(startDate, endDate)) {
-        return setMsg({ ok: false, text: "La fecha hasta no puede ser anterior a la fecha desde." });
-      }
-    }
+  const expValidation = validateAllExperiences(updatedExperience);
+  if (!expValidation.valid) {
+    return setMsg({ ok: false, text: expValidation.error });
   }
 
-  for (const link of form.socialLinks) {
-    if (!validateAllSocialLinks(link)) {
-      return setMsg({ ok: false, text: "Completá plataforma y una URL válida en cada red social." });
-    }
+  const socialValidation = validateAllSocialLinks(form.socialLinks);
+  if (!socialValidation.valid) {
+    return setMsg({ ok: false, text: socialValidation.error });
   }
 
   const formData = new FormData();
   Object.entries(form).forEach(([key, value]) => {
     if (Array.isArray(value)) {
-      if (key === "experience") {
-        formData.set(key, JSON.stringify(updatedExperience));
-      } else {
-        formData.set(key, JSON.stringify(value));
-      }
+      formData.set(key, JSON.stringify(key === "experience" ? updatedExperience : value));
     } else if (value instanceof File) {
       formData.set(key, value);
     } else if (typeof value === "number") {
