@@ -22,6 +22,14 @@ export const ProtectedRoute = ({
     return <LoadingSpinner message="Verificando autenticación..." />;
   }
 
+  // Usuario no autenticado
+  if (!isAuthenticated) {
+    if (showPublicContent && publicContent) {
+      return publicContent;
+    }
+    return null;
+  }
+
   // Error de autenticación o rol
   if (hasError) {
     return (
@@ -32,14 +40,6 @@ export const ProtectedRoute = ({
         redirectTo="/login"
       />
     );
-  }
-
-  // Usuario no autenticado
-  if (!isAuthenticated) {
-    if (showPublicContent && publicContent) {
-      return publicContent;
-    }
-    return null;
   }
 
   // Si se especificaron roles permitidos, verificar que el usuario tenga uno de ellos
