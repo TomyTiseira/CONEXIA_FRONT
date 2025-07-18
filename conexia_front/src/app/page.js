@@ -4,13 +4,14 @@ import ClientCommunity from "@/components/community/ClientCommunity";
 import Navbar from "@/components/common/Navbar";
 import { Hero } from "@/components/Hero";
 import { Footer } from "@/components/Footer";
-import { useValidateSession, useRole } from "@/hooks";
+import { useAuth } from "@/context/AuthContext";
+import { useRole } from "@/hooks";
 
 export default function Home() {
-  const { isAuthenticated, isLoading, error, data } = useValidateSession();
-  console.log(isAuthenticated, isLoading, error, data);
+  const { isAuthenticated, isLoading, error, user } = useAuth();
+  console.log(isAuthenticated, isLoading, error, user);
 
-  const roleId = data?.roleId ?? null;
+  const roleId = user?.roleId ?? null;
   const { role, loading: loadingRole, error: roleError } = useRole(roleId);
   
   // TODO: Manejar el estado de carga y error

@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata = {
   title: "Conexia",
@@ -13,7 +14,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className="bg-white text-conexia-green">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

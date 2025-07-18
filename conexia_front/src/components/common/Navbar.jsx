@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import { logoutUser } from '@/service/auth/authService';
+import { useAuth } from '@/context/AuthContext';
 import {
   MessageCircle,
   Bell,
@@ -15,17 +15,16 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/common/DropdownUserMenu';
-import { useSessionStore } from '@/store';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await logoutUser();
-      router.refresh();
+      await logout();
       router.push('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
