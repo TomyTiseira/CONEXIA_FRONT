@@ -17,7 +17,7 @@ export default function DropdownUserMenu({ onLogout }) {
             <div className="flex flex-col justify-center">
             <span className="font-semibold text-sm">Alex Paredes</span>
             <span className="text-xs text-conexia-green/80 mb-1">Estudiante</span>
-            <Button className="px-3 py-1 text-xs h-6">Ver perfil</Button>
+            <Button className="px-3 py-0.5 text-xs">Ver perfil</Button>
             </div>
         </div>
 

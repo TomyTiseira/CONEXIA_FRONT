@@ -1,9 +1,12 @@
 import { cookies } from 'next/headers';
 
 export async function validateSession() {
-  const cookieStore = cookies();
-  const accessToken = cookieStore.get('accessToken');
-  const refreshToken = cookieStore.get('refreshToken');
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const refreshToken = cookieStore.get('refresh_token')?.value;
+  console.log('Access Token:', accessToken);
+  console.log('Refresh Token:', refreshToken);
 
-  return Boolean(accessToken || refreshToken);
+  console.log('Cookies en SSR:', cookieStore.getAll());
+  return !!accessToken || !!refreshToken;
 }
