@@ -19,13 +19,21 @@ export const isStartDateBeforeEndDate = (start, end) => {
   return new Date(start) <= new Date(end);
 };
 
-export const isValidExperienceDates = ({ startDate, endDate, isCurrent }) => {
+export const isStartDateAfterBirth = (startDate, birthDate) => {
+  return new Date(startDate) >= new Date(birthDate);
+};
+
+export const isValidExperienceDates = ({ startDate, endDate, isCurrent }, birthDate) => {
   const hoy = new Date();
 
   if (!startDate) return { valid: false, error: "Falta la fecha desde." };
-  const desde = new Date(startDate);
 
+  const desde = new Date(startDate);
   if (desde > hoy) return { valid: false, error: "La fecha desde no puede ser posterior a hoy." };
+
+  if (!isStartDateAfterBirth(startDate, birthDate)) {
+    return { valid: false, error: "La fecha desde no puede ser anterior a tu fecha de nacimiento." };
+  }
 
   if (!isCurrent) {
     if (!endDate) return { valid: false, error: "Falta la fecha hasta." };

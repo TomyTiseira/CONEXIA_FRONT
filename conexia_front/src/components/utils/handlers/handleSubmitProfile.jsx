@@ -9,6 +9,7 @@ export const handleSubmitProfile = async (e, form, setMsg, router) => {
 
   const requiredFields = ["name", "lastName", "birthDate", "documentTypeId", "documentNumber"];
   const missing = requiredFields.some((f) => !form[f]);
+  
   if (missing) {
     return setMsg({ ok: false, text: "Completá todos los campos obligatorios." });
   }
@@ -28,12 +29,12 @@ export const handleSubmitProfile = async (e, form, setMsg, router) => {
       : exp
   );
 
-  const expValidation = validateAllExperiences(updatedExperience);
-  if (!expValidation.valid) {
-    return setMsg({ ok: false, text: expValidation.error });
-  }
+  const expValidation = validateAllExperiences(updatedExperience, form.birthDate);
+	if (!expValidation.valid) {
+		return setMsg({ ok: false, text: expValidation.error });
+	}
 
-  const socialValidation = validateAllSocialLinks(form.socialLinks);
+const socialValidation = validateAllSocialLinks(form.socialLinks);
   if (!socialValidation.valid) {
     return setMsg({ ok: false, text: socialValidation.error });
   }
