@@ -1,6 +1,6 @@
 import VerifyForm from "@/components/verify-account/VerifyForm";
 import { Footer } from "@/components/Footer";
-import HeroPanel from "@/components/common/HeroPanel";
+import HeroPanel from "@/components/hero/HeroPanel";
 import { Suspense } from "react";
 
 export default function VerifyAccountPage() {

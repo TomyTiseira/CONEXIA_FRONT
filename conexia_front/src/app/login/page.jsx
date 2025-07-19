@@ -1,4 +1,4 @@
-import HeroPanel from "@/components/common/HeroPanel";
+import HeroPanel from "@/components/hero/HeroPanel";
 import LoginForm from "@/components/login/LoginForm";
 import { Footer } from "@/components/Footer";
 

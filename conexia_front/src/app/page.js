@@ -5,7 +5,7 @@ import NavbarCommunity from "@/components/navbar/NavbarCommunity";
 import ClientAdmin from "@/components/admin/ClientAdmin";
 import NavbarAdmin from "@/components/navbar/NavbarAdmin";
 import NavbarHome from "@/components/navbar/NavbarHome";
-import { Hero } from "@/components/Hero";
+import HeroHome from "@/components/hero/HeroHome";
 import { Footer } from "@/components/Footer";
 import { ROLES } from "@/constants/roles";
 
@@ -14,7 +14,7 @@ export default function Home() {
   const publicContent = (
     <>
       <NavbarHome />
-      <Hero />
+      <HeroHome />
       <Footer />
     </>
   );
