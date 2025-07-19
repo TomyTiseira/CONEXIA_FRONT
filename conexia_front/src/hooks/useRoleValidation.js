@@ -8,7 +8,8 @@ export const useRoleValidation = () => {
 
   // Estados combinados
   const isInitialLoading = isLoading || loadingRole;
-  const hasError = error || roleError;
+  // Solo considerar error si hay un error real y el usuario está autenticado
+  const hasError = (error && isAuthenticated) || roleError;
 
   // Función para verificar si el usuario tiene un rol específico
   const hasRole = (expectedRole) => {
