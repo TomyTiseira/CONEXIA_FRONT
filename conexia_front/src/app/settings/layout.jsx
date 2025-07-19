@@ -7,6 +7,7 @@ import SettingsSidebarMobile from '@/components/settings/layout/SettingsSidebarM
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { ROLES } from '@/constants/roles';
 import { useState } from 'react';
+import { NotFound } from '@/components/ui';
 
 export default function SettingsLayout({ children }) {
   const activeSection = useSelectedLayoutSegment() || 'account';
@@ -17,6 +18,7 @@ export default function SettingsLayout({ children }) {
   return (
     <ProtectedRoute 
       allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR]}
+      fallbackComponent={<NotFound />}
     >
       <div className="min-h-screen bg-conexia-soft flex flex-col">
         <SettingsHeader onToggleMenu={toggleMobileMenu} />
