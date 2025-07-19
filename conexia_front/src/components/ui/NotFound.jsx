@@ -9,7 +9,6 @@ export const NotFound = ({
   showBackButton = true,
   showHomeButton = true 
 }) => {
-  console.log('NotFound component rendered with props:', { title, message, showBackButton, showHomeButton });
   const router = useRouter();
 
   const handleGoHome = () => {
@@ -21,27 +20,42 @@ export const NotFound = ({
   };
 
   return (
-    <div className="min-h-screen bg-red-100 flex items-center justify-center px-4">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8 w-96 max-w-sm text-center flex flex-col items-center">
-        {/* Icono */}
-        <div className="w-16 h-16 mb-6 bg-blue-100 rounded-full flex items-center justify-center">
-          <Home className="w-8 h-8 text-blue-600" />
-        </div>
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: 'red', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      padding: '1rem'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        border: '1px solid #ccc',
+        borderRadius: '8px',
+        padding: '2rem',
+        maxWidth: '400px',
+        textAlign: 'center'
+      }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+          {title}
+        </h2>
         
-        {/* Título */}
-        <h2 className="text-xl font-bold text-gray-800 mb-3">{title}</h2>
+        <p style={{ marginBottom: '1.5rem' }}>
+          {message}
+        </p>
         
-        {/* Mensaje */}
-        <p className="text-sm text-gray-600 mb-6 px-4">{message}</p>
-        
-        {/* Botones */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
+        <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
           {showBackButton && (
             <button
               onClick={handleGoBack}
-              className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#ccc',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
             >
-              <ArrowLeft size={16} />
               Volver
             </button>
           )}
@@ -49,9 +63,15 @@ export const NotFound = ({
           {showHomeButton && (
             <button
               onClick={handleGoHome}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
             >
-              <Home size={16} />
               Ir al Inicio
             </button>
           )}
