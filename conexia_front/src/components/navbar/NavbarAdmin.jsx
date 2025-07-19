@@ -3,46 +3,40 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useRouter } from 'next/navigation';
-import { logoutUser } from '@/service/auth/authService';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import {
   MessageCircle,
   Bell,
   Home,
   Briefcase,
   Layers,
-  Users,
   ChevronDown,
+  Users,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/common/DropdownUserMenu';
 
-export default function NavbarCommunity({ isAdmin = false }) {
+export default function NavbarAdmin() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await logoutUser();
+      await logout();
       router.push('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
   };
 
-  const baseItems = [
-    { label: 'Inicio', href: '/community', icon: Home },
+  const navItems = [
+    { label: 'Inicio', href: '/', icon: Home },
     { label: 'Servicios', href: '#servicios', icon: Briefcase },
     { label: 'Proyectos', href: '#proyectos', icon: Layers },
+    { label: 'Usuarios', href: '#usuarios', icon: Users },
   ];
-
-  const adminItems = [
-    ...baseItems,
-    { label: 'Usuarios internos', href: '/admin/internal-users', icon: Users },
-  ];
-
-  const navItems = isAdmin ? adminItems : baseItems;
 
   return (
     <header className="bg-white shadow sticky top-0 z-50">
@@ -55,13 +49,13 @@ export default function NavbarCommunity({ isAdmin = false }) {
         </div>
 
         {/* Navigation */}
-        <ul className="flex items-end gap-8 font-medium text-xs">
+        <ul className="flex items-end gap-6 font-medium text-xs">
           {navItems.map(({ label, href, icon: Icon }) => {
             const isActive = pathname === href;
             return (
               <li key={label} className="flex flex-col items-center relative group cursor-pointer">
                 <Icon
-                  size={20}
+                  size={18}
                   className={`mb-1 transition-colors ${
                     isActive ? 'text-conexia-green' : 'text-conexia-green/70'
                   } group-hover:text-conexia-green`}
@@ -127,11 +121,11 @@ export default function NavbarCommunity({ isAdmin = false }) {
             <Link
               key={label}
               href={href}
-              className={`flex flex-col items-center text-xs ${
+              className={`flex flex-col items-center text-[11px] ${
                 isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
               }`}
             >
-              <Icon size={20} />
+              <Icon size={18} />
               <span>{label}</span>
               {isActive && (
                 <span className="mt-[2px] h-[2px] w-4 bg-conexia-green rounded"></span>
