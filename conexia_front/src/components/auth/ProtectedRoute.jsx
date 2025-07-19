@@ -1,5 +1,5 @@
 import { useRoleValidation } from "@/hooks";
-import { LoadingSpinner, ErrorDisplay } from "@/components/ui";
+import { LoadingSpinner, ErrorDisplay, NotFound } from "@/components/ui";
 
 export const ProtectedRoute = ({ 
   children, 
@@ -50,9 +50,11 @@ export const ProtectedRoute = ({
       return fallbackComponent;
     }
     return (
-      <ErrorDisplay 
-        message="No tienes permisos para acceder a esta página"
-        redirectTo="/login"
+      <NotFound 
+        title="Página no encontrada"
+        message="La página que buscas no existe o no tienes permisos para acceder a ella."
+        showBackButton={true}
+        showHomeButton={true}
       />
     );
   }
