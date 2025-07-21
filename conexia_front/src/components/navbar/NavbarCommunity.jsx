@@ -14,7 +14,7 @@ import {
   Layers,
   ChevronDown,
 } from 'lucide-react';
-import DropdownUserMenu from '@/components/common/DropdownUserMenu';
+import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,34 +42,38 @@ export default function NavbarCommunity() {
       {/* Desktop Navbar */}
       <nav className="hidden md:flex justify-between items-center px-4 py-3 max-w-7xl mx-auto h-[64px]">
         {/* Logo */}
-        <div className="flex items-center gap-2 select-none">
+        <Link href="/" className="flex items-center gap-2 select-none">
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
           <span className="font-bold text-xl text-conexia-coral">CONEXIA</span>
-        </div>
+        </Link>
 
         {/* Navigation */}
         <ul className="flex items-end gap-8 font-medium text-xs">
           {navItems.map(({ label, href, icon: Icon }) => {
             const isActive = pathname === href;
             return (
-              <li key={label} className="flex flex-col items-center relative group cursor-pointer">
-                <Icon
-                  size={20}
-                  className={`mb-1 transition-colors ${
-                    isActive ? 'text-conexia-green' : 'text-conexia-green/70'
-                  } group-hover:text-conexia-green`}
-                />
+              <li key={label}>
                 <Link
                   href={href}
-                  className={`transition-colors ${
-                    isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
-                  } group-hover:text-conexia-green`}
+                  className="flex flex-col items-center relative group cursor-pointer"
                 >
-                  {label}
+                  <Icon
+                    size={18}
+                    className={`mb-1 transition-colors ${
+                      isActive ? 'text-conexia-green' : 'text-conexia-green/70'
+                    } group-hover:text-conexia-green`}
+                  />
+                  <span
+                    className={`transition-colors ${
+                      isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
+                    } group-hover:text-conexia-green`}
+                  >
+                    {label}
+                  </span>
+                  {isActive && (
+                    <span className="absolute -bottom-[6px] h-[2px] w-full bg-conexia-green rounded"></span>
+                  )}
                 </Link>
-                {isActive && (
-                  <span className="absolute -bottom-[6px] h-[2px] w-full bg-conexia-green rounded"></span>
-                )}
               </li>
             );
           })}
@@ -93,10 +97,10 @@ export default function NavbarCommunity() {
 
       {/* Mobile Top Bar */}
       <nav className="md:hidden flex justify-between items-center px-4 py-2 bg-white shadow h-[56px]">
-        <div className="flex items-center gap-2 select-none">
+        <Link href="/" className="flex items-center gap-2 select-none">
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
           <span className="font-bold text-xl text-conexia-coral">CONEXIA</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-4 text-conexia-green">
           <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />

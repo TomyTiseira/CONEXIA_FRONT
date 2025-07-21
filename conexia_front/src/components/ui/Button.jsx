@@ -18,7 +18,10 @@ export default function Button({
         primary: 'bg-conexia-green text-white hover:bg-conexia-green/90',
         secondary: 'bg-[#ff4953] text-white hover:bg-[#f36970ff]',
         neutral: 'bg-[#367d7d] text-white hover:bg-[#2b6a6a]',
-        informative: 'bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0]', // estilo más suave
+        informative: 'bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0]',
+        delete:'bg-red-200 text-red-800 hover:bg-red-300 focus:ring-red-300',
+        edit:'bg-[#e4f1f1] text-conexia-green hover:bg-[#d6ebeb]',
+        add:'bg-[#cde6e6] text-conexia-green hover:bg-[#b9dddd]',
     };
 
     return (
