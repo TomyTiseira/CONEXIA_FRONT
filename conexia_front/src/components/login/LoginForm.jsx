@@ -43,15 +43,18 @@ export default function LoginForm() {
     try {
       await loginUser({ email: form.email, password: form.password });
       setMsg({ ok: true, text: "Sesión iniciada con éxito." });
-      window.location.href = "/community";
+      window.location.href = "/";
     } catch (err) {
       let friendlyMsg = "Ocurrió un error al iniciar sesión.";
+
       if (err.message.includes("not verified")) {
         friendlyMsg = "Tu cuenta aún no fue verificada. Revisa tu correo electrónico.";
       } else if (err.message.includes("Invalid credentials")) {
         friendlyMsg = "El correo y la contraseña no coinciden. Verificalos e intentalo de nuevo.";
       } else if (err.message.includes("not found")) {
         friendlyMsg = "El correo ingresado no pertenece a ninguna cuenta registrada.";
+      } else if (err.message.includes("The email is not valid")) {
+      friendlyMsg = "El formato del correo electrónico no es válido.";
       } else {
         friendlyMsg = err.message;
       }

@@ -5,6 +5,7 @@ import InputField from '@/components/form/InputField';
 import { validatePassword, validateRepeatPwd } from '@/utils/validation';
 import { updatePassword } from '@/service/user/userFetch';
 import { useRouter } from 'next/navigation';
+import Button from '@/components/ui/Button';
 
 export default function ChangePasswordForm() {
     const [form, setForm] = useState({
@@ -151,21 +152,18 @@ export default function ChangePasswordForm() {
 
             {/* Botones */}
             <div className="flex justify-center gap-4 mt-6">
-            <button
-                type="submit"
-                className="min-w-[120px] px-5 bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"
-            >
-                Guardar cambios
-            </button>
+                <Button type="submit" className="min-w-[100px] px-4 py-2">
+                    Guardar cambios
+                </Button>
 
-            <button
+              <Button
                 type="button"
                 onClick={() => router.push('/settings/security')}
-                className="min-w-[120px] px-5 py-2 rounded text-white bg-[#ff4953] hover:bg-[#f36970ff]"
-                >
+                variant="secondary"
+                className="min-w-[100px] px-4 py-2"
+              >
                 Cancelar
-            </button>
-
+              </Button>
             </div>
 
             {/* Espacio para mensaje de éxito o error */}

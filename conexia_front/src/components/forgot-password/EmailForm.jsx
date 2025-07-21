@@ -96,7 +96,7 @@ export default function EmailForm() {
             href="/login"
             className="text-conexia-green font-semibold text-sm hover:underline"
           >
-            ← Volver al inicio de sesión
+            Volver al inicio de sesión
           </Link>
         </div>
         <div className="min-h-[40px] mt-4 text-center text-sm">

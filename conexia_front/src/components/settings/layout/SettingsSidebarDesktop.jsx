@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { User, ShieldCheck, Eye } from 'lucide-react';
+import Button from '@/components/ui/Button';
 
 const sections = [
   { id: 'account', label: 'Cuenta', icon: User, path: '/settings/account' },
@@ -30,6 +31,16 @@ export default function SettingsSidebarDesktop({ active }) {
           </li>
         ))}
       </ul>
+      <div className="mt-8 flex justify-center">
+        <Button
+          onClick={() => router.push('/')}
+          variant="informative"
+          className="w-fit"
+        >
+          Volver al inicio
+        </Button>
+      </div>
+
     </nav>
   );
 }
