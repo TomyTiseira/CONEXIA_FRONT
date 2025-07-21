@@ -18,7 +18,6 @@ export default function useInternalUsers() {
   const fetchData = async () => {
     setLoading(true);
     const result = await fetchInternalUsers(filters);
-    console.log('result', result)
     setData(result);
     setLoading(false);
   };
