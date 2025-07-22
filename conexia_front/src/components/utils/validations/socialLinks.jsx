@@ -1,7 +1,7 @@
 import { isValidURL } from "./urls";
 
 export const validateSocialLink = ({ platform, url }) => {
-  if ((platform && !url) || (!platform && url)) {
+  if ((platform && !url) || (!platform && url) || (!platform && !url)) {
     return { valid: false, error: "Completá plataforma y URL." };
   }
   if (url && !isValidURL(url)) {

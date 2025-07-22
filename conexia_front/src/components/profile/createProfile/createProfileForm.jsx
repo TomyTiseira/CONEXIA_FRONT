@@ -200,7 +200,7 @@ export default function CreateProfileForm() {
       ))}
       <button
         type="button"
-        onClick={() => handleAddExperience(form, setForm, setFieldErrors)}
+        onClick={() => handleAddExperience(form, setForm, setFieldErrors, form.birthDate)}
         className="mt-2 text-sm text-conexia-green hover:underline"
       >
         + Agregar experiencia
@@ -262,8 +262,8 @@ export default function CreateProfileForm() {
         + Agregar red social
       </button>
 
-      {errors.socialLinks && (
-        <p className="text-red-600 text-sm mt-1">{errors.socialLinks}</p>
+      {fieldErrors.socialLinks && (
+        <p className="text-red-600 text-sm mt-1">{fieldErrors.socialLinks}</p>
       )}
     </div>
 
