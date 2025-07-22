@@ -26,3 +26,34 @@ export async function fetchInternalUsers(filters) {
       hasPreviousPage: json.data.pagination.hasPreviousPage,
     };
 }
+
+export async function getInternalUserRoles() {
+  const res = await fetch(`${config.API_URL}/internal-users/roles`, {
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Error al obtener roles');
+  }
+
+  return res.json();
+}
+
+export async function createInternalUser(data) {
+  const res = await fetch(`${config.API_URL}/internal-users`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Error al crear usuario');
+  }
+
+  return res.json();
+}
