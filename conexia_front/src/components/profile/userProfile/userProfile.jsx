@@ -6,14 +6,14 @@ import { useParams } from "next/navigation";
 import { getProfileById } from "@/service/profiles/profilesFetch";
 import Image from "next/image";
 import { config } from "@/config";
+import { NotFound } from "@/components/ui";
 
 export default function UserProfile() {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // TODO: Manejo de errores
-
-  // Ahora isOwner viene del backend
+  const [error, setError] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -23,19 +23,39 @@ export default function UserProfile() {
         setIsOwner(data.isOwner);
       } catch (err) {
         setError(err.message || "Error al cargar el perfil");
+        setProfile(null);
+        setIsOwner(false);
       } finally {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [id]);
 
   if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
-  if (!profile) return <p className="text-center mt-10 text-red-500">Perfil no encontrado.</p>;
 
-  // Extraer datos según nueva estructura
-  const isOwner = profile.isOwner;
+  if (error) {
+    return (
+      <NotFound
+        title="Error al cargar el perfil"
+        message={error}
+        showHomeButton={true}
+        showBackButton={false}
+      />
+    );
+  }
+
+  if (!profile) {
+    return (
+      <NotFound
+        title="Usuario no encontrado"
+        message="No se encontró el usuario solicitado."
+        showHomeButton={true}
+        showBackButton={false}
+      />
+    );
+  }
+
   const user = profile.profile;
   return (
     <div className="bg-conexia-soft min-h-screen py-10">
@@ -82,11 +102,20 @@ export default function UserProfile() {
 
         {/* Información en bloques */}
         <div className="mt-6 space-y-6">
+
+
           {user.description && (
             <Section title="Descripción">
               <p>{user.description}</p>
             </Section>
           )}
+
+          {user.birthDate && (
+            <Section title="Fecha de nacimiento">
+              <p>{new Date(user.birthDate).toLocaleDateString()}</p>
+            </Section>
+          )}
+
 
           {Array.isArray(user.skills) && user.skills.length > 0 && (
             <Section title="Habilidades">
@@ -95,7 +124,7 @@ export default function UserProfile() {
                   let skillText = h;
                   // Si es string, limpiar llaves y comillas
                   if (typeof h === 'string') {
-                    skillText = h.replace(/[{\}"]/g, '').trim();
+                    skillText = h.replace(/[{"]}/g, '').trim();
                   } else if (h.name) {
                     skillText = h.name;
                   }
@@ -111,21 +140,29 @@ export default function UserProfile() {
 
           {Array.isArray(user.experience) && user.experience.length > 0 && (
             <Section title="Experiencia">
-              <ul className="list-disc ml-6">
-                {user.experience.map((exp, idx) => (
-                  <li key={idx}>
-                    {exp.title} ({exp.years} año{exp.years > 1 ? 's' : ''})
-                  </li>
-                ))}
+              <ul className="ml-2">
+                {user.experience.map((exp, idx) => {
+                  const start = exp.startDate ? new Date(exp.startDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' }) : '';
+                  const end = exp.isCurrent
+                    ? 'Actualidad'
+                    : exp.endDate
+                      ? new Date(exp.endDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' })
+                      : '';
+                  return (
+                    <li key={idx} className="mb-2">
+                      <div className="font-semibold text-conexia-green">{exp.title}</div>
+                      {exp.project && <div className="text-sm text-conexia-coral">{exp.project}</div>}
+                      <div className="text-xs text-gray-500">
+                        {start} - {end}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </Section>
           )}
 
-          {user.birthDate && (
-            <Section title="Fecha de nacimiento">
-              <p>{new Date(user.birthDate).toLocaleDateString()}</p>
-            </Section>
-          )}
+
 
           {user.socialLinks && Array.isArray(user.socialLinks) && user.socialLinks.length > 0 && (
             <Section title="Redes sociales">

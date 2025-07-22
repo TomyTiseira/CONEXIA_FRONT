@@ -15,12 +15,28 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
+import { useEffect } from 'react';
+import { getProfileById } from '@/service/profiles/profilesFetch';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const userId = 2; // Puedes cambiar esto por el ID dinámico del usuario autenticado
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getProfileById(userId);
+        setProfile(data.data.profile);
+      } catch (err) {
+        setProfile(null);
+      }
+    };
+    fetchProfile();
+  }, [userId]);
 
   const handleLogout = async () => {
     try {
@@ -86,7 +102,16 @@ export default function NavbarCommunity() {
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                <Image src="/yo.png" alt="Perfil" fill className="object-cover" />
+                {profile && profile.profilePicture ? (
+                  <Image
+                    src={`${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`}
+                    alt="Foto de perfil"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full" />
+                )}
               </div>
               <ChevronDown size={16} />
             </button>
