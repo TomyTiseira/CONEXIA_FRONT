@@ -1,13 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { registerUser } from "@/service/user/userFetch";
-import { Eye, EyeOff } from "lucide-react";
+import InputField from "@/components/form/InputField";
+import { validateEmail, validatePassword, validateRepeatPwd } from "@/utils/validation";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -23,46 +23,29 @@ export default function RegisterForm() {
   const [showPwd, setShowPwd] = useState(false);
   const [showRepeatPwd, setShowRepeatPwd] = useState(false);
 
-
-  const validateEmail = (value) => {
-    if (!value) return "";
-    if (!/^\S+@\S+\.\S+$/.test(value)) return "Email inválido.";
-    return "";
-  };
-
-  const validatePassword = (value) => {
-  if (!value) return "";
-
-  const hasMinLength = value.length >= 12;
-  const hasUpperCase = /[A-Z]/.test(value);
-  const hasLowerCase = /[a-z]/.test(value);
-  const hasNumber = /\d/.test(value);
-  const hasSymbol = /[^A-Za-z0-9]/.test(value);
-
-  if (!hasMinLength) return "Debe tener al menos 12 caracteres.";
-  if (!hasUpperCase) return "Debe contener al menos una letra mayúscula.";
-  if (!hasLowerCase) return "Debe contener al menos una letra minúscula.";
-  if (!hasNumber) return "Debe contener al menos un número.";
-  if (!hasSymbol) return "Debe contener al menos un símbolo.";
-
-  return "";
-  };
-
-  const validateRepeatPwd = (value) => {
-    if (!value) return "";
-    if (value !== form.password) return "Las contraseñas no coinciden.";
-    return "";
-  };
-
   const getError = (field) => {
     const value = form[field];
-    if (!touched[field] || focused[field]) return "";
+    if (!touched[field]) return "";
 
-    switch (field) {
-      case "email": return validateEmail(value);
-      case "password": return validatePassword(value);
-      case "repeatPwd": return validateRepeatPwd(value);
-      default: return "";
+    if (field === "repeatPwd") {
+      return validateRepeatPwd(form.password, form.repeatPwd);
+    }
+
+    return {
+      email: validateEmail,
+      password: validatePassword,
+    }[field](value);
+  };
+
+  const handleBlur = (field) => {
+    setFocused((prev) => ({ ...prev, [field]: false }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (touched[field]) {
+      setTouched((prev) => ({ ...prev, [field]: true }));
     }
   };
 
@@ -70,24 +53,33 @@ export default function RegisterForm() {
     e.preventDefault();
     setTouched({ email: true, password: true, repeatPwd: true });
 
-    const hasErrors =
-      validateEmail(form.email) ||
-      validatePassword(form.password) ||
-      validateRepeatPwd(form.repeatPwd);
+    const emailError = validateEmail(form.email);
+    const passwordError = validatePassword(form.password);
+    const repeatPwdError = validateRepeatPwd(form.password, form.repeatPwd);
 
-    if (hasErrors) return setMsg(null);
+    if (emailError || passwordError || repeatPwdError)
+      return setMsg({ ok: false, text: "" });
 
     try {
       await registerUser(form);
-      setMsg({ ok: true, text: "Código enviado a tu correo. Por favor revísalo." });
+      setMsg({
+        ok: true,
+        text: "Código enviado a tu correo. Por favor revísalo.",
+      });
       setTimeout(() => {
-        router.push(`/verify-code?email=${encodeURIComponent(form.email)}`);
+        router.push(`/verify-account?email=${encodeURIComponent(form.email)}`);
       }, 800);
     } catch (error) {
       if (error.message.includes("already exists")) {
-        setMsg({ ok: false, text: "Este correo ya está registrado. Intenta con otro." });
+        setMsg({
+          ok: false,
+          text: "Este correo ya está registrado. Intenta con otro.",
+        });
       } else {
-        setMsg({ ok: false, text: "Ocurrió un error al registrarte. Intenta nuevamente." });
+        setMsg({
+          ok: false,
+          text: "Ocurrió un error al registrarte. Intenta nuevamente.",
+        });
       }
     }
   };
@@ -104,53 +96,60 @@ export default function RegisterForm() {
           Ingresa tu correo y crea una contraseña. Te enviaremos un código por email para verificar tu identidad antes de completar el registro.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {/* Email */}
-          <InputField
-            type="email"
-            placeholder="Correo electrónico"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            onFocus={() => setFocused({ ...focused, email: true })}
-            onBlur={() => {
-              setFocused({ ...focused, email: false });
-              setTouched({ ...touched, email: true });
-            }}
-            error={getError("email")}
-          />
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {/* Campo Correo */}
+          <div>
+            <label className="block text-sm font-medium text-conexia-green mb-1">
+              Correo electrónico
+            </label>
+            <InputField
+              type="email"
+              placeholder="Correo electrónico"
+              value={form.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}
+              onBlur={() => handleBlur("email")}
+              error={getError("email")}
+            />
+          </div>
 
-          <InputField
-            type="password"
-            placeholder="Contraseña"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            onFocus={() => setFocused({ ...focused, password: true })}
-            onBlur={() => {
-              setFocused({ ...focused, password: false });
-              setTouched({ ...touched, password: true });
-            }}
-            error={getError("password")}
-            showToggle={true}
-            show={showPwd}
-            onToggle={() => setShowPwd(!showPwd)}
-          />
+          {/* Campo Contraseña */}
+          <div>
+            <label className="block text-sm font-medium text-conexia-green mb-1">
+              Contraseña
+            </label>
+            <InputField
+              type="password"
+              placeholder="Contraseña"
+              value={form.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              onFocus={() => setFocused((prev) => ({ ...prev, password: true }))}
+              onBlur={() => handleBlur("password")}
+              error={getError("password")}
+              showToggle={true}
+              show={showPwd}
+              onToggle={() => setShowPwd(!showPwd)}
+            />
+          </div>
 
-          {/* Repeat password */}
-          <InputField
-            type="password"
-            placeholder="Repetir contraseña"
-            value={form.repeatPwd}
-            onChange={(e) => setForm({ ...form, repeatPwd: e.target.value })}
-            onFocus={() => setFocused({ ...focused, repeatPwd: true })}
-            onBlur={() => {
-              setFocused({ ...focused, repeatPwd: false });
-              setTouched({ ...touched, repeatPwd: true });
-            }}
-            error={getError("repeatPwd")}
-            showToggle={true}
-            show={showRepeatPwd}
-            onToggle={() => setShowRepeatPwd(!showRepeatPwd)}
-          />
+          {/* Campo Repetir Contraseña */}
+          <div>
+            <label className="block text-sm font-medium text-conexia-green mb-1">
+              Repetir contraseña
+            </label>
+            <InputField
+              type="password"
+              placeholder="Repetir contraseña"
+              value={form.repeatPwd}
+              onChange={(e) => handleChange("repeatPwd", e.target.value)}
+              onFocus={() => setFocused((prev) => ({ ...prev, repeatPwd: true }))}
+              onBlur={() => handleBlur("repeatPwd")}
+              error={getError("repeatPwd")}
+              showToggle={true}
+              show={showRepeatPwd}
+              onToggle={() => setShowRepeatPwd(!showRepeatPwd)}
+            />
+          </div>
 
           <button
             type="submit"
@@ -161,64 +160,20 @@ export default function RegisterForm() {
         </form>
 
         <div className="mt-6 text-center text-sm">
-          ¿Ya estás en Conexia?{" "}
+          ¿Ya sos parte de Conexia?{" "}
           <Link href="/login" className="text-conexia-coral hover:underline font-semibold">
             Iniciar sesión
           </Link>
         </div>
 
-        <div className="min-h-[24px] mt-4 text-center text-sm transition-all duration-300">
+        <div className="min-h-[40px] mt-4 text-center text-sm transition-all duration-300">
           {msg && (
             <p className={`${msg.ok ? "text-green-600" : "text-red-600"}`}>
               {msg.text}
             </p>
           )}
         </div>
-
-
       </div>
-    </div>
-  );
-}
-
-
-function InputField({
-  type,
-  placeholder,
-  value,
-  onChange,
-  onFocus,
-  onBlur,
-  error,
-  showToggle = false,
-  show = false,
-  onToggle,
-}) {
-  return (
-    <div className="min-h-[64px] relative">
-      <input
-        type={show && type === "password" ? "text" : type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring pr-10 ${
-          error
-            ? "border-red-500 ring-red-300"
-            : "border-gray-300 focus:ring-conexia-green/40"
-        }`}
-      />
-      {showToggle && (
-        <button
-          type="button"
-          onClick={onToggle}
-          className="absolute right-3 top-2.5 text-conexia-green"
-        >
-          {show ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-      )}
-      <p className="text-xs text-red-600 mt-1 h-[14px]">{error}</p>
     </div>
   );
 }

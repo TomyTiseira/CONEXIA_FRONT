@@ -1,6 +1,6 @@
 import RegisterForm from "@/components/register/RegisterForm";
 import { Footer } from "@/components/Footer";
-import HeroPanel from "@/components/common/HeroPanel";
+import HeroPanel from "@/components/hero/HeroPanel";
 
 export default function RegisterPage() {
   return (

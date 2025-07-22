@@ -89,7 +89,7 @@ export const colors = {
   },
   secondary: {
     normal: '#ff4953',
-    hover: '#e6424b',
+    hover: '#f36970ff',
     active: '#cc3a42',
     light: {
       normal: '#ffedee',

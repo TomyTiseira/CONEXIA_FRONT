@@ -3,7 +3,7 @@ import { Users, Star, BadgeCheck, Settings } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-export function Hero() {
+export default function HeroHome() {
   const IconBoxes = [Users, Star, BadgeCheck, Settings];
   const [isMobile, setIsMobile] = useState(false);
 

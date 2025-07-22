@@ -1,4 +1,5 @@
 import { config } from '../../config';
+import { fetchWithRefresh } from '@/service/auth/fetchWithRefresh';
 
 export const fetchPing = async() => {
   const response = await fetch(`${config.API_URL}/users/ping`, {
@@ -71,3 +72,44 @@ export async function resendVerification(email) {
 
   return data;
 }
+
+export async function updatePassword(data) {
+  const response = await fetchWithRefresh(`${config.API_URL}/users/update`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      actualPassword: data.currentPassword,
+      newPassword: data.newPassword,
+      confirmPassword: data.repeatPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'No se pudo actualizar la contraseña');
+  }
+
+  return await response.json();
+}
+
+
+export const getRoleById = async (id) => {
+    try {
+      const res = await fetchWithRefresh(
+        `${config.API_URL}/users/get-role-by-id?id=${id}`,
+        { method: "GET" }
+      );
+
+      if (!res.ok) {
+        throw new Error("No se pudo obtener el rol");
+      }
+
+      const data = await res.json();
+      return data.data.name;
+    } catch (error) {
+      console.error("Error al obtener el rol:", error);
+      return null;
+    }
+  };
