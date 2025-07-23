@@ -1,4 +1,6 @@
 import { config } from '@/config';
+import { fetchWithRefresh } from "@/service/auth/fetchWithRefresh";
+
 
 export async function fetchInternalUsers(filters) {
     const params = new URLSearchParams();
@@ -53,6 +55,20 @@ export async function createInternalUser(data) {
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || 'Error al crear usuario');
+  }
+
+  return res.json();
+}
+
+export async function deleteInternalUser(id) {
+  const res = await fetchWithRefresh(`${config.API_URL}/internal-users/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Error al eliminar usuario');
   }
 
   return res.json();

@@ -3,15 +3,19 @@
 import { useState } from 'react';
 import InternalUsersTable from '@/components/admin/internal-users/InternalUsersTable';
 import InternalUsersFilters from '@/components/admin/internal-users/InternalUsersFilters';
-import useInternalUsers from '@/hooks/useInternalUsers';
+import useInternalUsers from '@/hooks/internal-users/useInternalUsers';
 import NavbarAdmin from '@/components/navbar/NavbarAdmin';
 import Button from '@/components/ui/Button';
 import { Plus } from 'lucide-react';
 import CreateInternalUserModal from '@/components/admin/internal-users/CreateInternalUserModal';
+import useDeleteInternalUser from '@/hooks/internal-users/useDeleteInternalUser';
+import DeleteInternalUserModal from '@/components/admin/internal-users/DeleteInternalUserModal';
 
 export default function InternalUsersPage() {
   const internalUsers = useInternalUsers();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const { handleDelete, deletingId } = useDeleteInternalUser();
 
   return (
     <>
@@ -47,12 +51,26 @@ export default function InternalUsersPage() {
         </div>
 
         <InternalUsersFilters {...internalUsers} />
-        <InternalUsersTable {...internalUsers} />
+        <InternalUsersTable
+          {...internalUsers}
+          onDeleteUser={(user) => setUserToDelete(user)}
+        />
       </main>
 
       {isModalOpen && (
         <CreateInternalUserModal
           onClose={() => setIsModalOpen(false)}
+          onUserCreated={internalUsers.refetch}
+        />
+      )}
+
+      {userToDelete && (
+        <DeleteInternalUserModal
+          email={userToDelete.email}
+          loading={deletingId === userToDelete.id}
+          onConfirm={() => handleDelete(userToDelete.id)}
+          onCancel={() => setUserToDelete(null)}
+          onUserDeleted={internalUsers.refetch}
         />
       )}
     </>
