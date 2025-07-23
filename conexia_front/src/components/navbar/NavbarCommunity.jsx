@@ -24,8 +24,9 @@ export default function NavbarCommunity() {
   const router = useRouter();
   const { logout } = useAuth();
   const [profile, setProfile] = useState(null);
-  const userId = 2; // Puedes cambiar esto por el ID dinámico del usuario autenticado
-
+  const { user } = useAuth();
+  const userId = user?.id; 
+  
   useEffect(() => {
     const fetchProfile = async () => {
       try {
