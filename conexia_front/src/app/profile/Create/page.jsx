@@ -1,6 +1,5 @@
 import CreateProfileForm from "@/components/profile/createProfile/createProfileForm";
 import { Footer } from "@/components/Footer";
-import HeroPanel from "@/components/common/HeroPanel";
 
 export default function CreateProfilePage() {
   return (
