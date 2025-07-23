@@ -74,23 +74,22 @@ export default function UserProfile() {
           )}
         </div>
         <div className="relative flex items-center mb-4" style={{ minHeight: 64 }}>
-          <div className="w-32 h-32">
+          <div className="w-[100px] h-[100px] rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-200 flex items-center justify-center">
             {user.profilePicture ? (
-              <Image
-                src={`${config.IMAGE_URL}/${user.profilePicture}`}
-                alt="Foto de perfil"
-                width={128}
-                height={128}
-                className="rounded-full border-4 border-white shadow-md bg-gray-200"
-                priority
-              />
-            ) : (
-              <div className="w-full h-full rounded-full border-4 border-white shadow-md bg-gray-200 flex items-center justify-center">
-                {/* Espacio gris, puedes agregar un ícono SVG si lo deseas */}
+              <div className="relative w-full h-full">
+                <Image
+                  src={`${config.IMAGE_URL}/${user.profilePicture}`}
+                  alt="Foto de perfil"
+                  fill
+                  className="object-cover rounded-full"
+                  priority
+                />
               </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center rounded-full" />
             )}
           </div>
-          <div className="ml-6">
+          <div className="ml-8 flex flex-col justify-center h-full">
             <h2 className="text-2xl font-bold text-conexia-green">
               {user.name} {user.lastName}
             </h2>
