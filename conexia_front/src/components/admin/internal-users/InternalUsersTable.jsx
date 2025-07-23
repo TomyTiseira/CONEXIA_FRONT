@@ -15,6 +15,7 @@ export default function InternalUsersTable({
   filters,
   setFilters,
   loading,
+  onDeleteUser,
 }) {
   const showEmptyMessage = !loading && users.length === 0;
 
@@ -45,22 +46,35 @@ export default function InternalUsersTable({
             </tr>
           ) : (
             users.map((user) => (
-              <tr key={user.id} className="border-b hover:bg-gray-50">
+              <tr
+                key={user.id}
+                className="border-b hover:bg-gray-50 h-[52px]" // altura fija de la fila
+              >
                 <td className="p-2 truncate max-w-[300px]">{user.email}</td>
                 <td className="p-2 w-[150px] text-center">{roleLabels[user.role] || user.role}</td>
                 <td className="p-2 w-[180px] text-center">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
                 <td className="p-2 text-center">{user.isActive ? 'SI' : 'NO'}</td>
-                <td className="p-2 text-center">
-                  <div className="flex justify-center gap-x-2">
-                    <Button variant="edit" className="px-3 py-1 text-xs">
-                      Editar
-                    </Button>
-                    <Button variant="delete" className="px-3 py-1 text-xs">
-                      Eliminar
-                    </Button>
-                  </div>
+                <td className="p-2 text-center align-middle">
+                  {user.isActive ? (
+                    <div className="flex justify-center gap-x-2">
+                      <Button variant="edit" className="px-3 py-1 text-xs">
+                        Editar
+                      </Button>
+                      <Button
+                        variant="delete"
+                        className="px-3 py-1 text-xs"
+                        onClick={() => onDeleteUser(user)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-center h-full items-center">
+                      <span className="text-gray-400 text-xs italic">Inactivo</span>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))

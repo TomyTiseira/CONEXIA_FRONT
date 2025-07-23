@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useInternalRoles } from '@/hooks/useInternalRoles';
-import { useCreateInternalUser } from '@/hooks/useCreateInternalUser';
+import { useInternalRoles } from '@/hooks/internal-users/useInternalRoles';
+import { useCreateInternalUser } from '@/hooks/internal-users/useCreateInternalUser';
 import InputField from '@/components/form/InputField';
 import Button from '@/components/ui/Button';
 import { validateEmail, validatePassword } from '@/utils/validation';
 import { ROLES_NAME } from '@/constants/roles';
 import SelectField from '@/components/form/SelectField';
 
-export default function CreateInternalUserModal({ onClose }) {
+export default function CreateInternalUserModal({ onClose, onUserCreated }) {
   const { roles } = useInternalRoles();
   const { createUser, loading } = useCreateInternalUser();
 
@@ -74,7 +74,9 @@ export default function CreateInternalUserModal({ onClose }) {
 
       setTimeout(() => {
         onClose();
+        if (onUserCreated) onUserCreated();
       }, 1500);
+      
     } catch (error) {
       if (error.message.includes('already exists')) {
         setMsg({ ok: false, text: 'Este correo ya está registrado.' });
