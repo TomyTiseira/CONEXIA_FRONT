@@ -22,6 +22,7 @@ export default function Button({
         delete:'bg-red-200 text-red-800 hover:bg-red-300 focus:ring-red-300',
         edit:'bg-[#e4f1f1] text-conexia-green hover:bg-[#d6ebeb]',
         add:'bg-[#cde6e6] text-conexia-green hover:bg-[#b9dddd]',
+        danger: 'bg-red-600 text-white hover:bg-red-700',
     };
 
     return (

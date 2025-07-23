@@ -15,6 +15,8 @@ export default function useInternalUsers() {
   const [data, setData] = useState({ users: [], hasNextPage: false, hasPreviousPage: false });
   const [loading, setLoading] = useState(false);
 
+  const [reloadTrigger, setReloadTrigger] = useState(0); // ✅ nuevo
+
   const fetchData = async () => {
     setLoading(true);
     const result = await fetchInternalUsers(filters);
@@ -24,7 +26,9 @@ export default function useInternalUsers() {
 
   useEffect(() => {
     fetchData();
-  }, [filters]);
+  }, [filters, reloadTrigger]); // ✅ dependemos también de reloadTrigger
+
+  const refetch = () => setReloadTrigger((prev) => prev + 1); // ✅ función para forzar refetch
 
   return {
     users: data.users,
@@ -33,5 +37,6 @@ export default function useInternalUsers() {
     filters,
     setFilters,
     loading,
+    refetch, // ✅ lo devolvemos
   };
 }
