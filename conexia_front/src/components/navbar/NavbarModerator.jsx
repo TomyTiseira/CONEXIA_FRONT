@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 
-export default function NavbarAdmin() {
+export default function NavbarModerator() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -35,7 +35,6 @@ export default function NavbarAdmin() {
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Servicios', href: '#servicios', icon: Briefcase },
     { label: 'Proyectos', href: '#proyectos', icon: Layers },
-    { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
   ];
 
   const profileImage = '/images/default-avatar.png'; // Ruta pública a tu imagen por defecto

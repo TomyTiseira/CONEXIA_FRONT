@@ -5,6 +5,8 @@ import NavbarCommunity from "@/components/navbar/NavbarCommunity";
 import ClientAdmin from "@/components/admin/ClientAdmin";
 import NavbarAdmin from "@/components/navbar/NavbarAdmin";
 import NavbarHome from "@/components/navbar/NavbarHome";
+import NavbarModerator from "@/components/navbar/NavbarModerator";
+import ClientModerator from "@/components/moderator/ClientModerator";
 import HeroHome from "@/components/hero/HeroHome";
 import { Footer } from "@/components/Footer";
 import { ROLES } from "@/constants/roles";
@@ -34,10 +36,9 @@ export default function Home() {
       </div>
     ),
     [ROLES.MODERATOR]: (
-      <div className="min-h-screen bg-[#f3f9f8] p-8">
-        <h1 className="text-3xl font-bold text-conexia-green mb-6">Panel de Moderación</h1>
-        <p className="text-conexia-green/70">Bienvenido al panel de moderación</p>
-        {/* Aquí irían los componentes específicos del moderador */}
+      <div className="min-h-screen bg-[#f3f9f8]">
+        <NavbarModerator />
+        <ClientModerator />
       </div>
     )
   };
