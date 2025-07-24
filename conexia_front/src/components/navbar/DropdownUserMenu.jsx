@@ -16,6 +16,7 @@ export default function DropdownUserMenu({ onLogout }) {
     const [error, setError] = useState(null);
     const { user } = useAuth();
     const userId = user?.id;
+    const defaultAvatar = '/images/default-avatar.png';
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -41,16 +42,16 @@ export default function DropdownUserMenu({ onLogout }) {
             {profile ? (
                 <div className="px-4 py-3 flex items-center gap-3 border-b">
                     <div className="w-12 h-12 relative rounded-full overflow-hidden">
-                        {profile.profilePicture ? (
-                            <Image
-                                src={`${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`}
-                                alt="Foto de perfil"
-                                fill
-                                className="object-cover"
-                            />
-                        ) : (
-                            <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full" />
-                        )}
+                        <Image
+                        src={
+                            profile.profilePicture
+                            ? `${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`
+                            : defaultAvatar
+                        }
+                        alt="Foto de perfil"
+                        fill
+                        className="object-cover"
+                        />
                     </div>
                     <div className="flex flex-col justify-center">
                         <span className="font-semibold text-sm">{profile.name} {profile.lastName}</span>
