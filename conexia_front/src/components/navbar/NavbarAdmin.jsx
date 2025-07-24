@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { getProfileById } from '@/service/profiles/profilesFetch';
 import {
   MessageCircle,
   Bell,
@@ -18,6 +19,21 @@ import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 
 export default function NavbarAdmin() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const { user } = useAuth();
+  const userId = user?.id;
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getProfileById(userId);
+        setProfile(data.data.profile);
+      } catch (err) {
+        setProfile(null);
+      }
+    };
+    if (userId) fetchProfile();
+  }, [userId]);
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
@@ -87,7 +103,16 @@ export default function NavbarAdmin() {
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                <Image src="/yo.png" alt="Perfil" fill className="object-cover" />
+                {profile && profile.profilePicture ? (
+                  <Image
+                    src={`${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`}
+                    alt="Foto de perfil"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full" />
+                )}
               </div>
               <ChevronDown size={16} />
             </button>
@@ -108,7 +133,16 @@ export default function NavbarAdmin() {
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                <Image src="/yo.png" alt="Perfil" fill className="object-cover" />
+                {profile && profile.profilePicture ? (
+                  <Image
+                    src={`${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`}
+                    alt="Foto de perfil"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full" />
+                )}
               </div>
               <ChevronDown size={16} />
             </button>

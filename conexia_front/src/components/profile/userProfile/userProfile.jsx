@@ -2,14 +2,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getProfileById } from "@/service/profiles/profilesFetch";
 import Image from "next/image";
 import { config } from "@/config";
 import { NotFound } from "@/components/ui";
+import Button from "@/components/ui/Button";
+
+
 
 export default function UserProfile() {
   const { id } = useParams();
+  const router = useRouter();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -123,7 +127,7 @@ export default function UserProfile() {
                   let skillText = h;
                   // Si es string, limpiar llaves y comillas
                   if (typeof h === 'string') {
-                    skillText = h.replace(/[{"]}/g, '').trim();
+                    skillText = h.replace(/[{"}]}/g, '').trim();
                   } else if (h.name) {
                     skillText = h.name;
                   }
@@ -184,6 +188,10 @@ export default function UserProfile() {
             </Section>
           )}
         </div>
+      </div>
+      {/* Botón de volver a la derecha, fuera del contenedor */}
+      <div className="max-w-5xl mx-auto flex justify-end mt-6">
+        <Button variant="primary" onClick={() => router.push('/')}>← Volver a la comunidad</Button>
       </div>
     </div>
   );
