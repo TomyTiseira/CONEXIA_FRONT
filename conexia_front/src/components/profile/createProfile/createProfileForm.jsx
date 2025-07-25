@@ -337,6 +337,7 @@ export default function CreateProfileForm() {
         if (!firstErrorField && firstExpErrorIndex === null) {
           firstExpErrorIndex = i;
         }
+      }
       if (errs.title || errs.project || errs.startDate || errs.endDate || errs.confirmation) {
         expHasError = true;
       }
@@ -356,7 +357,7 @@ export default function CreateProfileForm() {
         if (!firstErrorField && firstExpErrorIndex === null && firstSocialErrorIndex === null) {
           firstSocialErrorIndex = i;
         }
-
+      }
       if (errs.platform || errs.url || errs.confirmation) {
         socialHasError = true;
       }
