@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,14 +15,32 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
+import { getProfileById } from '@/service/profiles/profilesFetch';
+import { config } from '@/config';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
-  const profile = user?.profile;
-  const defaultAvatar = '/images/default-admin-avatar.png';
+  const userId = user?.id;
+  const defaultAvatar = '/images/default-avatar.png';
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!userId) return;
+      
+      try {
+        const data = await getProfileById(userId);
+        setProfile(data.data.profile);
+      } catch (err) {
+        setProfile(null);
+      }
+    };
+    
+    fetchProfile();
+  }, [userId]);
 
   const handleLogout = async () => {
     try {
@@ -91,7 +109,7 @@ export default function NavbarCommunity() {
                   <Image
                     src={
                       profile && profile.profilePicture
-                        ? `${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`
+                        ? `${config.IMAGE_URL}/${profile.profilePicture}`
                         : defaultAvatar
                     }
                     alt="Foto de perfil"
@@ -121,7 +139,7 @@ export default function NavbarCommunity() {
                   <Image
                     src={
                       profile && profile.profilePicture
-                        ? `${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`
+                        ? `${config.IMAGE_URL}/${profile.profilePicture}`
                         : defaultAvatar
                     }
                     alt="Foto de perfil"
