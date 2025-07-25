@@ -15,30 +15,14 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
-import { useEffect } from 'react';
-import { getProfileById } from '@/service/profiles/profilesFetch';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const { user } = useAuth();
-  const userId = user?.id; 
+  const { logout, user } = useAuth();
+  const profile = user?.profile;
   const defaultAvatar = '/images/default-admin-avatar.png';
-  
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfileById(userId);
-        setProfile(data.data.profile);
-      } catch (err) {
-        setProfile(null);
-      }
-    };
-    fetchProfile();
-  }, [userId]);
 
   const handleLogout = async () => {
     try {
