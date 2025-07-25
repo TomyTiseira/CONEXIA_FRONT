@@ -26,6 +26,7 @@ export default function NavbarCommunity() {
   const [profile, setProfile] = useState(null);
   const { user } = useAuth();
   const userId = user?.id; 
+  const defaultAvatar = '/images/default-admin-avatar.png';
   
   useEffect(() => {
     const fetchProfile = async () => {
@@ -102,18 +103,18 @@ export default function NavbarCommunity() {
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
-              <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                {profile && profile.profilePicture ? (
+                <div className="w-8 h-8 rounded-full overflow-hidden relative">
                   <Image
-                    src={`${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`}
+                    src={
+                      profile && profile.profilePicture
+                        ? `${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`
+                        : defaultAvatar
+                    }
                     alt="Foto de perfil"
                     fill
                     className="object-cover"
                   />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full" />
-                )}
-              </div>
+                </div>
               <ChevronDown size={16} />
             </button>
             {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
@@ -132,20 +133,18 @@ export default function NavbarCommunity() {
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
-              <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                {profile && profile.profilePicture ? (
-                  <Image 
-                    src={`${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`} 
-                    alt="Perfil" 
-                    fill 
-                    className="object-cover" 
+                <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                  <Image
+                    src={
+                      profile && profile.profilePicture
+                        ? `${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`
+                        : defaultAvatar
+                    }
+                    alt="Foto de perfil"
+                    fill
+                    className="object-cover"
                   />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-500 text-xs">Sin foto</span>
-                  </div>
-                )}
-              </div>
+                </div>
               <ChevronDown size={16} />
             </button>
             {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
