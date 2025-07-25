@@ -73,3 +73,22 @@ export async function deleteInternalUser(id) {
 
   return res.json();
 }
+
+export async function updateInternalUser(id, data) {
+  const res = await fetchWithRefresh(`${config.API_URL}/internal-users/${id}`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Error al actualizar usuario');
+    console.log(error.message);
+  }
+
+  return res.json();
+}
