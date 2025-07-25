@@ -10,11 +10,13 @@ import { Plus } from 'lucide-react';
 import CreateInternalUserModal from '@/components/admin/internal-users/CreateInternalUserModal';
 import useDeleteInternalUser from '@/hooks/internal-users/useDeleteInternalUser';
 import DeleteInternalUserModal from '@/components/admin/internal-users/DeleteInternalUserModal';
+import EditInternalUserModal from '@/components/admin/internal-users/EditInternalUserModal';
 
 export default function InternalUsersPage() {
   const internalUsers = useInternalUsers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [userToEdit, setUserToEdit] = useState(null);
   const { handleDelete, deletingId } = useDeleteInternalUser();
 
   return (
@@ -54,6 +56,7 @@ export default function InternalUsersPage() {
         <InternalUsersTable
           {...internalUsers}
           onDeleteUser={(user) => setUserToDelete(user)}
+          onEditUser={(user) => setUserToEdit(user)}
         />
       </main>
 
@@ -71,6 +74,14 @@ export default function InternalUsersPage() {
           onConfirm={() => handleDelete(userToDelete.id)}
           onCancel={() => setUserToDelete(null)}
           onUserDeleted={internalUsers.refetch}
+        />
+      )}
+
+      {userToEdit && (
+        <EditInternalUserModal
+          user={userToEdit}
+          onClose={() => setUserToEdit(null)}
+          onUserUpdated={internalUsers.refetch}
         />
       )}
     </>

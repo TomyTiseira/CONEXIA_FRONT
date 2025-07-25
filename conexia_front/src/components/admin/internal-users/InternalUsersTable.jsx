@@ -2,11 +2,7 @@
 
 import Pagination from '@/components/common/Pagination';
 import Button from '@/components/ui/Button';
-
-const roleLabels = {
-  admin: 'Administrador',
-  moderador: 'Moderador',
-};
+import { ROLES_NAME } from '@/constants/roles';
 
 export default function InternalUsersTable({
   users = [],
@@ -16,6 +12,7 @@ export default function InternalUsersTable({
   setFilters,
   loading,
   onDeleteUser,
+  onEditUser,
 }) {
   const showEmptyMessage = !loading && users.length === 0;
 
@@ -51,7 +48,7 @@ export default function InternalUsersTable({
                 className="border-b hover:bg-gray-50 h-[52px]" // altura fija de la fila
               >
                 <td className="p-2 truncate max-w-[300px]">{user.email}</td>
-                <td className="p-2 w-[150px] text-center">{roleLabels[user.role] || user.role}</td>
+                <td className="p-2 w-[150px] text-center">{ROLES_NAME[user.role] || user.role}</td>
                 <td className="p-2 w-[180px] text-center">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
@@ -59,7 +56,11 @@ export default function InternalUsersTable({
                 <td className="p-2 text-center align-middle">
                   {user.isActive ? (
                     <div className="flex justify-center gap-x-2">
-                      <Button variant="edit" className="px-3 py-1 text-xs">
+                      <Button
+                        variant="edit"
+                        className="px-3 py-1 text-xs"
+                        onClick={() => onEditUser(user)}
+                      >
                         Editar
                       </Button>
                       <Button
