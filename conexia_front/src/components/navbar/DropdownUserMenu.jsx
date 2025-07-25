@@ -5,36 +5,13 @@ import { LogOut, Settings } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
-import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getProfileById } from '@/service/profiles/profilesFetch';
 
 export default function DropdownUserMenu({ onLogout }) {
     const router = useRouter();
-    const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const { user } = useAuth();
-    const userId = user?.id;
+    const profile = user?.profile;
     const defaultAvatar = '/images/default-avatar.png';
-
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const data = await getProfileById(userId);
-                setProfile(data.data.profile);
-            } catch (err) {
-                setError(err.message || 'Error al cargar el perfil');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchProfile();
-    }, [userId]);
-
-    if (loading) {
-        return null;
-    }
 
     return (
         <div className="absolute right-0 top-12 w-56 bg-white border rounded shadow-md z-50 py-3 text-conexia-green">
@@ -59,7 +36,6 @@ export default function DropdownUserMenu({ onLogout }) {
                         <Button 
                             className="px-3 py-0.5 text-xs" 
                             onClick={() => {
-                                console.log('Navegando a:', `/profile/userProfile/${userId}`);
                                 window.location.href = `/profile/userProfile/${userId}`;
                             }}
                         >

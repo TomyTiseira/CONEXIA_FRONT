@@ -61,7 +61,7 @@ export default function InputField({
             : "border-gray-300 focus:ring-conexia-green/40"
         } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""} ${className}`}
       />
-      {showToggle && (
+      {showToggle && !disabled && (
         <button
           type="button"
           onClick={onToggle}
