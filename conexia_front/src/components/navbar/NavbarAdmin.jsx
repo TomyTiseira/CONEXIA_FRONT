@@ -15,6 +15,7 @@ import {
   Users,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
+import { config } from '@/config';
 
 export default function NavbarAdmin() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -38,7 +39,7 @@ export default function NavbarAdmin() {
     { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
   ];
 
-  const profileImage = '/images/default-avatar.png'; // Ruta pública a tu imagen por defecto
+  const defaultAvatar = '/images/default-avatar.png';
 
   return (
     <header className="bg-white shadow sticky top-0 z-50">
@@ -90,8 +91,14 @@ export default function NavbarAdmin() {
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
                 <Image
-                  src={profileImage}
-                  alt="Foto de perfil predeterminada"
+                  src={
+                    (user?.role === 'admin' || user?.role === 'moderator') 
+                      ? defaultAvatar
+                      : (user && user.profilePicture
+                        ? `${config.IMAGE_URL}/${user.profilePicture}`
+                        : defaultAvatar)
+                  }
+                  alt="Foto de perfil"
                   fill
                   className="object-cover"
                 />
@@ -116,8 +123,14 @@ export default function NavbarAdmin() {
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
                 <Image
-                  src={profileImage}
-                  alt="Foto de perfil predeterminada"
+                  src={
+                    (user?.role === 'admin' || user?.role === 'moderator') 
+                      ? defaultAvatar
+                      : (user && user.profilePicture
+                        ? `${config.IMAGE_URL}/${user.profilePicture}`
+                        : defaultAvatar)
+                  }
+                  alt="Foto de perfil"
                   fill
                   className="object-cover"
                 />
