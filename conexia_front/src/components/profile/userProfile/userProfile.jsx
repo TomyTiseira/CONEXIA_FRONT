@@ -19,7 +19,7 @@ import Button from "@/components/ui/Button";
 
 
 export default function UserProfile() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, updateUser } = useAuth();
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -92,6 +92,7 @@ export default function UserProfile() {
       const textFields = {
         name: user.name,
         lastName: user.lastName,
+        birthDate: user.birthDate,
         phoneNumber: user.phoneNumber,
         country: user.country,
         state: user.state,
@@ -103,7 +104,6 @@ export default function UserProfile() {
         const newValue = formData[field] || '';
         if (originalValue !== newValue) {
           changedFields[field] = newValue;
-          console.log(`Campo cambiado - ${field}: "${originalValue}" -> "${newValue}"`);
         }
       });
       
@@ -119,9 +119,9 @@ export default function UserProfile() {
       
       if (!arraysEqual(originalSkills, newSkills)) {
         changedFields.skills = newSkills;
-        console.log('Skills cambiaron:', originalSkills, '->', newSkills);
       }
       
+      // Siempre incluir experiencias (todas, no solo las que cambiaron)
       // Limpiar experiencias del formulario
       const cleanedExperience = [];
       if (Array.isArray(formData.experience)) {
@@ -134,6 +134,7 @@ export default function UserProfile() {
               isCurrent: Boolean(exp.isCurrent)
             };
             
+            // Solo agregar endDate si no es actual y tiene valor
             if (!exp.isCurrent && exp.endDate?.trim()) {
               experienceItem.endDate = String(exp.endDate).trim();
             }
@@ -143,37 +144,10 @@ export default function UserProfile() {
         });
       }
       
-      // Limpiar experiencias originales para comparación justa
-      const cleanedOriginalExperience = [];
-      const originalExperience = user.experience || [];
-      if (Array.isArray(originalExperience)) {
-        originalExperience.forEach((exp) => {
-          if (exp && typeof exp === 'object') {
-            const experienceItem = {
-              title: String(exp.title || '').trim(),
-              project: String(exp.project || '').trim(),
-              startDate: String(exp.startDate || '').trim(),
-              isCurrent: Boolean(exp.isCurrent)
-            };
-            
-            if (!exp.isCurrent && exp.endDate) {
-              experienceItem.endDate = String(exp.endDate).trim();
-            }
-            
-            cleanedOriginalExperience.push(experienceItem);
-          }
-        });
-      }
+      // Siempre incluir las experiencias para asegurar que se mantenga el estado
+      changedFields.experience = cleanedExperience;
       
-      // Comparar experiencias con función profunda
-      const experienceChanged = JSON.stringify(cleanedOriginalExperience.sort((a,b) => a.title.localeCompare(b.title))) !== 
-                               JSON.stringify(cleanedExperience.sort((a,b) => a.title.localeCompare(b.title)));
-      
-      if (experienceChanged) {
-        changedFields.experience = cleanedExperience;
-        console.log('Experience cambió:', cleanedOriginalExperience, '->', cleanedExperience);
-      }
-      
+      // Siempre incluir redes sociales (todas, no solo las que cambiaron)
       // Limpiar socialLinks del formulario
       const cleanedSocialLinks = [];
       if (Array.isArray(formData.socialLinks)) {
@@ -187,49 +161,23 @@ export default function UserProfile() {
         });
       }
       
-      // Limpiar socialLinks originales para comparación justa
-      const cleanedOriginalSocialLinks = [];
-      const originalSocialLinks = user.socialLinks || [];
-      if (Array.isArray(originalSocialLinks)) {
-        originalSocialLinks.forEach((link) => {
-          if (link && typeof link === 'object') {
-            cleanedOriginalSocialLinks.push({
-              platform: String(link.platform || '').trim(),
-              url: String(link.url || '').trim()
-            });
-          }
-        });
-      }
-      
-      // Comparar socialLinks con función profunda
-      const socialLinksChanged = JSON.stringify(cleanedOriginalSocialLinks.sort((a,b) => a.platform.localeCompare(b.platform))) !== 
-                                 JSON.stringify(cleanedSocialLinks.sort((a,b) => a.platform.localeCompare(b.platform)));
-      
-      if (socialLinksChanged) {
-        changedFields.socialLinks = cleanedSocialLinks;
-        console.log('SocialLinks cambió:', cleanedOriginalSocialLinks, '->', cleanedSocialLinks);
-      }
+      // Siempre incluir las redes sociales para asegurar que se mantenga el estado
+      changedFields.socialLinks = cleanedSocialLinks;
       
       // Agregar archivos si son nuevos
       if (formData.profilePicture instanceof File) {
         changedFields.profilePicture = formData.profilePicture;
-        console.log('Nueva foto de perfil:', formData.profilePicture.name);
       }
       if (formData.coverPicture instanceof File) {
         changedFields.coverPicture = formData.coverPicture;
-        console.log('Nueva foto de portada:', formData.coverPicture.name);
       }
       
       // Solo enviar si hay cambios
       if (Object.keys(changedFields).length === 0) {
-        console.log('No hay cambios para enviar');
-        alert('No se detectaron cambios en el perfil');
         return;
       }
       
-      console.log('Campos que cambiaron:', Object.keys(changedFields));
-      
-      // Preparar payload solo con campos cambiados (sin incluir token aquí)
+      // Preparar payload solo con campos cambiados
       const payload = {
         ...changedFields
       };
@@ -242,8 +190,15 @@ export default function UserProfile() {
         payload.coverPicture = formData.coverPicture;
       }
       
-      await updateUserProfile(payload);
-      // Refrescar perfil desde backend
+      const response = await updateUserProfile(payload);
+      
+      // Si el backend devuelve el usuario actualizado y es el perfil del usuario logueado,
+      // actualizar el estado de autenticación
+      if (response.success && response.data?.user && authUser && authUser.id === parseInt(id)) {
+        updateUser(response.data.user);
+      }
+      
+      // Refrescar perfil desde backend para mostrar los cambios
       const data = await getProfileById(id);
       setProfile(data.data);
     } catch (err) {
