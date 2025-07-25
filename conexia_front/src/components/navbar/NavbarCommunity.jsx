@@ -133,7 +133,18 @@ export default function NavbarCommunity() {
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                <Image src="/yo.png" alt="Perfil" fill className="object-cover" />
+                {profile && profile.profilePicture ? (
+                  <Image 
+                    src={`${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`} 
+                    alt="Perfil" 
+                    fill 
+                    className="object-cover" 
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-500 text-xs">Sin foto</span>
+                  </div>
+                )}
               </div>
               <ChevronDown size={16} />
             </button>
