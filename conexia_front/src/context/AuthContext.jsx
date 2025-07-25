@@ -48,6 +48,11 @@ export const AuthProvider = ({ children }) => {
     validateSession();
   }, [validateSession]);
 
+  const updateUser = useCallback((userData) => {
+    setUser(userData);
+    setError(null);
+  }, []);
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -55,6 +60,7 @@ export const AuthProvider = ({ children }) => {
     error,
     logout,
     refetch: validateSession,
+    updateUser,
   };
 
   return (

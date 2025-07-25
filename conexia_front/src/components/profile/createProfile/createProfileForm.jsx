@@ -9,6 +9,8 @@ import { getDocumentTypes } from "@/service/profiles/profilesFetch";
 import { handleDynamicFieldChange, validateDynamicField } from "@/components/utils/validations/addElement";
 import { removeItemFromFormArray } from "@/components/utils/removeItemArray";
 import { toggleHabilidad } from "@/components/utils/toggleHabilidad";
+import { useAuth } from "@/context/AuthContext";
+import { isValidPhoneNumber, validatePhoneWithInfo } from "@/components/utils/validations/phones";
 
 import InputField from "@/components/form/InputField";
 import TextArea from "@/components/form/InputField";
@@ -21,6 +23,7 @@ export default function CreateProfileForm() {
   const profilePicRef = useRef(null);
   const coverPicRef = useRef(null);
   const router = useRouter();
+  const { updateUser } = useAuth();
 
   const [form, setForm] = useState({
     name: "",
@@ -134,6 +137,37 @@ export default function CreateProfileForm() {
       setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
     }
   };
+
+  // Funciones específicas para el teléfono
+  const handlePhoneChange = (value) => {
+    setForm((prev) => ({ ...prev, phoneNumber: value }));
+    // Solo validar si hay contenido y el campo ha sido tocado
+    if (touched.phoneNumber && value && value.trim() !== "") {
+      const phoneValidation = validatePhoneWithInfo(value);
+      setErrors((prev) => ({ 
+        ...prev, 
+        phoneNumber: phoneValidation.isValid ? "" : phoneValidation.message 
+      }));
+    } else if (touched.phoneNumber && (!value || value.trim() === "")) {
+      // Limpiar error si el campo se vacía
+      setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    setTouched((prev) => ({ ...prev, phoneNumber: true }));
+    // Solo validar si hay contenido
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      const phoneValidation = validatePhoneWithInfo(form.phoneNumber);
+      setErrors((prev) => ({ 
+        ...prev, 
+        phoneNumber: phoneValidation.isValid ? "" : phoneValidation.message 
+      }));
+    } else {
+      // Limpiar error si el campo está vacío
+      setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+    }
+  };
   function isExperienceValid(exp) {
     return (
       exp.title && exp.title.trim() !== '' &&
@@ -144,12 +178,28 @@ export default function CreateProfileForm() {
   }
 
   function getExperienceErrors(exp) {
-    return {
+    const errors = {
       title: !exp.title || exp.title.trim() === '' ? 'Campo obligatorio' : '',
       project: !exp.project || exp.project.trim() === '' ? 'Campo obligatorio' : '',
       startDate: !exp.startDate ? 'Campo obligatorio' : '',
       endDate: !exp.isCurrent && !exp.endDate ? 'Campo obligatorio' : '',
     };
+
+    // Validar que la fecha hasta no sea anterior a la fecha desde
+    if (!exp.isCurrent && exp.startDate && exp.endDate) {
+      const startDate = new Date(exp.startDate);
+      const endDate = new Date(exp.endDate);
+      if (endDate < startDate) {
+        errors.endDate = 'La fecha hasta no puede ser anterior a la fecha desde';
+      }
+    }
+
+    // Validar que la experiencia esté confirmada
+    if (isExperienceValid(exp) && !exp.confirmed) {
+      errors.confirmation = 'Debes confirmar la experiencia antes de continuar';
+    }
+
+    return errors;
   }
 
   function isSocialLinkValid(link) {
@@ -157,17 +207,24 @@ export default function CreateProfileForm() {
   }
 
   function getSocialErrors(link) {
-    return {
+    const errors = {
       platform: !link.platform || link.platform.trim() === '' ? 'Campo obligatorio' : '',
       url: !link.url || link.url.trim() === '' ? 'Campo obligatorio' : '',
     };
+
+    // Validar que la red social esté confirmada
+    if (isSocialLinkValid(link) && !link.confirmed) {
+      errors.confirmation = 'Debes confirmar la red social antes de continuar';
+    }
+
+    return errors;
   }
 
   // Confirmación de experiencia/red social
   function handleAddExperience() {
     setForm((prev) => ({ ...prev, experience: [...prev.experience, { title: '', project: '', startDate: '', endDate: '', isCurrent: false, confirmed: false }] }));
-    setExpTouched((prev) => [...prev, { title: false, project: false, startDate: false, endDate: false }]);
-    setExpErrors((prev) => [...prev, getExperienceErrors({ title: '', project: '', startDate: '', endDate: '', isCurrent: false })]);
+    setExpTouched((prev) => [...prev, { title: false, project: false, startDate: false, endDate: false, confirmation: false }]);
+    setExpErrors((prev) => [...prev, getExperienceErrors({ title: '', project: '', startDate: '', endDate: '', isCurrent: false, confirmed: false })]);
   }
 
   function handleExpChange(i, field, value) {
@@ -200,8 +257,8 @@ export default function CreateProfileForm() {
 
   function handleAddSocial() {
     setForm((prev) => ({ ...prev, socialLinks: [...prev.socialLinks, { platform: '', url: '', confirmed: false }] }));
-    setSocialTouched((prev) => [...prev, { platform: false, url: false }]);
-    setSocialErrors((prev) => [...prev, getSocialErrors({ platform: '', url: '' })]);
+    setSocialTouched((prev) => [...prev, { platform: false, url: false, confirmation: false }]);
+    setSocialErrors((prev) => [...prev, getSocialErrors({ platform: '', url: '', confirmed: false })]);
   }
 
   function handleSocialChange(i, field, value) {
@@ -245,18 +302,28 @@ export default function CreateProfileForm() {
       newErrors[f.name] = err;
       if (err) hasError = true;
     });
+
+    // Validación específica del teléfono al enviar - solo si tiene contenido
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      const phoneValidation = validatePhoneWithInfo(form.phoneNumber);
+      if (!phoneValidation.isValid) {
+        newErrors.phoneNumber = phoneValidation.message;
+        hasError = true;
+      }
+    }
+
     setTouched(newTouched);
     setErrors(newErrors);
 
     // Marcar todos los campos de experiencia como touched SOLO al intentar submit
     const newExpTouched = form.experience.map(() => ({
-      title: true, project: true, startDate: true, endDate: true
+      title: true, project: true, startDate: true, endDate: true, confirmation: true
     }));
     const newExpErrors = form.experience.map(getExperienceErrors);
     let expHasError = false;
     form.experience.forEach((exp, i) => {
       const errs = getExperienceErrors(exp);
-      if ((!exp.confirmed && (errs.title || errs.project || errs.startDate || errs.endDate)) || !exp.confirmed) {
+      if (errs.title || errs.project || errs.startDate || errs.endDate || errs.confirmation) {
         expHasError = true;
       }
     });
@@ -264,12 +331,12 @@ export default function CreateProfileForm() {
     setExpErrors(newExpErrors);
 
     // Marcar todos los campos de redes sociales como touched SOLO al intentar submit
-    const newSocialTouched = form.socialLinks.map(() => ({ platform: true, url: true }));
+    const newSocialTouched = form.socialLinks.map(() => ({ platform: true, url: true, confirmation: true }));
     const newSocialErrors = form.socialLinks.map(getSocialErrors);
     let socialHasError = false;
     form.socialLinks.forEach((link, i) => {
       const errs = getSocialErrors(link);
-      if ((!link.confirmed && (errs.platform || errs.url)) || !link.confirmed) {
+      if (errs.platform || errs.url || errs.confirmation) {
         socialHasError = true;
       }
     });
@@ -283,7 +350,7 @@ export default function CreateProfileForm() {
       experience: form.experience.map(({ confirmed, ...rest }) => rest),
       socialLinks: form.socialLinks.map(({ confirmed, ...rest }) => rest),
     };
-    handleSubmitProfile(e, cleanForm, setMsg, router);
+    handleSubmitProfile(e, cleanForm, setMsg, router, updateUser);
   }
 
   return (
@@ -328,7 +395,9 @@ export default function CreateProfileForm() {
             <label className="block text-sm font-medium text-conexia-green mb-1">Teléfono</label>
             <InputField
               value={form.phoneNumber}
-              onChange={e => handleChange("phoneNumber", e.target.value)}
+              onChange={e => handlePhoneChange(e.target.value)}
+              onBlur={handlePhoneBlur}
+              error={errors.phoneNumber}
             />
           </div>
         </div>
@@ -471,6 +540,7 @@ export default function CreateProfileForm() {
                 onBlur={() => handleExpBlur(i, 'startDate')}
                 onKeyDown={e => e.preventDefault()}
                 min={form.birthDate ? getNextDay(form.birthDate) : undefined}
+                max={getTodayDate()}
                 disabled={exp.confirmed}
               />
               <div style={{ minHeight: 20 }}>
@@ -487,7 +557,8 @@ export default function CreateProfileForm() {
                 onBlur={() => handleExpBlur(i, 'endDate')}
                 disabled={exp.isCurrent || exp.confirmed}
                 onKeyDown={e => e.preventDefault()}
-                min={exp.startDate ? getNextDay(exp.startDate) : undefined}
+                max={getTodayDate()}
+                placeholder="dd/mm/yyyy"
               />
               <div style={{ minHeight: 20 }}>
                 {expTouched[i]?.endDate && expErrors[i]?.endDate && <p className="text-xs text-red-600 mt-1 text-left">{expErrors[i].endDate}</p>}
@@ -530,6 +601,9 @@ export default function CreateProfileForm() {
               ✕
             </button>
           </div>
+          {expTouched[i]?.confirmation && expErrors[i]?.confirmation && (
+            <p className="text-xs text-red-600 mt-1 text-left">{expErrors[i].confirmation}</p>
+          )}
         </div>
       ))}
       {form.experience.length > 0 && (
@@ -595,6 +669,9 @@ export default function CreateProfileForm() {
               ✕
             </button>
           </div>
+          {socialTouched[i]?.confirmation && socialErrors[i]?.confirmation && (
+            <p className="text-xs text-red-600 mt-1 text-left">{socialErrors[i].confirmation}</p>
+          )}
         </div>
       ))}
       {form.socialLinks.length > 0 && (
@@ -627,6 +704,11 @@ function getPrevDay(dateStr) {
   const date = new Date(dateStr);
   date.setDate(date.getDate() - 1);
   return date.toISOString().split('T')[0];
+}
+
+// Utilidad para obtener la fecha actual (formato yyyy-mm-dd)
+function getTodayDate() {
+  return new Date().toISOString().split('T')[0];
 }
 
 // Reutilizables
