@@ -33,7 +33,14 @@ export default function DropdownUserMenu({ onLogout }) {
                     <div className="flex flex-col justify-center">
                         <span className="font-semibold text-sm">{profile.name} {profile.lastName}</span>
                         <span className="text-xs text-conexia-green/80 mb-1">{profile.description || ''}</span>
-                        <Button className="px-3 py-0.5 text-xs" onClick={() => router.push(`/profile/userProfile/${user?.id}`)}>Ver perfil</Button>
+                        <Button 
+                            className="px-3 py-0.5 text-xs" 
+                            onClick={() => {
+                                window.location.href = `/profile/userProfile/${userId}`;
+                            }}
+                        >
+                            Ver perfil
+                        </Button>
                     </div>
                 </div>
             ) : null}

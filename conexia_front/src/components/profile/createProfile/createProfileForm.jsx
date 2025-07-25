@@ -185,12 +185,13 @@ export default function CreateProfileForm() {
       endDate: !exp.isCurrent && !exp.endDate ? 'Campo obligatorio' : '',
     };
 
-    // Validar que la fecha hasta no sea anterior a la fecha desde
-    if (!exp.isCurrent && exp.startDate && exp.endDate) {
+    // Validar que la fecha "Desde" no sea posterior a la fecha "Hasta"
+    if (exp.startDate && exp.endDate && !exp.isCurrent) {
       const startDate = new Date(exp.startDate);
       const endDate = new Date(exp.endDate);
-      if (endDate < startDate) {
-        errors.endDate = 'La fecha hasta no puede ser anterior a la fecha desde';
+      if (startDate >= endDate) {
+        errors.startDate = 'La fecha de inicio debe ser anterior a la fecha de fin';
+        errors.endDate = 'La fecha de fin debe ser posterior a la fecha de inicio';
       }
     }
 
@@ -296,11 +297,18 @@ export default function CreateProfileForm() {
     const newTouched = { ...touched };
     const newErrors = { ...errors };
     let hasError = false;
+    let firstErrorField = null;
+    
     requiredFields.forEach(f => {
       newTouched[f.name] = true;
       const err = validateField(f.name, form[f.name]);
       newErrors[f.name] = err;
-      if (err) hasError = true;
+      if (err && !firstErrorField) {
+        firstErrorField = f.name;
+        hasError = true;
+      } else if (err) {
+        hasError = true;
+      }
     });
 
     // Validación específica del teléfono al enviar - solo si tiene contenido
@@ -321,8 +329,15 @@ export default function CreateProfileForm() {
     }));
     const newExpErrors = form.experience.map(getExperienceErrors);
     let expHasError = false;
+    let firstExpErrorIndex = null;
     form.experience.forEach((exp, i) => {
       const errs = getExperienceErrors(exp);
+
+      if ((!exp.confirmed && (errs.title || errs.project || errs.startDate || errs.endDate)) || !exp.confirmed) {
+        if (!firstErrorField && firstExpErrorIndex === null) {
+          firstExpErrorIndex = i;
+        }
+      }
       if (errs.title || errs.project || errs.startDate || errs.endDate || errs.confirmation) {
         expHasError = true;
       }
@@ -334,8 +349,15 @@ export default function CreateProfileForm() {
     const newSocialTouched = form.socialLinks.map(() => ({ platform: true, url: true, confirmation: true }));
     const newSocialErrors = form.socialLinks.map(getSocialErrors);
     let socialHasError = false;
+    let firstSocialErrorIndex = null;
     form.socialLinks.forEach((link, i) => {
       const errs = getSocialErrors(link);
+
+      if ((!link.confirmed && (errs.platform || errs.url)) || !link.confirmed) {
+        if (!firstErrorField && firstExpErrorIndex === null && firstSocialErrorIndex === null) {
+          firstSocialErrorIndex = i;
+        }
+      }
       if (errs.platform || errs.url || errs.confirmation) {
         socialHasError = true;
       }
@@ -343,7 +365,41 @@ export default function CreateProfileForm() {
     setSocialTouched(newSocialTouched);
     setSocialErrors(newSocialErrors);
 
-    if (hasError || expHasError || socialHasError) return;
+    // Si hay errores, hacer scroll al primer error y detener el submit
+    if (hasError || expHasError || socialHasError) {
+      // Scroll al primer error después de que el estado se actualice
+      setTimeout(() => {
+        if (firstErrorField) {
+          // Buscar el campo de error en el DOM
+          const errorElement = document.querySelector(`input[name="${firstErrorField}"], select[name="${firstErrorField}"], textarea[name="${firstErrorField}"]`);
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            errorElement.focus();
+          }
+        } else if (firstExpErrorIndex !== null) {
+          // Buscar la primera experiencia con error
+          const expElements = document.querySelectorAll('[data-experience-index]');
+          const expElement = Array.from(expElements).find(el => 
+            el.getAttribute('data-experience-index') === firstExpErrorIndex.toString()
+          );
+          if (expElement) {
+            expElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else if (firstSocialErrorIndex !== null) {
+          // Buscar la primera red social con error
+          const socialElements = document.querySelectorAll('[data-social-index]');
+          const socialElement = Array.from(socialElements).find(el => 
+            el.getAttribute('data-social-index') === firstSocialErrorIndex.toString()
+          );
+          if (socialElement) {
+            socialElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      }, 100);
+      
+      return;
+    }
+    
     // Si no hay errores, limpiar 'confirmed' antes de enviar al backend
     const cleanForm = {
       ...form,
@@ -504,7 +560,7 @@ export default function CreateProfileForm() {
         <button type="button" onClick={handleAddExperience} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar experiencia</button>
       )}
       {form.experience.map((exp, i) => (
-        <div key={i} className="grid gap-2 mt-2 border-b pb-4">
+        <div key={i} className="grid gap-2 mt-2 border-b pb-4" data-experience-index={i}>
           <div className="grid md:grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium text-conexia-green mb-1">Título</label>
@@ -618,7 +674,7 @@ export default function CreateProfileForm() {
         <button type="button" onClick={handleAddSocial} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar red social</button>
       )}
       {form.socialLinks.map((link, i) => (
-        <div key={i} className="grid md:grid-cols-3 gap-2 items-center mt-2">
+        <div key={i} className="grid md:grid-cols-3 gap-2 items-center mt-2" data-social-index={i}>
           <div className="flex flex-col items-start h-full">
             <label className="block font-semibold text-conexia-green text-sm mb-0">Plataforma</label>
             <select
