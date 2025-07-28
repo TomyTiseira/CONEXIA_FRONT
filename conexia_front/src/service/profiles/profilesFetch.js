@@ -11,7 +11,22 @@ export async function createUserProfile(formData) {
   const response = await res.json();
 
   if (!res.ok) {
-    throw new Error(response.message || "Error al crear perfil");
+    // Crear un error más simple y robusto
+    const errorMessage = response.message || "Error al crear perfil";
+    const customError = {
+      message: errorMessage,
+      status: res.status,
+      response: response,
+      name: 'ProfileError',
+      toString: () => errorMessage
+    };
+    
+    // Si es un error 409, agregar información específica
+    if (res.status === 409) {
+      customError.isDuplicateProfile = true;
+    }
+    
+    throw customError;
   }
 
   return response;

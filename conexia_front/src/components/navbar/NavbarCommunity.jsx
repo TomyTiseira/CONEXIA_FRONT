@@ -119,7 +119,7 @@ export default function NavbarCommunity() {
                 </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
+            {menuOpen && <DropdownUserMenu onLogout={handleLogout} onClose={() => setMenuOpen(false)} />}
           </div>
         </div>
       </nav>
@@ -149,7 +149,7 @@ export default function NavbarCommunity() {
                 </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
+            {menuOpen && <DropdownUserMenu onLogout={handleLogout} onClose={() => setMenuOpen(false)} />}
           </div>
         </div>
       </nav>
