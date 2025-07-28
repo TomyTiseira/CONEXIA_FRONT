@@ -9,9 +9,11 @@ import { useAuth } from '@/context/AuthContext';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { config } from '@/config';
 
+
 const defaultAvatar = '/images/default-avatar.png';
 
-export default function DropdownUserMenu({ onLogout }) {
+export default function DropdownUserMenu({ onLogout, }) {
+
     const router = useRouter();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -62,6 +64,7 @@ export default function DropdownUserMenu({ onLogout }) {
                             className="object-cover"
                         />
                     </div>
+
                     <div className="flex flex-col justify-center min-w-0">
                         <span className="font-semibold text-sm truncate">
                             {profile.name} {profile.lastName}
@@ -82,6 +85,7 @@ export default function DropdownUserMenu({ onLogout }) {
                 </div>
             </div>
 
+
             {/* Acciones */}
             <div className="pt-1">
                 <button
@@ -100,6 +104,7 @@ export default function DropdownUserMenu({ onLogout }) {
                     Cerrar sesión
                 </button>
             </div>
+
         </div>
     );
 }

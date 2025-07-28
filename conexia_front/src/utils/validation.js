@@ -44,6 +44,40 @@ export function validateArgentinaPhone(phone) {
   return patterns.some(pattern => pattern.test(cleaned));
 }
 
+// Validación simple de teléfono: solo verifica que tenga 10 dígitos
+export function validateSimplePhone(phone) {
+  if (!phone || phone.trim() === '') {
+    return {
+      isValid: true, // Campo opcional
+      message: ''
+    };
+  }
+  
+  // Limpiar el teléfono (quitar espacios, guiones, paréntesis)
+  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  
+  // Verificar que solo contenga números
+  if (!/^\d+$/.test(cleanPhone)) {
+    return {
+      isValid: false,
+      message: 'El teléfono debe contener solo números'
+    };
+  }
+  
+  // Verificar que tenga exactamente 10 dígitos
+  if (cleanPhone.length !== 10) {
+    return {
+      isValid: false,
+      message: 'El teléfono debe tener exactamente 10 dígitos'
+    };
+  }
+  
+  return {
+    isValid: true,
+    message: 'Número válido'
+  };
+}
+
 // Función para validar si una fecha es válida
 export function isValidDate(dateString) {
   if (!dateString) return false;
