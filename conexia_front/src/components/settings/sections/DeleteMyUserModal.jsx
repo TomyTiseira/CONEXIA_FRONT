@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { deleteMyUser } from "@/service/user/userFetch";
@@ -8,22 +8,8 @@ import { deleteMyUser } from "@/service/user/userFetch";
 export default function DeleteMyUserModal({ email, onConfirm, onCancel, loading, onUserDeleted }) {
   const [msg, setMsg] = useState(null);
   const [motivo, setMotivo] = useState("");
-  const [confirmChecked, setConfirmChecked] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-
-  useEffect(() => {
-    if (msg?.ok) {
-      const timeout = setTimeout(() => {
-        setMsg(null);
-        onCancel();
-        if (onUserDeleted) onUserDeleted();
-        // Redirigir al Home
-        router.push("/");
-      }, 1500);
-      return () => clearTimeout(timeout);
-    }
-  }, [msg, onCancel, onUserDeleted, router]);
 
   const handleSubmit = async () => {
     setError("");
@@ -31,16 +17,33 @@ export default function DeleteMyUserModal({ email, onConfirm, onCancel, loading,
       setError("El motivo de baja es obligatorio.");
       return;
     }
-    if (!confirmChecked) {
-      setError("Debes confirmar la eliminación de tu cuenta.");
-      return;
-    }
     try {
       await deleteMyUser({ motivo });
-      setMsg({ ok: true, text: "Tu cuenta fue dada de baja exitosamente." });
+      
+      // Limpiar inmediatamente todos los datos del navegador
       if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        sessionStorage.removeItem("token");
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Limpiar específicamente las cookies de autenticación
+        const cookiesToClear = ['access_token', 'refresh_token', 'token'];
+        cookiesToClear.forEach(cookieName => {
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`;
+        });
+        
+        // Limpiar todas las cookies restantes
+        document.cookie.split(";").forEach((c) => {
+          const eqPos = c.indexOf("=");
+          const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`;
+        });
+        
+        // Forzar redirección a home con parámetro para evitar cache
+        window.location.replace("/?logout=true");
       }
     } catch (err) {
       setMsg({ ok: false, text: err.message });
@@ -67,16 +70,6 @@ export default function DeleteMyUserModal({ email, onConfirm, onCancel, loading,
             placeholder="Escribe el motivo de la baja..."
           />
         </div>
-        <div className="flex items-center mb-4">
-          <input
-            type="checkbox"
-            id="confirmDelete"
-            checked={confirmChecked}
-            onChange={e => setConfirmChecked(e.target.checked)}
-            className="mr-2"
-          />
-          <label htmlFor="confirmDelete" className="text-sm text-conexia-green">Confirmo que deseo eliminar mi cuenta</label>
-        </div>
         <div className="min-h-[40px] text-center text-sm transition-all duration-300 mb-2">
           {error && <p className="text-red-600">{error}</p>}
           {msg && (
@@ -84,10 +77,10 @@ export default function DeleteMyUserModal({ email, onConfirm, onCancel, loading,
           )}
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="danger" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Eliminando..." : "Eliminar"}
+          <Button variant="success" onClick={handleSubmit} disabled={loading}>
+            {loading ? "Procesando..." : "Confirmar"}
           </Button>
-          <Button variant="neutral" onClick={onCancel} disabled={loading}>
+          <Button variant="danger" onClick={onCancel} disabled={loading}>
             Cancelar
           </Button>
         </div>

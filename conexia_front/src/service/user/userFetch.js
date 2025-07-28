@@ -118,8 +118,8 @@ export const getRoleById = async (id) => {
 
   // Dar de baja usuario (eliminar cuenta propia)
 export async function deleteMyUser({ motivo }) {
-  const response = await fetch(`${config.API_URL}/users/delete-me`, {
-    method: 'POST',
+  const response = await fetchWithRefresh(`${config.API_URL}/users`, {
+    method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },
