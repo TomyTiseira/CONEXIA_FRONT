@@ -1,25 +1,14 @@
 import { createUserProfile } from "@/service/profiles/profilesFetch";
-import { calculateAge } from "@/components/utils/validations/fechas";
-import { isValidPhoneNumber } from "@/components/utils/validations/phones";
+import { validateSimplePhone } from "@/components/utils/validations/phones";
 import { validateAllSocialLinks } from "@/components/utils/validations/socialLinks";
 import { validateAllExperiences } from "@/components/utils/validations/experience";
 
-export const handleSubmitProfile = async (e, form, setMsg, router) => {
+export const handleSubmitProfile = async (e, form, setMsg, router, updateAuthUser) => {
   e.preventDefault();
 
-  const requiredFields = ["name", "lastName", "birthDate", "documentTypeId", "documentNumber"];
-  const missing = requiredFields.some((f) => !form[f]);
-  
-  if (missing) {
-    return setMsg({ ok: false, text: "Completá todos los campos obligatorios." });
-  }
-
-  if (calculateAge(form.birthDate) < 18) {
-    return setMsg({ ok: false, text: "Debes tener al menos 18 años." });
-  }
-
-  if (form.phoneNumber && !isValidPhoneNumber(form.phoneNumber)) {
-    return setMsg({ ok: false, text: "El teléfono debe ser numérico y válido (ej: 351xxxxxxxx)." });
+  if (form.phoneNumber && form.phoneNumber.trim() !== "" && !validateSimplePhone(form.phoneNumber).isValid) {
+    const phoneValidation = validateSimplePhone(form.phoneNumber);
+    return setMsg({ ok: false, text: phoneValidation.message });
   }
 
   // Experiencias con fechas corregidas
@@ -41,6 +30,11 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
 
   const formData = new FormData();
   Object.entries(form).forEach(([key, value]) => {
+    // No enviar phoneNumber si está vacío
+    if (key === 'phoneNumber' && (!value || value.trim() === '')) {
+      return;
+    }
+    
     if (Array.isArray(value)) {
       formData.set(key, JSON.stringify(key === "experience" ? updatedExperience : value));
     } else if (value instanceof File) {
@@ -53,10 +47,45 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
   });
 
   try {
-    await createUserProfile(formData);
+    const response = await createUserProfile(formData);
     setMsg({ ok: true, text: "Perfil creado con éxito." });
-    setTimeout(() => router.push("/"), 1000);
+    
+    // El usuario está en response.data.user según la estructura que devuelve el backend
+    const userData = response.data?.user || response.user;
+    
+    if (response.success && userData && updateAuthUser) {
+      updateAuthUser(userData);
+      
+      // Usar replace para evitar que el usuario pueda volver atrás a la página de creación
+      setTimeout(() => {
+        router.replace("/");
+      }, 300);
+    } else {
+      console.error('No se pudo actualizar el usuario:', { 
+        success: response.success, 
+        hasUser: !!userData, 
+        hasUpdateFunction: !!updateAuthUser
+      });
+      setMsg({ ok: false, text: "Error: No se pudo actualizar la sesión." });
+    }
   } catch (err) {
-    setMsg({ ok: false, text: "Error al crear el perfil." });
+    // Verificar si es el error específico de perfil existente (409)
+    if (err.status === 409 || err.isDuplicateProfile || (err.message && err.message.includes('already exists'))) {
+      // No registrar en consola porque es un error controlado
+      setMsg({ 
+        ok: false, 
+        text: "Este documento ya se encuentra registrado.", 
+        fields: ["documentTypeId", "documentNumber"] // Múltiples campos
+      });
+    } else {
+      // Solo registrar en consola errores no controlados
+      console.error('Error al crear perfil:', err);
+      
+      // Usar un mensaje más genérico que no cause problemas
+      const errorMessage = typeof err === 'string' ? err : 
+                          err.message || 
+                          "Error al crear el perfil.";
+      setMsg({ ok: false, text: errorMessage });
+    }
   }
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,20 +15,22 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
-import { useEffect } from 'react';
 import { getProfileById } from '@/service/profiles/profilesFetch';
+import { config } from '@/config';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const { user } = useAuth();
-  const userId = user?.id; 
-  
+  const { logout, user } = useAuth();
+  const userId = user?.id;
+  const defaultAvatar = '/images/default-avatar.png';
+
   useEffect(() => {
     const fetchProfile = async () => {
+      if (!userId) return;
+      
       try {
         const data = await getProfileById(userId);
         setProfile(data.data.profile);
@@ -36,6 +38,7 @@ export default function NavbarCommunity() {
         setProfile(null);
       }
     };
+    
     fetchProfile();
   }, [userId]);
 
@@ -102,21 +105,21 @@ export default function NavbarCommunity() {
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
-              <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                {profile && profile.profilePicture ? (
+                <div className="w-8 h-8 rounded-full overflow-hidden relative">
                   <Image
-                    src={`${require('@/config').config.IMAGE_URL}/${profile.profilePicture}`}
+                    src={
+                      profile && profile.profilePicture
+                        ? `${config.IMAGE_URL}/${profile.profilePicture}`
+                        : defaultAvatar
+                    }
                     alt="Foto de perfil"
                     fill
                     className="object-cover"
                   />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full" />
-                )}
-              </div>
+                </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
+            {menuOpen && <DropdownUserMenu onLogout={handleLogout} onClose={() => setMenuOpen(false)} />}
           </div>
         </div>
       </nav>
@@ -132,12 +135,21 @@ export default function NavbarCommunity() {
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
-              <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                <Image src="/yo.png" alt="Perfil" fill className="object-cover" />
-              </div>
+                <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                  <Image
+                    src={
+                      profile && profile.profilePicture
+                        ? `${config.IMAGE_URL}/${profile.profilePicture}`
+                        : defaultAvatar
+                    }
+                    alt="Foto de perfil"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
+            {menuOpen && <DropdownUserMenu onLogout={handleLogout} onClose={() => setMenuOpen(false)} />}
           </div>
         </div>
       </nav>

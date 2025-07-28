@@ -9,6 +9,8 @@ import { getDocumentTypes } from "@/service/profiles/profilesFetch";
 import { handleDynamicFieldChange, validateDynamicField } from "@/components/utils/validations/addElement";
 import { removeItemFromFormArray } from "@/components/utils/removeItemArray";
 import { toggleHabilidad } from "@/components/utils/toggleHabilidad";
+import { useAuth } from "@/context/AuthContext";
+import { isValidPhoneNumber, validateSimplePhone } from "@/components/utils/validations/phones";
 
 import InputField from "@/components/form/InputField";
 import TextArea from "@/components/form/InputField";
@@ -21,6 +23,7 @@ export default function CreateProfileForm() {
   const profilePicRef = useRef(null);
   const coverPicRef = useRef(null);
   const router = useRouter();
+  const { updateUser } = useAuth();
 
   const [form, setForm] = useState({
     name: "",
@@ -48,11 +51,20 @@ export default function CreateProfileForm() {
       if (file.size > 5 * 1024 * 1024) {
         setImgErrors(prev => ({ ...prev, [field]: 'La imagen no puede superar los 5MB' }));
         setForm(prev => ({ ...prev, [field]: null }));
+        // Limpiar el input file si hay error
+        if (field === 'profilePicture' && profilePicRef.current) {
+          profilePicRef.current.value = '';
+        }
+        if (field === 'coverPicture' && coverPicRef.current) {
+          coverPicRef.current.value = '';
+        }
         return;
       }
+      // Limpiar error si el archivo es válido
       setImgErrors(prev => ({ ...prev, [field]: '' }));
       setForm(prev => ({ ...prev, [field]: file }));
     } else {
+      // Si no hay archivo seleccionado
       setImgErrors(prev => ({ ...prev, [field]: '' }));
       setForm(prev => ({ ...prev, [field]: null }));
     }
@@ -78,6 +90,55 @@ export default function CreateProfileForm() {
   const [expErrors, setExpErrors] = useState([]);
   const [socialTouched, setSocialTouched] = useState([]);
   const [socialErrors, setSocialErrors] = useState([]);
+
+  // Efecto para manejar errores específicos de campos desde el backend
+  useEffect(() => {
+    if (msg && !msg.ok && typeof msg.text === 'string') {
+      // Manejar múltiples campos
+      if (msg.fields && Array.isArray(msg.fields)) {
+        const newErrors = { ...errors };
+        const newTouched = { ...touched };
+        
+        msg.fields.forEach(fieldName => {
+          newErrors[fieldName] = msg.text;
+          newTouched[fieldName] = true;
+        });
+        
+        setErrors(newErrors);
+        setTouched(newTouched);
+        
+        // Hacer scroll al primer campo con error
+        setTimeout(() => {
+          const firstField = msg.fields[0];
+          const errorElement = document.querySelector(`input[name="${firstField}"], select[name="${firstField}"], textarea[name="${firstField}"]`);
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            errorElement.focus();
+          }
+        }, 200);
+      }
+      // Manejar campo único (mantener compatibilidad)
+      else if (msg.field) {
+        setErrors(prev => ({
+          ...prev,
+          [msg.field]: msg.text
+        }));
+        setTouched(prev => ({
+          ...prev,
+          [msg.field]: true
+        }));
+        
+        // Hacer scroll al campo con error después de que se actualice el estado
+        setTimeout(() => {
+          const errorElement = document.querySelector(`input[name="${msg.field}"], select[name="${msg.field}"], textarea[name="${msg.field}"]`);
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            errorElement.focus();
+          }
+        }, 200);
+      }
+    }
+  }, [msg]);
   
 
   useEffect(() => {
@@ -130,8 +191,52 @@ export default function CreateProfileForm() {
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    
+    // Limpiar errores del backend cuando el usuario empiece a escribir
+    if (msg && !msg.ok) {
+      // Si es un error de campo único
+      if (msg.field === field) {
+        setMsg(null);
+      }
+      // Si es un error de múltiples campos y el campo actual está en la lista
+      else if (msg.fields && msg.fields.includes(field)) {
+        setMsg(null);
+      }
+    }
+    
     if (touched[field]) {
       setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
+    }
+  };
+
+  // Funciones específicas para el teléfono
+  const handlePhoneChange = (value) => {
+    setForm((prev) => ({ ...prev, phoneNumber: value }));
+    // Solo validar si hay contenido y el campo ha sido tocado
+    if (touched.phoneNumber && value && value.trim() !== "") {
+      const phoneValidation = validateSimplePhone(value);
+      setErrors((prev) => ({ 
+        ...prev, 
+        phoneNumber: phoneValidation.isValid ? "" : phoneValidation.message 
+      }));
+    } else if (touched.phoneNumber && (!value || value.trim() === "")) {
+      // Limpiar error si el campo se vacía
+      setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    setTouched((prev) => ({ ...prev, phoneNumber: true }));
+    // Solo validar si hay contenido
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      const phoneValidation = validateSimplePhone(form.phoneNumber);
+      setErrors((prev) => ({ 
+        ...prev, 
+        phoneNumber: phoneValidation.isValid ? "" : phoneValidation.message 
+      }));
+    } else {
+      // Limpiar error si el campo está vacío
+      setErrors((prev) => ({ ...prev, phoneNumber: "" }));
     }
   };
   function isExperienceValid(exp) {
@@ -144,12 +249,29 @@ export default function CreateProfileForm() {
   }
 
   function getExperienceErrors(exp) {
-    return {
+    const errors = {
       title: !exp.title || exp.title.trim() === '' ? 'Campo obligatorio' : '',
       project: !exp.project || exp.project.trim() === '' ? 'Campo obligatorio' : '',
       startDate: !exp.startDate ? 'Campo obligatorio' : '',
       endDate: !exp.isCurrent && !exp.endDate ? 'Campo obligatorio' : '',
     };
+
+    // Validar que la fecha "Desde" no sea posterior a la fecha "Hasta"
+    if (exp.startDate && exp.endDate && !exp.isCurrent) {
+      const startDate = new Date(exp.startDate);
+      const endDate = new Date(exp.endDate);
+      if (startDate >= endDate) {
+        errors.startDate = 'La fecha de inicio debe ser anterior a la fecha de fin';
+        errors.endDate = 'La fecha de fin debe ser posterior a la fecha de inicio';
+      }
+    }
+
+    // Validar que la experiencia esté confirmada
+    if (isExperienceValid(exp) && !exp.confirmed) {
+      errors.confirmation = 'Debes confirmar la experiencia antes de continuar';
+    }
+
+    return errors;
   }
 
   function isSocialLinkValid(link) {
@@ -157,17 +279,24 @@ export default function CreateProfileForm() {
   }
 
   function getSocialErrors(link) {
-    return {
+    const errors = {
       platform: !link.platform || link.platform.trim() === '' ? 'Campo obligatorio' : '',
       url: !link.url || link.url.trim() === '' ? 'Campo obligatorio' : '',
     };
+
+    // Validar que la red social esté confirmada
+    if (isSocialLinkValid(link) && !link.confirmed) {
+      errors.confirmation = 'Debes confirmar la red social antes de continuar';
+    }
+
+    return errors;
   }
 
   // Confirmación de experiencia/red social
   function handleAddExperience() {
     setForm((prev) => ({ ...prev, experience: [...prev.experience, { title: '', project: '', startDate: '', endDate: '', isCurrent: false, confirmed: false }] }));
-    setExpTouched((prev) => [...prev, { title: false, project: false, startDate: false, endDate: false }]);
-    setExpErrors((prev) => [...prev, getExperienceErrors({ title: '', project: '', startDate: '', endDate: '', isCurrent: false })]);
+    setExpTouched((prev) => [...prev, { title: false, project: false, startDate: false, endDate: false, confirmation: false }]);
+    setExpErrors((prev) => [...prev, getExperienceErrors({ title: '', project: '', startDate: '', endDate: '', isCurrent: false, confirmed: false })]);
   }
 
   function handleExpChange(i, field, value) {
@@ -190,6 +319,11 @@ export default function CreateProfileForm() {
     const updated = [...form.experience];
     updated[i] = { ...updated[i], confirmed: true };
     setForm({ ...form, experience: updated });
+    
+    // Actualizar errores para reflejar que ya está confirmada
+    const updatedErrors = [...expErrors];
+    updatedErrors[i] = getExperienceErrors(updated[i]);
+    setExpErrors(updatedErrors);
   }
 
   function handleRemoveExperience(i) {
@@ -200,8 +334,8 @@ export default function CreateProfileForm() {
 
   function handleAddSocial() {
     setForm((prev) => ({ ...prev, socialLinks: [...prev.socialLinks, { platform: '', url: '', confirmed: false }] }));
-    setSocialTouched((prev) => [...prev, { platform: false, url: false }]);
-    setSocialErrors((prev) => [...prev, getSocialErrors({ platform: '', url: '' })]);
+    setSocialTouched((prev) => [...prev, { platform: false, url: false, confirmation: false }]);
+    setSocialErrors((prev) => [...prev, getSocialErrors({ platform: '', url: '', confirmed: false })]);
   }
 
   function handleSocialChange(i, field, value) {
@@ -224,6 +358,11 @@ export default function CreateProfileForm() {
     const updated = [...form.socialLinks];
     updated[i] = { ...updated[i], confirmed: true };
     setForm({ ...form, socialLinks: updated });
+    
+    // Actualizar errores para reflejar que ya está confirmada
+    const updatedErrors = [...socialErrors];
+    updatedErrors[i] = getSocialErrors(updated[i]);
+    setSocialErrors(updatedErrors);
   }
 
   function handleRemoveSocial(i) {
@@ -239,51 +378,117 @@ export default function CreateProfileForm() {
     const newTouched = { ...touched };
     const newErrors = { ...errors };
     let hasError = false;
+    let firstErrorField = null;
+    
     requiredFields.forEach(f => {
       newTouched[f.name] = true;
       const err = validateField(f.name, form[f.name]);
       newErrors[f.name] = err;
-      if (err) hasError = true;
+      if (err && !firstErrorField) {
+        firstErrorField = f.name;
+        hasError = true;
+      } else if (err) {
+        hasError = true;
+      }
     });
+
+    // Validación específica del teléfono al enviar - solo si tiene contenido
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      const phoneValidation = validateSimplePhone(form.phoneNumber);
+      if (!phoneValidation.isValid) {
+        newErrors.phoneNumber = phoneValidation.message;
+        hasError = true;
+      }
+    }
+
+    // Validación de errores de imágenes
+    if (imgErrors.profilePicture || imgErrors.coverPicture) {
+      hasError = true;
+    }
+
     setTouched(newTouched);
     setErrors(newErrors);
 
     // Marcar todos los campos de experiencia como touched SOLO al intentar submit
     const newExpTouched = form.experience.map(() => ({
-      title: true, project: true, startDate: true, endDate: true
+      title: true, project: true, startDate: true, endDate: true, confirmation: true
     }));
     const newExpErrors = form.experience.map(getExperienceErrors);
     let expHasError = false;
+    let firstExpErrorIndex = null;
     form.experience.forEach((exp, i) => {
       const errs = getExperienceErrors(exp);
-      if ((!exp.confirmed && (errs.title || errs.project || errs.startDate || errs.endDate)) || !exp.confirmed) {
+      // Si hay cualquier error (campos faltantes o no confirmada)
+      if (errs.title || errs.project || errs.startDate || errs.endDate || errs.confirmation) {
         expHasError = true;
+        if (firstExpErrorIndex === null) {
+          firstExpErrorIndex = i;
+        }
       }
     });
     setExpTouched(newExpTouched);
     setExpErrors(newExpErrors);
 
     // Marcar todos los campos de redes sociales como touched SOLO al intentar submit
-    const newSocialTouched = form.socialLinks.map(() => ({ platform: true, url: true }));
+    const newSocialTouched = form.socialLinks.map(() => ({ platform: true, url: true, confirmation: true }));
     const newSocialErrors = form.socialLinks.map(getSocialErrors);
     let socialHasError = false;
+    let firstSocialErrorIndex = null;
     form.socialLinks.forEach((link, i) => {
       const errs = getSocialErrors(link);
-      if ((!link.confirmed && (errs.platform || errs.url)) || !link.confirmed) {
+      // Si hay cualquier error (campos faltantes o no confirmada)
+      if (errs.platform || errs.url || errs.confirmation) {
         socialHasError = true;
+        if (firstSocialErrorIndex === null) {
+          firstSocialErrorIndex = i;
+        }
       }
     });
     setSocialTouched(newSocialTouched);
     setSocialErrors(newSocialErrors);
 
-    if (hasError || expHasError || socialHasError) return;
+    // Si hay errores, hacer scroll al primer error y detener el submit
+    if (hasError || expHasError || socialHasError) {
+      // Scroll al primer error después de que el estado se actualice
+      setTimeout(() => {
+        if (firstErrorField) {
+          // Buscar el campo de error en el DOM
+          const errorElement = document.querySelector(`input[name="${firstErrorField}"], select[name="${firstErrorField}"], textarea[name="${firstErrorField}"]`);
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            errorElement.focus();
+          }
+        } else if (firstExpErrorIndex !== null) {
+          // Buscar la primera experiencia con error
+          const expElements = document.querySelectorAll('[data-experience-index]');
+          const expElement = Array.from(expElements).find(el => 
+            el.getAttribute('data-experience-index') === firstExpErrorIndex.toString()
+          );
+          if (expElement) {
+            expElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else if (firstSocialErrorIndex !== null) {
+          // Buscar la primera red social con error
+          const socialElements = document.querySelectorAll('[data-social-index]');
+          const socialElement = Array.from(socialElements).find(el => 
+            el.getAttribute('data-social-index') === firstSocialErrorIndex.toString()
+          );
+          if (socialElement) {
+            socialElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      }, 200);
+      
+      return;
+    }
+    
     // Si no hay errores, limpiar 'confirmed' antes de enviar al backend
     const cleanForm = {
       ...form,
       experience: form.experience.map(({ confirmed, ...rest }) => rest),
       socialLinks: form.socialLinks.map(({ confirmed, ...rest }) => rest),
     };
-    handleSubmitProfile(e, cleanForm, setMsg, router);
+    handleSubmitProfile(e, cleanForm, setMsg, router, updateUser);
   }
 
   return (
@@ -294,21 +499,21 @@ export default function CreateProfileForm() {
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Nombre</label>
             <InputField
+              name="name"
               value={form.name}
               onChange={e => handleChange("name", e.target.value)}
               onBlur={() => handleBlur("name")}
               error={errors.name}
-              required
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Apellido</label>
             <InputField
+              name="lastName"
               value={form.lastName}
               onChange={e => handleChange("lastName", e.target.value)}
               onBlur={() => handleBlur("lastName")}
               error={errors.lastName}
-              required
             />
           </div>
         </div>
@@ -317,6 +522,7 @@ export default function CreateProfileForm() {
             <label className="block text-sm font-medium text-conexia-green mb-1">Fecha de nacimiento</label>
             <input
               type="date"
+              name="birthDate"
               value={form.birthDate}
               onChange={e => handleChange("birthDate", e.target.value)}
               onBlur={() => handleBlur("birthDate")}
@@ -327,8 +533,11 @@ export default function CreateProfileForm() {
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Teléfono</label>
             <InputField
+              name="phoneNumber"
               value={form.phoneNumber}
-              onChange={e => handleChange("phoneNumber", e.target.value)}
+              onChange={e => handlePhoneChange(e.target.value)}
+              onBlur={handlePhoneBlur}
+              error={errors.phoneNumber}
             />
           </div>
         </div>
@@ -336,6 +545,7 @@ export default function CreateProfileForm() {
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Tipo de documento</label>
             <select
+              name="documentTypeId"
               value={form.documentTypeId}
               onChange={e => handleChange("documentTypeId", e.target.value)}
               onBlur={() => handleBlur("documentTypeId")}
@@ -351,62 +561,115 @@ export default function CreateProfileForm() {
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Número de documento</label>
             <InputField
+              name="documentNumber"
               value={form.documentNumber}
               onChange={e => handleChange("documentNumber", e.target.value)}
               onBlur={() => handleBlur("documentNumber")}
               error={errors.documentNumber}
-              required
             />
           </div>
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">País</label>
-            <InputField value={form.country} onChange={e => handleChange("country", e.target.value)} />
+            <InputField name="country" value={form.country} onChange={e => handleChange("country", e.target.value)} />
           </div>
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Ciudad</label>
-            <InputField value={form.state} onChange={e => handleChange("state", e.target.value)} />
+            <InputField name="state" value={form.state} onChange={e => handleChange("state", e.target.value)} />
           </div>
         </div>
         {/* Imágenes */}
         <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil</label>
-            <input
-              type="file"
-              accept="image/jpeg,image/png"
-              ref={profilePicRef}
-              onChange={e => handleImageChange(e, 'profilePicture')}
-            />
-            {form.profilePicture && (
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-gray-700">{form.profilePicture.name}</span>
-                <button type="button" onClick={() => handleRemoveImage('profilePicture')} className="text-red-500 text-xs hover:underline">Eliminar</button>
-              </div>
-            )}
-            {imgErrors.profilePicture && <p className="text-xs text-red-600 mt-1 text-left">{imgErrors.profilePicture}</p>}
+          <div className="flex items-center gap-6">
+            <div className="flex-shrink-0">
+              <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil</label>
+
+              {/* Nueva imagen seleccionada */}
+              {form.profilePicture && (
+                <div className="mb-3">
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md">
+                    <img
+                      src={URL.createObjectURL(form.profilePicture)}
+                      alt="Vista previa perfil"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 flex flex-col items-start">
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                ref={profilePicRef}
+                onChange={e => handleImageChange(e, 'profilePicture')}
+                className="w-full mb-2"
+                style={{ color: 'transparent' }}
+              />
+              {form.profilePicture && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage('profilePicture')}
+                  className="text-red-500 text-xs hover:underline mb-1"
+                >
+                  Eliminar
+                </button>
+              )}
+              {form.profilePicture && (
+                <span className="text-xs text-gray-700 mb-1 block">{form.profilePicture.name}</span>
+              )}
+              {imgErrors.profilePicture && <p className="text-xs text-red-600 mt-1 text-left">{imgErrors.profilePicture}</p>}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada</label>
-            <input
-              type="file"
-              accept="image/jpeg,image/png"
-              ref={coverPicRef}
-              onChange={e => handleImageChange(e, 'coverPicture')}
-            />
-            {form.coverPicture && (
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-gray-700">{form.coverPicture.name}</span>
-                <button type="button" onClick={() => handleRemoveImage('coverPicture')} className="text-red-500 text-xs hover:underline">Eliminar</button>
-              </div>
-            )}
-            {imgErrors.coverPicture && <p className="text-xs text-red-600 mt-1 text-left">{imgErrors.coverPicture}</p>}
+
+          <div className="flex items-center gap-6">
+            <div className="flex-shrink-0">
+              <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada</label>
+
+              {/* Nueva imagen seleccionada */}
+              {form.coverPicture && (
+                <div className="mb-3">
+                  <div className="relative w-32 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md">
+                    <img
+                      src={URL.createObjectURL(form.coverPicture)}
+                      alt="Vista previa portada"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 flex flex-col items-start">
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                ref={coverPicRef}
+                onChange={e => handleImageChange(e, 'coverPicture')}
+                className="w-full mb-2"
+                style={{ color: 'transparent' }}
+              />
+              {form.coverPicture && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage('coverPicture')}
+                  className="text-red-500 text-xs hover:underline mb-1"
+                >
+                  Eliminar
+                </button>
+              )}
+              {form.coverPicture && (
+                <span className="text-xs text-gray-700 mb-1 block">{form.coverPicture.name}</span>
+              )}
+              {imgErrors.coverPicture && <p className="text-xs text-red-600 mt-1 text-left">{imgErrors.coverPicture}</p>}
+            </div>
           </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-conexia-green mb-1">Descripción</label>
-          <TextArea value={form.description} onChange={e => handleChange("description", e.target.value)} />
+          <TextArea name="description" value={form.description} onChange={e => handleChange("description", e.target.value)} />
         </div>
 
         {/* Habilidades */}
@@ -435,7 +698,7 @@ export default function CreateProfileForm() {
         <button type="button" onClick={handleAddExperience} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar experiencia</button>
       )}
       {form.experience.map((exp, i) => (
-        <div key={i} className="grid gap-2 mt-2 border-b pb-4">
+        <div key={i} className="grid gap-2 mt-2 border-b pb-4" data-experience-index={i}>
           <div className="grid md:grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium text-conexia-green mb-1">Título</label>
@@ -445,7 +708,6 @@ export default function CreateProfileForm() {
                 onBlur={() => handleExpBlur(i, 'title')}
                 error={expTouched[i]?.title && expErrors[i]?.title}
                 disabled={exp.confirmed}
-                required
               />
             </div>
             <div>
@@ -456,7 +718,6 @@ export default function CreateProfileForm() {
                 onBlur={() => handleExpBlur(i, 'project')}
                 error={expTouched[i]?.project && expErrors[i]?.project}
                 disabled={exp.confirmed}
-                required
               />
             </div>
           </div>
@@ -471,6 +732,7 @@ export default function CreateProfileForm() {
                 onBlur={() => handleExpBlur(i, 'startDate')}
                 onKeyDown={e => e.preventDefault()}
                 min={form.birthDate ? getNextDay(form.birthDate) : undefined}
+                max={getTodayDate()}
                 disabled={exp.confirmed}
               />
               <div style={{ minHeight: 20 }}>
@@ -487,7 +749,8 @@ export default function CreateProfileForm() {
                 onBlur={() => handleExpBlur(i, 'endDate')}
                 disabled={exp.isCurrent || exp.confirmed}
                 onKeyDown={e => e.preventDefault()}
-                min={exp.startDate ? getNextDay(exp.startDate) : undefined}
+                max={getTodayDate()}
+                placeholder="dd/mm/yyyy"
               />
               <div style={{ minHeight: 20 }}>
                 {expTouched[i]?.endDate && expErrors[i]?.endDate && <p className="text-xs text-red-600 mt-1 text-left">{expErrors[i].endDate}</p>}
@@ -530,6 +793,9 @@ export default function CreateProfileForm() {
               ✕
             </button>
           </div>
+          {expTouched[i]?.confirmation && expErrors[i]?.confirmation && (
+            <p className="text-xs text-red-600 mt-1 text-left">{expErrors[i].confirmation}</p>
+          )}
         </div>
       ))}
       {form.experience.length > 0 && (
@@ -544,7 +810,7 @@ export default function CreateProfileForm() {
         <button type="button" onClick={handleAddSocial} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar red social</button>
       )}
       {form.socialLinks.map((link, i) => (
-        <div key={i} className="grid md:grid-cols-3 gap-2 items-center mt-2">
+        <div key={i} className="grid md:grid-cols-3 gap-2 items-center mt-2" data-social-index={i}>
           <div className="flex flex-col items-start h-full">
             <label className="block font-semibold text-conexia-green text-sm mb-0">Plataforma</label>
             <select
@@ -569,7 +835,6 @@ export default function CreateProfileForm() {
               onBlur={() => handleSocialBlur(i, 'url')}
               error={socialTouched[i]?.url && socialErrors[i]?.url}
               disabled={link.confirmed}
-              required
             />
           </div>
           <div className="flex flex-row justify-end items-center gap-2 h-full">
@@ -595,6 +860,9 @@ export default function CreateProfileForm() {
               ✕
             </button>
           </div>
+          {socialTouched[i]?.confirmation && socialErrors[i]?.confirmation && (
+            <p className="text-xs text-red-600 mt-1 text-left">{socialErrors[i].confirmation}</p>
+          )}
         </div>
       ))}
       {form.socialLinks.length > 0 && (
@@ -607,7 +875,11 @@ export default function CreateProfileForm() {
         <button type="submit" className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90">
           Crear perfil
         </button>
-        {msg && <p className={`text-center mt-2 text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>{msg.text}</p>}
+        {msg && (!msg.field && !msg.fields || msg.ok) && msg.text && typeof msg.text === 'string' && (
+          <p className={`text-center mt-2 text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>
+            {msg.text}
+          </p>
+        )}
       </form>
     </div>
   );
@@ -627,6 +899,11 @@ function getPrevDay(dateStr) {
   const date = new Date(dateStr);
   date.setDate(date.getDate() - 1);
   return date.toISOString().split('T')[0];
+}
+
+// Utilidad para obtener la fecha actual (formato yyyy-mm-dd)
+function getTodayDate() {
+  return new Date().toISOString().split('T')[0];
 }
 
 // Reutilizables

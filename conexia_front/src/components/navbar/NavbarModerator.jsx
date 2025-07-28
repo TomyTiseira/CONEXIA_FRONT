@@ -36,7 +36,6 @@ export default function NavbarAdmin() {
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Servicios', href: '#servicios', icon: Briefcase },
     { label: 'Proyectos', href: '#proyectos', icon: Layers },
-    { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';
