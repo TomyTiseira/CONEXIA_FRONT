@@ -216,7 +216,12 @@ export default function UserProfile() {
       <div className="bg-conexia-soft min-h-screen">
         <Navbar />
         <div className="w-full max-w-2xl mx-auto mt-4">
-          <EditProfileForm user={user} onSubmit={handleUpdate} isEditing={true} />
+          <EditProfileForm 
+            user={user} 
+            onSubmit={handleUpdate} 
+            onCancel={() => setEditing(false)}
+            isEditing={true} 
+          />
         </div>
       </div>
     );

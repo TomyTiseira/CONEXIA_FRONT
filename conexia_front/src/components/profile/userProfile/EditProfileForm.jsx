@@ -1,6 +1,7 @@
 // src/components/profile/userProfile/EditProfileForm.jsx
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { toggleHabilidad } from "@/components/utils/toggleHabilidad";
 import { useAuth } from "@/context/AuthContext";
 import InputField from "@/components/form/InputField";
@@ -8,9 +9,10 @@ import Button from "@/components/ui/Button";
 import TextArea from "@/components/form/InputField";
 import { config } from "@/config";
 import Image from "next/image";
-import { validateArgentinaPhone, isValidDate, isCurrentOrFutureDate, calculateAge } from "@/utils/validation";
+import { validateSimplePhone, isValidDate, isCurrentOrFutureDate, calculateAge } from "@/utils/validation";
 
-export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
+export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = true }) {
+  const router = useRouter();
   const profilePicRef = useRef(null);
   const coverPicRef = useRef(null);
   
@@ -84,8 +86,11 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
     // Validación específica por campo
     switch (name) {
       case 'phoneNumber':
-        if (value && value.trim() && !validateArgentinaPhone(value)) {
-          return 'Formato de teléfono inválido para Argentina';
+        if (value && value.trim()) {
+          const phoneValidation = validateSimplePhone(value);
+          if (!phoneValidation.isValid) {
+            return phoneValidation.message;
+          }
         }
         break;
       
@@ -195,6 +200,11 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
     updated[i].confirmed = true;
     setForm({ ...form, experience: updated });
     
+    // Actualizar errores para reflejar que ya está confirmada
+    const updatedErrors = [...expErrors];
+    updatedErrors[i] = getExperienceErrors(updated[i]);
+    setExpErrors(updatedErrors);
+    
     // Limpiar error de confirmación si todas las experiencias están confirmadas
     const allConfirmed = updated.every(exp => exp.confirmed);
     if (allConfirmed) {
@@ -242,6 +252,11 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
     updated[i].confirmed = true;
     setForm({ ...form, socialLinks: updated });
     
+    // Actualizar errores para reflejar que ya está confirmada
+    const updatedErrors = [...socialErrors];
+    updatedErrors[i] = getSocialErrors(updated[i]);
+    setSocialErrors(updatedErrors);
+    
     // Limpiar error de confirmación si todas las redes sociales están confirmadas
     const allConfirmed = updated.every(link => link.confirmed);
     if (allConfirmed) {
@@ -279,10 +294,22 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
       if (file.size > 5 * 1024 * 1024) {
         setImgErrors(prev => ({ ...prev, [field]: 'La imagen no puede superar los 5MB' }));
         setForm(prev => ({ ...prev, [field]: null }));
+        // Limpiar el input file si hay error
+        if (field === 'profilePicture' && profilePicRef.current) {
+          profilePicRef.current.value = '';
+        }
+        if (field === 'coverPicture' && coverPicRef.current) {
+          coverPicRef.current.value = '';
+        }
         return;
       }
+      // Limpiar error si el archivo es válido
       setImgErrors(prev => ({ ...prev, [field]: '' }));
       setForm(prev => ({ ...prev, [field]: file }));
+    } else {
+      // Si no hay archivo seleccionado
+      setImgErrors(prev => ({ ...prev, [field]: '' }));
+      setForm(prev => ({ ...prev, [field]: null }));
     }
   }
 
@@ -321,6 +348,11 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
       }
     }
     
+    // Validación de errores de imágenes
+    if (imgErrors.profilePicture || imgErrors.coverPicture) {
+      hasError = true;
+    }
+    
     setTouched(newTouched);
     setErrors(newErrors);
     
@@ -331,18 +363,15 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
     let firstExpErrorIndex = null;
     form.experience.forEach((exp, i) => {
       if (!exp.confirmed) {
-        newExpTouched[i] = { title: true, project: true, startDate: true, endDate: true };
+        newExpTouched[i] = { title: true, project: true, startDate: true, endDate: true, confirmation: true };
         const errs = getExperienceErrors(exp);
         newExpErrors[i] = errs;
-        if (errs.title || errs.project || errs.startDate || errs.endDate) {
-          hasError = true;
-          if (!firstErrorField && firstExpErrorIndex === null) {
+        // Si hay cualquier error (campos faltantes o no confirmada)
+        if (errs.title || errs.project || errs.startDate || errs.endDate || errs.confirmation) {
+          expHasError = true;
+          if (firstExpErrorIndex === null) {
             firstExpErrorIndex = i;
           }
-        }
-        expHasError = true; // Si no está confirmada, hay error
-        if (!firstErrorField && firstExpErrorIndex === null) {
-          firstExpErrorIndex = i;
         }
       }
     });
@@ -356,18 +385,15 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
     let firstSocialErrorIndex = null;
     form.socialLinks.forEach((social, i) => {
       if (!social.confirmed) {
-        newSocialTouched[i] = { platform: true, url: true };
+        newSocialTouched[i] = { platform: true, url: true, confirmation: true };
         const errs = getSocialErrors(social);
         newSocialErrors[i] = errs;
-        if (errs.platform || errs.url) {
-          hasError = true;
-          if (!firstErrorField && firstExpErrorIndex === null && firstSocialErrorIndex === null) {
+        // Si hay cualquier error (campos faltantes o no confirmada)
+        if (errs.platform || errs.url || errs.confirmation) {
+          socialHasError = true;
+          if (firstSocialErrorIndex === null) {
             firstSocialErrorIndex = i;
           }
-        }
-        socialHasError = true; // Si no está confirmada, hay error
-        if (!firstErrorField && firstExpErrorIndex === null && firstSocialErrorIndex === null) {
-          firstSocialErrorIndex = i;
         }
       }
     });
@@ -560,7 +586,6 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
                 onChange={handleChangeEvent} 
                 onBlur={() => handleBlur('name')}
                 error={touched.name && errors.name} 
-                required 
               />
             </div>
             <div>
@@ -571,7 +596,6 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
                 onChange={handleChangeEvent} 
                 onBlur={() => handleBlur('lastName')}
                 error={touched.lastName && errors.lastName} 
-                required 
               />
             </div>
             <div>
@@ -582,7 +606,6 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
                 onChange={handleChangeEvent} 
                 onBlur={() => handleBlur('country')}
                 error={touched.country && errors.country} 
-                required 
               />
             </div>
             <div>
@@ -593,7 +616,6 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
                 onChange={handleChangeEvent} 
                 onBlur={() => handleBlur('state')}
                 error={touched.state && errors.state} 
-                required 
               />
             </div>
             <div>
@@ -652,7 +674,6 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
                       onChange={e => handleExpChange(i, 'title', e.target.value)} 
                       onBlur={() => handleExpBlur(i, 'title')}
                       error={expTouched[i]?.title && expErrors[i]?.title}
-                      required 
                       disabled={exp.confirmed} 
                     />
                   </div>
@@ -663,7 +684,6 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
                       onChange={e => handleExpChange(i, 'project', e.target.value)} 
                       onBlur={() => handleExpBlur(i, 'project')}
                       error={expTouched[i]?.project && expErrors[i]?.project}
-                      required 
                       disabled={exp.confirmed} 
                     />
                   </div>
@@ -785,7 +805,6 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
                       onChange={e => handleSocialChange(i, 'url', e.target.value)} 
                       onBlur={() => handleSocialBlur(i, 'url')}
                       error={socialTouched[i]?.url && socialErrors[i]?.url}
-                      required 
                       disabled={link.confirmed} 
                     />
                   </div>
@@ -847,7 +866,20 @@ export default function EditProfileForm({ user, onSubmit, isEditing = true }) {
                 type="button"
                 className="w-full md:w-auto bg-[#ff4d58] text-white py-2 px-8 rounded font-semibold hover:bg-red-500"
                 style={{ minWidth: '120px' }}
-                onClick={() => { window.location.href = "/"; }}
+                onClick={() => {
+                  if (onCancel) {
+                    // Si hay una función onCancel, usarla
+                    onCancel();
+                  } else {
+                    // Fallback: navegar directamente
+                    try {
+                      router.replace(`/profile/${user.id}`);
+                    } catch (error) {
+                      console.error('Error al navegar:', error);
+                      window.location.href = `/profile/${user.id}`;
+                    }
+                  }
+                }}
               >
                 Cancelar
               </button>

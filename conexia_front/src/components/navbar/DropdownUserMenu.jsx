@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { config } from '@/config';
 
-export default function DropdownUserMenu({ onLogout }) {
+export default function DropdownUserMenu({ onLogout, onClose }) {
     const router = useRouter();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -77,7 +77,14 @@ export default function DropdownUserMenu({ onLogout }) {
                             <Button 
                                 className="px-3 py-0.5 text-xs" 
                                 onClick={() => {
-                                    router.push(`/profile/userProfile/${userId}`);
+                                    try {
+                                        if (onClose) onClose(); // Cerrar dropdown
+                                        router.push(`/profile/${userId}`);
+                                    } catch (error) {
+                                        console.error('Error al navegar al perfil:', error);
+                                        // Fallback: usar window.location
+                                        window.location.href = `/profile/${userId}`;
+                                    }
                                 }}
                             >
                                 Ver perfil
@@ -104,7 +111,10 @@ export default function DropdownUserMenu({ onLogout }) {
 
             {/* Opciones */}
             <button
-                onClick={() => router.push('/settings')}
+                onClick={() => {
+                    if (onClose) onClose(); // Cerrar dropdown
+                    router.push('/settings');
+                }}
                 className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
             >
                 <Settings size={16} />
@@ -112,7 +122,10 @@ export default function DropdownUserMenu({ onLogout }) {
             </button>
 
             <button
-                onClick={onLogout}
+                onClick={() => {
+                    if (onClose) onClose(); // Cerrar dropdown
+                    onLogout();
+                }}
                 className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
             >
                 <LogOut size={16} />

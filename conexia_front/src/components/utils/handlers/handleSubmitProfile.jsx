@@ -1,25 +1,13 @@
 import { createUserProfile } from "@/service/profiles/profilesFetch";
-import { calculateAge } from "@/components/utils/validations/fechas";
-import { validatePhoneWithInfo } from "@/components/utils/validations/phones";
+import { validateSimplePhone } from "@/components/utils/validations/phones";
 import { validateAllSocialLinks } from "@/components/utils/validations/socialLinks";
 import { validateAllExperiences } from "@/components/utils/validations/experience";
 
 export const handleSubmitProfile = async (e, form, setMsg, router, updateAuthUser) => {
   e.preventDefault();
 
-  const requiredFields = ["name", "lastName", "birthDate", "documentTypeId", "documentNumber"];
-  const missing = requiredFields.some((f) => !form[f]);
-  
-  if (missing) {
-    return setMsg({ ok: false, text: "Completá todos los campos obligatorios." });
-  }
-
-  if (calculateAge(form.birthDate) < 18) {
-    return setMsg({ ok: false, text: "Debes tener al menos 18 años." });
-  }
-
-  if (form.phoneNumber && form.phoneNumber.trim() !== "" && !validatePhoneWithInfo(form.phoneNumber).isValid) {
-    const phoneValidation = validatePhoneWithInfo(form.phoneNumber);
+  if (form.phoneNumber && form.phoneNumber.trim() !== "" && !validateSimplePhone(form.phoneNumber).isValid) {
+    const phoneValidation = validateSimplePhone(form.phoneNumber);
     return setMsg({ ok: false, text: phoneValidation.message });
   }
 
@@ -81,7 +69,23 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
       setMsg({ ok: false, text: "Error: No se pudo actualizar la sesión." });
     }
   } catch (err) {
-    console.error('Error al crear perfil:', err);
-    setMsg({ ok: false, text: "Error al crear el perfil." });
+    // Verificar si es el error específico de perfil existente (409)
+    if (err.status === 409 || err.isDuplicateProfile || (err.message && err.message.includes('already exists'))) {
+      // No registrar en consola porque es un error controlado
+      setMsg({ 
+        ok: false, 
+        text: "Este documento ya se encuentra registrado.", 
+        fields: ["documentTypeId", "documentNumber"] // Múltiples campos
+      });
+    } else {
+      // Solo registrar en consola errores no controlados
+      console.error('Error al crear perfil:', err);
+      
+      // Usar un mensaje más genérico que no cause problemas
+      const errorMessage = typeof err === 'string' ? err : 
+                          err.message || 
+                          "Error al crear el perfil.";
+      setMsg({ ok: false, text: errorMessage });
+    }
   }
 };
