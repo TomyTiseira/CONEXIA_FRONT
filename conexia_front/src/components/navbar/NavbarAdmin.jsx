@@ -14,7 +14,7 @@ import {
   ChevronDown,
   Users,
 } from 'lucide-react';
-import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
+import DropdownInternalUserMenu from '@/components/navbar/DropdownInternalUserMenu';
 import { config } from '@/config';
 
 export default function NavbarAdmin() {
@@ -105,7 +105,7 @@ export default function NavbarAdmin() {
               </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
+            {menuOpen && <DropdownInternalUserMenu onLogout={handleLogout} />}
           </div>
         </div>
       </nav>
@@ -137,7 +137,7 @@ export default function NavbarAdmin() {
               </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownUserMenu onLogout={handleLogout} />}
+            {menuOpen && <DropdownInternalUserMenu onLogout={handleLogout} />}
           </div>
         </div>
       </nav>

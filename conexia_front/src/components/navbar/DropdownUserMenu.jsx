@@ -1,14 +1,15 @@
-
 'use client';
 
 import { LogOut, Settings } from 'lucide-react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { config } from '@/config';
+
+const defaultAvatar = '/images/default-avatar.png';
 
 export default function DropdownUserMenu({ onLogout }) {
     const router = useRouter();
@@ -17,10 +18,6 @@ export default function DropdownUserMenu({ onLogout }) {
     const [error, setError] = useState(null);
     const { user } = useAuth();
     const userId = user?.id;
-    const defaultAvatar = '/images/default-avatar.png';
-    
-    // Verificar si es un usuario interno (admin/moderator) que no tiene perfil público
-    const isInternalUser = user?.role === 'admin' || user?.role === 'moderator';
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -44,80 +41,65 @@ export default function DropdownUserMenu({ onLogout }) {
         fetchProfile();
     }, [userId]);
 
-    if (loading) {
-        return null;
-    }
-
-    if (error || (!profile && !isInternalUser)) {
+    if (loading || error || !profile) {
         return null;
     }
 
     return (
-        <div className="absolute right-0 top-12 w-56 bg-white border rounded shadow-md z-50 py-3 text-conexia-green">
-            {/* Header del usuario */}
-            {profile ? (
-                <div className="px-4 py-3 flex items-center gap-3 border-b">
-                    <div className="w-12 h-12 relative rounded-full overflow-hidden">
+        <div className="absolute right-0 top-12 w-64 bg-white border rounded shadow-md z-50 py-3 text-conexia-green">
+            {/* Perfil */}
+            <div className="flex flex-col gap-3 px-4 pb-3 border-b">
+                <div className="flex gap-3 items-center">
+                    <div className="w-10 h-10 relative rounded-full overflow-hidden shrink-0">
                         <Image
                             src={
                                 profile.profilePicture
-                                ? `${config.IMAGE_URL}/${profile.profilePicture}`
-                                : defaultAvatar
+                                    ? `${config.IMAGE_URL}/${profile.profilePicture}`
+                                    : defaultAvatar
                             }
                             alt="Foto de perfil"
                             fill
                             className="object-cover"
                         />
                     </div>
-                    <div className="flex flex-col justify-center">
-                        <span className="font-semibold text-sm">{profile.name} {profile.lastName}</span>
-                        <span className="text-xs text-conexia-green/80 mb-1">{profile.description || ''}</span>
-                        {/* Solo mostrar botón "Ver perfil" para usuarios no internos */}
-                        {!isInternalUser && (
-                            <Button 
-                                className="px-3 py-0.5 text-xs" 
-                                onClick={() => {
-                                    router.push(`/profile/userProfile/${userId}`);
-                                }}
-                            >
-                                Ver perfil
-                            </Button>
-                        )}
+                    <div className="flex flex-col justify-center min-w-0">
+                        <span className="font-semibold text-sm truncate">
+                            {profile.name} {profile.lastName}
+                        </span>
+                        <span className="text-xs text-conexia-green/80 leading-tight line-clamp-2 break-words">
+                            {profile.description || ''}
+                        </span>
                     </div>
                 </div>
-            ) : isInternalUser ? (
-                <div className="px-4 py-3 flex items-center gap-3 border-b">
-                    <div className="w-12 h-12 relative rounded-full overflow-hidden">
-                        <Image
-                            src={defaultAvatar}
-                            alt="Foto de perfil"
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                        <span className="font-semibold text-sm">{user?.email}</span>
-                        <span className="text-xs text-conexia-green/80 mb-1">Usuario {user?.role}</span>
-                    </div>
+
+                <div className="flex justify-center items-center">
+                    <Link
+                        href={`/profile/userProfile/${userId}`}
+                        className="bg-conexia-green text-white text-xs px-3 py-1 rounded-md hover:bg-conexia-green/90 transition-colors"
+                    >
+                        Ver perfil
+                    </Link>
                 </div>
-            ) : null}
+            </div>
 
-            {/* Opciones */}
-            <button
-                onClick={() => router.push('/settings')}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
-            >
-                <Settings size={16} />
-                Configuraciones y privacidad
-            </button>
+            {/* Acciones */}
+            <div className="pt-1">
+                <button
+                    onClick={() => router.push('/settings')}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+                >
+                    <Settings size={16} />
+                    Configuraciones y privacidad
+                </button>
 
-            <button
-                onClick={onLogout}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
-            >
-                <LogOut size={16} />
-                Cerrar sesión
-            </button>
+                <button
+                    onClick={onLogout}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+                >
+                    <LogOut size={16} />
+                    Cerrar sesión
+                </button>
+            </div>
         </div>
     );
 }
