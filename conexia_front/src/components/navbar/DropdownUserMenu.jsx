@@ -3,7 +3,7 @@
 import { LogOut, Settings } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getProfileById } from '@/service/profiles/profilesFetch';
@@ -12,9 +12,10 @@ import { config } from '@/config';
 
 const defaultAvatar = '/images/default-avatar.png';
 
-export default function DropdownUserMenu({ onLogout, }) {
+export default function DropdownUserMenu({ onLogout, onClose }) {
 
     const router = useRouter();
+    const pathname = usePathname();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -42,6 +43,46 @@ export default function DropdownUserMenu({ onLogout, }) {
 
         fetchProfile();
     }, [userId]);
+
+    // Función para manejar el click en "Ver perfil"
+    const handleViewProfile = () => {
+        // Cerrar el dropdown primero
+        if (onClose) {
+            onClose();
+        }
+        
+        // Detectar si estamos en la página de perfil de usuario y si hay elementos del formulario de edición
+        const isInProfilePage = pathname && pathname.includes('/profile/userProfile/');
+        
+        // Verificar si hay elementos del formulario de edición en el DOM
+        const hasEditForm = typeof window !== 'undefined' && 
+                           document.querySelector('form[novalidate]') !== null;
+        
+        const isEditingProfile = isInProfilePage && hasEditForm;
+        
+        // Debug logs
+        console.log('Debug handleViewProfile:', {
+            pathname,
+            isInProfilePage,
+            hasEditForm,
+            isEditingProfile,
+            userId
+        });
+        
+        // Usar setTimeout para asegurar que el dropdown se cierre antes de navegar
+        setTimeout(() => {
+            if (isEditingProfile) {
+                // Si estamos editando, navegar de vuelta a la visualización del perfil sin parámetros
+                console.log('Navegando desde edición a visualización del perfil');
+                // Usar window.location.href para forzar la navegación
+                window.location.href = `/profile/userProfile/${userId}`;
+            } else {
+                // Si no estamos editando, navegar normalmente al perfil de usuario
+                console.log('Navegando normalmente al perfil de usuario');
+                router.push(`/profile/userProfile/${userId}`);
+            }
+        }, 100);
+    };
 
     if (loading || error || !profile) {
         return null;
@@ -76,12 +117,12 @@ export default function DropdownUserMenu({ onLogout, }) {
                 </div>
 
                 <div className="flex justify-center items-center">
-                    <Link
-                        href={`/profile/userProfile/${userId}`}
+                    <button
+                        onClick={handleViewProfile}
                         className="bg-conexia-green text-white text-xs px-3 py-1 rounded-md hover:bg-conexia-green/90 transition-colors"
                     >
                         Ver perfil
-                    </Link>
+                    </button>
                 </div>
             </div>
 
