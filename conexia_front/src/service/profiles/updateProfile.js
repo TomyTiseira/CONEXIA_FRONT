@@ -11,7 +11,7 @@ export async function updateUserProfile(payload) {
       const formData = new FormData();
       
       // Solo agregar campos que tienen valores (que se están actualizando)
-      const textFields = ['name', 'lastName', 'birthDate', 'phoneNumber', 'country', 'state', 'description'];
+      const textFields = ['name', 'lastName', 'birthDate', 'phoneNumber', 'country', 'state', 'description', 'profession'];
       textFields.forEach(field => {
         if (payload[field] !== null && payload[field] !== undefined && payload[field] !== '') {
           formData.append(field, payload[field]);
@@ -19,7 +19,7 @@ export async function updateUserProfile(payload) {
       });
       
       // Solo agregar arrays si tienen contenido
-      ['skills', 'experience', 'socialLinks'].forEach(field => {
+      ['skills', 'experience', 'socialLinks', 'education', 'certifications'].forEach(field => {
         if (payload[field] && Array.isArray(payload[field]) && payload[field].length > 0) {
           formData.append(field, JSON.stringify(payload[field]));
         }
@@ -47,7 +47,7 @@ export async function updateUserProfile(payload) {
       const jsonPayload = {};
       
       // Solo incluir campos de texto que tienen valores
-      const textFields = ['name', 'lastName', 'birthDate', 'phoneNumber', 'country', 'state', 'description'];
+      const textFields = ['name', 'lastName', 'birthDate', 'phoneNumber', 'country', 'state', 'description', 'profession'];
       textFields.forEach(field => {
         if (payload[field] !== null && payload[field] !== undefined && payload[field] !== '') {
           jsonPayload[field] = payload[field];
@@ -55,7 +55,7 @@ export async function updateUserProfile(payload) {
       });
       
       // Solo incluir arrays que tienen contenido
-      ['skills', 'experience', 'socialLinks'].forEach(field => {
+      ['skills', 'experience', 'socialLinks', 'education', 'certifications'].forEach(field => {
         if (payload[field] && Array.isArray(payload[field]) && payload[field].length > 0) {
           jsonPayload[field] = payload[field];
         }

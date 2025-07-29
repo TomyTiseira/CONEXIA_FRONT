@@ -96,7 +96,8 @@ export default function UserProfile() {
         phoneNumber: user.phoneNumber,
         country: user.country,
         state: user.state,
-        description: user.description
+        description: user.description,
+        profession: user.profession
       };
       
       Object.keys(textFields).forEach(field => {
@@ -163,6 +164,49 @@ export default function UserProfile() {
       
       // Siempre incluir las redes sociales para asegurar que se mantenga el estado
       changedFields.socialLinks = cleanedSocialLinks;
+      
+      // Siempre incluir educación (todas, no solo las que cambiaron)
+      // Limpiar educación del formulario
+      const cleanedEducation = [];
+      if (Array.isArray(formData.education)) {
+        formData.education.forEach((edu) => {
+          if (edu && typeof edu === 'object' && edu.institution?.trim() && edu.title?.trim() && edu.startDate?.trim()) {
+            const educationItem = {
+              institution: String(edu.institution).trim(),
+              title: String(edu.title).trim(),
+              startDate: String(edu.startDate).trim(),
+              isCurrent: Boolean(edu.isCurrent)
+            };
+            
+            // Solo agregar endDate si no es actual y tiene valor
+            if (!edu.isCurrent && edu.endDate?.trim()) {
+              educationItem.endDate = String(edu.endDate).trim();
+            }
+            
+            cleanedEducation.push(educationItem);
+          }
+        });
+      }
+      
+      // Siempre incluir las educaciones para asegurar que se mantenga el estado
+      changedFields.education = cleanedEducation;
+
+      // Siempre incluir certificaciones (todas, no solo las que cambiaron)
+      // Limpiar certificaciones del formulario
+      const cleanedCertifications = [];
+      if (Array.isArray(formData.certifications)) {
+        formData.certifications.forEach((cert) => {
+          if (cert && typeof cert === 'object' && cert.name?.trim() && cert.url?.trim()) {
+            cleanedCertifications.push({
+              name: String(cert.name).trim(),
+              url: String(cert.url).trim()
+            });
+          }
+        });
+      }
+      
+      // Siempre incluir las certificaciones para asegurar que se mantenga el estado
+      changedFields.certifications = cleanedCertifications;
       
       // Agregar archivos si son nuevos
       if (formData.profilePicture instanceof File) {
@@ -265,8 +309,13 @@ export default function UserProfile() {
               <h2 className="text-2xl font-bold text-conexia-green">
                 {user.name} {user.lastName}
               </h2>
+              {user.profession && (
+                <p className="text-conexia-coral font-medium text-lg mt-1">
+                  {user.profession}
+                </p>
+              )}
               {(user.state || user.country) && (
-                <p className="text-gray-600">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
+                <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
               )}
             </div>
           </div>
@@ -342,6 +391,43 @@ export default function UserProfile() {
                     </li>
                   );
                 })}
+              </ul>
+            </Section>
+          )}
+          {Array.isArray(user.education) && user.education.length > 0 && (
+            <Section title="Educación">
+              <ul className="ml-2">
+                {user.education.map((edu, idx) => {
+                  const start = edu.startDate ? new Date(edu.startDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' }) : '';
+                  const end = edu.isCurrent
+                    ? 'Actualidad'
+                    : edu.endDate
+                      ? new Date(edu.endDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' })
+                      : '';
+                  return (
+                    <li key={idx} className="mb-2">
+                      <div className="font-semibold text-conexia-green">{edu.title}</div>
+                      {edu.institution && <div className="text-sm text-conexia-coral">{edu.institution}</div>}
+                      <div className="text-xs text-gray-500">
+                        {start} - {end}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Section>
+          )}
+          {Array.isArray(user.certifications) && user.certifications.length > 0 && (
+            <Section title="Certificaciones">
+              <ul className="list-disc ml-6">
+                {user.certifications.map((cert, idx) => (
+                  <li key={idx}>
+                    <span className="font-semibold mr-2">{cert.name}:</span>
+                    <a href={cert.url} target="_blank" className="text-conexia-coral underline">
+                      Ver certificación
+                    </a>
+                  </li>
+                ))}
               </ul>
             </Section>
           )}

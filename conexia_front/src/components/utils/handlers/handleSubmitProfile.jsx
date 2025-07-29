@@ -2,6 +2,49 @@ import { createUserProfile } from "@/service/profiles/profilesFetch";
 import { validateSimplePhone } from "@/components/utils/validations/phones";
 import { validateAllSocialLinks } from "@/components/utils/validations/socialLinks";
 import { validateAllExperiences } from "@/components/utils/validations/experience";
+import { isValidExperienceDates } from "@/components/utils/validations/fechas";
+import { isValidURL } from "@/components/utils/validations/urls";
+
+// Validación para educación (igual que experiencia)
+const validateEducationEntry = (edu, birthDate) => {
+  const { institution, title, startDate, endDate, isCurrent } = edu;
+
+  if ((institution && !title) || (!institution && title)) {
+    return { valid: false, error: "Completá institución y título." };
+  }
+
+  const dateCheck = isValidExperienceDates({ startDate, endDate, isCurrent }, birthDate);
+  if (!dateCheck.valid) return { valid: false, error: dateCheck.error };
+
+  return { valid: true };
+};
+
+const validateAllEducations = (educations, birthDate) => {
+  for (const edu of educations) {
+    const result = validateEducationEntry(edu, birthDate);
+    if (!result.valid) return result;
+  }
+  return { valid: true };
+};
+
+// Validación para certificaciones (igual que redes sociales)
+const validateCertification = ({ name, url }) => {
+  if ((name && !url) || (!name && url) || (!name && !url)) {
+    return { valid: false, error: "Completá nombre y URL." };
+  }
+  if (url && !isValidURL(url)) {
+    return { valid: false, error: "Ingresá una URL válida." };
+  }
+  return { valid: true };
+};
+
+const validateAllCertifications = (certifications) => {
+  for (const cert of certifications) {
+    const result = validateCertification(cert);
+    if (!result.valid) return result;
+  }
+  return { valid: true };
+};
 
 export const handleSubmitProfile = async (e, form, setMsg, router, updateAuthUser) => {
   e.preventDefault();
@@ -23,28 +66,64 @@ export const handleSubmitProfile = async (e, form, setMsg, router, updateAuthUse
 		return setMsg({ ok: false, text: expValidation.error });
 	}
 
+  // Validar educaciones (igual que experiencias)
+  const eduValidation = validateAllEducations(form.education, form.birthDate);
+  if (!eduValidation.valid) {
+    return setMsg({ ok: false, text: eduValidation.error });
+  }
+
 const socialValidation = validateAllSocialLinks(form.socialLinks);
   if (!socialValidation.valid) {
     return setMsg({ ok: false, text: socialValidation.error });
   }
 
+  // Validar certificaciones (igual que redes sociales)
+  const certValidation = validateAllCertifications(form.certifications);
+  if (!certValidation.valid) {
+    return setMsg({ ok: false, text: certValidation.error });
+  }
+
   const formData = new FormData();
+  
+  // Debug temporal - verificar estructura exacta que esperan
+  console.log('=== ESTRUCTURA COMPLETA ENVIADA ===');
+  console.log('Form completo:', form);
+  console.log('Skills:', JSON.stringify(form.skills));
+  console.log('Experience:', JSON.stringify(updatedExperience));
+  console.log('Education:', JSON.stringify(form.education));
+  console.log('Certifications:', JSON.stringify(form.certifications));
+  console.log('Social Links:', JSON.stringify(form.socialLinks));
+  
   Object.entries(form).forEach(([key, value]) => {
     // No enviar phoneNumber si está vacío
     if (key === 'phoneNumber' && (!value || value.trim() === '')) {
+      console.log(`Skipping empty phoneNumber`);
       return;
     }
     
     if (Array.isArray(value)) {
-      formData.set(key, JSON.stringify(key === "experience" ? updatedExperience : value));
+      const jsonString = JSON.stringify(key === "experience" ? updatedExperience : value);
+      console.log(`${key} as JSON string:`, jsonString);
+      formData.set(key, jsonString);
     } else if (value instanceof File) {
+      console.log(`${key}: File - ${value.name}`);
       formData.set(key, value);
     } else if (typeof value === "number") {
+      console.log(`${key}: ${value} (as string: ${value.toString()})`);
       formData.set(key, value.toString());
     } else if (value !== null && value !== undefined) {
+      console.log(`${key}: ${value}`);
       formData.set(key, value);
+    } else {
+      console.log(`Skipping ${key}: null or undefined`);
     }
   });
+  
+  // Mostrar todo lo que va en FormData
+  console.log('=== FORMDATA FINAL ===');
+  for (let [key, value] of formData.entries()) {
+    console.log(`FormData ${key}:`, value);
+  }
 
   try {
     const response = await createUserProfile(formData);
