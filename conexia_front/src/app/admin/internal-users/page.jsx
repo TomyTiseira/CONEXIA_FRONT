@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import InternalUsersTable from '@/components/admin/internal-users/InternalUsersTable';
 import InternalUsersFilters from '@/components/admin/internal-users/InternalUsersFilters';
 import useInternalUsers from '@/hooks/internal-users/useInternalUsers';
@@ -12,7 +12,7 @@ import useDeleteInternalUser from '@/hooks/internal-users/useDeleteInternalUser'
 import DeleteInternalUserModal from '@/components/admin/internal-users/DeleteInternalUserModal';
 import EditInternalUserModal from '@/components/admin/internal-users/EditInternalUserModal';
 
-export default function InternalUsersPage() {
+function InternalUsersContent() {
   const internalUsers = useInternalUsers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
@@ -85,5 +85,20 @@ export default function InternalUsersPage() {
         />
       )}
     </>
+  );
+}
+
+export default function InternalUsersPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#eaf5f2]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
+          <p className="text-conexia-green">Cargando usuarios internos...</p>
+        </div>
+      </div>
+    }>
+      <InternalUsersContent />
+    </Suspense>
   );
 }

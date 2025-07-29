@@ -1,6 +1,7 @@
 'use client';
 
 import { useSelectedLayoutSegment } from 'next/navigation';
+import { Suspense } from 'react';
 import SettingsHeader from '@/components/settings/layout/SettingsHeader';
 import SettingsSidebarDesktop from '@/components/settings/layout/SettingsSidebarDesktop';
 import SettingsSidebarMobile from '@/components/settings/layout/SettingsSidebarMobile';
@@ -16,10 +17,18 @@ export default function SettingsLayout({ children }) {
   const toggleMobileMenu = () => setMenuOpen((prev) => !prev);
 
   return (
-    <ProtectedRoute 
-      allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR]}
-      fallbackComponent={<NotFound />}
-    >
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-conexia-soft">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
+          <p className="text-conexia-green">Cargando configuraciones...</p>
+        </div>
+      </div>
+    }>
+      <ProtectedRoute 
+        allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR]}
+        fallbackComponent={<NotFound />}
+      >
       <div className="min-h-screen bg-conexia-soft flex flex-col">
         <SettingsHeader onToggleMenu={toggleMobileMenu} />
 
@@ -48,5 +57,6 @@ export default function SettingsLayout({ children }) {
         </div>
       </div>
     </ProtectedRoute>
+    </Suspense>
   );
 }

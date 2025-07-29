@@ -115,3 +115,21 @@ export const getRoleById = async (id) => {
       return null;
     }
   };
+
+  // Dar de baja usuario (eliminar cuenta propia)
+export async function deleteMyUser({ motivo }) {
+  const response = await fetchWithRefresh(`${config.API_URL}/users`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ reason: motivo }),
+    credentials: 'include',
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'No se pudo dar de baja la cuenta');
+  }
+  return data;
+}

@@ -8,7 +8,7 @@ export default function Button({
     type = 'button',
     onClick,
     className = '',
-    variant = 'primary', // 'primary' | 'secondary' | 'neutral' | 'informative'
+    variant = 'primary', // 'primary' | 'secondary' | 'neutral' | 'informative' | 'danger' | 'success'
     ...props
     }) {
     const baseStyles =
@@ -23,6 +23,7 @@ export default function Button({
         edit:'bg-[#e4f1f1] text-conexia-green hover:bg-[#d6ebeb]',
         add:'bg-[#cde6e6] text-conexia-green hover:bg-[#b9dddd]',
         danger: 'bg-red-600 text-white hover:bg-red-700',
+        success: 'bg-conexia-green text-white hover:bg-conexia-green/80 focus:ring-conexia-green/50',
     };
 
     return (

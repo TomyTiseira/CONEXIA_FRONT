@@ -10,6 +10,7 @@ import TextArea from "@/components/form/InputField";
 import { config } from "@/config";
 import Image from "next/image";
 import { validateSimplePhone, isValidDate, isCurrentOrFutureDate, calculateAge } from "@/utils/validation";
+import { isValidURL } from "@/components/utils/validations/urls";
 
 export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = true }) {
   const router = useRouter();
@@ -143,7 +144,8 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
   const getSocialErrors = (social) => {
     return {
       platform: !social.platform || social.platform.trim() === '' ? 'Campo obligatorio' : '',
-      url: !social.url || social.url.trim() === '' ? 'Campo obligatorio' : '',
+      url: !social.url || social.url.trim() === '' ? 'Campo obligatorio' : 
+           (social.url && social.url.trim() !== '' && !isValidURL(social.url.trim())) ? 'Ingresá una URL válida' : '',
     };
   };
 
@@ -378,22 +380,30 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     setExpTouched(newExpTouched);
     setExpErrors(newExpErrors);
     
-    // Validar redes sociales no confirmadas (igual que crear perfil)
+    // Validar redes sociales (tanto confirmadas como no confirmadas)
     const newSocialTouched = [...socialTouched];
     const newSocialErrors = [...socialErrors];
     let socialHasError = false;
     let firstSocialErrorIndex = null;
     form.socialLinks.forEach((social, i) => {
-      if (!social.confirmed) {
-        newSocialTouched[i] = { platform: true, url: true, confirmation: true };
-        const errs = getSocialErrors(social);
-        newSocialErrors[i] = errs;
-        // Si hay cualquier error (campos faltantes o no confirmada)
-        if (errs.platform || errs.url || errs.confirmation) {
-          socialHasError = true;
-          if (firstSocialErrorIndex === null) {
-            firstSocialErrorIndex = i;
-          }
+      // Validar todas las redes sociales
+      newSocialTouched[i] = { platform: true, url: true, confirmation: true };
+      const errs = getSocialErrors(social);
+      newSocialErrors[i] = errs;
+      
+      // Si hay cualquier error (campos faltantes, URL inválida o no confirmada)
+      if (errs.platform || errs.url || (!social.confirmed && (errs.platform || errs.url))) {
+        socialHasError = true;
+        if (firstSocialErrorIndex === null) {
+          firstSocialErrorIndex = i;
+        }
+      }
+      
+      // Si no está confirmada pero es válida, también es un error
+      if (!social.confirmed && isSocialLinkValid(social)) {
+        socialHasError = true;
+        if (firstSocialErrorIndex === null) {
+          firstSocialErrorIndex = i;
         }
       }
     });
@@ -407,7 +417,13 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
       setExpConfirmError('');
     }
     
-    if (socialHasError) {
+    // Verificar si hay errores de URL o confirmación en redes sociales
+    const hasUrlErrors = form.socialLinks.some((social, i) => socialErrors[i]?.url);
+    const hasUnconfirmedValid = form.socialLinks.some(social => !social.confirmed && isSocialLinkValid(social));
+    
+    if (hasUrlErrors) {
+      setSocialConfirmError("Corregí las URLs inválidas antes de continuar");
+    } else if (hasUnconfirmedValid) {
       setSocialConfirmError("Para continuar debes confirmar la red social");
     } else {
       setSocialConfirmError('');

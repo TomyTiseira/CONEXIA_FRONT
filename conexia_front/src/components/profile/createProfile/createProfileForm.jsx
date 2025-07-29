@@ -11,6 +11,7 @@ import { removeItemFromFormArray } from "@/components/utils/removeItemArray";
 import { toggleHabilidad } from "@/components/utils/toggleHabilidad";
 import { useAuth } from "@/context/AuthContext";
 import { isValidPhoneNumber, validateSimplePhone } from "@/components/utils/validations/phones";
+import { isValidURL } from "@/components/utils/validations/urls";
 
 import InputField from "@/components/form/InputField";
 import TextArea from "@/components/form/InputField";
@@ -281,7 +282,8 @@ export default function CreateProfileForm() {
   function getSocialErrors(link) {
     const errors = {
       platform: !link.platform || link.platform.trim() === '' ? 'Campo obligatorio' : '',
-      url: !link.url || link.url.trim() === '' ? 'Campo obligatorio' : '',
+      url: !link.url || link.url.trim() === '' ? 'Campo obligatorio' : 
+           (link.url && link.url.trim() !== '' && !isValidURL(link.url.trim())) ? 'Ingresá una URL válida' : '',
     };
 
     // Validar que la red social esté confirmada

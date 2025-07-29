@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import RegisterForm from "@/components/register/RegisterForm";
 import { Footer } from "@/components/Footer";
 import HeroPanel from "@/components/hero/HeroPanel";
@@ -10,7 +11,16 @@ export default function RegisterPage() {
           title="¡Crea tu cuenta y súmate!"
           subtitle="Conecta con talentos, proyectos y oportunidades reales."
         />
-        <RegisterForm />
+        <Suspense fallback={
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
+              <p className="text-conexia-green">Cargando formulario...</p>
+            </div>
+          </div>
+        }>
+          <RegisterForm />
+        </Suspense>
       </section>
       <Footer />
     </main>

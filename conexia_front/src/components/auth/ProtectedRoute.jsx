@@ -1,5 +1,6 @@
 import { useRoleValidation } from "@/hooks";
 import { LoadingSpinner, ErrorDisplay, NotFound } from "@/components/ui";
+import { useSearchParams } from "next/navigation";
 
 export const ProtectedRoute = ({ 
   children, 
@@ -9,6 +10,9 @@ export const ProtectedRoute = ({
   publicContent = null,
   roleBasedContent = null // Nuevo prop para contenido específico por rol
 }) => {
+  const searchParams = useSearchParams();
+  const isForceLogout = searchParams.get('logout') === 'true';
+  
   const {
     isAuthenticated,
     isInitialLoading,
@@ -17,7 +21,12 @@ export const ProtectedRoute = ({
     roleError,
     hasAnyRole,
     role
-  } = useRoleValidation()
+  } = useRoleValidation();
+
+  // Si hay parámetro logout=true, forzar contenido público independientemente del estado de autenticación
+  if (isForceLogout && publicContent) {
+    return publicContent;
+  }
 
   // Estado de carga inicial
   if (isInitialLoading) {
