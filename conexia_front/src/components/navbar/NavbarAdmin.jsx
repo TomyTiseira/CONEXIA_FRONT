@@ -105,7 +105,12 @@ export default function NavbarAdmin() {
               </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownInternalUserMenu onLogout={handleLogout} />}
+            {menuOpen && (
+              <DropdownInternalUserMenu
+                onLogout={handleLogout}
+                onClose={() => setMenuOpen(false)}
+              />
+            )}
           </div>
         </div>
       </nav>
@@ -137,7 +142,12 @@ export default function NavbarAdmin() {
               </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownInternalUserMenu onLogout={handleLogout} />}
+            {menuOpen && (
+              <DropdownInternalUserMenu
+                onLogout={handleLogout}
+                onClose={() => setMenuOpen(false)}
+              />
+            )}
           </div>
         </div>
       </nav>
