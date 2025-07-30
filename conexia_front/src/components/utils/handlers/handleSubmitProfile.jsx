@@ -102,7 +102,18 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
     }
     
     if (Array.isArray(value)) {
-      const jsonString = JSON.stringify(key === "experience" ? updatedExperience : value);
+      let processedValue;
+      
+      if (key === "experience") {
+        processedValue = updatedExperience;
+      } else if (key === "skills") {
+        // Convertir skills a array de IDs
+        processedValue = value.map(skill => skill.id);
+      } else {
+        processedValue = value;
+      }
+      
+      const jsonString = JSON.stringify(processedValue);
       console.log(`${key} as JSON string:`, jsonString);
       formData.set(key, jsonString);
     } else if (value instanceof File) {
@@ -127,25 +138,45 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
 
   try {
     const response = await createUserProfile(formData);
-    setMsg({ ok: true, text: "Perfil creado con éxito." });
     
-    // El usuario está en response.data.user según la estructura que devuelve el backend
-    const userData = response.data?.user || response.user;
+    // Debug de la respuesta completa
+    console.log('Respuesta completa del backend:', response);
     
-    if (response.success && userData && updateAuthUser) {
+    // El usuario puede estar en diferentes ubicaciones según la respuesta del backend
+    const userData = response.data?.user || response.user || response.data;
+    
+    console.log('Datos del usuario extraídos:', userData);
+    console.log('Función updateUser disponible:', !!updateAuthUser);
+    
+    if (response.success !== false && userData && updateAuthUser) {
+      // Actualizar el usuario en el contexto
       updateAuthUser(userData);
       
-      // Usar replace para evitar que el usuario pueda volver atrás a la página de creación
+      // Mostrar mensaje de éxito
+      setMsg({ ok: true, text: "¡Perfil creado con éxito! Redirigiendo a la comunidad..." });
+      
+      // Esperar y redirigir
       setTimeout(() => {
-        router.replace("/");
-      }, 300);
+        console.log('Redirigiendo a la comunidad...');
+        window.location.href = "/";  // Usar window.location para forzar recarga completa
+      }, 2000);
+    } else if (userData && updateAuthUser) {
+      // Si no hay success pero sí hay userData, asumir éxito
+      updateAuthUser(userData);
+      
+      setMsg({ ok: true, text: "¡Perfil creado con éxito! Redirigiendo a la comunidad..." });
+      
+      setTimeout(() => {
+        console.log('Redirigiendo a la comunidad (caso alternativo)...');
+        window.location.href = "/";
+      }, 2000);
     } else {
       console.error('No se pudo actualizar el usuario:', { 
-        success: response.success, 
+        response: response,
         hasUser: !!userData, 
         hasUpdateFunction: !!updateAuthUser
       });
-      setMsg({ ok: false, text: "Error: No se pudo actualizar la sesión." });
+      setMsg({ ok: false, text: "Error: No se pudo actualizar la sesión del usuario." });
     }
   } catch (err) {
     // Verificar si es el error específico de perfil existente (409)

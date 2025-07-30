@@ -9,6 +9,12 @@ export async function createUserProfile(formData) {
   });
 
   const response = await res.json();
+  
+  // Debug para ver la respuesta exacta
+  console.log('=== RESPUESTA DE CREATE PROFILE ===');
+  console.log('Status:', res.status);
+  console.log('Response completa:', response);
+  console.log('====================================');
 
   if (!res.ok) {
     // Crear un error más simple y robusto

@@ -15,6 +15,7 @@ import EditProfileForm from "./EditProfileForm";
 import { updateUserProfile } from "@/service/profiles/updateProfile";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/ui/Button";
+import SkillsDisplay from "@/components/skills/SkillsDisplay";
 
 
 
@@ -353,22 +354,7 @@ export default function UserProfile() {
           )}
           {Array.isArray(user.skills) && user.skills.length > 0 && (
             <Section title="Habilidades">
-              <div className="flex flex-wrap gap-2">
-                {user.skills.map((h, idx) => {
-                  let skillText = h;
-                  // Si es string, limpiar llaves y comillas
-                  if (typeof h === 'string') {
-                    skillText = h.replace(/[{"}]}/g, '').trim();
-                  } else if (h.name) {
-                    skillText = h.name;
-                  }
-                  return (
-                    <span key={idx} className="bg-conexia-soft text-conexia-green px-3 py-1 rounded-full text-sm">
-                      {skillText}
-                    </span>
-                  );
-                })}
-              </div>
+              <SkillsDisplay skills={user.skills} />
             </Section>
           )}
           {Array.isArray(user.experience) && user.experience.length > 0 && (

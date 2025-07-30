@@ -8,6 +8,7 @@ import InputField from "@/components/form/InputField";
 import Button from "@/components/ui/Button";
 import TextArea from "@/components/form/InputField";
 import { config } from "@/config";
+import SkillsSelector from "@/components/skills/SkillsSelector";
 import Image from "next/image";
 import { validateSimplePhone, isValidDate, isCurrentOrFutureDate, calculateAge } from "@/utils/validation";
 import { isValidURL } from "@/components/utils/validations/urls";
@@ -917,18 +918,11 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           {/* Habilidades */}
           <div className="-mt-6">
             <label className="block font-medium text-conexia-green mb-1">Habilidades</label>
-            <div className="flex flex-wrap gap-2">
-              {habilidadesDisponibles.map((h) => (
-                <button
-                  key={h}
-                  type="button"
-                  onClick={() => toggleHabilidad(h, form, setForm)}
-                  className={`px-3 py-1 rounded border text-sm font-medium ${form.skills.includes(h) ? "bg-conexia-green text-white" : "bg-gray-100 text-gray-700"}`}
-                >
-                  {h}
-                </button>
-              ))}
-            </div>
+            <SkillsSelector
+              selectedSkills={form.skills}
+              onSkillsChange={(newSkills) => setForm(prev => ({ ...prev, skills: newSkills }))}
+              maxSkills={20}
+            />
           </div>
           
           {/* Experiencia */}

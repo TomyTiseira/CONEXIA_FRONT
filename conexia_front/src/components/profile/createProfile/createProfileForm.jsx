@@ -16,6 +16,7 @@ import { isValidURL } from "@/components/utils/validations/urls";
 import InputField from "@/components/form/InputField";
 import TextArea from "@/components/form/InputField";
 import { handleSubmitProfile } from "@/components/utils/handlers";
+import SkillsSelector from "@/components/skills/SkillsSelector";
 
 
 
@@ -925,20 +926,11 @@ export default function CreateProfileForm() {
         {/* Habilidades */}
         <div>
           <label className="block font-medium text-conexia-green mb-1">Habilidades</label>
-          <div className="flex flex-wrap gap-2">
-            {habilidadesDisponibles.map((h) => (
-              <button
-                key={h}
-                type="button"
-                onClick={() => toggleHabilidad(h, form, setForm)}
-                className={`px-3 py-1 rounded border text-sm font-medium ${
-                  form.skills.includes(h) ? "bg-conexia-green text-white" : "bg-gray-100 text-gray-700"
-                }`}
-              >
-                {h}
-              </button>
-            ))}
-          </div>
+          <SkillsSelector
+            selectedSkills={form.skills}
+            onSkillsChange={(newSkills) => setForm(prev => ({ ...prev, skills: newSkills }))}
+            maxSkills={20}
+          />
         </div>
 
     {/* Experiencia */}

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { verifyUser } from "@/service/user/userFetch"; 
 import ResendCodeButton from "../auth/ResendCodeButton"; 
 import { resendVerification } from "@/service/user/userFetch";
+import { useAuth } from "@/context/AuthContext";
 
 export default function VerifyForm() {
   const searchParams = useSearchParams();
@@ -14,6 +15,7 @@ export default function VerifyForm() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [msg, setMsg] = useState(null);
   const router = useRouter();
+  const { refetch: refreshAuth } = useAuth();
 
   const handleChange = (index, value) => {
   if (/^\d$/.test(value)) {
@@ -72,8 +74,14 @@ const handlePaste = (e) => {
     }
 
     try {
-      await verifyUser({ email, verificationCode });
+      const response = await verifyUser({ email, verificationCode });
       setMsg({ ok: true, text: "¡Usuario verificado con éxito!" });
+      
+      // El usuario ya está logueado en el backend (cookies HTTP-only)
+      // Actualizar el estado de autenticación en el frontend
+      await refreshAuth();
+      
+      // Redirigir a creación de perfil
       setTimeout(() => router.push("/profile/Create"), 1500);
     } catch (err) {
       if (
