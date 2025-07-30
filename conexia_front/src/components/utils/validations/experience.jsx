@@ -2,8 +2,6 @@ import { isValidExperienceDates } from "./fechas.jsx";
 
 export const validateExperienceEntry = (exp, birthDate) => {
   const { title, project, startDate, endDate, isCurrent } = exp;
-  console.log("startDate original:", birthDate, "tipo:", typeof birthDate);
-  console.log("startDate original:", startDate, "tipo:", typeof startDate);
 
   if ((title && !project) || (!title && project)) {
     return { valid: false, error: "Completá título y proyecto." };
