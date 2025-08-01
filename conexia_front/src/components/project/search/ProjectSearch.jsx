@@ -12,14 +12,24 @@ export default function ProjectSearch() {
     category: '',
     skills: [],
     collaboration: '',
+    contract: '',
   });
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
 
+  // Normaliza los filtros para enviar solo ids y el título
   const handleSearch = async (newFilters) => {
     setFilters(newFilters);
     setSearched(true);
-    const projects = await fetchProjects(newFilters);
+    // Solo enviar los ids y el título
+    const params = {
+      title: newFilters.title,
+      category: newFilters.category || '',
+      skills: newFilters.skills || [],
+      collaboration: newFilters.collaboration || '',
+      contract: newFilters.contract || '',
+    };
+    const projects = await fetchProjects(params);
     setResults(projects);
   };
 

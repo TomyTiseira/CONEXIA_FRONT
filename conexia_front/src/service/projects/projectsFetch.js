@@ -1,53 +1,61 @@
+// Obtener proyecto por id (simulado)
+export async function fetchProjectById(id) {
+  const res = await fetch(`http://localhost:8080/api/projects/${id}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+  if (!res.ok) return null;
+  const p = await res.json();
+  return {
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    image: p.image,
+    location: p.location,
+    price: p.price,
+    ownerName: p.ownerName,
+    ownerImage: p.ownerImage,
+    ownerId: p.ownerId,
+    contractType: p.contractType,
+    collaborationType: p.collaborationType,
+    skills: p.skills,
+    category: p.category,
+  };
+}
 // Servicio para buscar proyectos según filtros
-export async function fetchProjects({ title, category, skills, collaboration }) {
-  // Simulación: reemplazar por fetch real a la API
-  // Aquí deberías construir la query string según los filtros
+
+export async function fetchProjects({ title, category, skills, collaboration, contract, ownerId, active }) {
   const params = new URLSearchParams();
   if (title) params.append('title', title);
-  if (category) params.append('category', category);
+  if (category) params.append('categoryId', category);
   if (skills && skills.length > 0) params.append('skills', skills.join(','));
-  if (collaboration) params.append('collaboration', collaboration);
+  if (collaboration) params.append('collaborationTypeId', collaboration);
+  if (contract) params.append('contractTypeId', contract);
+  if (ownerId) params.append('ownerId', ownerId);
+  if (typeof active === 'boolean') params.append('active', active);
 
-  // Ejemplo de endpoint: /api/projects?title=...&category=...&skills=...&collaboration=...
-  // const res = await fetch(`/api/projects?${params.toString()}`);
-  // return await res.json();
-
-  // Simulación de resultados
-  return [
-    {
-      id: 1,
-      title: 'Plataforma para gestionar tareas con IA',
-      description: 'Buscamos desarrollar una app web con funciones de automatización usando IA.',
-      image: '/img/proyecto1.jpg',
-      location: 'Córdoba',
-      price: 300,
-      ownerName: 'Luis Rodríguez',
-      ownerImage: '/img/user1.jpg',
-      contractType: 'Remunerada',
-      collaborationType: 'Remunerada',
-      skills: ['React', 'Python'],
-      category: 'Tecnología e Innovación',
-    },
-    {
-      id: 2,
-      title: 'Dibuja conmigo un cuento para chicos',
-      description: 'Estoy escribiendo un libro infantil y necesito un ilustrador/a para crear los personajes y escenarios.',
-      image: '/img/proyecto2.jpg',
-      location: 'Córdoba',
-      price: 300,
-      ownerName: 'Julieta Ortega',
-      ownerImage: '/img/user2.jpg',
-      contractType: 'Remunerada',
-      collaborationType: 'Voluntaria',
-      skills: ['Creatividad', 'Comunicación'],
-      category: 'Diseño y Creatividad',
-    },
-    // ...más proyectos de ejemplo
-  ].filter(p => {
-    if (title && !p.title.toLowerCase().includes(title.toLowerCase())) return false;
-    if (category && p.category !== category) return false;
-    if (skills && skills.length > 0 && !skills.every(s => p.skills.includes(s))) return false;
-    if (collaboration && p.collaborationType !== collaboration) return false;
-    return true;
+  const res = await fetch(`http://localhost:8080/api/projects?${params.toString()}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
   });
+  if (!res.ok) throw new Error('Error al obtener proyectos');
+  const data = await res.json();
+  // Adaptar los proyectos al formato esperado por la UI
+  return data.map(p => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    image: p.image,
+    location: p.location,
+    price: p.price,
+    ownerName: p.ownerName,
+    ownerImage: p.ownerImage,
+    ownerId: p.ownerId,
+    contractType: p.contractType, // si existe
+    collaborationType: p.collaborationType, // si existe
+    skills: p.skills, // array de ids o nombres según backend
+    category: p.category, // nombre o id según backend
+  }));
 }

@@ -1,5 +1,7 @@
-// Lista de proyectos (vacía por defecto)
+import { useRouter } from 'next/navigation';
+
 export default function ProjectList({ projects }) {
+  const router = useRouter();
   if (!projects || projects.length === 0) {
     return <div className="text-center text-conexia-green mt-12 text-lg opacity-70">No se encontraron proyectos.</div>;
   }
@@ -34,8 +36,18 @@ export default function ProjectList({ projects }) {
             <span className="text-conexia-green font-semibold text-sm">{project.ownerName}</span>
           </div>
           <div className="flex gap-2 mt-2">
-            <button className="bg-conexia-coral text-white px-4 py-2 rounded text-sm font-semibold hover:bg-conexia-coral/90 transition">+ información</button>
-            <button className="bg-conexia-green/90 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-conexia-green transition">Ver perfil</button>
+            <button
+              className="bg-conexia-coral text-white px-4 py-2 rounded text-sm font-semibold hover:bg-conexia-coral/90 transition"
+              onClick={() => router.push(`/project/${project.id}`)}
+            >
+              + información
+            </button>
+            <button
+              className="bg-conexia-green/90 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-conexia-green transition"
+              onClick={() => router.push(`/profile/userProfile/${project.ownerId}`)}
+            >
+              Ver perfil
+            </button>
           </div>
         </div>
       ))}
