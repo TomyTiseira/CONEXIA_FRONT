@@ -1,198 +1,406 @@
 'use client';
 
-import { useState } from 'react';
-import useLocationAutocomplete from '@/hooks/common/useLocationAutocomplete';
-import useSkillsSearch from '@/hooks/common/useSkillsSearch';
+import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { useSkills } from '@/hooks/useSkills';
+import { useProjectCategories } from '@/hooks/project/useProjectCategories';
+import { useCollaborationTypes } from '@/hooks/project/useCollaborationTypes';
+import { useContractTypes } from '@/hooks/project/useContractTypes';
+import { useCreateProject } from '@/hooks/project/useCreateProject';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
 import DateRangePicker from '@/components/form/DateRangePicker';
-import SkillSelector from '@/components/common/SkillSelector';
+import SkillsSelector from '@/components/skills/SkillsSelector';
 import Button from '@/components/ui/Button';
+import LocalitySelector from '@/components/localities/LocalitySelector';
 
 export default function CreateProjectForm() {
-  const [projectData, setProjectData] = useState({
+  // Handler para el selector de provincia
+  const handleLocalityChange = (locality) => {
+    setForm((prev) => ({
+      ...prev,
+      locationId: locality ? locality.id : '',
+      locationName: locality ? locality.name : '',
+    }));
+    if (touched['locationId']) validateField('locationId', locality ? locality.id : '');
+  };
+  const router = useRouter();
+  const imageInputRef = useRef(null);
+  const [msg, setMsg] = useState(null); 
+
+  const [form, setForm] = useState({
     title: '',
     description: '',
-    location: '',
+    locationId: '', // id de la provincia seleccionada
+    locationName: '', // nombre para mostrar en el input
     category: '',
     contractType: '',
     collaborationType: '',
     maxCollaborators: '',
     image: null,
     skills: [],
-    dates: { start: '', end: '' },
+    dates: { startDate: '', endDate: '' },
   });
 
   const [errors, setErrors] = useState({});
-  const [locationQuery, setLocationQuery] = useState('');
-  const locationOptions = useLocationAutocomplete(locationQuery);
+  const [touched, setTouched] = useState({});
+  const [imgError, setImgError] = useState('');
+
+  const { skills } = useSkills();
+  const { data: categories } = useProjectCategories();
+  const { data: collaborationTypes } = useCollaborationTypes();
+  const { data: contractTypes } = useContractTypes();
+  const { publishProject, loading } = useCreateProject();
 
   const handleChange = (field, value) => {
-    setProjectData((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (touched[field]) validateField(field, value);
   };
 
   const handleDateChange = (field, value) => {
-    setProjectData((prev) => ({
+    setForm((prev) => ({
       ...prev,
-      dates: { ...prev.dates, [field]: value },
+      dates: {
+        ...prev.dates,
+        [field]: value,
+      },
     }));
   };
 
-  const validate = () => {
-    const errs = {};
-    if (!projectData.title) errs.title = 'El título es obligatorio';
-    if (!projectData.description) errs.description = 'Agregá una descripción';
-    if (!projectData.location) errs.location = 'Ubicación requerida';
-    if (!projectData.dates.start || !projectData.dates.end) errs.dates = 'Fechas requeridas';
-    if (projectData.skills.length === 0) errs.skills = 'Seleccioná al menos una habilidad';
-    if (!projectData.collaborationType) errs.collaborationType = 'Seleccioná un tipo';
-    if (!projectData.category) errs.category = 'Seleccioná una categoría';
-    if (!projectData.contractType) errs.contractType = 'Seleccioná un tipo de contrato';
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+  const handleSkillsChange = (skills) => {
+    setForm((prev) => ({ ...prev, skills }));
   };
+
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    validateField(field, form[field]);
+  };
+
+  const validateField = (field, value) => {
+    let error = '';
+
+    if (field === 'title') {
+      if (!value) error = 'Este campo es obligatorio';
+      else if (value.trim().length < 3 || value.length > 100)
+        error = 'Debe tener entre 3 y 100 caracteres';
+    }
+
+    if (field === 'description') {
+      if (!value) error = 'Este campo es obligatorio';
+      else if (value.trim().length < 50 || value.length > 1000)
+        error = 'Debe tener entre 50 y 1000 caracteres';
+    }
+
+    // Solo mostrar error si el usuario escribió algo pero no seleccionó una provincia
+    if (field === 'locationId') {
+      if (form.locationName && !value) {
+        error = 'Selecciona una provincia válida';
+      }
+    }
+
+    if (['category', 'collaborationType', 'contractType'].includes(field) && !value) {
+      error = 'Este campo es obligatorio';
+    }
+
+    if (field === 'dates') {
+      if (
+        form.dates.startDate &&
+        form.dates.endDate &&
+        form.dates.endDate < form.dates.startDate
+      ) {
+        error = 'La fecha hasta no puede ser menor a la fecha desde';
+      }
+    }
+
+    // Validación para maxCollaborators: debe ser entero mayor a 1 si se ingresa
+    if (field === 'maxCollaborators' && value !== '') {
+      const num = Number(value);
+      if (!Number.isInteger(num) || num < 1) {
+        error = 'Debe ingresar un número entero mayor o igual a 1';
+      }
+    }
+
+    setErrors((prev) => ({ ...prev, [field]: error }));
+  };
+
+  const validateAll = () => {
+    const fields = ['title', 'description', 'category', 'collaborationType', 'contractType', 'dates'];
+    const newTouched = {};
+    let isValid = true;
+
+    fields.forEach((field) => {
+      newTouched[field] = true;
+      validateField(field, form[field]);
+      if (errors[field]) isValid = false;
+    });
+
+    setTouched((prev) => ({ ...prev, ...newTouched }));
+    return isValid;
+  };
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file && file.size <= 5 * 1024 * 1024) {
-      handleChange('image', file);
+      setForm((prev) => ({ ...prev, image: file }));
+      setImgError('');
     } else {
-      alert('La imagen debe ser JPG o PNG y pesar menos de 5MB');
+      setImgError('La imagen debe pesar menos de 5MB y ser JPG o PNG');
+      setForm((prev) => ({ ...prev, image: null }));
+      if (imageInputRef.current) imageInputRef.current.value = '';
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleRemoveImage = () => {
+      setForm((prev) => ({ ...prev, image: null }));
+      setImgError('');
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    };
+
+    const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
-    console.log(projectData);
-    // enviar al backend
+    const isValid = validateAll();
+    // Validar campos obligatorios manualmente
+    const requiredFields = ['title', 'description', 'category', 'collaborationType', 'contractType'];
+    let missing = false;
+    requiredFields.forEach((field) => {
+      if (!form[field] || (typeof form[field] === 'string' && form[field].trim() === '')) {
+        missing = true;
+        setErrors((prev) => ({ ...prev, [field]: 'Este campo es obligatorio' }));
+      }
+    });
+    // Bloquear envío si maxCollaborators tiene error y no está vacío
+    if ((form.maxCollaborators !== '' && errors.maxCollaborators) || !isValid || missing) return;
+
+    try {
+      const formToSend = { ...form, location: form.locationId };
+      await publishProject(formToSend);
+      setMsg({ ok: true, text: 'Proyecto publicado con éxito.' });
+      //setTimeout(() => {
+      //  router.push('/project');
+      //}, 1500); // 1,5 segundos
+    } catch (err) {
+      setMsg({ ok: false, text: err.message || 'Error al publicar el proyecto' });
+    }
   };
 
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <InputField
-        label="Título del proyecto"
-        name="title"
-        value={projectData.title}
-        onChange={(e) => handleChange('title', e.target.value)}
-        error={errors.title}
-        required
-      />
-
-      <InputField
-        label="Descripción del proyecto"
-        name="description"
-        multiline
-        rows={4}
-        value={projectData.description}
-        onChange={(e) => handleChange('description', e.target.value)}
-        error={errors.description}
-        required
-      />
-
-      <InputField
-        label="Ubicación"
-        name="location"
-        placeholder="Ej: Córdoba, Argentina"
-        value={locationQuery}
-        onChange={(e) => {
-          setLocationQuery(e.target.value);
-          handleChange('location', e.target.value);
-        }}
-        error={errors.location}
-      />
-      {locationOptions.length > 0 && (
-        <ul className="bg-white border rounded mt-1 shadow-sm max-h-48 overflow-y-auto">
-          {locationOptions.map((loc, idx) => (
-            <li
-              key={idx}
-              className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => {
-                handleChange('location', loc.label);
-                setLocationQuery(loc.label);
-              }}
-            >
-              {loc.label}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div>
-        <p className="font-medium text-sm text-gray-700 mb-1">Plazo estimado de ejecución</p>
-        <DateRangePicker
-          start={projectData.dates.start}
-          end={projectData.dates.end}
-          onChange={handleDateChange}
+    <form onSubmit={handleSubmit} noValidate className="w-full grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+      {/* Título del proyecto */}
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Título del proyecto
+        </label>
+        <InputField
+          name="title"
+          placeholder="Ingrese el título del proyecto"
+          value={form.title}
+          onChange={(e) => handleChange('title', e.target.value)}
+          onBlur={() => handleBlur('title')}
+          error={touched.title && errors.title}
+          required
         />
+      </div>
+
+      {/* Descripción */}
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Descripción del proyecto
+        </label>
+        <InputField
+          name="description"
+          placeholder="Describí brevemente tu idea"
+          multiline
+          rows={4}
+          value={form.description}
+          onChange={(e) => handleChange('description', e.target.value)}
+          onBlur={() => handleBlur('description')}
+          error={touched.description && errors.description}
+          required
+          showCharCount={true}
+          maxLength={1000}
+        />
+      </div>
+
+      {/* Ubicación */}
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[120px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Ubicación del proyecto
+        </label>
+        <LocalitySelector
+          selectedLocality={form.locationId ? { id: form.locationId, name: form.locationName } : null}
+          onLocalityChange={handleLocalityChange}
+          className=""
+        />
+        {touched.locationId && errors.locationId && (
+          <div className="text-xs text-red-600 mt-1">{errors.locationId}</div>
+        )}
+      </div>
+
+      {/* Habilidades */}
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Habilidades requeridas
+        </label>
+        <div className="min-h-[110px]">
+          <SkillsSelector selectedSkills={form.skills} onSkillsChange={handleSkillsChange} />
+        </div>
+      </div>
+
+      {/* Fechas */}
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[75px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Plazo estimado de ejecución
+        </label>
+        <div className="w-full flex flex-row justify-center gap-3">
+          <DateRangePicker
+            start={form.dates.startDate}
+            end={form.dates.endDate}
+            onStartChange={(e) => handleDateChange('startDate', e.target.value)}
+            onEndChange={(e) => handleDateChange('endDate', e.target.value)}
+            errorStart={
+              errors.dates &&
+              (!form.dates.startDate || (form.dates.endDate && form.dates.startDate > form.dates.endDate))
+                ? errors.dates
+                : ''
+            }
+            errorEnd={
+              errors.dates &&
+              (!form.dates.endDate || (form.dates.endDate && form.dates.endDate < form.dates.startDate))
+                ? errors.dates
+                : ''
+            }
+          />
+        </div>
         {errors.dates && <p className="text-xs text-red-600 mt-1">{errors.dates}</p>}
       </div>
 
-      <SkillSelector
-        selectedSkills={projectData.skills}
-        setSelectedSkills={(skills) => handleChange('skills', skills)}
-      />
-      {errors.skills && <p className="text-xs text-red-600 mt-1">{errors.skills}</p>}
-
-      <SelectField
-        label="Tipo de colaboración"
-        name="collaborationType"
-        options={['Remunerada', 'Voluntaria', 'A definir']}
-        value={projectData.collaborationType}
-        onChange={(e) => handleChange('collaborationType', e.target.value)}
-        error={errors.collaborationType}
-      />
-
-      <SelectField
-        label="Categoría del proyecto"
-        name="category"
-        options={['Tecnología', 'Educación', 'Salud', 'Ambiental', 'Arte']}
-        value={projectData.category}
-        onChange={(e) => handleChange('category', e.target.value)}
-        error={errors.category}
-      />
-
-      <SelectField
-        label="Tipo de contrato"
-        name="contractType"
-        options={['Remoto', 'Híbrido', 'Presencial']}
-        value={projectData.contractType}
-        onChange={(e) => handleChange('contractType', e.target.value)}
-        error={errors.contractType}
-      />
-
-      <InputField
-        label="Número máximo de colaboradores (opcional)"
-        name="maxCollaborators"
-        type="number"
-        value={projectData.maxCollaborators}
-        onChange={(e) => handleChange('maxCollaborators', e.target.value)}
-      />
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Imagen representativa del proyecto
+      {/* Tipo de colaboración */}
+      <div className="flex flex-col justify-center min-h-[120px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Tipo de colaboración
         </label>
-        <input
-          type="file"
-          accept="image/jpeg, image/png"
-          onChange={handleImageChange}
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-                     file:rounded-full file:border-0
-                     file:text-sm file:font-semibold
-                     file:bg-conexia-green file:text-white
-                     hover:file:bg-conexia-green/90"
+        <SelectField
+          name="collaborationType"
+          options={collaborationTypes?.map((t) => ({ value: t.id, label: t.name })) || []}
+          value={form.collaborationType}
+          onChange={(e) => handleChange('collaborationType', e.target.value)}
+          error={touched.collaborationType && errors.collaborationType}
         />
       </div>
 
+      {/* Tipo de contrato */}
+      <div className="flex flex-col justify-center min-h-[120px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Tipo de contrato
+        </label>
+        <SelectField
+          name="contractType"
+          options={contractTypes?.map((t) => ({ value: t.id, label: t.name })) || []}
+          value={form.contractType}
+          onChange={(e) => handleChange('contractType', e.target.value)}
+          error={touched.contractType && errors.contractType}
+        />
+      </div>
+
+      {/* Categoría */}
+      <div className="flex flex-col justify-center min-h-[72px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Categoría del proyecto
+        </label>
+        <SelectField
+          name="category"
+          options={categories?.map((t) => ({ value: t.id, label: t.name })) || []}
+          value={form.category}
+          onChange={(e) => handleChange('category', e.target.value)}
+          error={touched.category && errors.category}
+        />
+      </div>
+
+      {/* Máximo de colaboradores */}
+      <div className="flex flex-col justify-center min-h-[72px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          N° máximo de colaboradores (opcional)
+        </label>
+        <InputField
+          name="maxCollaborators"
+          type="number"
+          placeholder="Ingrese un número entero mayor a 1"
+          value={form.maxCollaborators}
+          onChange={(e) => handleChange('maxCollaborators', e.target.value)}
+          onBlur={() => handleBlur('maxCollaborators')}
+          error={touched.maxCollaborators && errors.maxCollaborators}
+        />
+      </div>
+
+      {/* Imagen representativa */}
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Imagen representativa del proyecto
+        </label>
+
+        <div className="flex items-center gap-4">
+          <div className="w-[120px] h-[80px] border rounded bg-gray-100 flex items-center justify-center overflow-hidden">
+            {form.image ? (
+              <Image
+                src={URL.createObjectURL(form.image)}
+                alt="Vista previa"
+                width={120}
+                height={80}
+                className="object-cover"
+              />
+            ) : (
+              <span className="text-xs text-gray-500">Sin imagen</span>
+            )}
+          </div>
+
+          {form.image && (
+            <button
+              type="button"
+              className="text-red-600 text-sm hover:underline"
+              onClick={handleRemoveImage}
+            >
+              Eliminar imagen
+            </button>
+          )}
+        </div>
+
+        <input
+          type="file"
+          accept="image/jpeg, image/png"
+          ref={imageInputRef}
+          onChange={handleImageChange}
+          className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-[#367d7d] file:text-white
+                    hover:file:bg-[#2b6a6a]"
+        />
+        <p className="text-xs text-red-600 mt-1 min-h-[20px]">
+          {imgError || '\u00A0'}
+        </p>
+      </div>
+
+
       {/* Botones */}
-      <div className="flex justify-between pt-4">
-        <Button type="button" variant="neutral" onClick={() => console.log('Cancelar')}>
+      <div className="md:col-span-2 flex justify-end gap-4 pt-4">
+        <Button type="button" variant="secondary" onClick={() => router.push('/community/projects')}>
           Cancelar
         </Button>
-        <Button type="submit" variant="primary">
-          Publicar proyecto
+        <Button type="submit" variant="primary" disabled={loading}>
+          {loading ? 'Publicando...' : 'Publicar proyecto'}
         </Button>
+      </div>
+
+      {/* Mensaje de error o éxito */}
+      <div className="md:col-span-2 min-h-[48px] mt-2">
+        {msg && (
+          <p className={`text-sm text-center ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
+            {msg.text}
+          </p>
+        )}
       </div>
     </form>
   );

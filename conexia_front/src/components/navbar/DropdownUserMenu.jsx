@@ -107,7 +107,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               {profile.name} {profile.lastName}
             </span>
             <span className="text-xs text-conexia-green/80 leading-tight line-clamp-2 break-words">
-              {profile.description || ''}
+              {profile.profession || ''}
             </span>
           </div>
         </div>

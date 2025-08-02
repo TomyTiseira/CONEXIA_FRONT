@@ -8,6 +8,7 @@ import InputField from "@/components/form/InputField";
 import Button from "@/components/ui/Button";
 import TextArea from "@/components/form/InputField";
 import { config } from "@/config";
+import SkillsSelector from "@/components/skills/SkillsSelector";
 import Image from "next/image";
 import { validateSimplePhone, isValidDate, isCurrentOrFutureDate, calculateAge } from "@/utils/validation";
 import { isValidURL } from "@/components/utils/validations/urls";
@@ -24,12 +25,15 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     phoneNumber: user.phoneNumber || "",
     country: user.country || "",
     state: user.state || "",
+    profession: user.profession || "",
     profilePicture: null,
     coverPicture: null,
     skills: user.skills || [],
     description: user.description || "",
     experience: (user.experience || []).map(exp => ({ ...exp, confirmed: true })),
     socialLinks: (user.socialLinks || []).map(link => ({ ...link, confirmed: true })),
+    education: (user.education || []).map(edu => ({ ...edu, confirmed: true })),
+    certifications: (user.certifications || []).map(cert => ({ ...cert, confirmed: true })),
   });
   
   const [imgErrors, setImgErrors] = useState({ profilePicture: '', coverPicture: '' });   
@@ -39,9 +43,15 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
   const [expTouched, setExpTouched] = useState([]);
   const [socialErrors, setSocialErrors] = useState([]);
   const [socialTouched, setSocialTouched] = useState([]);
+  const [eduErrors, setEduErrors] = useState([]);
+  const [eduTouched, setEduTouched] = useState([]);
+  const [certErrors, setCertErrors] = useState([]);
+  const [certTouched, setCertTouched] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expConfirmError, setExpConfirmError] = useState('');
   const [socialConfirmError, setSocialConfirmError] = useState('');
+  const [eduConfirmError, setEduConfirmError] = useState('');
+  const [certConfirmError, setCertConfirmError] = useState('');
   
   const habilidadesDisponibles = ["Frontend", "Backend", "UX/UI", "DevOps", "Marketing", "Otra"];
   const plataformas = ["LinkedIn", "GitHub", "Twitter", "Portfolio", "Otro"];
@@ -58,6 +68,18 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     if (form.socialLinks.length > 0) {
       setSocialErrors(form.socialLinks.map(social => getSocialErrors(social)));
       setSocialTouched(form.socialLinks.map(() => ({ platform: false, url: false })));
+    }
+
+    // Inicializar errores y touched para educación existente
+    if (form.education.length > 0) {
+      setEduErrors(form.education.map(edu => getEducationErrors(edu)));
+      setEduTouched(form.education.map(() => ({ institution: false, title: false, startDate: false, endDate: false })));
+    }
+
+    // Inicializar errores y touched para certificaciones existentes
+    if (form.certifications.length > 0) {
+      setCertErrors(form.certifications.map(cert => getCertificationErrors(cert)));
+      setCertTouched(form.certifications.map(() => ({ name: false, url: false })));
     }
   }, []);
 
@@ -118,6 +140,14 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     );
   }
 
+  // Función para verificar si una experiencia es válida
+  function isExperienceValid(exp) {
+    return exp.title && exp.title.trim() !== '' && 
+           exp.project && exp.project.trim() !== '' && 
+           exp.startDate && 
+           (exp.isCurrent || exp.endDate);
+  }
+
   // Función para obtener errores de experiencia
   const getExperienceErrors = (exp) => {
     const errors = {
@@ -137,17 +167,85 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
       }
     }
 
+    // Validar que la experiencia esté confirmada
+    if (isExperienceValid(exp) && !exp.confirmed) {
+      errors.confirmation = 'Debes confirmar la experiencia antes de continuar';
+    }
+
     return errors;
   };
 
   // Función para obtener errores de redes sociales
   const getSocialErrors = (social) => {
-    return {
+    const errors = {
       platform: !social.platform || social.platform.trim() === '' ? 'Campo obligatorio' : '',
       url: !social.url || social.url.trim() === '' ? 'Campo obligatorio' : 
            (social.url && social.url.trim() !== '' && !isValidURL(social.url.trim())) ? 'Ingresá una URL válida' : '',
     };
+
+    // Validar que la red social esté confirmada
+    if (isSocialLinkValid(social) && !social.confirmed) {
+      errors.confirmation = 'Debes confirmar la red social antes de continuar';
+    }
+
+    return errors;
   };
+
+  // Función para obtener errores de educación (igual que experiencia)
+  const getEducationErrors = (edu) => {
+    const errors = {
+      institution: !edu.institution ? 'Campo obligatorio' : '',
+      title: !edu.title ? 'Campo obligatorio' : '',
+      startDate: !edu.startDate ? 'Campo obligatorio' : '',
+      endDate: !edu.isCurrent && !edu.endDate ? 'Campo obligatorio' : '',
+    };
+
+    // Validar que la fecha "Desde" no sea posterior a la fecha "Hasta"
+    if (edu.startDate && edu.endDate && !edu.isCurrent) {
+      const startDate = new Date(edu.startDate);
+      const endDate = new Date(edu.endDate);
+      if (startDate >= endDate) {
+        errors.startDate = 'La fecha de inicio debe ser anterior a la fecha de fin';
+        errors.endDate = 'La fecha de fin debe ser posterior a la fecha de inicio';
+      }
+    }
+
+    // Validar que la educación esté confirmada
+    if (isEducationValid(edu) && !edu.confirmed) {
+      errors.confirmation = 'Debes confirmar la educación antes de continuar';
+    }
+
+    return errors;
+  };
+
+  // Función para obtener errores de certificaciones (igual que redes sociales)
+  const getCertificationErrors = (cert) => {
+    const errors = {
+      name: !cert.name || cert.name.trim() === '' ? 'Campo obligatorio' : '',
+      url: !cert.url || cert.url.trim() === '' ? 'Campo obligatorio' : 
+           (cert.url && cert.url.trim() !== '' && !isValidURL(cert.url.trim())) ? 'Ingresá una URL válida' : '',
+    };
+
+    // Validar que la certificación esté confirmada
+    if (isCertificationValid(cert) && !cert.confirmed) {
+      errors.confirmation = 'Debes confirmar la certificación antes de continuar';
+    }
+
+    return errors;
+  };
+
+  // Función para verificar si una educación es válida
+  function isEducationValid(edu) {
+    return edu.institution && edu.institution.trim() !== '' && 
+           edu.title && edu.title.trim() !== '' && 
+           edu.startDate && edu.startDate.trim() !== '' &&
+           (edu.isCurrent || (edu.endDate && edu.endDate.trim() !== ''));
+  }
+
+  // Función para verificar si una certificación es válida
+  function isCertificationValid(cert) {
+    return cert.name && cert.name.trim() !== '' && cert.url && cert.url.trim() !== '';
+  }
 
   // Función para verificar si una red social es válida
   function isSocialLinkValid(link) {
@@ -272,6 +370,112 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     setForm({ ...form, socialLinks: updated });
   }
 
+  // Funciones para manejo de educación (igual que experiencia)
+  function handleAddEducation() {
+    setForm(prev => ({ ...prev, education: [...prev.education, { institution: '', title: '', startDate: '', endDate: '', isCurrent: false, confirmed: false }] }));
+    setEduTouched(prev => [...prev, { institution: false, title: false, startDate: false, endDate: false }]);
+    setEduErrors(prev => [...prev, getEducationErrors({ institution: '', title: '', startDate: '', endDate: '', isCurrent: false })]);
+  }
+
+  function handleRemoveEducation(i) {
+    setForm(prev => ({ ...prev, education: prev.education.filter((_, idx) => idx !== i) }));
+    setEduTouched(prev => prev.filter((_, idx) => idx !== i));
+    setEduErrors(prev => prev.filter((_, idx) => idx !== i));
+  }
+
+  function handleEducationChange(i, field, value) {
+    const updated = [...form.education];
+    updated[i][field] = value;
+    setForm({ ...form, education: updated });
+    
+    if (eduTouched[i]) {
+      const errs = getEducationErrors(updated[i]);
+      setEduErrors(prev => prev.map((e, idx) => idx === i ? errs : e));
+    }
+  }
+
+  function handleEducationBlur(i, field) {
+    setEduTouched(prev => prev.map((t, idx) => idx === i ? { ...t, [field]: true } : t));
+    const errs = getEducationErrors(form.education[i]);
+    setEduErrors(prev => prev.map((e, idx) => idx === i ? errs : e));
+  }
+
+  function handleConfirmEducation(i) {
+    const updated = [...form.education];
+    updated[i].confirmed = true;
+    setForm({ ...form, education: updated });
+    
+    // Actualizar errores para reflejar que ya está confirmada
+    const updatedErrors = [...eduErrors];
+    updatedErrors[i] = getEducationErrors(updated[i]);
+    setEduErrors(updatedErrors);
+    
+    // Limpiar error de confirmación si todas las educaciones están confirmadas
+    const allConfirmed = updated.every(edu => edu.confirmed);
+    if (allConfirmed) {
+      setEduConfirmError('');
+    }
+  }
+
+  function handleEditEducation(i) {
+    const updated = [...form.education];
+    updated[i].confirmed = false;
+    setForm({ ...form, education: updated });
+  }
+
+  // Funciones para manejo de certificaciones (igual que redes sociales)
+  function handleAddCertification() {
+    setForm(prev => ({ ...prev, certifications: [...prev.certifications, { name: '', url: '', confirmed: false }] }));
+    setCertTouched(prev => [...prev, { name: false, url: false }]);
+    setCertErrors(prev => [...prev, getCertificationErrors({ name: '', url: '' })]);
+  }
+
+  function handleRemoveCertification(i) {
+    setForm(prev => ({ ...prev, certifications: prev.certifications.filter((_, idx) => idx !== i) }));
+    setCertTouched(prev => prev.filter((_, idx) => idx !== i));
+    setCertErrors(prev => prev.filter((_, idx) => idx !== i));
+  }
+
+  function handleCertificationChange(i, field, value) {
+    const updated = [...form.certifications];
+    updated[i][field] = value;
+    setForm({ ...form, certifications: updated });
+    
+    if (certTouched[i]) {
+      const errs = getCertificationErrors(updated[i]);
+      setCertErrors(prev => prev.map((e, idx) => idx === i ? errs : e));
+    }
+  }
+
+  function handleCertificationBlur(i, field) {
+    setCertTouched(prev => prev.map((t, idx) => idx === i ? { ...t, [field]: true } : t));
+    const errs = getCertificationErrors(form.certifications[i]);
+    setCertErrors(prev => prev.map((e, idx) => idx === i ? errs : e));
+  }
+
+  function handleConfirmCertification(i) {
+    const updated = [...form.certifications];
+    updated[i].confirmed = true;
+    setForm({ ...form, certifications: updated });
+    
+    // Actualizar errores para reflejar que ya está confirmada
+    const updatedErrors = [...certErrors];
+    updatedErrors[i] = getCertificationErrors(updated[i]);
+    setCertErrors(updatedErrors);
+    
+    // Limpiar error de confirmación si todas las certificaciones están confirmadas
+    const allConfirmed = updated.every(cert => cert.confirmed);
+    if (allConfirmed) {
+      setCertConfirmError('');
+    }
+  }
+
+  function handleEditCertification(i) {
+    const updated = [...form.certifications];
+    updated[i].confirmed = false;
+    setForm({ ...form, certifications: updated });
+  }
+
   // Manejo de cambios en campos con validación en tiempo real
   function handleChangeEvent(e) {
     const { name, value } = e.target;
@@ -358,49 +562,33 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     setTouched(newTouched);
     setErrors(newErrors);
     
-    // Validar experiencias no confirmadas (igual que crear perfil)
-    const newExpTouched = [...expTouched];
-    const newExpErrors = [...expErrors];
+    // Validar todas las experiencias (igual que crear perfil)
+    const newExpTouched = form.experience.map(() => ({ title: true, project: true, startDate: true, endDate: true, confirmation: true }));
+    const newExpErrors = form.experience.map(getExperienceErrors);
     let expHasError = false;
     let firstExpErrorIndex = null;
     form.experience.forEach((exp, i) => {
-      if (!exp.confirmed) {
-        newExpTouched[i] = { title: true, project: true, startDate: true, endDate: true, confirmation: true };
-        const errs = getExperienceErrors(exp);
-        newExpErrors[i] = errs;
-        // Si hay cualquier error (campos faltantes o no confirmada)
-        if (errs.title || errs.project || errs.startDate || errs.endDate || errs.confirmation) {
-          expHasError = true;
-          if (firstExpErrorIndex === null) {
-            firstExpErrorIndex = i;
-          }
+      const errs = getExperienceErrors(exp);
+      // Si hay cualquier error (campos faltantes o no confirmada)
+      if (errs.title || errs.project || errs.startDate || errs.endDate || errs.confirmation) {
+        expHasError = true;
+        if (firstExpErrorIndex === null) {
+          firstExpErrorIndex = i;
         }
       }
     });
     setExpTouched(newExpTouched);
     setExpErrors(newExpErrors);
     
-    // Validar redes sociales (tanto confirmadas como no confirmadas)
-    const newSocialTouched = [...socialTouched];
-    const newSocialErrors = [...socialErrors];
+    // Validar todas las redes sociales (igual que crear perfil)
+    const newSocialTouched = form.socialLinks.map(() => ({ platform: true, url: true, confirmation: true }));
+    const newSocialErrors = form.socialLinks.map(getSocialErrors);
     let socialHasError = false;
     let firstSocialErrorIndex = null;
     form.socialLinks.forEach((social, i) => {
-      // Validar todas las redes sociales
-      newSocialTouched[i] = { platform: true, url: true, confirmation: true };
       const errs = getSocialErrors(social);
-      newSocialErrors[i] = errs;
-      
-      // Si hay cualquier error (campos faltantes, URL inválida o no confirmada)
-      if (errs.platform || errs.url || (!social.confirmed && (errs.platform || errs.url))) {
-        socialHasError = true;
-        if (firstSocialErrorIndex === null) {
-          firstSocialErrorIndex = i;
-        }
-      }
-      
-      // Si no está confirmada pero es válida, también es un error
-      if (!social.confirmed && isSocialLinkValid(social)) {
+      // Si hay cualquier error (campos faltantes o no confirmada)
+      if (errs.platform || errs.url || errs.confirmation) {
         socialHasError = true;
         if (firstSocialErrorIndex === null) {
           firstSocialErrorIndex = i;
@@ -410,6 +598,42 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     setSocialTouched(newSocialTouched);
     setSocialErrors(newSocialErrors);
     
+    // Validar todas las educaciones (igual que experiencias)
+    const newEduTouched = form.education.map(() => ({ institution: true, title: true, startDate: true, endDate: true, confirmation: true }));
+    const newEduErrors = form.education.map(getEducationErrors);
+    let eduHasError = false;
+    let firstEduErrorIndex = null;
+    form.education.forEach((edu, i) => {
+      const errs = getEducationErrors(edu);
+      // Si hay cualquier error (campos faltantes o no confirmada)
+      if (errs.institution || errs.title || errs.startDate || errs.endDate || errs.confirmation) {
+        eduHasError = true;
+        if (firstEduErrorIndex === null) {
+          firstEduErrorIndex = i;
+        }
+      }
+    });
+    setEduTouched(newEduTouched);
+    setEduErrors(newEduErrors);
+
+    // Validar todas las certificaciones (igual que redes sociales)
+    const newCertTouched = form.certifications.map(() => ({ name: true, url: true, confirmation: true }));
+    const newCertErrors = form.certifications.map(getCertificationErrors);
+    let certHasError = false;
+    let firstCertErrorIndex = null;
+    form.certifications.forEach((cert, i) => {
+      const errs = getCertificationErrors(cert);
+      // Si hay cualquier error (campos faltantes o no confirmada)
+      if (errs.name || errs.url || errs.confirmation) {
+        certHasError = true;
+        if (firstCertErrorIndex === null) {
+          firstCertErrorIndex = i;
+        }
+      }
+    });
+    setCertTouched(newCertTouched);
+    setCertErrors(newCertErrors);
+    
     // Configurar mensajes de error específicos por sección
     if (expHasError) {
       setExpConfirmError("Para continuar debes confirmar la experiencia");
@@ -417,20 +641,26 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
       setExpConfirmError('');
     }
     
-    // Verificar si hay errores de URL o confirmación en redes sociales
-    const hasUrlErrors = form.socialLinks.some((social, i) => socialErrors[i]?.url);
-    const hasUnconfirmedValid = form.socialLinks.some(social => !social.confirmed && isSocialLinkValid(social));
-    
-    if (hasUrlErrors) {
-      setSocialConfirmError("Corregí las URLs inválidas antes de continuar");
-    } else if (hasUnconfirmedValid) {
+    if (socialHasError) {
       setSocialConfirmError("Para continuar debes confirmar la red social");
     } else {
       setSocialConfirmError('');
     }
+
+    if (eduHasError) {
+      setEduConfirmError("Para continuar debes confirmar la educación");
+    } else {
+      setEduConfirmError('');
+    }
+
+    if (certHasError) {
+      setCertConfirmError("Para continuar debes confirmar la certificación");
+    } else {
+      setCertConfirmError('');
+    }
     
     // Si hay errores, hacer scroll al primer error y detener el submit
-    if (hasError || expHasError || socialHasError) {
+    if (hasError || expHasError || socialHasError || eduHasError || certHasError) {
       setIsSubmitting(false);
       
       // Scroll al primer error después de que el estado se actualice
@@ -459,6 +689,24 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           );
           if (socialElement) {
             socialElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else if (firstEduErrorIndex !== null) {
+          // Buscar la primera educación con error
+          const eduElements = document.querySelectorAll('[data-education-index]');
+          const eduElement = Array.from(eduElements).find(el => 
+            el.getAttribute('data-education-index') === firstEduErrorIndex.toString()
+          );
+          if (eduElement) {
+            eduElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else if (firstCertErrorIndex !== null) {
+          // Buscar la primera certificación con error
+          const certElements = document.querySelectorAll('[data-certification-index]');
+          const certElement = Array.from(certElements).find(el => 
+            el.getAttribute('data-certification-index') === firstCertErrorIndex.toString()
+          );
+          if (certElement) {
+            certElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         }
       }, 100);
@@ -644,6 +892,16 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
                 error={touched.phoneNumber && errors.phoneNumber} 
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-conexia-green mb-1">Profesión</label>
+              <InputField 
+                name="profession" 
+                value={form.profession} 
+                onChange={handleChangeEvent} 
+                onBlur={() => handleBlur('profession')}
+                error={touched.profession && errors.profession} 
+              />
+            </div>
             <div className="md:col-span-2 mb-2">
               <label className="block text-sm font-medium text-conexia-green mb-1">Descripción</label>
               <TextArea 
@@ -660,18 +918,11 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           {/* Habilidades */}
           <div className="-mt-6">
             <label className="block font-medium text-conexia-green mb-1">Habilidades</label>
-            <div className="flex flex-wrap gap-2">
-              {habilidadesDisponibles.map((h) => (
-                <button
-                  key={h}
-                  type="button"
-                  onClick={() => toggleHabilidad(h, form, setForm)}
-                  className={`px-3 py-1 rounded border text-sm font-medium ${form.skills.includes(h) ? "bg-conexia-green text-white" : "bg-gray-100 text-gray-700"}`}
-                >
-                  {h}
-                </button>
-              ))}
-            </div>
+            <SkillsSelector
+              selectedSkills={form.skills}
+              onSkillsChange={(newSkills) => setForm(prev => ({ ...prev, skills: newSkills }))}
+              maxSkills={20}
+            />
           </div>
           
           {/* Experiencia */}
@@ -786,6 +1037,195 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
             ))}
             {form.experience.length > 0 && (
               <button type="button" onClick={handleAddExperience} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar experiencia</button>
+            )}
+          </div>
+
+          {/* Educación */}
+          <div>
+            <h4 className="font-semibold text-conexia-green">Educación</h4>
+            {form.education.length === 0 && (
+              <button type="button" onClick={handleAddEducation} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar educación</button>
+            )}
+            {form.education.map((edu, i) => (
+              <div key={i} className="grid gap-2 mt-2 border-b pb-4" data-education-index={i}>
+                <div className="grid md:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-sm font-medium text-conexia-green mb-1">Institución</label>
+                    <InputField 
+                      value={edu.institution} 
+                      onChange={e => handleEducationChange(i, 'institution', e.target.value)} 
+                      onBlur={() => handleEducationBlur(i, 'institution')}
+                      error={eduTouched[i]?.institution && eduErrors[i]?.institution}
+                      disabled={edu.confirmed} 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-conexia-green mb-1">Título</label>
+                    <InputField 
+                      value={edu.title} 
+                      onChange={e => handleEducationChange(i, 'title', e.target.value)} 
+                      onBlur={() => handleEducationBlur(i, 'title')}
+                      error={eduTouched[i]?.title && eduErrors[i]?.title}
+                      disabled={edu.confirmed} 
+                    />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-3 gap-2 items-end">
+                  <div className="flex flex-col min-h-[80px]">
+                    <label className="text-sm text-conexia-green mb-1">Desde</label>      
+                    <input 
+                      type="date" 
+                      className={`border rounded p-2 ${eduTouched[i]?.startDate && eduErrors[i]?.startDate ? 'border-red-500 ring-red-300' : ''}`}
+                      value={edu.startDate} 
+                      onChange={e => handleEducationChange(i, 'startDate', e.target.value)} 
+                      onBlur={() => handleEducationBlur(i, 'startDate')}
+                      onKeyDown={e => e.preventDefault()}
+                      min={form.birthDate ? getNextDay(form.birthDate) : undefined}
+                      max={new Date().toISOString().split('T')[0]}
+                      placeholder="dd/mm/aaaa"
+                      disabled={edu.confirmed} 
+                    />
+                    <div style={{ minHeight: 20 }}>
+                      {eduTouched[i]?.startDate && eduErrors[i]?.startDate && <p className="text-xs text-red-600 mt-1 text-left">{eduErrors[i].startDate}</p>}
+                    </div>
+                  </div>
+                  <div className="flex flex-col min-h-[80px]">
+                    <label className="text-sm text-conexia-green mb-1">Hasta</label>      
+                    <input 
+                      type="date" 
+                      className={`border rounded p-2 ${eduTouched[i]?.endDate && eduErrors[i]?.endDate ? 'border-red-500 ring-red-300' : ''}`}
+                      value={edu.endDate} 
+                      onChange={e => handleEducationChange(i, 'endDate', e.target.value)} 
+                      onBlur={() => handleEducationBlur(i, 'endDate')}
+                      disabled={edu.isCurrent || edu.confirmed} 
+                      onKeyDown={e => e.preventDefault()}
+                      min={edu.isCurrent ? undefined : (edu.startDate ? getNextDay(edu.startDate) : undefined)}
+                      max={edu.isCurrent ? undefined : new Date().toISOString().split('T')[0]}
+                      placeholder={edu.isCurrent ? "dd/mm/yyyy" : "dd/mm/aaaa"}
+                    />
+                    <div style={{ minHeight: 20 }}>
+                      {eduTouched[i]?.endDate && eduErrors[i]?.endDate && <p className="text-xs text-red-600 mt-1 text-left">{eduErrors[i].endDate}</p>}
+                    </div>
+                  </div>
+                  <label className="text-sm text-conexia-green mb-1 flex items-center gap-2">
+                    <input type="checkbox" checked={edu.isCurrent} onChange={e => handleEducationChange(i, 'isCurrent', e.target.checked)} disabled={edu.confirmed} />Actualmente estudio aquí
+                  </label>
+                </div>
+                {!edu.confirmed && eduConfirmError && isEducationValid(edu) && <p className="text-xs text-red-600 mt-1 mb-4">Para continuar debes confirmar la educación</p>}
+                <div className="flex justify-end gap-2 items-end">
+                  <button
+                    type="button"
+                    className={`w-6 h-6 flex items-center justify-center rounded ${edu.confirmed ? 'bg-green-100' : 'bg-conexia-green hover:bg-green-700'} ${!edu.confirmed && !isEducationValid(edu) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={edu.confirmed || !isEducationValid(edu)}
+                    onClick={() => handleConfirmEducation(i)}
+                    title="Confirmar educación"
+                    style={{ minWidth: '1.5rem', minHeight: '1.5rem' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${edu.confirmed ? 'text-green-600' : 'text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                  {edu.confirmed && (
+                    <button
+                      type="button"
+                      className="w-6 h-6 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white"
+                      onClick={() => handleEditEducation(i)}
+                      title="Editar educación"
+                      style={{ minWidth: '1.5rem', minHeight: '1.5rem' }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveEducation(i)}
+                    className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded flex items-center justify-center"
+                    title="Eliminar"
+                    style={{ minWidth: '1.5rem', minHeight: '1.5rem' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+            {form.education.length > 0 && (
+              <button type="button" onClick={handleAddEducation} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar educación</button>
+            )}
+          </div>
+
+          {/* Certificaciones */}
+          <div>
+            <h4 className="font-semibold text-conexia-green">Certificaciones</h4>
+            {form.certifications.length === 0 && (
+              <button type="button" onClick={handleAddCertification} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar certificación</button>
+            )}
+            {form.certifications.map((cert, i) => (
+              <div key={i} className="mt-2" data-certification-index={i}>
+                <div className="grid md:grid-cols-3 gap-2 items-center">       
+                  <div className="flex flex-col items-start h-full">
+                    <label className="block font-semibold text-conexia-green text-sm mb-0">Nombre</label>
+                    <InputField 
+                      value={cert.name} 
+                      onChange={e => handleCertificationChange(i, 'name', e.target.value)} 
+                      onBlur={() => handleCertificationBlur(i, 'name')}
+                      error={certTouched[i]?.name && certErrors[i]?.name}
+                      disabled={cert.confirmed} 
+                    />
+                  </div>
+                  <div className="flex flex-col items-start h-full">
+                    <label className="block font-semibold text-conexia-green text-sm mb-0">URL</label>
+                    <InputField 
+                      value={cert.url} 
+                      onChange={e => handleCertificationChange(i, 'url', e.target.value)} 
+                      onBlur={() => handleCertificationBlur(i, 'url')}
+                      error={certTouched[i]?.url && certErrors[i]?.url}
+                      disabled={cert.confirmed} 
+                    />
+                  </div>
+                  <div className="flex flex-row justify-end items-center gap-2 h-full">     
+                    <button
+                      type="button"
+                      className={`w-6 h-6 flex items-center justify-center rounded ${cert.confirmed ? 'bg-green-100' : 'bg-conexia-green hover:bg-green-700'} ${!cert.confirmed && !isCertificationValid(cert) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={cert.confirmed || !isCertificationValid(cert)}
+                      onClick={() => handleConfirmCertification(i)}
+                      title="Confirmar certificación"
+                      style={{ minWidth: '1.5rem', minHeight: '1.5rem' }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${cert.confirmed ? 'text-green-600' : 'text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    {cert.confirmed && (
+                      <button
+                        type="button"
+                        className="w-6 h-6 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white"
+                        onClick={() => handleEditCertification(i)}
+                        title="Editar certificación"
+                        style={{ minWidth: '1.5rem', minHeight: '1.5rem' }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
+                        </svg>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCertification(i)}
+                      className="w-6 h-6 bg-red-500 text-white rounded hover:bg-red-600 flex items-center justify-center"
+                      title="Eliminar"
+                      style={{ minWidth: '1.5rem', minHeight: '1.5rem' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                {!cert.confirmed && certConfirmError && isCertificationValid(cert) && <p className="text-xs text-red-600 mt-0">Para continuar debes confirmar la certificación</p>}
+              </div>
+            ))}
+            {form.certifications.length > 0 && (
+              <button type="button" onClick={handleAddCertification} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar certificación</button>
             )}
           </div>
           

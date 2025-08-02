@@ -6,6 +6,8 @@ import DeleteMyUserModal from "./DeleteMyUserModal";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import { getProfileById } from "@/service/profiles/profilesFetch";
+import { useUserStore } from "@/store/userStore";
+import { ROLES } from "@/constants/roles";
 
 export default function AccountSection() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -13,12 +15,17 @@ export default function AccountSection() {
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const { user } = useAuth();
+  const { roleName } = useUserStore();
   const userId = user?.id;
 
   useEffect(() => {
+    // Solo buscar perfil si es usuario normal y tiene id
+    if (!userId || roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
+      setProfileLoading(false);
+      return;
+    }
+
     const fetchProfile = async () => {
-      if (!userId) return;
-      
       try {
         setProfileLoading(true);
         const data = await getProfileById(userId);
@@ -30,14 +37,13 @@ export default function AccountSection() {
         setProfileLoading(false);
       }
     };
-    
+
     fetchProfile();
-  }, [userId]);
+  }, [userId, roleName]);
 
   // Simulación de eliminación
   const handleDeleteAccount = async () => {
     setLoading(true);
-    // Aquí iría la lógica real de eliminación de cuenta
     await new Promise((resolve) => setTimeout(resolve, 1200));
     setLoading(false);
     return { ok: true, text: "Cuenta eliminada correctamente" };
@@ -54,13 +60,17 @@ export default function AccountSection() {
   // Preparar los datos para mostrar
   let displayName = 'No disponible';
   let displayEmail = 'No disponible';
-  
-  if (profile && (profile.name || profile.lastName)) {
-    // Si hay perfil con nombre/apellido, usarlo
+
+  if (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
+    // Usuario interno: mostrar nombre según rol y email del store
+    displayName = roleName === ROLES.ADMIN ? 'Administrador' : 'Moderador';
+    displayEmail = user?.email || 'No disponible';
+  } else if (profile && (profile.name || profile.lastName)) {
+    // Usuario normal con perfil
     displayName = `${profile.name || ''} ${profile.lastName || ''}`.trim();
     displayEmail = profile.email || user?.email || 'No disponible';
   } else if (user) {
-    // Si no hay perfil pero hay usuario autenticado, usar sus datos
+    // Usuario normal sin perfil
     displayName = user.name || user.username || user.firstName || 'Usuario';
     displayEmail = user.email || 'No disponible';
   }
@@ -84,7 +94,6 @@ export default function AccountSection() {
           loading={loading}
           onConfirm={async (baja) => {
             setLoading(true);
-            // Aquí iría la lógica real de eliminación de cuenta, usando baja.motivo y baja.fecha
             await new Promise((resolve) => setTimeout(resolve, 1200));
             setLoading(false);
             return { ok: true, text: "Tu cuenta fue dada de baja exitosamente." };
