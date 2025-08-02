@@ -230,7 +230,7 @@ export default function UserProfile() {
   const [showMyProjects, setShowMyProjects] = useState(false);
 
   if (showMyProjects) {
-    const MyProjects = require('@/components/project/search/MyProjects').default;
+    const MyProjects = require('@/components/project/search/MyProjectsView').default;
     return (
       <div className="bg-conexia-soft min-h-screen">
         <Navbar />
