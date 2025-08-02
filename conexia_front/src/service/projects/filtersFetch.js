@@ -1,6 +1,6 @@
 // Obtener tipos de contrato
 export async function fetchContractTypes() {
-  const res = await fetch('http://localhost:8080/api/projects/contract-types', {
+  const res = await fetch(`${config.API_URL}/projects/contract-types`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -14,7 +14,7 @@ export async function fetchContractTypes() {
 import { config } from '@/config';
 
 export async function fetchCategories() {
-  const res = await fetch(`http://localhost:8080/api/projects/categories`, {
+  const res = await fetch(`${config.API_URL}/projects/categories`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -25,7 +25,7 @@ export async function fetchCategories() {
 
 
 export async function fetchSkills() {
-  const res = await fetch(`http://localhost:8080/api/users/skills`, {
+  const res = await fetch(`${config.API_URL}/users/skills`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -36,7 +36,7 @@ export async function fetchSkills() {
 
 
 export async function fetchCollabTypes() {
-  const res = await fetch(`http://localhost:8080/api/projects/collaboration-types`, {
+  const res = await fetch(`${config.API_URL}/projects/collaboration-types`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',

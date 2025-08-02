@@ -5,9 +5,8 @@ import NavbarCommunity from '@/components/navbar/NavbarCommunity';
 import ProjectList from './ProjectList';
 import { useAuth } from '@/context/AuthContext';
 
-export default function MyProjectsView({ userId, isOwner: isOwnerProp }) {
+export default function MyProjectsView({ userId }) {
   const { user: authUser } = useAuth();
-  const isOwner = isOwnerProp ?? (authUser && userId && String(authUser.id) === String(userId));
   const [showInactive, setShowInactive] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,12 +15,12 @@ export default function MyProjectsView({ userId, isOwner: isOwnerProp }) {
     if (!userId && !authUser) return;
     async function load() {
       setLoading(true);
-      const res = await fetchProjects({ ownerId: userId || authUser.id, active: isOwner ? (showInactive ? undefined : true) : true });
+      const res = await fetchProjects({ ownerId: userId , active: (showInactive ? undefined : true)});
       setProjects(res);
       setLoading(false);
     }
     load();
-  }, [userId, authUser, isOwner, showInactive]);
+  }, [userId, authUser, showInactive]);
 
   return (
     <>
