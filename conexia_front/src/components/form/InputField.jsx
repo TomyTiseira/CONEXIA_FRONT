@@ -18,6 +18,8 @@ export default function InputField({
   multiline = false,
   rows = 3,
   className = "",
+  showCharCount = false,
+  maxLength,
 }) {
   if (multiline) {
     return (
@@ -32,12 +34,18 @@ export default function InputField({
           disabled={disabled}
           required={required}
           rows={rows}
+          maxLength={maxLength}
           className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring resize-none ${
             error
               ? "border-red-500 ring-red-300"
               : "border-gray-300 focus:ring-conexia-green/40"
           } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""} ${className}`}
         />
+        {showCharCount && (
+          <div className="absolute right-3 bottom-2 text-xs text-gray-500 pointer-events-none">
+            {value.length}{maxLength ? ` / ${maxLength}` : ''} caracteres
+          </div>
+        )}
         <p className="text-xs text-red-600 mt-1 text-left h-[30px]">{error}</p>
       </div>
     );
