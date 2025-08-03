@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Pagination from '@/components/common/Pagination';
 import { fetchProjects } from '@/service/projects/projectsFetch';
 
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
@@ -16,11 +17,14 @@ export default function ProjectSearch() {
   });
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
 
   // Normaliza los filtros para enviar solo ids y el título
   const handleSearch = async (newFilters) => {
     setFilters(newFilters);
     setSearched(true);
+    setPage(1); // Reiniciar a la primera página en cada búsqueda
     // Solo enviar los ids y el título
     const params = {
       title: newFilters.title,
@@ -65,7 +69,15 @@ export default function ProjectSearch() {
           {/* Contenido principal */}
           <section className="flex-1 min-w-0">
             {searched ? (
-              <ProjectList projects={results} />
+              <>
+                <ProjectList projects={results.slice((page-1)*pageSize, page*pageSize)} />
+                <Pagination
+                  page={page}
+                  hasPreviousPage={page > 1}
+                  hasNextPage={results.length > page * pageSize}
+                  onPageChange={setPage}
+                />
+              </>
             ) : (
               <div className="text-center text-conexia-green mt-12 text-lg opacity-70">
                 Usa la barra de búsqueda o los filtros para ver proyectos.

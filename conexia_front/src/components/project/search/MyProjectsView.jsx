@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from 'react';
+import Pagination from '@/components/common/Pagination';
 import { fetchProjects } from '@/service/projects/projectsFetch';
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
 import ProjectList from './ProjectList';
@@ -10,6 +11,8 @@ export default function MyProjectsView({ userId }) {
   const [showInactive, setShowInactive] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const pageSize = 16;
 
   useEffect(() => {
     if (!userId && !authUser) return;
@@ -18,6 +21,7 @@ export default function MyProjectsView({ userId }) {
       const res = await fetchProjects({ ownerId: userId , active: (showInactive ? undefined : true)});
       setProjects(res);
       setLoading(false);
+      setPage(1); // Reiniciar a la primera página al buscar
     }
     load();
   }, [userId, authUser, showInactive]);
@@ -45,7 +49,15 @@ export default function MyProjectsView({ userId }) {
             {loading ? (
               <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
             ) : (
-              <ProjectList projects={projects} />
+              <>
+                <ProjectList projects={projects.slice((page-1)*pageSize, page*pageSize)} />
+                <Pagination
+                  page={page}
+                  hasPreviousPage={page > 1}
+                  hasNextPage={projects.length > page * pageSize}
+                  onPageChange={setPage}
+                />
+              </>
             )}
           </section>
         </div>
