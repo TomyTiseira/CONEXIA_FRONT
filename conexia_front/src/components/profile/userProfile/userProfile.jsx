@@ -104,6 +104,7 @@ export default function UserProfile() {
       Object.keys(textFields).forEach(field => {
         const originalValue = textFields[field] || '';
         const newValue = formData[field] || '';
+        // Incluir el campo siempre para permitir vaciar campos opcionales
         if (originalValue !== newValue) {
           changedFields[field] = newValue;
         }
@@ -113,12 +114,36 @@ export default function UserProfile() {
       const originalSkills = user.skills || [];
       const newSkills = formData.skills || [];
       
-      // Función para comparar arrays de strings
+      // Función para comparar arrays de objetos/strings
       const arraysEqual = (arr1, arr2) => {
         if (arr1.length !== arr2.length) return false;
+        
+        // Si ambos arrays están vacíos
+        if (arr1.length === 0 && arr2.length === 0) return true;
+        
+        // Si uno está vacío y el otro no
+        if (arr1.length !== arr2.length) return false;
+        
+        // Si arr1 son objetos (skills del backend) y arr2 son objetos (del selector)
+        if (arr1[0] && typeof arr1[0] === 'object' && arr1[0].id && 
+            arr2[0] && typeof arr2[0] === 'object' && arr2[0].id) {
+          return arr1.every((item, index) => {
+            const item2 = arr2[index];
+            return item2 && item.id === item2.id;
+          });
+        }
+        
+        // Si arr1 son objetos pero arr2 son IDs
+        if (arr1[0] && typeof arr1[0] === 'object' && arr1[0].id && 
+            arr2[0] && typeof arr2[0] === 'number') {
+          return arr1.every((item, index) => item.id === arr2[index]);
+        }
+        
+        // Si son arrays de IDs o strings
         return arr1.every((item, index) => item === arr2[index]);
       };
       
+      // Solo incluir skills si hay cambios o si se están vaciando
       if (!arraysEqual(originalSkills, newSkills)) {
         changedFields.skills = newSkills;
       }
@@ -217,8 +242,11 @@ export default function UserProfile() {
         changedFields.coverPicture = formData.coverPicture;
       }
       
-      // Solo enviar si hay cambios
-      if (Object.keys(changedFields).length === 0) {
+      // Solo salir si NO hay cambios Y NO hay datos de formulario relevantes
+      // Los arrays siempre se incluyen para asegurar sincronización
+      const hasRelevantData = Object.keys(changedFields).length > 0;
+      
+      if (!hasRelevantData) {
         return;
       }
       

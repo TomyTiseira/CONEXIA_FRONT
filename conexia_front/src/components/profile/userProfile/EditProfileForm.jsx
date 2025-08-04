@@ -94,8 +94,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
   const requiredFields = [
     { name: "name", label: "Nombre" },
     { name: "lastName", label: "Apellido" },
-    { name: "country", label: "País" },
-    { name: "state", label: "Localidad" },
+    { name: "profession", label: "Profesión" },
   ];
 
   // Función para validar campos individuales
@@ -550,6 +549,19 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
         firstErrorField = 'phoneNumber';
         hasError = true;
       } else if (phoneErr) {
+        hasError = true;
+      }
+    }
+
+    // Validar fecha de nacimiento solo si tiene valor
+    if (form.birthDate) {
+      newTouched.birthDate = true;
+      const birthDateErr = validateField('birthDate', form.birthDate);
+      newErrors.birthDate = birthDateErr;
+      if (birthDateErr && !firstErrorField) {
+        firstErrorField = 'birthDate';
+        hasError = true;
+      } else if (birthDateErr) {
         hasError = true;
       }
     }
