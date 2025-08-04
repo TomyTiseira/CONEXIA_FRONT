@@ -178,7 +178,7 @@ export default function CreateProjectForm() {
       await publishProject(formToSend);
       setMsg({ ok: true, text: 'Proyecto publicado con éxito.' });
       setTimeout(() => {
-        router.push('/project');
+        router.push('/project/search');
       }, 1500); // 1,5 segundos
     } catch (err) {
       setMsg({ ok: false, text: err.message || 'Error al publicar el proyecto' });

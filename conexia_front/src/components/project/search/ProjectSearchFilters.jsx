@@ -16,24 +16,40 @@ export default function ProjectSearchFilters({ filters, onChange }) {
   useEffect(() => {
     async function loadFilters() {
       setLoading(true);
-      const [cat, skl, col, cont] = await Promise.all([
-        fetchCategories(),
-        fetchSkills(),
-        fetchCollabTypes(),
-        fetchContractTypes(),
-      ]);
-      setCategories(cat);
-      setSkills(skl);
-      setCollabTypes(col);
-      setContractTypes(cont);
+      try {
+        const [cat, skl, col, cont] = await Promise.all([
+          fetchCategories(),
+          fetchSkills(),
+          fetchCollabTypes(),
+          fetchContractTypes(),
+        ]);
+        setCategories(Array.isArray(cat) ? cat : (Array.isArray(cat?.data) ? cat.data : []));
+        setSkills(Array.isArray(skl) ? skl : (Array.isArray(skl?.data) ? skl.data : []));
+        setCollabTypes(Array.isArray(col) ? col : (Array.isArray(col?.data) ? col.data : []));
+        setContractTypes(Array.isArray(cont) ? cont : (Array.isArray(cont?.data) ? cont.data : []));
+      } catch (e) {
+        setCategories([]);
+        setSkills([]);
+        setCollabTypes([]);
+        setContractTypes([]);
+      }
       setLoading(false);
     }
     loadFilters();
-  // Radio para tipo de contrato
-  const handleContract = (typeId) => {
-    onChange({ ...filters, contract: filters.contract === typeId ? '' : typeId });
-  };
+    // Radio para tipo de contrato
+    // (mover handleContract fuera del useEffect)
   }, []);
+
+  // Checkbox múltiple para tipo de contrato
+  const handleContract = (typeId) => {
+    let newContracts = Array.isArray(filters.contract) ? [...filters.contract] : [];
+    if (newContracts.includes(typeId)) {
+      newContracts = newContracts.filter((id) => id !== typeId);
+    } else {
+      newContracts.push(typeId);
+    }
+    onChange({ ...filters, contract: newContracts });
+  };
 
   // Checkbox para categorías (solo una seleccionada a la vez, pero visual tipo checkbox)
   const handleCategory = (catId) => {
@@ -47,9 +63,15 @@ export default function ProjectSearchFilters({ filters, onChange }) {
       skills: exists ? filters.skills.filter((s) => s !== skillId) : [...filters.skills, skillId],
     });
   };
-  // Radio para tipo de colaboración
+  // Checkbox múltiple para tipo de colaboración
   const handleCollab = (typeId) => {
-    onChange({ ...filters, collaboration: filters.collaboration === typeId ? '' : typeId });
+    let newCollabs = Array.isArray(filters.collaboration) ? [...filters.collaboration] : [];
+    if (newCollabs.includes(typeId)) {
+      newCollabs = newCollabs.filter((id) => id !== typeId);
+    } else {
+      newCollabs.push(typeId);
+    }
+    onChange({ ...filters, collaboration: newCollabs });
   };
 
   if (loading) {
@@ -89,6 +111,16 @@ export default function ProjectSearchFilters({ filters, onChange }) {
       <div>
         <div className="font-semibold text-conexia-green mb-2">Habilidades requeridas</div>
         <div className="flex flex-col gap-1 ml-1">
+          {/* Opción Todas */}
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!Array.isArray(filters.skills) || filters.skills.length === 0}
+              onChange={() => onChange({ ...filters, skills: [] })}
+              className="accent-conexia-green"
+            />
+            Todas
+          </label>
           {skills.map((skill) => (
             <label key={skill.id} className="flex items-center gap-2 text-sm cursor-pointer">
               <input
@@ -106,56 +138,52 @@ export default function ProjectSearchFilters({ filters, onChange }) {
       <div>
         <div className="font-semibold text-conexia-green mb-2">Tipo de contrato</div>
         <div className="flex flex-col gap-1 ml-1">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!Array.isArray(filters.contract) || filters.contract.length === 0}
+              onChange={() => onChange({ ...filters, contract: [] })}
+              className="accent-conexia-green"
+            />
+            Todos
+          </label>
           {contractTypes.map((type) => (
             <label key={type.id} className="flex items-center gap-2 text-sm cursor-pointer">
               <input
-                type="radio"
-                name="contractType"
-                checked={filters.contract === type.id}
+                type="checkbox"
+                checked={Array.isArray(filters.contract) && filters.contract.includes(type.id)}
                 onChange={() => handleContract(type.id)}
                 className="accent-conexia-green"
               />
               {type.name}
             </label>
           ))}
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="radio"
-              name="contractType"
-              checked={!filters.contract}
-              onChange={() => handleContract('')}
-              className="accent-conexia-green"
-            />
-            Todos
-          </label>
         </div>
       </div>
       {/* Tipo de colaboración */}
       <div>
         <div className="font-semibold text-conexia-green mb-2">Tipo de colaboración</div>
         <div className="flex flex-col gap-1 ml-1">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!Array.isArray(filters.collaboration) || filters.collaboration.length === 0}
+              onChange={() => onChange({ ...filters, collaboration: [] })}
+              className="accent-conexia-green"
+            />
+            Todas
+          </label>
           {collabTypes.map((type) => (
             <label key={type.id} className="flex items-center gap-2 text-sm cursor-pointer">
               <input
-                type="radio"
-                name="collabType"
-                checked={filters.collaboration === type.id}
+                type="checkbox"
+                checked={Array.isArray(filters.collaboration) && filters.collaboration.includes(type.id)}
                 onChange={() => handleCollab(type.id)}
                 className="accent-conexia-green"
               />
               {type.name}
             </label>
           ))}
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="radio"
-              name="collabType"
-              checked={!filters.collaboration}
-              onChange={() => handleCollab('')}
-              className="accent-conexia-green"
-            />
-            Todas
-          </label>
         </div>
       </div>
     </div>

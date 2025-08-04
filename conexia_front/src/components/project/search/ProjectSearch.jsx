@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Pagination from '@/components/common/Pagination';
 import { fetchProjects } from '@/service/projects/projectsFetch';
 
@@ -8,33 +9,42 @@ import ProjectSearchBar from './ProjectSearchBar';
 import ProjectList from './ProjectList';
 
 export default function ProjectSearch() {
+  const router = useRouter();
   const [filters, setFilters] = useState({
     title: '',
     category: '',
     skills: [],
-    collaboration: '',
-    contract: '',
+    collaboration: [],
+    contract: [],
   });
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 12;
 
-  // Normaliza los filtros para enviar solo ids y el título
-  const handleSearch = async (newFilters) => {
-    setFilters(newFilters);
-    setSearched(true);
-    setPage(1); // Reiniciar a la primera página en cada búsqueda
-    // Solo enviar los ids y el título
-    const params = {
-      title: newFilters.title,
-      category: newFilters.category || '',
-      skills: newFilters.skills || [],
-      collaboration: newFilters.collaboration || '',
-      contract: newFilters.contract || '',
+  // Aplica los filtros automáticamente al cambiar cualquier filtro
+  const [pendingFilters, setPendingFilters] = useState(filters);
+  useEffect(() => {
+    const applyFilters = async () => {
+      setSearched(true);
+      setPage(1);
+      const params = {
+        title: pendingFilters.title,
+        category: pendingFilters.category || '',
+        skills: pendingFilters.skills || [],
+        collaboration: Array.isArray(pendingFilters.collaboration) ? pendingFilters.collaboration : [],
+        contract: Array.isArray(pendingFilters.contract) ? pendingFilters.contract : [],
+      };
+      const projects = await fetchProjects(params);
+      setResults(projects);
+      setFilters(pendingFilters);
     };
-    const projects = await fetchProjects(params);
-    setResults(projects);
+    applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingFilters]);
+
+  const handleSearch = (newFilters) => {
+    setPendingFilters(newFilters);
   };
 
   return (
@@ -53,7 +63,10 @@ export default function ProjectSearch() {
             </div>
           </div>
           <div className="flex justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
-            <button className="bg-conexia-green text-white font-semibold rounded-lg px-6 py-3 shadow hover:bg-conexia-green/90 transition text-base w-full md:w-auto max-w-xs">
+            <button
+              className="bg-conexia-green text-white font-semibold rounded-lg px-6 py-3 shadow hover:bg-conexia-green/90 transition text-base w-full md:w-auto max-w-xs"
+              onClick={() => router.push('/project/create')}
+            >
               ¿Tienes una idea que necesita apoyo? <br className="hidden md:block" /> Publica tu proyecto
             </button>
           </div>
