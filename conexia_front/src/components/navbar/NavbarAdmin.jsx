@@ -35,7 +35,7 @@ export default function NavbarAdmin() {
   const navItems = [
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Servicios', href: '#servicios', icon: Briefcase },
-    { label: 'Proyectos', href: '#proyectos', icon: Layers },
+    { label: 'Proyectos', href: '/project', icon: Layers },
     { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
   ];
 
@@ -105,7 +105,12 @@ export default function NavbarAdmin() {
               </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownInternalUserMenu onLogout={handleLogout} />}
+            {menuOpen && (
+              <DropdownInternalUserMenu
+                onLogout={handleLogout}
+                onClose={() => setMenuOpen(false)}
+              />
+            )}
           </div>
         </div>
       </nav>
@@ -137,7 +142,12 @@ export default function NavbarAdmin() {
               </div>
               <ChevronDown size={16} />
             </button>
-            {menuOpen && <DropdownInternalUserMenu onLogout={handleLogout} />}
+            {menuOpen && (
+              <DropdownInternalUserMenu
+                onLogout={handleLogout}
+                onClose={() => setMenuOpen(false)}
+              />
+            )}
           </div>
         </div>
       </nav>
