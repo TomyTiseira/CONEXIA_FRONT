@@ -43,7 +43,7 @@ export default function ProjectList({ projects }) {
 
         {/* Título, dueño, tipos */}
         <div className="flex flex-col flex-1 justify-between w-full min-w-0">
-          <h3 className="font-bold text-conexia-green text-xl sm:text-2xl leading-tight mb-1 break-words whitespace-pre-line w-full truncate text-center">
+          <h3 className="font-bold text-conexia-green text-xl sm:text-2xl leading-tight mb-1 break-words w-full text-center line-clamp-2">
             {project.title}
           </h3>
           {/* Dueño */}
