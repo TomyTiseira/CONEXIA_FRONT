@@ -79,7 +79,7 @@ export default function ProjectSearchFilters({ filters, onChange }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full max-w-[200px] min-w-[180px]">
       {/* Categoría */}
       <div>
         <div className="font-semibold text-conexia-green mb-2">Categoría del proyecto</div>

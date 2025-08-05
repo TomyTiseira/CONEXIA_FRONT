@@ -1,4 +1,5 @@
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import { useAuth } from '@/context/AuthContext';
@@ -28,56 +29,123 @@ export default function ProjectDetail({ projectId }) {
   const collaborationTypes = Array.isArray(project.collaborationType) ? project.collaborationType : (project.collaborationType ? [project.collaborationType] : []);
   const categories = Array.isArray(project.category) ? project.category : (project.category ? [project.category] : []);
 
+  // Helper para asegurar URLs absolutas
+  const { config } = require('@/config');
+  const getImageUrl = (img) => {
+    if (!img) return null;
+    if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) return img;
+    return `${config.IMAGE_URL}/${img}`;
+  };
+
   return (
     <>
       <NavbarCommunity />
-      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-2 md:px-6 flex flex-col items-center">
-        <div className="w-full max-w-4xl bg-white rounded-xl shadow p-8">
-          <div className="flex flex-col md:flex-row gap-8">
-            {project.image ? (
-              <img src={project.image} alt={project.title} className="w-48 h-48 object-cover rounded-xl border mx-auto md:mx-0" />
-            ) : (
-              <div className="w-48 h-48 flex items-center justify-center rounded-xl border bg-gray-100 mx-auto md:mx-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-gray-300">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5V8.25A2.25 2.25 0 015.25 6h13.5A2.25 2.25 0 0121 8.25v8.25M3 16.5A2.25 2.25 0 005.25 18.75h13.5A2.25 2.25 0 0021 16.5M3 16.5l4.72-4.72a2.25 2.25 0 013.18 0l.84.84a2.25 2.25 0 003.18 0l2.72-2.72a2.25 2.25 0 013.18 0L21 12.75" />
-                </svg>
+      <div className="min-h-[calc(100vh-64px)] relative py-8 px-2 md:px-6 flex flex-col items-center overflow-x-hidden bg-[#f3f9f8]">
+        {/* Fondo decorativo */}
+        <div className="pointer-events-none select-none fixed inset-0 w-screen h-screen z-0">
+          <img
+            src="/window.svg"
+            alt="Decoración fondo"
+            className="absolute top-[-120px] left-[-120px] w-[500px] opacity-20 rotate-12"
+            aria-hidden="true"
+          />
+          <img
+            src="/globe.svg"
+            alt="Decoración fondo"
+            className="absolute bottom-[-100px] right-[-100px] w-[400px] opacity-10"
+            aria-hidden="true"
+          />
+        </div>
+        <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative">
+          <div className="flex flex-col md:flex-row gap-10">
+            {/* Imagen */}
+            <div className="flex flex-col items-center md:items-start w-full md:w-56">
+              <div className="relative w-48 h-48 rounded-xl border bg-[#f3f9f8] overflow-hidden mb-2">
+                {project.image ? (
+                  <Image
+                    src={getImageUrl(project.image)}
+                    alt={project.title}
+                    fill
+                    className="object-cover rounded-xl"
+                    sizes="192px"
+                  />
+                ) : (
+                  <Image
+                    src="/file.svg"
+                    alt="Sin imagen"
+                    fill
+                    className="object-contain rounded-xl"
+                    sizes="192px"
+                  />
+                )}
               </div>
-            )}
-            <div className="flex-1 flex flex-col gap-2">
-              <h1 className="text-2xl font-bold text-conexia-green mb-2">{project.title || 'Sin título'}</h1>
-              <div className="flex flex-wrap gap-2 mb-2">
+            </div>
+            {/* Info principal */}
+            <div className="flex-1 flex flex-col gap-4 min-w-0">
+              <h1 className="text-3xl font-bold text-conexia-green break-words">{project.title || 'Sin título'}</h1>
+              <div className="flex flex-wrap gap-2 mb-1">
                 {categories.length > 0 && categories.map((cat) => (
-                  <span key={cat} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium truncate">{cat}</span>
+                  <span key={cat} className="bg-conexia-green/10 text-conexia-green px-3 py-1 rounded-full text-xs font-semibold">{cat}</span>
                 ))}
                 {contractTypes.length > 0 && contractTypes.map((type) => (
-                  <span key={type} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium truncate">{type}</span>
+                  <span key={type} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
                 ))}
                 {collaborationTypes.length > 0 && collaborationTypes.map((type) => (
-                  <span key={type} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium truncate">{type}</span>
+                  <span key={type} className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
                 ))}
               </div>
-              <div className="text-base mb-4">{project.description || 'Sin descripción'}</div>
-              <div className="flex items-center gap-2 mb-2">
-                {ownerImage ? (
-                  <img src={ownerImage} alt={ownerName} className="w-10 h-10 rounded-full border" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full border bg-gray-200 flex items-center justify-center text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118A7.5 7.5 0 0112 15.75a7.5 7.5 0 017.5 4.368" />
-                    </svg>
-                  </div>
-                )}
-                <span className="text-conexia-green font-semibold">{ownerName}</span>
+              <div>
+                <span className="block text-sm text-gray-500 font-semibold mb-1">Descripción</span>
+                <div className="text-base break-words whitespace-pre-line text-gray-700 bg-gray-50 rounded p-3 border border-gray-100">{project.description || 'Sin descripción'}</div>
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <div className="relative w-10 h-10">
+                  {ownerImage ? (
+                    <Image
+                      src={getImageUrl(ownerImage)}
+                      alt={ownerName}
+                      fill
+                      className="object-cover rounded-full border"
+                      sizes="40px"
+                    />
+                  ) : (
+                    <Image
+                      src="/logo.png"
+                      alt="Sin imagen"
+                      fill
+                      className="object-contain rounded-full border bg-gray-200"
+                      sizes="40px"
+                    />
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-conexia-green font-semibold text-base break-words">{ownerName}</span>
+                  <span className="text-xs text-gray-500">Dueño del proyecto</span>
+                </div>
               </div>
               {skills.length > 0 && (
-                <div className="flex gap-2 flex-wrap mb-2">
-                  {skills.map(skill => (
-                    <span key={skill} className="bg-conexia-green/10 text-conexia-green px-3 py-1 rounded-full text-xs font-semibold">{skill}</span>
-                  ))}
+                <div className="mt-2">
+                  <span className="block text-sm text-gray-500 font-semibold mb-1">Habilidades requeridas</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {skills.map(skill => (
+                      <span key={skill} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">{skill}</span>
+                    ))}
+                  </div>
                 </div>
               )}
-              <div className="text-conexia-green font-bold text-lg mt-2">{project.price ? `$${project.price}` : 'A convenir'}</div>
-              <div className="mt-4 flex gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-4">
+                <div className="text-conexia-green font-bold text-xl">{project.price ? `$${project.price}` : 'A convenir'}</div>
+                {project.maxCollaborators && (
+                  <div className="text-sm text-gray-500 ml-2">Máx. colaboradores: <span className="font-semibold text-gray-700">{project.maxCollaborators}</span></div>
+                )}
+                {project.startDate && (
+                  <div className="text-sm text-gray-500 ml-2">Inicio: <span className="font-semibold text-gray-700">{new Date(project.startDate).toLocaleDateString()}</span></div>
+                )}
+                {project.endDate && (
+                  <div className="text-sm text-gray-500 ml-2">Fin: <span className="font-semibold text-gray-700">{new Date(project.endDate).toLocaleDateString()}</span></div>
+                )}
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
                 <button className="bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition">Contactar</button>
                 {isOwner ? (
                   <button className="bg-red-600 text-white px-5 py-2 rounded font-semibold hover:bg-red-700 transition">Dar de baja proyecto</button>

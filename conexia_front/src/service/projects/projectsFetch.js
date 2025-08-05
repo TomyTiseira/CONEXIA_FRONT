@@ -7,7 +7,8 @@ export async function fetchProjectById(id) {
     credentials: 'include',
   });
   if (!res.ok) return null;
-  const p = await res.json();
+  const data = await res.json();
+  const p = data.data || {};
   return {
     id: p.id,
     title: p.title,
@@ -15,15 +16,16 @@ export async function fetchProjectById(id) {
     image: p.image,
     owner: p.owner,
     ownerImage: p.ownerImage,
-    contractType: p.contractType,
-    collaborationType: p.collaborationType,
-    skills: p.skills,
-    category: p.category,
+    contractType: Array.isArray(p.contractType) ? p.contractType : (p.contractType ? [p.contractType] : []),
+    collaborationType: Array.isArray(p.collaborationType) ? p.collaborationType : (p.collaborationType ? [p.collaborationType] : []),
+    skills: Array.isArray(p.skills) ? p.skills : (p.skills ? [p.skills] : []),
+    category: Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []),
     maxCollaborators: p.maxCollaborators,
     isActive: p.isActive,
-    start_date: p.start_date,
-    end_date: p.end_date,
-    };
+    startDate: p.startDate,
+    endDate: p.endDate,
+    isOwner: p.isOwner,
+  };
 }
 // Servicio para buscar proyectos según filtros
 
