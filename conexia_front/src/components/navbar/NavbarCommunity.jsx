@@ -54,7 +54,7 @@ export default function NavbarCommunity() {
   const navItems = [
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Servicios', href: '#servicios', icon: Briefcase },
-    { label: 'Proyectos', href: '/project', icon: Layers },
+    { label: 'Proyectos', href: "/project/search", icon: Layers },
   ];
 
   return (

@@ -46,6 +46,7 @@ export default function CreateProjectForm() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [imgError, setImgError] = useState('');
+  const [isIndefinite, setIsIndefinite] = useState(false);
 
   const { skills } = useSkills();
   const { data: categories } = useProjectCategories();
@@ -66,6 +67,20 @@ export default function CreateProjectForm() {
         [field]: value,
       },
     }));
+  };
+
+  const handleIndefiniteChange = (checked) => {
+    setIsIndefinite(checked);
+    if (checked) {
+      // Clear end date when indefinite is checked
+      setForm((prev) => ({
+        ...prev,
+        dates: {
+          ...prev.dates,
+          endDate: '',
+        },
+      }));
+    }
   };
 
   const handleSkillsChange = (skills) => {
@@ -107,6 +122,7 @@ export default function CreateProjectForm() {
       if (
         form.dates.startDate &&
         form.dates.endDate &&
+        !isIndefinite &&
         form.dates.endDate < form.dates.startDate
       ) {
         error = 'La fecha hasta no puede ser menor a la fecha desde';
@@ -174,11 +190,18 @@ export default function CreateProjectForm() {
     if ((form.maxCollaborators !== '' && errors.maxCollaborators) || !isValid || missing) return;
 
     try {
-      const formToSend = { ...form, location: form.locationId };
+      const formToSend = { 
+        ...form, 
+        location: form.locationId,
+        dates: {
+          ...form.dates,
+          endDate: isIndefinite ? null : form.dates.endDate
+        }
+      };
       await publishProject(formToSend);
       setMsg({ ok: true, text: 'Proyecto publicado con éxito.' });
       setTimeout(() => {
-        router.push('/project');
+        router.push('/project/search');
       }, 1500); // 1,5 segundos
     } catch (err) {
       setMsg({ ok: false, text: err.message || 'Error al publicar el proyecto' });
@@ -260,20 +283,23 @@ export default function CreateProjectForm() {
             end={form.dates.endDate}
             onStartChange={(e) => handleDateChange('startDate', e.target.value)}
             onEndChange={(e) => handleDateChange('endDate', e.target.value)}
+            isIndefinite={isIndefinite}
+            onIndefiniteChange={handleIndefiniteChange}
             errorStart={
               errors.dates &&
-              (!form.dates.startDate || (form.dates.endDate && form.dates.startDate > form.dates.endDate))
+              (!form.dates.startDate || (!isIndefinite && form.dates.endDate && form.dates.startDate > form.dates.endDate))
                 ? errors.dates
                 : ''
             }
             errorEnd={
               errors.dates &&
-              (!form.dates.endDate || (form.dates.endDate && form.dates.endDate < form.dates.startDate))
+              (!isIndefinite && (!form.dates.endDate || (form.dates.endDate && form.dates.endDate < form.dates.startDate)))
                 ? errors.dates
                 : ''
             }
           />
         </div>
+        
         {errors.dates && <p className="text-xs text-red-600 mt-1">{errors.dates}</p>}
       </div>
 

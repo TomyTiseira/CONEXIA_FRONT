@@ -28,6 +28,9 @@ export default function DateRangePicker({
   labelClassName = '',
   containerClassName = '',
   disableTyping = true,
+  hideEnd = false,
+  isIndefinite = false,
+  onIndefiniteChange,
 }) {
   const minStart = getTomorrow();
   return (
@@ -48,19 +51,36 @@ export default function DateRangePicker({
         />
         <p className="text-xs text-red-600 mt-1 text-left h-[30px]">{errorStart}</p>
       </div>
-      {/* Fecha hasta */}
+      {/* Fecha hasta - siempre visible */}
       <div className="w-full md:w-1/2">
         <label className={`block text-sm font-semibold text-conexia-green-dark mb-0.5 ${labelClassName}`}>{endLabel}</label>
         <input
           type="date"
-          value={end}
+          value={isIndefinite ? '' : end}
           min={start || minStart}
           onChange={onEndChange}
+          disabled={isIndefinite}
           className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring pr-10 h-10 text-base appearance-none
             ${errorEnd ? 'border-red-500 ring-red-300' : 'border-gray-300 focus:ring-conexia-green/40'}
+            ${isIndefinite ? 'bg-gray-100 cursor-not-allowed' : ''}
             ${inputClassName}`}
           onKeyDown={disableTyping ? (e) => e.preventDefault() : undefined}
         />
+        {/* Checkbox para fecha indefinida - justo debajo del campo fecha hasta */}
+        {onIndefiniteChange && (
+          <div className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              id="indefinite-date"
+              checked={isIndefinite}
+              onChange={(e) => onIndefiniteChange(e.target.checked)}
+              className="accent-conexia-green"
+            />
+            <label htmlFor="indefinite-date" className="text-sm text-conexia-green-dark cursor-pointer">
+              Fecha hasta indefinida
+            </label>
+          </div>
+        )}
         <p className="text-xs text-red-600 mt-1 text-left h-[30px]">{errorEnd}</p>
       </div>
     </div>
