@@ -10,21 +10,24 @@ export async function updateUserProfile(payload) {
       // Si hay archivos, usar FormData
       const formData = new FormData();
       
-      // Solo agregar campos que tienen valores (que se están actualizando)
+      // Solo incluir campos de texto que tienen valores o que están siendo vaciados intencionalmente
       const textFields = ['name', 'lastName', 'birthDate', 'phoneNumber', 'country', 'state', 'description', 'profession'];
+      const optionalFields = ['phoneNumber', 'birthDate', 'country', 'state', 'description'];
+      
       textFields.forEach(field => {
-        if (payload[field] !== null && payload[field] !== undefined && payload[field] !== '') {
+        if (payload[field] !== null && payload[field] !== undefined) {
+          // Para campos opcionales, si están vacíos, enviar string vacío que el backend puede convertir a null
           formData.append(field, payload[field]);
         }
       });
       
-      // Solo agregar arrays si tienen contenido
+      // Incluir arrays si están presentes en el payload (incluso si están vacíos)
       ['skills', 'experience', 'socialLinks', 'education', 'certifications'].forEach(field => {
-        if (payload[field] && Array.isArray(payload[field]) && payload[field].length > 0) {
+        if (payload.hasOwnProperty(field) && Array.isArray(payload[field])) {
           let processedArray = payload[field];
           
           // Convertir skills a array de IDs si contiene objetos
-          if (field === 'skills' && payload[field][0] && typeof payload[field][0] === 'object') {
+          if (field === 'skills' && payload[field].length > 0 && typeof payload[field][0] === 'object') {
             processedArray = payload[field].map(skill => skill.id);
           }
           
@@ -53,21 +56,24 @@ export async function updateUserProfile(payload) {
       // Si NO hay archivos, enviar como JSON puro solo con campos que tienen valores
       const jsonPayload = {};
       
-      // Solo incluir campos de texto que tienen valores
+      // Solo incluir campos de texto que tienen valores o que están siendo vaciados intencionalmente
       const textFields = ['name', 'lastName', 'birthDate', 'phoneNumber', 'country', 'state', 'description', 'profession'];
+      const optionalFields = ['phoneNumber', 'birthDate', 'country', 'state', 'description'];
+      
       textFields.forEach(field => {
-        if (payload[field] !== null && payload[field] !== undefined && payload[field] !== '') {
+        if (payload[field] !== null && payload[field] !== undefined) {
+          // Para campos opcionales, si están vacíos, enviar string vacío que el backend puede convertir a null
           jsonPayload[field] = payload[field];
         }
       });
       
-      // Solo incluir arrays que tienen contenido
+      // Incluir arrays si están presentes en el payload (incluso si están vacíos)
       ['skills', 'experience', 'socialLinks', 'education', 'certifications'].forEach(field => {
-        if (payload[field] && Array.isArray(payload[field]) && payload[field].length > 0) {
+        if (payload.hasOwnProperty(field) && Array.isArray(payload[field])) {
           let processedArray = payload[field];
           
           // Convertir skills a array de IDs si contiene objetos
-          if (field === 'skills' && payload[field][0] && typeof payload[field][0] === 'object') {
+          if (field === 'skills' && payload[field].length > 0 && typeof payload[field][0] === 'object') {
             processedArray = payload[field].map(skill => skill.id);
           }
           
