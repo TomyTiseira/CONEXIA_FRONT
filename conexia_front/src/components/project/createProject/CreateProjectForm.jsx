@@ -386,7 +386,7 @@ export default function CreateProjectForm() {
 
       {/* Botones */}
       <div className="md:col-span-2 flex justify-end gap-4 pt-4">
-        <Button type="button" variant="secondary" onClick={() => router.push('/community/projects')}>
+        <Button type="button" variant="secondary" onClick={() => router.push('/project')}>
           Cancelar
         </Button>
         <Button type="submit" variant="primary" disabled={loading}>

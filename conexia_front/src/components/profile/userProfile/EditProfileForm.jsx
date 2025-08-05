@@ -108,7 +108,8 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     // Validación específica por campo
     switch (name) {
       case 'phoneNumber':
-        if (value && value.trim()) {
+        // Solo validar si el campo tiene contenido real (no solo espacios)
+        if (value && value.trim() && value.trim().length > 0) {
           const phoneValidation = validateSimplePhone(value);
           if (!phoneValidation.isValid) {
             return phoneValidation.message;
@@ -486,6 +487,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     const { value } = e.target;
     // Permitir solo números, espacios, guiones y paréntesis
     const cleaned = value.replace(/[^\d\s\-\(\)\+]/g, '');
+    // Si está completamente vacío, enviar string vacío
     handleChange('phoneNumber', cleaned);
   };
 
@@ -541,7 +543,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     });
     
     // Validar campos opcionales que tengan valor
-    if (form.phoneNumber) {
+    if (form.phoneNumber && form.phoneNumber.trim()) {
       newTouched.phoneNumber = true;
       const phoneErr = validateField('phoneNumber', form.phoneNumber);
       newErrors.phoneNumber = phoneErr;
@@ -551,10 +553,13 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
       } else if (phoneErr) {
         hasError = true;
       }
+    } else {
+      // Limpiar error si el campo está vacío
+      newErrors.phoneNumber = '';
     }
 
     // Validar fecha de nacimiento solo si tiene valor
-    if (form.birthDate) {
+    if (form.birthDate && form.birthDate.trim()) {
       newTouched.birthDate = true;
       const birthDateErr = validateField('birthDate', form.birthDate);
       newErrors.birthDate = birthDateErr;
@@ -564,6 +569,9 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
       } else if (birthDateErr) {
         hasError = true;
       }
+    } else {
+      // Limpiar error si el campo está vacío
+      newErrors.birthDate = '';
     }
     
     // Validación de errores de imágenes

@@ -12,8 +12,11 @@ export async function updateUserProfile(payload) {
       
       // Solo incluir campos de texto que tienen valores o que están siendo vaciados intencionalmente
       const textFields = ['name', 'lastName', 'birthDate', 'phoneNumber', 'country', 'state', 'description', 'profession'];
+      const optionalFields = ['phoneNumber', 'birthDate', 'country', 'state', 'description'];
+      
       textFields.forEach(field => {
         if (payload[field] !== null && payload[field] !== undefined) {
+          // Para campos opcionales, si están vacíos, enviar string vacío que el backend puede convertir a null
           formData.append(field, payload[field]);
         }
       });
@@ -55,8 +58,11 @@ export async function updateUserProfile(payload) {
       
       // Solo incluir campos de texto que tienen valores o que están siendo vaciados intencionalmente
       const textFields = ['name', 'lastName', 'birthDate', 'phoneNumber', 'country', 'state', 'description', 'profession'];
+      const optionalFields = ['phoneNumber', 'birthDate', 'country', 'state', 'description'];
+      
       textFields.forEach(field => {
         if (payload[field] !== null && payload[field] !== undefined) {
+          // Para campos opcionales, si están vacíos, enviar string vacío que el backend puede convertir a null
           jsonPayload[field] = payload[field];
         }
       });
