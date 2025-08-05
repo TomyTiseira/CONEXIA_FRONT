@@ -7,6 +7,14 @@ function getToday() {
   return today.toISOString().split('T')[0];
 }
 
+// Helper para obtener la fecha de mañana en formato yyyy-mm-dd
+function getTomorrow() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  return tomorrow.toISOString().split('T')[0];
+}
+
 export default function DateRangePicker({
   startLabel = 'Fecha desde:',
   endLabel = 'Fecha hasta:',
@@ -21,7 +29,7 @@ export default function DateRangePicker({
   containerClassName = '',
   disableTyping = true,
 }) {
-  const minStart = getToday();
+  const minStart = getTomorrow();
   return (
     <div className={`w-full flex flex-col md:flex-row gap-4 ${containerClassName}`}>
       {/* Fecha desde */}
