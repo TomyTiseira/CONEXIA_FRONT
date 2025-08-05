@@ -13,7 +13,6 @@ export async function fetchProjectById(id) {
     title: p.title,
     description: p.description,
     image: p.image,
-    location: p.location,
     owner: p.owner,
     ownerImage: p.ownerImage,
     contractType: p.contractType,
@@ -52,7 +51,6 @@ export async function fetchProjects({ title, category, skills, collaboration, co
     title: p.title,
     description: p.description,
     image: p.image,
-    location: p.location,
     // Si owner es objeto, extraer nombre y/o id
     owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
     ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,

@@ -9,87 +9,99 @@ export default function ProjectList({ projects }) {
     return <div className="text-center text-conexia-green mt-12 text-lg opacity-70">No se encontraron proyectos.</div>;
   }
   return (
-    <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-8">
-      {projects.map(project => (
-        <div
-          key={project.id}
-          className="bg-white rounded-xl shadow-md p-5 flex flex-col items-stretch min-h-[370px] hover:shadow-lg transition"
-        >
-          {/* Imagen principal */}
-          <div className="flex flex-col items-center mb-2">
-            <div className="w-full flex justify-center">
-              <div className="relative w-32 h-28 mb-2">
-                {project.image ? (
-                  <Image
-                    src={`${config.IMAGE_URL}/${project.image}`}
-                    alt={project.title}
-                    fill
-                    className="object-cover rounded border bg-[#f3f9f8]"
-                    style={{ background: '#f3f9f8' }}
-                    sizes="128px"
-                  />
-                ) : (
-                  <Image
-                    src="/file.svg"
-                    alt="Sin imagen"
-                    fill
-                    className="object-contain rounded border bg-[#f3f9f8]"
-                    sizes="128px"
-                  />
-                )}
-              </div>
-            </div>
-            <h3 className="font-bold text-conexia-green text-lg text-center mb-1 leading-tight min-h-[48px]">
-              {project.title}
-            </h3>
-            {/* Info principal: ubicación */}
-            <div className="flex justify-center items-center gap-2 mb-2">
-              <span className="bg-[#e6f2ef] text-conexia-green px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                {project.location || 'Ubicación'}
+<div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-start mt-0">
+  {projects.map(project => (
+    <div
+      key={project.id}
+      className="bg-white rounded-2xl shadow-md p-6 sm:p-8 flex flex-col items-stretch min-h-[320px] max-w-full sm:max-w-[500px] w-full hover:shadow-lg transition"
+      style={{ minWidth: '340px' }}
+    >
+      {/* Imagen, título y dueño */}
+      <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4 mb-4 w-full">
+        {/* Imagen del proyecto */}
+        <div className="relative w-full sm:w-40 h-40 sm:h-40 flex-shrink-0 mx-auto sm:mx-0">
+          {project.image ? (
+            <Image
+              src={`${config.IMAGE_URL}/${project.image}`}
+              alt={project.title}
+              fill
+              className="object-cover rounded-xl border bg-[#f3f9f8]"
+              sizes="144px"
+            />
+          ) : (
+            <Image
+              src="/file.svg"
+              alt="Sin imagen"
+              fill
+              className="object-contain rounded-xl border bg-[#f3f9f8]"
+              sizes="144px"
+            />
+          )}
+        </div>
+
+        {/* Título, tipos, dueño */}
+        <div className="flex flex-col flex-1 justify-between w-full min-w-0">
+          <h3 className="font-bold text-conexia-green text-xl sm:text-2xl leading-tight mb-1 break-words whitespace-pre-line w-full truncate">
+            {project.title}
+          </h3>
+          <div className="flex flex-wrap gap-2 mb-2 w-full">
+            {project.contractType && (
+              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium truncate">
+                {project.contractType}
               </span>
-            </div>
-            {/* Nombre y avatar del owner */}
-            <div className="flex items-center gap-2 mb-2">
-              <div className="relative w-8 h-8">
-                {project.ownerImage ? (
-                  <Image
-                    src={`${config.IMAGE_URL}/${project.ownerImage}`}
-                    alt={project.owner || 'Usuario'}
-                    fill
-                    className="object-cover rounded-full border bg-[#f3f9f8]"
-                    sizes="32px"
-                  />
-                ) : (
-                  <Image
-                    src="/logo.png"
-                    alt="Sin imagen"
-                    fill
-                    className="object-contain rounded-full border bg-[#f3f9f8]"
-                    sizes="32px"
-                  />
-                )}
-              </div>
-              <span className="text-conexia-green font-semibold text-sm">{project.owner || 'Usuario'}</span>
-            </div>
+            )}
+            {project.collaborationType && (
+              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium truncate">
+                {project.collaborationType}
+              </span>
+            )}
           </div>
-          {/* Botones */}
-          <div className="flex gap-2 mt-auto">
-            <button
-              className="bg-conexia-coral text-white px-4 py-2 rounded text-sm font-semibold hover:bg-conexia-coral/90 transition"
-              onClick={() => router.push(`/project/${project.id}`)}
-            >
-              + información
-            </button>
-            <button
-              className="bg-conexia-green/90 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-conexia-green transition"
-              onClick={() => router.push(`/profile/userProfile/${project.ownerId}`)}
-            >
-              Ver perfil
-            </button>
+          <div className="flex items-center gap-2 mt-2 min-w-0">
+            <div className="relative w-8 h-8">
+              {project.ownerImage ? (
+                <Image
+                  src={`${config.IMAGE_URL}/${project.ownerImage}`}
+                  alt={project.owner || 'Usuario'}
+                  fill
+                  className="object-cover rounded-full border bg-[#f3f9f8]"
+                  sizes="32px"
+                />
+              ) : (
+                <Image
+                  src="/logo.png"
+                  alt="Sin imagen"
+                  fill
+                  className="object-contain rounded-full border bg-[#f3f9f8]"
+                  sizes="32px"
+                />
+              )}
+            </div>
+            <span className="text-conexia-green font-semibold text-base whitespace-pre-line break-words truncate">
+              {project.owner || 'Usuario'}
+            </span>
           </div>
         </div>
-      ))}
+      </div>
+
+      {/* Botones responsive */}
+      <div className="mt-auto w-full flex justify-center px-0">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto justify-center items-center px-0">
+          <button
+            className="bg-conexia-coral text-white px-5 py-2 rounded-md text-base font-semibold hover:bg-conexia-coral/90 transition w-full sm:w-auto"
+            onClick={() => router.push(`/project/${project.id}`)}
+          >
+            + Información
+          </button>
+          <button
+            className="bg-conexia-green/90 text-white px-5 py-2 rounded-md text-base font-semibold hover:bg-conexia-green transition w-full sm:w-auto"
+            onClick={() => router.push(`/profile/userProfile/${project.ownerId}`)}
+          >
+            Ver Perfil
+          </button>
+        </div>
+      </div>
     </div>
+  ))}
+</div>
   );
 }
