@@ -13,6 +13,21 @@ export default function ProjectSearchFilters({ filters, onChange }) {
   const [contractTypes, setContractTypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Estados para controlar qué secciones están expandidas
+  const [expandedSections, setExpandedSections] = useState({
+    category: true,
+    skills: true,
+    contract: true,
+    collaboration: true,
+  });
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   useEffect(() => {
     async function loadFilters() {
       setLoading(true);
@@ -82,109 +97,181 @@ export default function ProjectSearchFilters({ filters, onChange }) {
     <div className="flex flex-col gap-6 w-full max-w-[200px] min-w-[180px]">
       {/* Categoría */}
       <div>
-        <div className="font-semibold text-conexia-green mb-2">Categoría del proyecto</div>
-        <div className="flex flex-col gap-1 ml-1">
-          {/* Opción Todas */}
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={!filters.category}
-              onChange={() => handleCategory('')}
-              className="accent-conexia-green"
-            />
-            Todas
-          </label>
-          {categories.map((cat) => (
-            <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-semibold text-conexia-green">Categoría del proyecto</div>
+          <button
+            onClick={() => toggleSection('category')}
+            className="text-conexia-green hover:text-conexia-green/80 transition-colors p-1"
+            aria-label={expandedSections.category ? 'Ocultar categorías' : 'Mostrar categorías'}
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${expandedSections.category ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+        {expandedSections.category && (
+          <div className="flex flex-col gap-1 ml-1">
+            {/* Opción Todas */}
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.category === cat.id}
-                onChange={() => handleCategory(cat.id)}
+                checked={!filters.category}
+                onChange={() => handleCategory('')}
                 className="accent-conexia-green"
               />
-              {cat.name}
+              Todas
             </label>
-          ))}
-        </div>
+            {categories.map((cat) => (
+              <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.category === cat.id}
+                  onChange={() => handleCategory(cat.id)}
+                  className="accent-conexia-green"
+                />
+                {cat.name}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
       {/* Habilidades */}
       <div>
-        <div className="font-semibold text-conexia-green mb-2">Habilidades requeridas</div>
-        <div className="flex flex-col gap-1 ml-1">
-          {/* Opción Todas */}
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={!Array.isArray(filters.skills) || filters.skills.length === 0}
-              onChange={() => onChange({ ...filters, skills: [] })}
-              className="accent-conexia-green"
-            />
-            Todas
-          </label>
-          {skills.map((skill) => (
-            <label key={skill.id} className="flex items-center gap-2 text-sm cursor-pointer">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-semibold text-conexia-green">Habilidades requeridas</div>
+          <button
+            onClick={() => toggleSection('skills')}
+            className="text-conexia-green hover:text-conexia-green/80 transition-colors p-1"
+            aria-label={expandedSections.skills ? 'Ocultar habilidades' : 'Mostrar habilidades'}
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${expandedSections.skills ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+        {expandedSections.skills && (
+          <div className="flex flex-col gap-1 ml-1">
+            {/* Opción Todas */}
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.skills.includes(skill.id)}
-                onChange={() => handleSkill(skill.id)}
+                checked={!Array.isArray(filters.skills) || filters.skills.length === 0}
+                onChange={() => onChange({ ...filters, skills: [] })}
                 className="accent-conexia-green"
               />
-              {skill.name}
+              Todas
             </label>
-          ))}
-        </div>
+            {skills.map((skill) => (
+              <label key={skill.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.skills.includes(skill.id)}
+                  onChange={() => handleSkill(skill.id)}
+                  className="accent-conexia-green"
+                />
+                {skill.name}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
       {/* Tipo de contrato */}
       <div>
-        <div className="font-semibold text-conexia-green mb-2">Tipo de contrato</div>
-        <div className="flex flex-col gap-1 ml-1">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={!Array.isArray(filters.contract) || filters.contract.length === 0}
-              onChange={() => onChange({ ...filters, contract: [] })}
-              className="accent-conexia-green"
-            />
-            Todos
-          </label>
-          {contractTypes.map((type) => (
-            <label key={type.id} className="flex items-center gap-2 text-sm cursor-pointer">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-semibold text-conexia-green">Tipo de contrato</div>
+          <button
+            onClick={() => toggleSection('contract')}
+            className="text-conexia-green hover:text-conexia-green/80 transition-colors p-1"
+            aria-label={expandedSections.contract ? 'Ocultar tipos de contrato' : 'Mostrar tipos de contrato'}
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${expandedSections.contract ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+        {expandedSections.contract && (
+          <div className="flex flex-col gap-1 ml-1">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={Array.isArray(filters.contract) && filters.contract.includes(type.id)}
-                onChange={() => handleContract(type.id)}
+                checked={!Array.isArray(filters.contract) || filters.contract.length === 0}
+                onChange={() => onChange({ ...filters, contract: [] })}
                 className="accent-conexia-green"
               />
-              {type.name}
+              Todos
             </label>
-          ))}
-        </div>
+            {contractTypes.map((type) => (
+              <label key={type.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Array.isArray(filters.contract) && filters.contract.includes(type.id)}
+                  onChange={() => handleContract(type.id)}
+                  className="accent-conexia-green"
+                />
+                {type.name}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
       {/* Tipo de colaboración */}
       <div>
-        <div className="font-semibold text-conexia-green mb-2">Tipo de colaboración</div>
-        <div className="flex flex-col gap-1 ml-1">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={!Array.isArray(filters.collaboration) || filters.collaboration.length === 0}
-              onChange={() => onChange({ ...filters, collaboration: [] })}
-              className="accent-conexia-green"
-            />
-            Todas
-          </label>
-          {collabTypes.map((type) => (
-            <label key={type.id} className="flex items-center gap-2 text-sm cursor-pointer">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-semibold text-conexia-green">Tipo de colaboración</div>
+          <button
+            onClick={() => toggleSection('collaboration')}
+            className="text-conexia-green hover:text-conexia-green/80 transition-colors p-1"
+            aria-label={expandedSections.collaboration ? 'Ocultar tipos de colaboración' : 'Mostrar tipos de colaboración'}
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${expandedSections.collaboration ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+        {expandedSections.collaboration && (
+          <div className="flex flex-col gap-1 ml-1">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={Array.isArray(filters.collaboration) && filters.collaboration.includes(type.id)}
-                onChange={() => handleCollab(type.id)}
+                checked={!Array.isArray(filters.collaboration) || filters.collaboration.length === 0}
+                onChange={() => onChange({ ...filters, collaboration: [] })}
                 className="accent-conexia-green"
               />
-              {type.name}
+              Todas
             </label>
-          ))}
-        </div>
+            {collabTypes.map((type) => (
+              <label key={type.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Array.isArray(filters.collaboration) && filters.collaboration.includes(type.id)}
+                  onChange={() => handleCollab(type.id)}
+                  className="accent-conexia-green"
+                />
+                {type.name}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -9,12 +9,47 @@ export async function fetchProjectById(id) {
   if (!res.ok) return null;
   const data = await res.json();
   const p = data.data || {};
-  return {
+  
+  const result = {
     id: p.id,
     title: p.title,
     description: p.description,
     image: p.image,
     owner: p.owner,
+    ownerId: (() => {
+      // Intentar extraer ownerId de diferentes maneras
+      if (typeof p.owner === 'object' && p.owner !== null && p.owner.id) {
+        return p.owner.id;
+      }
+      if (p.ownerId) {
+        return p.ownerId;
+      }
+      if (p.userId) {
+        return p.userId;
+      }
+      if (p.createdBy) {
+        return p.createdBy;
+      }
+      if (p.user && typeof p.user === 'object' && p.user.id) {
+        return p.user.id;
+      }
+      // Si owner es un string que parece un ID numérico
+      if (typeof p.owner === 'string' && /^\d+$/.test(p.owner)) {
+        return p.owner;
+      }
+      // FALLBACK: Si no encontramos ownerId
+      // Buscar cualquier campo que pueda contener el ID del dueño
+      for (const [key, value] of Object.entries(p)) {
+        if (key.toLowerCase().includes('owner') && value && typeof value === 'object' && value.id) {
+          return value.id;
+        }
+        if (key.toLowerCase().includes('user') && value && typeof value === 'object' && value.id) {
+          return value.id;
+        }
+      }
+      
+      return undefined;
+    })(),
     ownerImage: p.ownerImage,
     contractType: Array.isArray(p.contractType) ? p.contractType : (p.contractType ? [p.contractType] : []),
     collaborationType: Array.isArray(p.collaborationType) ? p.collaborationType : (p.collaborationType ? [p.collaborationType] : []),
@@ -26,6 +61,8 @@ export async function fetchProjectById(id) {
     endDate: p.endDate,
     isOwner: p.isOwner,
   };
+  
+  return result;
 }
 // Servicio para buscar proyectos según filtros
 
@@ -57,15 +94,15 @@ export async function fetchProjects({ title, category, skills, collaboration, co
     owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
     ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
     ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
-    // Si contractType es objeto, extraer nombre
-    contractType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
-    contractTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
-    // Si collaborationType es objeto, extraer nombre
-    collaborationType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
-    collaborationTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
     // Si category es objeto, extraer nombre
     category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
     categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
+    // collaborationType en backend = tipo de contrato en UI
+    contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
+    contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
+    // contractType en backend = tipo de colaboración en UI
+    collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
+    collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
     // Otros campos planos
     isOwner: p.isOwner,
   }));

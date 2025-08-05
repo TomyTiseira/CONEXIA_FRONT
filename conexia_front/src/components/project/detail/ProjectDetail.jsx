@@ -21,10 +21,13 @@ export default function ProjectDetail({ projectId }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   if (!project) return <div className="min-h-screen flex items-center justify-center text-conexia-green">Proyecto no encontrado</div>;
 
-  const isOwner = user && project && String(user.id) === String(project.ownerId);
+  const isOwner = user && project && (String(user.id) === String(project.ownerId) || project.isOwner);
   const skills = Array.isArray(project.skills) ? project.skills : (project.skills ? [project.skills] : []);
   const ownerName = project.ownerName || project.owner || '';
   const ownerImage = project.ownerImage || null;
+  
+  // Determinar el ID del dueño para navegación
+  const ownerIdForNavigation = project.ownerId || (project.isOwner && user?.id) || null;
   const contractTypes = Array.isArray(project.contractType) ? project.contractType : (project.contractType ? [project.contractType] : []);
   const collaborationTypes = Array.isArray(project.collaborationType) ? project.collaborationType : (project.collaborationType ? [project.collaborationType] : []);
   const categories = Array.isArray(project.category) ? project.category : (project.category ? [project.category] : []);
@@ -40,7 +43,7 @@ export default function ProjectDetail({ projectId }) {
   return (
     <>
       <NavbarCommunity />
-      <div className="min-h-[calc(100vh-64px)] relative py-8 px-2 md:px-6 flex flex-col items-center overflow-x-hidden bg-[#f3f9f8]">
+      <div className="min-h-[calc(100vh-64px)] relative py-8 px-6 md:px-6 flex flex-col items-center overflow-x-hidden bg-[#f3f9f8]">
         {/* Fondo decorativo */}
         <div className="pointer-events-none select-none fixed inset-0 w-screen h-screen z-0">
           <img
@@ -60,7 +63,7 @@ export default function ProjectDetail({ projectId }) {
           <div className="flex flex-col md:flex-row gap-10">
             {/* Imagen */}
             <div className="flex flex-col items-center md:items-start w-full md:w-56">
-              <div className="relative w-48 h-48 rounded-xl border bg-[#f3f9f8] overflow-hidden mb-2">
+              <div className="relative w-48 h-48 rounded-xl border-4 border-white bg-[#f3f9f8] overflow-hidden mb-2 shadow-sm">
                 {project.image ? (
                   <Image
                     src={getImageUrl(project.image)}
@@ -71,10 +74,10 @@ export default function ProjectDetail({ projectId }) {
                   />
                 ) : (
                   <Image
-                    src="/file.svg"
-                    alt="Sin imagen"
+                    src="/default_project.jpeg"
+                    alt="Imagen por defecto"
                     fill
-                    className="object-contain rounded-xl"
+                    className="object-cover rounded-xl"
                     sizes="192px"
                   />
                 )}
@@ -85,20 +88,49 @@ export default function ProjectDetail({ projectId }) {
               <h1 className="text-3xl font-bold text-conexia-green break-words">{project.title || 'Sin título'}</h1>
               <div className="flex flex-wrap gap-2 mb-1">
                 {categories.length > 0 && categories.map((cat) => (
-                  <span key={cat} className="bg-conexia-green/10 text-conexia-green px-3 py-1 rounded-full text-xs font-semibold">{cat}</span>
+                  <span key={cat} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">{cat}</span>
                 ))}
                 {contractTypes.length > 0 && contractTypes.map((type) => (
-                  <span key={type} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
+                  <span key={type} className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
                 ))}
                 {collaborationTypes.length > 0 && collaborationTypes.map((type) => (
-                  <span key={type} className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
+                  <span key={type} className="bg-conexia-green/10 text-conexia-green px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
                 ))}
               </div>
               <div>
                 <span className="block text-sm text-gray-500 font-semibold mb-1">Descripción</span>
                 <div className="text-base break-words whitespace-pre-line text-gray-700 bg-gray-50 rounded p-3 border border-gray-100">{project.description || 'Sin descripción'}</div>
               </div>
-              <div className="flex items-center gap-3 mt-2">
+              {skills.length > 0 && (
+                <div className="mt-2">
+                  <span className="block text-sm text-gray-500 font-semibold mb-1">Habilidades requeridas</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {skills.map(skill => (
+                      <span key={skill} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">{skill}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-4">
+                {project.maxCollaborators && (
+                  <div className="text-sm text-gray-500">Máx. colaboradores: <span className="font-semibold text-gray-700">{project.maxCollaborators}</span></div>
+                )}
+                {project.startDate && (
+                  <div className="text-sm text-gray-500 ml-2">Inicio: <span className="font-semibold text-gray-700">{new Date(project.startDate).toLocaleDateString()}</span></div>
+                )}
+                {project.endDate && (
+                  <div className="text-sm text-gray-500 ml-2">Fin: <span className="font-semibold text-gray-700">{new Date(project.endDate).toLocaleDateString()}</span></div>
+                )}
+              </div>
+              {/* Dueño del proyecto */}
+              <div 
+                className="flex items-center gap-3 mt-4 cursor-pointer hover:bg-gray-50 rounded-lg p-3 transition-colors"
+                onClick={() => {
+                  if (ownerIdForNavigation) {
+                    router.push(`/profile/userProfile/${ownerIdForNavigation}`);
+                  }
+                }}
+              >
                 <div className="relative w-10 h-10">
                   {ownerImage ? (
                     <Image
@@ -119,40 +151,36 @@ export default function ProjectDetail({ projectId }) {
                   )}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-conexia-green font-semibold text-base break-words">{ownerName}</span>
+                  <span className="text-conexia-green font-semibold text-base break-words hover:underline">{ownerName}</span>
                   <span className="text-xs text-gray-500">Dueño del proyecto</span>
                 </div>
               </div>
-              {skills.length > 0 && (
-                <div className="mt-2">
-                  <span className="block text-sm text-gray-500 font-semibold mb-1">Habilidades requeridas</span>
-                  <div className="flex gap-2 flex-wrap">
-                    {skills.map(skill => (
-                      <span key={skill} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">{skill}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-4">
-                <div className="text-conexia-green font-bold text-xl">{project.price ? `$${project.price}` : 'A convenir'}</div>
-                {project.maxCollaborators && (
-                  <div className="text-sm text-gray-500 ml-2">Máx. colaboradores: <span className="font-semibold text-gray-700">{project.maxCollaborators}</span></div>
+            </div>
+          </div>
+          {/* Fila de botones que abarca ambas columnas */}
+          <div className="mt-6 flex flex-col md:flex-row gap-4 md:gap-0">
+            {/* Columna izquierda - Botón Atrás alineado con la imagen */}
+            <div className="w-full md:w-56 flex justify-start">
+              <button 
+                className="bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition text-sm"
+                onClick={() => router.push('/project/search')}
+              >
+                ← Atrás
+              </button>
+            </div>
+            {/* Espacio entre columnas - solo en desktop */}
+            <div className="hidden md:block md:w-10"></div>
+            {/* Columna derecha - Otros botones alineados a la izquierda */}
+            <div className="flex-1">
+              <div className="flex flex-col sm:flex-row gap-3">
+                {!isOwner && (
+                  <button className="bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 transition">Contactar</button>
                 )}
-                {project.startDate && (
-                  <div className="text-sm text-gray-500 ml-2">Inicio: <span className="font-semibold text-gray-700">{new Date(project.startDate).toLocaleDateString()}</span></div>
-                )}
-                {project.endDate && (
-                  <div className="text-sm text-gray-500 ml-2">Fin: <span className="font-semibold text-gray-700">{new Date(project.endDate).toLocaleDateString()}</span></div>
-                )}
-              </div>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button className="bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition">Contactar</button>
                 {isOwner ? (
-                  <button className="bg-red-600 text-white px-5 py-2 rounded font-semibold hover:bg-red-700 transition">Dar de baja proyecto</button>
+                  <button className="bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition">Eliminar proyecto</button>
                 ) : (
                   <button className="bg-conexia-green/90 text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green transition">Postularse a proyecto</button>
                 )}
-                <button className="bg-gray-200 text-conexia-green px-5 py-2 rounded font-semibold hover:bg-gray-300 transition" onClick={() => router.push(`/profile/userProfile/${project.ownerId}`)}>Ver perfil</button>
               </div>
             </div>
           </div>

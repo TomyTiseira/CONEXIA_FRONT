@@ -29,6 +29,7 @@ export default function UserProfile() {
   const [error, setError] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showMyProjects, setShowMyProjects] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -300,8 +301,6 @@ export default function UserProfile() {
     );
   }
 
-  const [showMyProjects, setShowMyProjects] = useState(false);
-
   if (showMyProjects) {
     const MyProjects = require('@/components/project/search/MyProjectsView').default;
     return (
@@ -379,8 +378,12 @@ export default function UserProfile() {
                 </svg>
               </button>
             )}
-            <Button variant="secondary" onClick={() => router.push(`/projects/user/${user.id}`)}>
-              Ver proyectos de este usuario
+            <Button 
+              variant="secondary" 
+              className="bg-conexia-coral hover:bg-conexia-coral/90 text-white"
+              onClick={() => router.push(`/projects/user/${user.id}`)}
+            >
+              Ver proyectos
             </Button>
           </div>
         </div>

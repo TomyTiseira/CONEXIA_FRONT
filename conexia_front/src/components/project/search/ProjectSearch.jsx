@@ -50,7 +50,7 @@ export default function ProjectSearch() {
   return (
     <>
       <NavbarCommunity />
-      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-2 md:px-6 flex flex-col items-center">
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
       <div className="w-full max-w-7xl flex flex-col gap-6">
         {/* Header: título, buscador y botón */}
         <div className="flex flex-col md:flex-row md:items-center md:gap-6 mb-2 w-full">
@@ -64,10 +64,10 @@ export default function ProjectSearch() {
           </div>
           <div className="flex justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
             <button
-              className="bg-conexia-green text-white font-semibold rounded-lg px-6 py-3 shadow hover:bg-conexia-green/90 transition text-base w-full md:w-auto max-w-xs"
+              className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap"
               onClick={() => router.push('/project/create')}
             >
-              ¿Tienes una idea que necesita apoyo? <br className="hidden md:block" /> Publica tu proyecto
+              Publica tu proyecto
             </button>
           </div>
         </div>

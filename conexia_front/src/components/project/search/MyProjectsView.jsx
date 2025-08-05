@@ -14,6 +14,9 @@ export default function MyProjectsView({ userId }) {
   const [page, setPage] = useState(1);
   const pageSize = 16;
 
+  // Determinar si el usuario autenticado es el dueño de los proyectos que se están viendo
+  const isOwner = authUser && userId && String(authUser.id) === String(userId);
+
   useEffect(() => {
     if (!userId && !authUser) return;
     async function load() {
@@ -29,10 +32,12 @@ export default function MyProjectsView({ userId }) {
   return (
     <>
       <NavbarCommunity />
-      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-2 md:px-6 flex flex-col items-center">
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
         <div className="w-full max-w-7xl flex flex-col gap-6">
           <div className="flex flex-col md:flex-row md:items-center md:gap-6 mb-2 w-full">
-            <h1 className="text-3xl font-bold text-conexia-green bg-white rounded-lg px-6 py-3 shadow-sm w-full md:w-[320px] text-center md:text-left">Mis Proyectos</h1>
+            <h1 className="text-3xl font-bold text-conexia-green bg-white rounded-lg px-6 py-3 shadow-sm w-full md:w-[320px] text-center md:text-left">
+              {isOwner ? 'Mis Proyectos' : 'Proyectos del Usuario'}
+            </h1>
             {isOwner && (
               <label className="flex items-center gap-2 ml-4 text-conexia-green font-medium cursor-pointer">
                 <input
