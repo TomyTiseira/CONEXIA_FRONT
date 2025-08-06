@@ -250,7 +250,7 @@ export default function CreateProjectForm() {
       {/* Ubicación */}
       <div className="md:col-span-2 flex flex-col justify-center min-h-[120px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          Ubicación del proyecto
+          Ubicación del proyecto (Opcional)
         </label>
         <LocalitySelector
           selectedLocality={form.locationId ? { id: form.locationId, name: form.locationName } : null}
@@ -265,7 +265,7 @@ export default function CreateProjectForm() {
       {/* Habilidades */}
       <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          Habilidades requeridas
+          Habilidades requeridas (Opcional)
         </label>
         <div className="min-h-[110px]">
           <SkillsSelector selectedSkills={form.skills} onSkillsChange={handleSkillsChange} />
@@ -275,7 +275,7 @@ export default function CreateProjectForm() {
       {/* Fechas */}
       <div className="md:col-span-2 flex flex-col justify-center min-h-[75px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          Plazo estimado de ejecución
+          Plazo estimado de ejecución (Opcional)
         </label>
         <div className="w-full flex flex-row justify-center gap-3">
           <DateRangePicker
@@ -348,7 +348,7 @@ export default function CreateProjectForm() {
       {/* Máximo de colaboradores */}
       <div className="flex flex-col justify-center min-h-[72px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          N° máximo de colaboradores (opcional)
+          N° máximo de colaboradores (Opcional)
         </label>
         <InputField
           name="maxCollaborators"
@@ -364,7 +364,7 @@ export default function CreateProjectForm() {
       {/* Imagen representativa */}
       <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          Imagen representativa del proyecto
+          Imagen representativa del proyecto (Opcional)
         </label>
 
         <div className="flex items-center gap-4">
@@ -412,7 +412,7 @@ export default function CreateProjectForm() {
 
       {/* Botones */}
       <div className="md:col-span-2 flex justify-end gap-4 pt-4">
-        <Button type="button" variant="secondary" onClick={() => router.push('/project')}>
+        <Button type="button" variant="secondary" onClick={() => router.push('/project/search')}>
           Cancelar
         </Button>
         <Button type="submit" variant="primary" disabled={loading}>
