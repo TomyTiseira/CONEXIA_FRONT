@@ -72,10 +72,11 @@ export default function ProjectSearchFilters({ filters, onChange }) {
   };
   // Checkbox múltiple para skills
   const handleSkill = (skillId) => {
-    const exists = filters.skills.includes(skillId);
+    const currentSkills = Array.isArray(filters.skills) ? filters.skills : [];
+    const exists = currentSkills.includes(skillId);
     onChange({
       ...filters,
-      skills: exists ? filters.skills.filter((s) => s !== skillId) : [...filters.skills, skillId],
+      skills: exists ? currentSkills.filter((s) => s !== skillId) : [...currentSkills, skillId],
     });
   };
   // Checkbox múltiple para tipo de colaboración
@@ -175,7 +176,7 @@ export default function ProjectSearchFilters({ filters, onChange }) {
               <label key={skill.id} className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={filters.skills.includes(skill.id)}
+                  checked={Array.isArray(filters.skills) && filters.skills.includes(skill.id)}
                   onChange={() => handleSkill(skill.id)}
                   className="accent-conexia-green"
                 />

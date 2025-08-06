@@ -747,7 +747,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           <div className="space-y-4">
             <div className="flex items-center gap-6">
               <div className="flex-shrink-0">
-                <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil</label>
+                <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil (Opcional)</label>
 
                 {/* Imagen actual */}
                 {user.profilePicture && !form.profilePicture && (
@@ -804,7 +804,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
 
             <div className="flex items-center gap-6">
               <div className="flex-shrink-0">
-                <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada</label>
+                <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada (Opcional)</label>
 
                 {/* Imagen actual */}
                 {user.coverPicture && !form.coverPicture && (
@@ -883,7 +883,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-conexia-green mb-1">País</label>
+              <label className="block text-sm font-medium text-conexia-green mb-1">País (Opcional)</label>
               <InputField 
                 name="country" 
                 value={form.country} 
@@ -893,7 +893,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-conexia-green mb-1">Localidad</label>
+              <label className="block text-sm font-medium text-conexia-green mb-1">Localidad (Opcional)</label>
               <InputField 
                 name="state" 
                 value={form.state} 
@@ -903,7 +903,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-conexia-green mb-1">Teléfono</label>
+              <label className="block text-sm font-medium text-conexia-green mb-1">Teléfono (Opcional)</label>
               <InputField 
                 name="phoneNumber" 
                 value={form.phoneNumber} 
@@ -923,7 +923,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
               />
             </div>
             <div className="md:col-span-2 mb-2">
-              <label className="block text-sm font-medium text-conexia-green mb-1">Descripción</label>
+              <label className="block text-sm font-medium text-conexia-green mb-1">Descripción (Opcional)</label>
               <TextArea 
                 name="description" 
                 value={form.description} 
@@ -937,7 +937,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           
           {/* Habilidades */}
           <div className="-mt-6">
-            <label className="block font-medium text-conexia-green mb-1">Habilidades</label>
+            <label className="block font-medium text-conexia-green mb-1">Habilidades (Opcional)</label>
             <SkillsSelector
               selectedSkills={form.skills}
               onSkillsChange={(newSkills) => setForm(prev => ({ ...prev, skills: newSkills }))}
@@ -947,7 +947,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           
           {/* Experiencia */}
           <div>
-            <h4 className="font-semibold text-conexia-green">Experiencia</h4>
+            <h4 className="font-semibold text-conexia-green">Experiencia (Opcional)</h4>
             {form.experience.length === 0 && (
               <button type="button" onClick={handleAddExperience} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar experiencia</button>
             )}
@@ -1062,7 +1062,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
 
           {/* Educación */}
           <div>
-            <h4 className="font-semibold text-conexia-green">Educación</h4>
+            <h4 className="font-semibold text-conexia-green">Educación (Opcional)</h4>
             {form.education.length === 0 && (
               <button type="button" onClick={handleAddEducation} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar educación</button>
             )}
@@ -1177,7 +1177,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
 
           {/* Certificaciones */}
           <div>
-            <h4 className="font-semibold text-conexia-green">Certificaciones</h4>
+            <h4 className="font-semibold text-conexia-green">Certificaciones (Opcional)</h4>
             {form.certifications.length === 0 && (
               <button type="button" onClick={handleAddCertification} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar certificación</button>
             )}
@@ -1251,7 +1251,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           
           {/* Redes Sociales */}
           <div>
-            <h4 className="font-semibold text-conexia-green">Redes Sociales</h4>
+            <h4 className="font-semibold text-conexia-green">Redes Sociales (Opcional)</h4>
             {form.socialLinks.length === 0 && (
               <button type="button" onClick={handleAddSocial} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar red social</button>
             )}

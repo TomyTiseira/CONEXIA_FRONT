@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/common/Pagination';
 import { fetchProjects } from '@/service/projects/projectsFetch';
+import { useAuth } from '@/context/AuthContext';
+import { ROLES } from '@/constants/roles';
 
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
+import NavbarAdmin from '@/components/navbar/NavbarAdmin';
+import NavbarModerator from '@/components/navbar/NavbarModerator';
 import ProjectSearchFilters from './ProjectSearchFilters';
 import ProjectSearchBar from './ProjectSearchBar';
 import ProjectList from './ProjectList';
 
 export default function ProjectSearch() {
   const router = useRouter();
+  const { user } = useAuth();
   const [filters, setFilters] = useState({
     title: '',
     category: '',
@@ -47,9 +52,20 @@ export default function ProjectSearch() {
     setPendingFilters(newFilters);
   };
 
+  // Renderizar la navbar apropiada según el rol
+  const renderNavbar = () => {
+    if (user?.role === ROLES.ADMIN) {
+      return <NavbarAdmin />;
+    } else if (user?.role === ROLES.MODERATOR) {
+      return <NavbarModerator />;
+    } else {
+      return <NavbarCommunity />;
+    }
+  };
+
   return (
     <>
-      <NavbarCommunity />
+      {renderNavbar()}
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
       <div className="w-full max-w-7xl flex flex-col gap-6">
         {/* Header: título, buscador y botón */}
@@ -62,14 +78,16 @@ export default function ProjectSearch() {
               </div>
             </div>
           </div>
-          <div className="flex justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
-            <button
-              className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap"
-              onClick={() => router.push('/project/create')}
-            >
-              Publica tu proyecto
-            </button>
-          </div>
+          {user?.role === ROLES.USER && (
+            <div className="flex justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
+              <button
+                className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap"
+                onClick={() => router.push('/project/create')}
+              >
+                Publica tu proyecto
+              </button>
+            </div>
+          )}
         </div>
         <div className="flex flex-col md:flex-row gap-6">
           {/* Filtros laterales */}

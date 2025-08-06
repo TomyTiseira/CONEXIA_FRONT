@@ -5,6 +5,23 @@ import { config } from '@/config';
 
 export default function ProjectList({ projects }) {
   const router = useRouter();
+  
+  // Función para mostrar solo primer nombre y primer apellido
+  const getShortName = (fullName) => {
+    if (!fullName) return 'Usuario';
+    const names = fullName.trim().split(' ');
+    
+    let shortName;
+    if (names.length >= 2) {
+      // Tomar el primer nombre y el último apellido
+      shortName = `${names[0]} ${names[names.length - 1]}`;
+    } else {
+      shortName = names[0] || 'Usuario';
+    }
+    
+    return shortName;
+  };
+  
   if (!projects || projects.length === 0) {
     return <div className="text-center text-conexia-green mt-12 text-lg opacity-70">No se encontraron proyectos.</div>;
   }
@@ -76,26 +93,32 @@ export default function ProjectList({ projects }) {
           )}
         </div>
         <span className="text-conexia-green font-semibold text-sm whitespace-pre-line break-words truncate hover:underline">
-          {project.owner || 'Usuario'}
+          {getShortName(project.owner)}
         </span>
       </div>
 
-      {/* Tipos/Badges */}
-      <div className="flex flex-wrap gap-1 mb-4 w-full px-2">
-        {project.category && (
-          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium truncate">
-            {project.category}
-          </span>
-        )}
+      {/* Tipos/Badges - Layout consistente */}
+      <div className="flex flex-col gap-1 mb-4 w-full px-2">
+        {/* Primera fila: Categoría y Tipo de Contrato */}
+        <div className="flex gap-1 w-full">
+          {project.category && (
+            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium truncate flex-1 min-w-0 text-center">
+              {project.category}
+            </span>
+          )}
+          {project.contractType && (
+            <span className="bg-conexia-green/10 text-conexia-green px-2 py-1 rounded text-xs font-medium truncate flex-1 min-w-0 text-center">
+              {project.contractType}
+            </span>
+          )}
+        </div>
+        {/* Segunda fila: Tipo de Colaboración */}
         {project.collaborationType && (
-          <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium truncate">
-            {project.collaborationType}
-          </span>
-        )}
-        {project.contractType && (
-          <span className="bg-conexia-green/10 text-conexia-green px-2 py-1 rounded text-xs font-medium truncate">
-            {project.contractType}
-          </span>
+          <div className="flex w-full">
+            <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium truncate w-full text-center">
+              {project.collaborationType}
+            </span>
+          </div>
         )}
       </div>
 

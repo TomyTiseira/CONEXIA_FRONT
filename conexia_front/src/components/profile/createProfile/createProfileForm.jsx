@@ -772,7 +772,7 @@ export default function CreateProfileForm() {
             {errors.birthDate && <p className="text-xs text-red-600 mt-1 text-left">{errors.birthDate}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">Teléfono</label>
+            <label className="block text-sm font-medium text-conexia-green mb-1">Teléfono (Opcional)</label>
             <InputField
               name="phoneNumber"
               value={form.phoneNumber}
@@ -812,11 +812,11 @@ export default function CreateProfileForm() {
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">País</label>
+            <label className="block text-sm font-medium text-conexia-green mb-1">País (Opcional)</label>
             <InputField name="country" value={form.country} onChange={e => handleChange("country", e.target.value)} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">Ciudad</label>
+            <label className="block text-sm font-medium text-conexia-green mb-1">Ciudad (Opcional)</label>
             <InputField name="state" value={form.state} onChange={e => handleChange("state", e.target.value)} />
           </div>
         </div>
@@ -834,7 +834,7 @@ export default function CreateProfileForm() {
         <div className="grid md:grid-cols-2 gap-4">
           <div className="flex items-center gap-6">
             <div className="flex-shrink-0">
-              <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil</label>
+              <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil (Opcional)</label>
 
               {/* Nueva imagen seleccionada */}
               {form.profilePicture && (
@@ -877,7 +877,7 @@ export default function CreateProfileForm() {
 
           <div className="flex items-center gap-6">
             <div className="flex-shrink-0">
-              <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada</label>
+              <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada (Opcional)</label>
 
               {/* Nueva imagen seleccionada */}
               {form.coverPicture && (
@@ -919,13 +919,13 @@ export default function CreateProfileForm() {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-conexia-green mb-1">Descripción</label>
+          <label className="block text-sm font-medium text-conexia-green mb-1">Descripción (Opcional)</label>
           <TextArea name="description" value={form.description} onChange={e => handleChange("description", e.target.value)} />
         </div>
 
         {/* Habilidades */}
         <div>
-          <label className="block font-medium text-conexia-green mb-1">Habilidades</label>
+          <label className="block font-medium text-conexia-green mb-1">Habilidades (Opcional)</label>
           <SkillsSelector
             selectedSkills={form.skills}
             onSkillsChange={(newSkills) => setForm(prev => ({ ...prev, skills: newSkills }))}
@@ -935,7 +935,7 @@ export default function CreateProfileForm() {
 
     {/* Experiencia */}
     <div>
-      <h4 className="font-semibold text-conexia-green">Experiencia</h4>
+      <h4 className="font-semibold text-conexia-green">Experiencia (Opcional)</h4>
       {form.experience.length === 0 && (
         <button type="button" onClick={handleAddExperience} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar experiencia</button>
       )}
@@ -1047,7 +1047,7 @@ export default function CreateProfileForm() {
 
     {/* Educación */}
     <div>
-      <h4 className="font-semibold text-conexia-green">Educación</h4>
+      <h4 className="font-semibold text-conexia-green">Educación (Opcional)</h4>
       {form.education.length === 0 && (
         <button type="button" onClick={handleAddEducation} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar educación</button>
       )}
@@ -1159,7 +1159,7 @@ export default function CreateProfileForm() {
 
     {/* Certificaciones */}
     <div>
-      <h4 className="font-semibold text-conexia-green">Certificaciones</h4>
+      <h4 className="font-semibold text-conexia-green">Certificaciones (Opcional)</h4>
       {form.certifications.length === 0 && (
         <button type="button" onClick={handleAddCertification} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar certificación</button>
       )}
@@ -1220,7 +1220,7 @@ export default function CreateProfileForm() {
 
     {/* Redes Sociales */}
     <div>
-      <h4 className="font-semibold text-conexia-green">Redes Sociales</h4>
+      <h4 className="font-semibold text-conexia-green">Redes Sociales (Opcional)</h4>
       {form.socialLinks.length === 0 && (
         <button type="button" onClick={handleAddSocial} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar red social</button>
       )}

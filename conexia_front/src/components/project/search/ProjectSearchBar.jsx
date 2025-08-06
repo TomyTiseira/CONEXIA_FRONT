@@ -12,17 +12,11 @@ export default function ProjectSearchBar({ filters, onSearch }) {
       <Search className="text-conexia-green/70 mr-1" size={22} />
       <input
         type="text"
-        placeholder="Buscar proyecto, habilidades requeridas, y más ..."
+        placeholder="Buscar proyectos..."
         value={filters.title}
         onChange={e => onSearch({ ...filters, title: e.target.value })}
         className="flex-1 bg-transparent outline-none text-conexia-green placeholder:text-conexia-green/40 text-base px-2"
       />
-      <button
-        className="bg-conexia-green text-white font-semibold rounded-full px-5 py-2 ml-2 hover:bg-conexia-green/90 transition text-base shadow"
-        type="submit"
-      >
-        Buscar
-      </button>
     </form>
   );
 }
