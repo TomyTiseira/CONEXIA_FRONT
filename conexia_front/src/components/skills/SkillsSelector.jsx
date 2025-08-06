@@ -33,7 +33,7 @@ const SkillsSelector = ({ selectedSkills = [], onSkillsChange, maxSkills = 20, c
   // Manejar navegación con teclado
   const handleKeyDown = (e) => {
     if (!isOpen) {
-      if (e.key === 'ArrowDown' || e.key === 'Enter') {
+      if ((e.key === 'ArrowDown' || e.key === 'Enter') && selectedSkills.length < maxSkills) {
         setIsOpen(true);
         setHighlightedIndex(0);
         e.preventDefault();
@@ -94,10 +94,17 @@ const SkillsSelector = ({ selectedSkills = [], onSkillsChange, maxSkills = 20, c
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    if (!isOpen && value) {
+    if (!isOpen && value && selectedSkills.length < maxSkills) {
       setIsOpen(true);
     }
     setHighlightedIndex(-1);
+  };
+
+  // Manejar focus en el input
+  const handleInputFocus = () => {
+    if (selectedSkills.length < maxSkills) {
+      setIsOpen(true);
+    }
   };
 
   if (error) {
@@ -118,9 +125,9 @@ const SkillsSelector = ({ selectedSkills = [], onSkillsChange, maxSkills = 20, c
             type="text"
             value={searchTerm}
             onChange={handleInputChange}
-            onFocus={() => setIsOpen(true)}
+            onFocus={handleInputFocus}
             onKeyDown={handleKeyDown}
-            placeholder={loading ? "Cargando habilidades..." : "Buscar habilidades..."}
+            placeholder={loading ? "Cargando habilidades..." : selectedSkills.length >= maxSkills ? `Máximo de ${maxSkills} habilidades alcanzado` : "Buscar habilidades..."}
             disabled={loading || selectedSkills.length >= maxSkills}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-conexia-green focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
@@ -137,7 +144,7 @@ const SkillsSelector = ({ selectedSkills = [], onSkillsChange, maxSkills = 20, c
         </div>
 
         {/* Dropdown con opciones */}
-        {isOpen && !loading && (
+        {isOpen && !loading && selectedSkills.length < maxSkills && (
           <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
             {filteredSkills.length > 0 ? (
               filteredSkills.map((skill, index) => (
