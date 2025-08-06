@@ -108,6 +108,68 @@ export async function fetchProjects({ title, category, skills, collaboration, co
   }));
 }
 
+// Función específica para obtener recomendaciones o proyectos recientes como fallback
+export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1 }) {
+  console.log('🔗 fetchRecommendations called with:', { skillIds, limit, page });
+  
+  const params = new URLSearchParams();
+  
+  // Si hay skillIds, obtener proyectos que coincidan con esas habilidades
+  if (skillIds && Array.isArray(skillIds) && skillIds.length > 0) {
+    params.append('skillIds', skillIds.join(','));
+  }
+  
+  // Agregar parámetros de paginación
+  params.append('limit', limit.toString());
+  params.append('page', page.toString());
+
+  const url = `${config.API_URL}/projects?${params.toString()}`;
+  console.log('🌐 API URL:', url);
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+
+  console.log('📡 API Response status:', res.status);
+
+  if (!res.ok) throw new Error('Error al obtener recomendaciones');
+  
+  const data = await res.json();
+  console.log('📦 API Response data:', data);
+  
+  const projects = data?.data?.projects;
+  
+  if (!Array.isArray(projects)) {
+    console.log('⚠️ No projects array found in response');
+    return { projects: [], pagination: { total: 0 } };
+  }
+  
+  // Adaptar los proyectos al formato esperado por la UI (misma lógica que fetchProjects)
+  const adaptedProjects = projects.map(p => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    image: p.image,
+    owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
+    ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
+    ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
+    category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
+    categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
+    contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
+    contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
+    collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
+    collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
+    isOwner: p.isOwner,
+  }));
+
+  return {
+    projects: adaptedProjects,
+    pagination: data?.data?.pagination || { total: adaptedProjects.length }
+  };
+}
+
 export async function fetchMyProjects({ ownerId, active }) {
   const params = new URLSearchParams();
   // Convertir el parámetro 'active' al formato esperado por el backend
