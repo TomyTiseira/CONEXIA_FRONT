@@ -1,9 +1,12 @@
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
+import NavbarAdmin from '@/components/navbar/NavbarAdmin';
+import NavbarModerator from '@/components/navbar/NavbarModerator';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { ROLES } from '@/constants/roles';
 
 export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
@@ -40,10 +43,21 @@ export default function ProjectDetail({ projectId }) {
     return `${config.IMAGE_URL}/${img}`;
   };
 
+  // Renderizar la navbar apropiada según el rol
+  const renderNavbar = () => {
+    if (user?.role === ROLES.ADMIN) {
+      return <NavbarAdmin />;
+    } else if (user?.role === ROLES.MODERATOR) {
+      return <NavbarModerator />;
+    } else {
+      return <NavbarCommunity />;
+    }
+  };
+
   return (
     <>
-      <NavbarCommunity />
-      <div className="min-h-[calc(100vh-64px)] relative py-8 px-6 md:px-6 flex flex-col items-center overflow-x-hidden bg-[#f3f9f8]">
+      {renderNavbar()}
+      <div className="min-h-[calc(100vh-64px)] relative py-8 px-6 md:px-6 flex flex-col items-center overflow-x-hidden bg-[#f3f9f8] pb-20 md:pb-8">
         {/* Fondo decorativo */}
         <div className="pointer-events-none select-none fixed inset-0 w-screen h-screen z-0">
           <img
@@ -90,11 +104,11 @@ export default function ProjectDetail({ projectId }) {
                 {categories.length > 0 && categories.map((cat) => (
                   <span key={cat} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">{cat}</span>
                 ))}
-                {contractTypes.length > 0 && contractTypes.map((type) => (
-                  <span key={type} className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
-                ))}
                 {collaborationTypes.length > 0 && collaborationTypes.map((type) => (
                   <span key={type} className="bg-conexia-green/10 text-conexia-green px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
+                ))}
+                {contractTypes.length > 0 && contractTypes.map((type) => (
+                  <span key={type} className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">{type}</span>
                 ))}
               </div>
               <div>
@@ -123,15 +137,15 @@ export default function ProjectDetail({ projectId }) {
                 )}
               </div>
               {/* Dueño del proyecto */}
-              <div 
-                className="flex items-center gap-3 mt-4 cursor-pointer hover:bg-gray-50 rounded-lg p-3 transition-colors"
-                onClick={() => {
-                  if (ownerIdForNavigation) {
-                    router.push(`/profile/userProfile/${ownerIdForNavigation}`);
-                  }
-                }}
-              >
-                <div className="relative w-10 h-10">
+              <div className="flex items-center gap-3 mt-4">
+                <div 
+                  className="relative w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    if (ownerIdForNavigation) {
+                      router.push(`/profile/userProfile/${ownerIdForNavigation}`);
+                    }
+                  }}
+                >
                   {ownerImage ? (
                     <Image
                       src={getImageUrl(ownerImage)}
@@ -150,7 +164,14 @@ export default function ProjectDetail({ projectId }) {
                     />
                   )}
                 </div>
-                <div className="flex flex-col">
+                <div 
+                  className="flex flex-col cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                  onClick={() => {
+                    if (ownerIdForNavigation) {
+                      router.push(`/profile/userProfile/${ownerIdForNavigation}`);
+                    }
+                  }}
+                >
                   <span className="text-conexia-green font-semibold text-base break-words hover:underline">{ownerName}</span>
                   <span className="text-xs text-gray-500">Dueño del proyecto</span>
                 </div>
@@ -161,25 +182,34 @@ export default function ProjectDetail({ projectId }) {
           <div className="mt-6 flex flex-col md:flex-row gap-4 md:gap-0">
             {/* Columna izquierda - Botón Atrás alineado con la imagen */}
             <div className="w-full md:w-56 flex justify-start">
-              <button 
-                className="bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition text-sm"
-                onClick={() => router.push('/project/search')}
-              >
-                ← Atrás
-              </button>
+              <div className="flex gap-3">
+                <button 
+                  className="bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition text-sm"
+                  onClick={() => router.push('/project/search')}
+                >
+                  ← Atrás
+                </button>
+                {/* Botón Contactar al lado del Atrás en mobile */}
+                {!isOwner && (
+                  <button className="md:hidden bg-blue-600 text-white px-3 py-2 rounded font-semibold hover:bg-blue-700 transition text-sm">Contactar</button>
+                )}
+              </div>
             </div>
             {/* Espacio entre columnas - solo en desktop */}
             <div className="hidden md:block md:w-10"></div>
             {/* Columna derecha - Otros botones alineados a la izquierda */}
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row gap-3">
+                {/* Botón Contactar solo en desktop */}
                 {!isOwner && (
-                  <button className="bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 transition">Contactar</button>
+                  <button className="hidden md:block bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 transition">Contactar</button>
                 )}
                 {isOwner ? (
                   <button className="bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition">Eliminar proyecto</button>
                 ) : (
-                  <button className="bg-conexia-green/90 text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green transition">Postularse a proyecto</button>
+                  user?.role === ROLES.USER && (
+                    <button className="bg-conexia-green/90 text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green transition">Postularse a proyecto</button>
+                  )
                 )}
               </div>
             </div>

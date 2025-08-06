@@ -381,7 +381,7 @@ export default function UserProfile() {
             <Button 
               variant="secondary" 
               className="bg-conexia-coral hover:bg-conexia-coral/90 text-white"
-              onClick={() => router.push(`/projects/user/${user.id}`)}
+              onClick={() => router.push(`/projects/user/${id}`)}
             >
               Ver proyectos
             </Button>
