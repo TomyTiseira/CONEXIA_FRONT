@@ -149,3 +149,19 @@ export async function fetchMyProjects({ ownerId, active }) {
     isOwner: p.isOwner,
   }));
 }
+
+export const deleteProjectById = async (projectId, motivo) => {
+  const res = await fetch(`/api/projects/${projectId}/disable`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ motivo }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Error al dar de baja el proyecto.");
+  }
+
+  return res.json();
+};
