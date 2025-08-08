@@ -2,34 +2,51 @@
 
 import { useState } from "react";
 import Button from "@/components/ui/Button";
-import { deleteProjectById } from "@/service/projects/projectFetch"; // asegurate que este endpoint exista
+import { deleteProjectById } from "@/service/projects/projectsFetch"; // Corregido: projectsFetch en plural
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { ROLES } from "@/constants/roles";
 
 export default function DeleteProjectModal({ projectId, onCancel, onProjectDeleted, loading }) {
   const [motivo, setMotivo] = useState("");
   const [error, setError] = useState("");
   const [msg, setMsg] = useState(null);
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleSubmit = async () => {
     setError("");
+    setMsg(null);
     if (!motivo.trim()) {
       setError("El motivo de baja es obligatorio.");
       return;
     }
 
     try {
-      await deleteProjectById(projectId, motivo); // lógica de backend para baja lógica del proyecto
+      await deleteProjectById(projectId, motivo); // Usar 'motivo' como 'reason'
 
       setMsg({ ok: true, text: "Proyecto dado de baja exitosamente." });
 
       setTimeout(() => {
         // Redirigir, actualizar UI o llamar callback
         onProjectDeleted?.();
-        router.push("/projects/mis-proyectos");
+        
+        // Redirigir según el rol del usuario
+        if (user?.id) {
+          // Si es admin o moderador, redirigir a la búsqueda de proyectos
+          if (user.role === "admin" || user.role === "moderator") {
+            router.push("/project");
+          } else {
+            // Si es el dueño, redirigir a sus proyectos
+            router.push(`/projects/user/${user.id}`);
+          }
+        } else {
+          router.push("/project"); // Fallback a la página principal de proyectos
+        }
       }, 1000);
     } catch (err) {
-      setMsg({ ok: false, text: "Error al dar de baja el proyecto." });
+      console.error("Error al eliminar proyecto:", err);
+      setMsg({ ok: false, text: err.message || "Error al dar de baja el proyecto." });
     }
   };
 

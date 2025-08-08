@@ -207,7 +207,7 @@ export default function ProjectDetail({ projectId }) {
                   ← Atrás
                 </button>
                 {/* Botones Contactar y Postularse en mobile */}
-                {!isOwner && (
+                {!isOwner ? (
                   <>
                     <button className="md:hidden bg-blue-600 text-white px-3 py-2 rounded font-semibold hover:bg-blue-700 transition text-sm">Contactar</button>
                     {roleName === ROLES.USER && (
@@ -216,6 +216,13 @@ export default function ProjectDetail({ projectId }) {
                       </button>
                     )}
                   </>
+                ) : (
+                  <button
+                    className="md:hidden bg-conexia-coral text-white px-3 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    Eliminar proyecto
+                  </button>
                 )}
               </div>
             </div>
