@@ -20,8 +20,15 @@ export function useCreateProject() {
       formData.append('collaborationTypeId', form.collaborationType);
       formData.append('contractTypeId', form.contractType);
 
-      if (form.skills.length > 0) {
-        form.skills.forEach((skill) => formData.append('skills', skill.id));
+      if (form.skills && form.skills.length > 0) {
+        form.skills.forEach((skill) => {
+          const skillId = skill.id || skill;
+          // Asegurar que el skillId sea un número válido
+          const numericSkillId = parseInt(skillId, 10);
+          if (!isNaN(numericSkillId) && numericSkillId > 0) {
+            formData.append('skills[]', numericSkillId); // ✅ Agregado [] para indicar array
+          }
+        });
       }
 
       // Cambio aquí: enviar fechas como campos individuales
@@ -44,10 +51,6 @@ export function useCreateProject() {
         formData.append('image', form.image);
       }
 
-      // Debug: mostrar el contenido de FormData antes de enviar
-      for (let [key, value] of formData.entries()) {
-        console.log(`FormData ${key}:`, value);
-      }
       await createProject(formData);
     } catch (err) {
       setError(err.message || 'Error al publicar el proyecto');

@@ -1,10 +1,9 @@
-import NavbarCommunity from '@/components/navbar/NavbarCommunity';
-import NavbarAdmin from '@/components/navbar/NavbarAdmin';
-import NavbarModerator from '@/components/navbar/NavbarModerator';
+import Navbar from '@/components/navbar/Navbar';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import { useAuth } from '@/context/AuthContext';
+import { useUserStore } from '@/store/userStore';
 import { useRouter } from 'next/navigation';
 import { ROLES } from '@/constants/roles';
 import DeleteProjectModal from '@/components/project/deleteProject/DeleteProjectModal';
@@ -14,6 +13,7 @@ export default function ProjectDetail({ projectId }) {
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user } = useAuth();
+  const { roleName } = useUserStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -26,13 +26,28 @@ export default function ProjectDetail({ projectId }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   if (!project) return <div className="min-h-screen flex items-center justify-center text-conexia-green">Proyecto no encontrado</div>;
 
+  // Función para mostrar primer nombre y primer apellido
+  const getShortName = (fullName) => {
+    if (!fullName) return 'Usuario';
+    const names = fullName.trim().split(' ').filter(name => name.length > 0);
+    
+    if (names.length === 0) return 'Usuario';
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return `${names[0]} ${names[1]}`;
+    
+    // Para 3 o más nombres, asumimos: Primer_Nombre [Segundo_Nombre] Primer_Apellido [Segundo_Apellido]
+    // Tomamos el primer nombre (names[0]) y el primer apellido (names[2] si existe, sino names[1])
+    if (names.length >= 3) {
+      return `${names[0]} ${names[2]}`;
+    }
+    
+    return `${names[0]} ${names[1]}`;
+  };
+
   const isOwner = user && project && (String(user.id) === String(project.ownerId) || project.isOwner);
   const skills = Array.isArray(project.skills) ? project.skills : (project.skills ? [project.skills] : []);
-  const ownerName = project.ownerName || project.owner || '';
-  const ownerImage = project.ownerImage || null;
-  
-  // Determinar el ID del dueño para navegación
-  const ownerIdForNavigation = project.ownerId || (project.isOwner && user?.id) || null;
+  const ownerName = getShortName(project.owner || ''); // owner ya viene como string del backend
+  const ownerImage = project.ownerImage || null; // ownerImage ya viene como string del backend
   const contractTypes = Array.isArray(project.contractType) ? project.contractType : (project.contractType ? [project.contractType] : []);
   const collaborationTypes = Array.isArray(project.collaborationType) ? project.collaborationType : (project.collaborationType ? [project.collaborationType] : []);
   const categories = Array.isArray(project.category) ? project.category : (project.category ? [project.category] : []);
@@ -45,20 +60,9 @@ export default function ProjectDetail({ projectId }) {
     return `${config.IMAGE_URL}/${img}`;
   };
 
-  // Renderizar la navbar apropiada según el rol
-  const renderNavbar = () => {
-    if (user?.role === ROLES.ADMIN) {
-      return <NavbarAdmin />;
-    } else if (user?.role === ROLES.MODERATOR) {
-      return <NavbarModerator />;
-    } else {
-      return <NavbarCommunity />;
-    }
-  };
-
   return (
     <>
-      {renderNavbar()}
+      <Navbar />
       <div className="min-h-[calc(100vh-64px)] relative py-8 px-6 md:px-6 flex flex-col items-center overflow-x-hidden bg-[#f3f9f8] pb-20 md:pb-8">
         {/* Fondo decorativo */}
         <div className="pointer-events-none select-none fixed inset-0 w-screen h-screen z-0">
@@ -117,12 +121,23 @@ export default function ProjectDetail({ projectId }) {
                 <span className="block text-sm text-gray-500 font-semibold mb-1">Descripción</span>
                 <div className="text-base break-words whitespace-pre-line text-gray-700 bg-gray-50 rounded p-3 border border-gray-100">{project.description || 'Sin descripción'}</div>
               </div>
+              {project.location && (
+                <div>
+                  <span className="block text-sm text-gray-500 font-semibold mb-1">Ubicación</span>
+                  <div className="text-base break-words text-gray-700 bg-gray-50 rounded p-3 border border-gray-100">{project.location}</div>
+                </div>
+              )}
               {skills.length > 0 && (
                 <div className="mt-2">
                   <span className="block text-sm text-gray-500 font-semibold mb-1">Habilidades requeridas</span>
                   <div className="flex gap-2 flex-wrap">
                     {skills.map(skill => (
-                      <span key={skill} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">{skill}</span>
+                      <div
+                        key={skill}
+                        className="inline-flex items-center px-3 py-1 bg-conexia-green text-white rounded-full text-sm"
+                      >
+                        {skill}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -132,10 +147,10 @@ export default function ProjectDetail({ projectId }) {
                   <div className="text-sm text-gray-500">Máx. colaboradores: <span className="font-semibold text-gray-700">{project.maxCollaborators}</span></div>
                 )}
                 {project.startDate && (
-                  <div className="text-sm text-gray-500 ml-2">Inicio: <span className="font-semibold text-gray-700">{new Date(project.startDate).toLocaleDateString()}</span></div>
+                  <div className="text-sm text-gray-500 sm:ml-2">Inicio: <span className="font-semibold text-gray-700">{new Date(project.startDate).toLocaleDateString()}</span></div>
                 )}
                 {project.endDate && (
-                  <div className="text-sm text-gray-500 ml-2">Fin: <span className="font-semibold text-gray-700">{new Date(project.endDate).toLocaleDateString()}</span></div>
+                  <div className="text-sm text-gray-500 sm:ml-2">Fin: <span className="font-semibold text-gray-700">{new Date(project.endDate).toLocaleDateString()}</span></div>
                 )}
               </div>
               {/* Dueño del proyecto */}
@@ -143,8 +158,8 @@ export default function ProjectDetail({ projectId }) {
                 <div 
                   className="relative w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => {
-                    if (ownerIdForNavigation) {
-                      router.push(`/profile/userProfile/${ownerIdForNavigation}`);
+                    if (project.ownerId) {
+                      router.push(`/profile/userProfile/${project.ownerId}`);
                     }
                   }}
                 >
@@ -169,8 +184,8 @@ export default function ProjectDetail({ projectId }) {
                 <div 
                   className="flex flex-col cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
                   onClick={() => {
-                    if (ownerIdForNavigation) {
-                      router.push(`/profile/userProfile/${ownerIdForNavigation}`);
+                    if (project.ownerId) {
+                      router.push(`/profile/userProfile/${project.ownerId}`);
                     }
                   }}
                 >
@@ -191,9 +206,16 @@ export default function ProjectDetail({ projectId }) {
                 >
                   ← Atrás
                 </button>
-                {/* Botón Contactar al lado del Atrás en mobile */}
+                {/* Botones Contactar y Postularse en mobile */}
                 {!isOwner && (
-                  <button className="md:hidden bg-blue-600 text-white px-3 py-2 rounded font-semibold hover:bg-blue-700 transition text-sm">Contactar</button>
+                  <>
+                    <button className="md:hidden bg-blue-600 text-white px-3 py-2 rounded font-semibold hover:bg-blue-700 transition text-sm">Contactar</button>
+                    {roleName === ROLES.USER && (
+                      <button className="md:hidden bg-conexia-green text-white px-3 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm">
+                        Postularse
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -226,8 +248,10 @@ export default function ProjectDetail({ projectId }) {
                     )}
                   </>
                 ) : (
-                  user?.role === ROLES.USER && (
-                    <button className="bg-conexia-green/90 text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green transition">Postularse a proyecto</button>
+                  roleName === ROLES.USER && (
+                    <button className="bg-conexia-green text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition md:block hidden">
+                      Postularse
+                    </button>
                   )
                 )}
               </div>

@@ -17,7 +17,7 @@ import {
 import DropdownInternalUserMenu from '@/components/navbar/DropdownInternalUserMenu';
 import { config } from '@/config';
 
-export default function NavbarAdmin() {
+export default function NavbarModerator() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -36,6 +36,7 @@ export default function NavbarAdmin() {
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Servicios', href: '#servicios', icon: Briefcase },
     { label: 'Proyectos', href: '/project/search', icon: Layers },
+    { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';

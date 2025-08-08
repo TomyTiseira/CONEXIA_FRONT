@@ -26,7 +26,8 @@ export default function MyProjectsView({ userId }) {
     if (!userId && !authUser) return;
     async function load() {
       setLoading(true);
-      const res = await fetchMyProjects({ ownerId: userId , active: (showInactive ? undefined : true)});
+      // Si showInactive es true, pasar false para incluir eliminados; si es false, pasar true para solo activos
+      const res = await fetchMyProjects({ ownerId: userId , active: !showInactive});
       setProjects(res);
       setLoading(false);
       setPage(1); // Reiniciar a la primera página al buscar

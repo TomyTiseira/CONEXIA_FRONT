@@ -68,7 +68,12 @@ export default function ProjectSearchFilters({ filters, onChange }) {
 
   // Checkbox para categorías (solo una seleccionada a la vez, pero visual tipo checkbox)
   const handleCategory = (catId) => {
-    onChange({ ...filters, category: filters.category === catId ? '' : catId });
+    // Si ya está seleccionada la misma categoría, deseleccionar (volver a "Todas")
+    if (filters.category === catId) {
+      onChange({ ...filters, category: '' });
+    } else {
+      onChange({ ...filters, category: catId });
+    }
   };
   // Checkbox múltiple para skills
   const handleSkill = (skillId) => {
@@ -121,8 +126,14 @@ export default function ProjectSearchFilters({ filters, onChange }) {
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={!filters.category}
-                onChange={() => handleCategory('')}
+                checked={filters.category === 'all'}
+                onChange={() => {
+                  if (filters.category === 'all') {
+                    onChange({ ...filters, category: '' });
+                  } else {
+                    onChange({ ...filters, category: 'all' });
+                  }
+                }}
                 className="accent-conexia-green"
               />
               Todas
@@ -166,8 +177,15 @@ export default function ProjectSearchFilters({ filters, onChange }) {
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={!Array.isArray(filters.skills) || filters.skills.length === 0}
-                onChange={() => onChange({ ...filters, skills: [] })}
+                checked={Array.isArray(filters.skills) && filters.skills.includes('all')}
+                onChange={() => {
+                  const currentSkills = Array.isArray(filters.skills) ? filters.skills : [];
+                  if (currentSkills.includes('all')) {
+                    onChange({ ...filters, skills: [] });
+                  } else {
+                    onChange({ ...filters, skills: ['all'] });
+                  }
+                }}
                 className="accent-conexia-green"
               />
               Todas
@@ -210,8 +228,15 @@ export default function ProjectSearchFilters({ filters, onChange }) {
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={!Array.isArray(filters.contract) || filters.contract.length === 0}
-                onChange={() => onChange({ ...filters, contract: [] })}
+                checked={Array.isArray(filters.contract) && filters.contract.includes('all')}
+                onChange={() => {
+                  const currentContracts = Array.isArray(filters.contract) ? filters.contract : [];
+                  if (currentContracts.includes('all')) {
+                    onChange({ ...filters, contract: [] });
+                  } else {
+                    onChange({ ...filters, contract: ['all'] });
+                  }
+                }}
                 className="accent-conexia-green"
               />
               Todos
@@ -254,8 +279,15 @@ export default function ProjectSearchFilters({ filters, onChange }) {
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={!Array.isArray(filters.collaboration) || filters.collaboration.length === 0}
-                onChange={() => onChange({ ...filters, collaboration: [] })}
+                checked={Array.isArray(filters.collaboration) && filters.collaboration.includes('all')}
+                onChange={() => {
+                  const currentCollabs = Array.isArray(filters.collaboration) ? filters.collaboration : [];
+                  if (currentCollabs.includes('all')) {
+                    onChange({ ...filters, collaboration: [] });
+                  } else {
+                    onChange({ ...filters, collaboration: ['all'] });
+                  }
+                }}
                 className="accent-conexia-green"
               />
               Todas
