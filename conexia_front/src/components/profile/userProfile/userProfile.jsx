@@ -306,7 +306,7 @@ export default function UserProfile() {
     return (
       <div className="bg-conexia-soft min-h-screen">
         <Navbar />
-        <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-6 mt-4">
+        <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-6 mt-4 mx-6 md:mx-auto">
           <MyProjects />
           <div className="mt-6 flex justify-end">
             <Button variant="primary" onClick={() => setShowMyProjects(false)}>Volver a mi perfil</Button>
@@ -319,7 +319,7 @@ export default function UserProfile() {
   return (
     <div className="bg-conexia-soft min-h-screen">
       <Navbar />
-      <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-6 mt-4">        
+      <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-6 mt-4 mx-6 md:mx-auto">        
         {/* Portada y foto de perfil */}
         <div className="relative h-48 rounded overflow-hidden bg-gray-100 mb-8">
           {user.coverPicture && (
@@ -333,24 +333,24 @@ export default function UserProfile() {
             />
           )}
         </div>
-        <div className="relative flex items-center mb-4 justify-between" style={{ minHeight: 64 }}>
-          <div className="flex items-center">
-            <div className="w-[100px] h-[100px] rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-200 flex items-center justify-center">
+        <div className="relative flex flex-col sm:flex-row sm:items-center mb-4 sm:justify-between" style={{ minHeight: 64 }}>
+          <div className="flex flex-col sm:flex-row sm:items-center">
+            <div className="w-[100px] h-[100px] flex-shrink-0 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-200 flex items-center justify-center mx-auto sm:mx-0 mb-4 sm:mb-0">
               {user.profilePicture ? (
                 <div className="relative w-full h-full">
                   <Image
                     src={`${config.IMAGE_URL}/${user.profilePicture}`}
                     alt="Foto de perfil"
                     fill
-                    className="object-cover rounded-full"
+                    className="object-cover"
                     priority
                   />
                 </div>
               ) : (
-                <div className="w-full h-full flex items-center justify-center rounded-full" />
+                <div className="w-full h-full flex items-center justify-center" />
               )}
             </div>
-            <div className="ml-8 flex flex-col justify-center h-full">
+            <div className="sm:ml-8 flex flex-col justify-center h-full text-center sm:text-left">
               <h2 className="text-2xl font-bold text-conexia-green">
                 {user.name} {user.lastName}
               </h2>
@@ -366,11 +366,11 @@ export default function UserProfile() {
           </div>
           
           {/* Botón de editar (solo dueño) y botón para ver proyectos (todos) */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center sm:justify-end mt-4 sm:mt-0">
             {isOwner && (
               <button
                 onClick={() => setEditing(true)}
-                className="flex items-center justify-center w-10 h-10 bg-conexia-green hover:bg-conexia-green/90 text-white rounded-full transition-colors duration-200 shadow-sm mr-2"
+                className="flex items-center justify-center w-10 h-10 bg-conexia-green hover:bg-conexia-green/90 text-white rounded-full transition-colors duration-200 shadow-sm flex-shrink-0"
                 title="Editar perfil"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -380,7 +380,7 @@ export default function UserProfile() {
             )}
             <Button 
               variant="secondary" 
-              className="bg-conexia-coral hover:bg-conexia-coral/90 text-white"
+              className="bg-conexia-coral hover:bg-conexia-coral/90 text-white flex-shrink-0"
               onClick={() => router.push(`/projects/user/${id}`)}
             >
               Ver proyectos
@@ -488,7 +488,7 @@ export default function UserProfile() {
         </div>
       </div>
       {/* Botón de volver a la derecha, fuera del contenedor */}
-      <div className="max-w-5xl mx-auto flex justify-end mt-6">
+      <div className="max-w-5xl mx-auto flex justify-end mt-6 mx-6 md:mx-auto pb-14 md:pb-6">
         <Button variant="primary" onClick={() => router.push('/')}>← Volver a la comunidad</Button>
       </div>
       {/* Margen inferior verde */}

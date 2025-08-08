@@ -15,42 +15,10 @@ export async function fetchProjectById(id) {
     title: p.title,
     description: p.description,
     image: p.image,
-    owner: p.owner,
-    ownerId: (() => {
-      // Intentar extraer ownerId de diferentes maneras
-      if (typeof p.owner === 'object' && p.owner !== null && p.owner.id) {
-        return p.owner.id;
-      }
-      if (p.ownerId) {
-        return p.ownerId;
-      }
-      if (p.userId) {
-        return p.userId;
-      }
-      if (p.createdBy) {
-        return p.createdBy;
-      }
-      if (p.user && typeof p.user === 'object' && p.user.id) {
-        return p.user.id;
-      }
-      // Si owner es un string que parece un ID numérico
-      if (typeof p.owner === 'string' && /^\d+$/.test(p.owner)) {
-        return p.owner;
-      }
-      // FALLBACK: Si no encontramos ownerId
-      // Buscar cualquier campo que pueda contener el ID del dueño
-      for (const [key, value] of Object.entries(p)) {
-        if (key.toLowerCase().includes('owner') && value && typeof value === 'object' && value.id) {
-          return value.id;
-        }
-        if (key.toLowerCase().includes('user') && value && typeof value === 'object' && value.id) {
-          return value.id;
-        }
-      }
-      
-      return undefined;
-    })(),
-    ownerImage: p.ownerImage,
+    location: p.location,
+    owner: p.owner || 'Usuario', // El backend envía directamente el nombre como string
+    ownerId: p.ownerId, // El backend envía directamente el ID
+    ownerImage: p.ownerImage, // El backend envía directamente la imagen
     contractType: Array.isArray(p.contractType) ? p.contractType : (p.contractType ? [p.contractType] : []),
     collaborationType: Array.isArray(p.collaborationType) ? p.collaborationType : (p.collaborationType ? [p.collaborationType] : []),
     skills: Array.isArray(p.skills) ? p.skills : (p.skills ? [p.skills] : []),

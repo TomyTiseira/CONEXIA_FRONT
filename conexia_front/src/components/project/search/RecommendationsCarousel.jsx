@@ -20,19 +20,22 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
     getCurrentItemMobile,
     goToPage
   } = useCarouselNavigation(projects.length, 3, 1);
-  // Función para mostrar solo primer nombre y primer apellido
+  // Función para mostrar primer nombre y primer apellido
   const getShortName = (fullName) => {
     if (!fullName) return 'Usuario';
-    const names = fullName.trim().split(' ');
+    const names = fullName.trim().split(' ').filter(name => name.length > 0);
     
-    let shortName;
-    if (names.length >= 2) {
-      shortName = `${names[0]} ${names[names.length - 1]}`;
-    } else {
-      shortName = names[0] || 'Usuario';
+    if (names.length === 0) return 'Usuario';
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return `${names[0]} ${names[1]}`;
+    
+    // Para 3 o más nombres, asumimos: Primer_Nombre [Segundo_Nombre] Primer_Apellido [Segundo_Apellido]
+    // Tomamos el primer nombre (names[0]) y el primer apellido (names[2] si existe, sino names[1])
+    if (names.length >= 3) {
+      return `${names[0]} ${names[2]}`;
     }
     
-    return shortName;
+    return `${names[0]} ${names[1]}`;
   };
 
   if (!projects || projects.length === 0) {
