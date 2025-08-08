@@ -16,7 +16,7 @@ export default function AdminLayout({ children }) {
       </div>
     }>
       <ProtectedRoute 
-            allowedRoles={[ROLES.ADMIN]}
+            allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]}
             fallbackComponent={<NotFound />}
         >
         {children}

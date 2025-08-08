@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/common/Pagination';
 import { fetchProjects } from '@/service/projects/projectsFetch';
 import { useAuth } from '@/context/AuthContext';
+import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { useRecommendations } from '@/hooks/project/useRecommendations';
 
-import NavbarCommunity from '@/components/navbar/NavbarCommunity';
-import NavbarAdmin from '@/components/navbar/NavbarAdmin';
-import NavbarModerator from '@/components/navbar/NavbarModerator';
+import Navbar from '@/components/navbar/Navbar';
 import ProjectSearchFilters from './ProjectSearchFilters';
 import ProjectSearchBar from './ProjectSearchBar';
 import ProjectList from './ProjectList';
@@ -21,6 +20,7 @@ import CompactNoRecommendations from './CompactNoRecommendations';
 export default function ProjectSearch() {
   const router = useRouter();
   const { user } = useAuth();
+  const { roleName } = useUserStore();
   const { recommendations, allProjects, isLoading: isLoadingRecommendations, hasRecommendations, userHasSkills } = useRecommendations();
   
   const [filters, setFilters] = useState({
@@ -35,45 +35,103 @@ export default function ProjectSearch() {
   const [showRecommendations, setShowRecommendations] = useState(true);
   const [page, setPage] = useState(1);
   const pageSize = 12;
+  const [allProjectsList, setAllProjectsList] = useState([]);
+  const [isLoadingAllProjects, setIsLoadingAllProjects] = useState(false);
 
   // Aplica los filtros automáticamente al cambiar cualquier filtro
   const [pendingFilters, setPendingFilters] = useState(filters);
+  
+  // Crear una versión serializada de los filtros para evitar problemas de dependencias
+  const filtersKey = useMemo(() => 
+    JSON.stringify(pendingFilters), [pendingFilters]
+  );
+
+  // Cargar todos los proyectos cuando no hay recomendaciones
+  useEffect(() => {
+    const loadAllProjects = async () => {
+      if (roleName === ROLES.USER && !hasRecommendations && !isLoadingRecommendations) {
+        setIsLoadingAllProjects(true);
+        try {
+          const allProjectsData = await fetchProjects({
+            title: '',
+            category: '',
+            skills: [],
+            collaboration: [],
+            contract: [],
+          });
+          
+          // Filtrar proyectos donde el usuario no sea el propietario
+          const filteredProjects = allProjectsData.filter(project => project.userId !== user?.id);
+          setAllProjectsList(filteredProjects);
+        } catch (error) {
+          console.error('Error cargando todos los proyectos:', error);
+          setAllProjectsList([]);
+        } finally {
+          setIsLoadingAllProjects(false);
+        }
+      }
+    };
+
+    loadAllProjects();
+  }, [roleName, hasRecommendations, isLoadingRecommendations, user?.id]);
+
   useEffect(() => {
     const applyFilters = async () => {
-      // Solo ejecutar si hay filtros activos
+      // Detectar filtros "Todas" específicamente
+      const hasAllFilters = 
+        pendingFilters.category === 'all' ||
+        (Array.isArray(pendingFilters.skills) && pendingFilters.skills.includes('all')) ||
+        (Array.isArray(pendingFilters.collaboration) && pendingFilters.collaboration.includes('all')) ||
+        (Array.isArray(pendingFilters.contract) && pendingFilters.contract.includes('all'));
+
+      // Detectar otros filtros activos (no "Todas")
       const hasActiveFilters = 
         pendingFilters.title.trim() !== '' ||
-        pendingFilters.category !== '' ||
-        (pendingFilters.skills && pendingFilters.skills.length > 0) ||
-        (pendingFilters.collaboration && pendingFilters.collaboration.length > 0) ||
-        (pendingFilters.contract && pendingFilters.contract.length > 0);
+        (pendingFilters.category !== '' && pendingFilters.category !== 'all') ||
+        (Array.isArray(pendingFilters.skills) && pendingFilters.skills.length > 0 && !pendingFilters.skills.includes('all')) ||
+        (Array.isArray(pendingFilters.collaboration) && pendingFilters.collaboration.length > 0 && !pendingFilters.collaboration.includes('all')) ||
+        (Array.isArray(pendingFilters.contract) && pendingFilters.contract.length > 0 && !pendingFilters.contract.includes('all'));
 
-      if (!hasActiveFilters) {
-        // Si no hay filtros activos, resetear a estado inicial
+      // Si hay filtros "Todas" o filtros activos, ocultar recomendaciones
+      if (hasAllFilters || hasActiveFilters) {
+        setSearched(true);
+        setShowRecommendations(false);
+        setPage(1);
+
+        // Para filtros "Todas", obtener todos los proyectos sin filtrar
+        if (hasAllFilters && !hasActiveFilters) {
+          const allProjectsData = await fetchProjects({
+            title: '',
+            category: '',
+            skills: [],
+            collaboration: [],
+            contract: [],
+          });
+          setResults(allProjectsData);
+        } else {
+          // Para otros filtros, aplicar filtrado normal
+          const params = {
+            title: pendingFilters.title,
+            category: pendingFilters.category === 'all' ? '' : pendingFilters.category,
+            skills: Array.isArray(pendingFilters.skills) && pendingFilters.skills.includes('all') ? [] : (pendingFilters.skills || []),
+            collaboration: Array.isArray(pendingFilters.collaboration) && pendingFilters.collaboration.includes('all') ? [] : (pendingFilters.collaboration || []),
+            contract: Array.isArray(pendingFilters.contract) && pendingFilters.contract.includes('all') ? [] : (pendingFilters.contract || []),
+          };
+          const projects = await fetchProjects(params);
+          setResults(projects);
+        }
+      } else {
+        // Si no hay filtros activos, resetear a estado inicial con recomendaciones
         setSearched(false);
         setShowRecommendations(true);
         setResults([]);
-        setFilters(pendingFilters);
-        return;
       }
-
-      setSearched(true);
-      setShowRecommendations(false);
-      setPage(1);
-      const params = {
-        title: pendingFilters.title,
-        category: pendingFilters.category || '',
-        skills: pendingFilters.skills || [],
-        collaboration: Array.isArray(pendingFilters.collaboration) ? pendingFilters.collaboration : [],
-        contract: Array.isArray(pendingFilters.contract) ? pendingFilters.contract : [],
-      };
-      const projects = await fetchProjects(params);
-      setResults(projects);
+      
       setFilters(pendingFilters);
     };
     applyFilters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingFilters]);
+  }, [filtersKey]);
 
   const handleSearch = (newFilters) => {
     setPendingFilters(newFilters);
@@ -101,20 +159,9 @@ export default function ProjectSearch() {
     router.push(`/project/${project.id}`);
   };
 
-  // Renderizar la navbar apropiada según el rol
-  const renderNavbar = () => {
-    if (user?.role === ROLES.ADMIN) {
-      return <NavbarAdmin />;
-    } else if (user?.role === ROLES.MODERATOR) {
-      return <NavbarModerator />;
-    } else {
-      return <NavbarCommunity />;
-    }
-  };
-
   return (
     <>
-      {renderNavbar()}
+      <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
       <div className="w-full max-w-7xl flex flex-col gap-6">
         {/* Header: título, buscador y botón */}
@@ -127,7 +174,7 @@ export default function ProjectSearch() {
               </div>
             </div>
           </div>
-          {(user?.role === ROLES.USER || user?.roleId === 2) && (
+          {(roleName === ROLES.USER || user?.roleId === 2) && (
             <div className="flex justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
               <button
                 className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap"
@@ -148,8 +195,8 @@ export default function ProjectSearch() {
           </aside>
           {/* Contenido principal */}
           <section className="flex-1 min-w-0">
-            {/* Estado inicial: Mostrar recomendaciones */}
-            {showRecommendations && !searched && (
+            {/* Estado inicial: Mostrar recomendaciones solo para usuarios regulares */}
+            {showRecommendations && !searched && roleName === ROLES.USER && (
               <div>
                 {isLoadingRecommendations ? (
                   <RecommendationsLoading />
@@ -158,29 +205,61 @@ export default function ProjectSearch() {
                     projects={recommendations}
                     onProjectClick={handleRecommendationClick}
                   />
-                ) : userHasSkills ? (
-                  <NoRecommendationsFound />
                 ) : (
                   <>
-                    {/* Mensaje compacto cuando no hay skills */}
+                    {/* Mensaje para completar perfil */}
                     <CompactNoRecommendations />
                     
-                    {/* Mostrar proyectos generales */}
-                    {allProjects.length > 0 && (
-                      <div>
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                          Todos los proyectos
-                        </h2>
-                        <ProjectList projects={allProjects.slice((page-1)*pageSize, page*pageSize)} />
-                        <Pagination
-                          page={page}
-                          hasPreviousPage={page > 1}
-                          hasNextPage={allProjects.length > page * pageSize}
-                          onPageChange={setPage}
-                        />
-                      </div>
-                    )}
+                    {/* Mostrar todos los proyectos siempre cuando no hay recomendaciones */}
+                    <div className="mt-8">
+                      <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                        Todos los proyectos
+                      </h2>
+                      {isLoadingAllProjects ? (
+                        <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
+                      ) : allProjectsList.length > 0 ? (
+                        <>
+                          <ProjectList projects={allProjectsList.slice((page-1)*pageSize, page*pageSize)} />
+                          <Pagination
+                            page={page}
+                            hasPreviousPage={page > 1}
+                            hasNextPage={allProjectsList.length > page * pageSize}
+                            onPageChange={setPage}
+                          />
+                        </>
+                      ) : (
+                        <div className="text-center text-gray-500 py-8">
+                          No hay proyectos disponibles en este momento.
+                        </div>
+                      )}
+                    </div>
                   </>
+                )}
+              </div>
+            )}
+
+            {/* Para admin y moderator, mostrar directamente todos los proyectos */}
+            {showRecommendations && !searched && (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
+              <div>
+                {isLoadingRecommendations ? (
+                  <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
+                ) : allProjects.length > 0 ? (
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                      Todos los proyectos
+                    </h2>
+                    <ProjectList projects={allProjects.slice((page-1)*pageSize, page*pageSize)} />
+                    <Pagination
+                      page={page}
+                      hasPreviousPage={page > 1}
+                      hasNextPage={allProjects.length > page * pageSize}
+                      onPageChange={setPage}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center text-conexia-green mt-12 text-lg opacity-70">
+                    No hay proyectos disponibles en este momento.
+                  </div>
                 )}
               </div>
             )}

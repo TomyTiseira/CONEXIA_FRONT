@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { fetchProjects } from '@/service/projects/projectsFetch';
 import { limitAndCleanProjects, sortProjectsByRelevance } from '@/utils/recommendationsUtils';
+import { ROLES } from '@/constants/roles';
 
 export const useRecommendations = () => {
   const { user } = useAuth();
@@ -24,6 +25,27 @@ export const useRecommendations = () => {
         setIsLoading(true);
         setError(null);
 
+        // Para admin y moderator, obtener todos los proyectos directamente
+        if (user.role === ROLES.ADMIN || user.role === ROLES.MODERATOR) {
+          const allProjectsResponse = await fetchProjects({
+            title: '',
+            category: '',
+            skills: [],
+            collaboration: [],
+            contract: []
+          });
+          
+          // Filtrar proyectos donde el usuario no sea el propietario
+          const filteredProjects = allProjectsResponse.filter(project => project.userId !== user.id);
+          const limitedProjects = limitAndCleanProjects(filteredProjects, 20);
+          setAllProjects(limitedProjects);
+          setRecommendations([]);
+          setUserHasSkills(false);
+          setIsLoading(false);
+          return;
+        }
+
+        // Para usuarios regulares, proceder con el flujo normal de recomendaciones
         // 1. Obtener el perfil del usuario para conseguir sus habilidades
         const profileResponse = await getProfileById(user.id);
         const userProfile = profileResponse.data || profileResponse;
@@ -48,10 +70,13 @@ export const useRecommendations = () => {
             contract: []
           });
 
-          // Procesar y limpiar los proyectos
+          // Filtrar proyectos donde el usuario no sea el propietario
+          const filteredProjects = recommendedProjects.filter(project => project.userId !== user.id);
+
+          // Procesar y limpiar los proyectos - cambiar a 9 para que el carrusel salga completo
           const processedProjects = limitAndCleanProjects(
-            sortProjectsByRelevance(recommendedProjects, userSkillIds),
-            12
+            sortProjectsByRelevance(filteredProjects, userSkillIds),
+            9
           );
           
           setRecommendations(processedProjects);
@@ -65,8 +90,11 @@ export const useRecommendations = () => {
             contract: []
           });
           
+          // Filtrar proyectos donde el usuario no sea el propietario
+          const filteredProjects = allProjectsResponse.filter(project => project.userId !== user.id);
+          
           // Limitar a los primeros 20 proyectos para no sobrecargar
-          const limitedProjects = limitAndCleanProjects(allProjectsResponse, 20);
+          const limitedProjects = limitAndCleanProjects(filteredProjects, 20);
           setAllProjects(limitedProjects);
           setRecommendations([]);
         }
@@ -82,7 +110,7 @@ export const useRecommendations = () => {
     };
 
     fetchRecommendationsData();
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   return {
     recommendations,
