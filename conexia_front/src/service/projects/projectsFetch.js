@@ -16,6 +16,7 @@ export async function fetchProjectById(id) {
     description: p.description,
     image: p.image,
     location: p.location,
+    userId: p.userId, // Agregar userId para el filtro de proyectos propios
     owner: p.owner || 'Usuario', // El backend envía directamente el nombre como string
     ownerId: p.ownerId, // El backend envía directamente el ID
     ownerImage: p.ownerImage, // El backend envía directamente la imagen
@@ -58,6 +59,7 @@ export async function fetchProjects({ title, category, skills, collaboration, co
     title: p.title,
     description: p.description,
     image: p.image,
+    userId: p.userId, // Agregar userId para el filtro de proyectos propios
     // Si owner es objeto, extraer nombre y/o id
     owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
     ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
@@ -78,8 +80,6 @@ export async function fetchProjects({ title, category, skills, collaboration, co
 
 // Función específica para obtener recomendaciones o proyectos recientes como fallback
 export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1 }) {
-  console.log('🔗 fetchRecommendations called with:', { skillIds, limit, page });
-  
   const params = new URLSearchParams();
   
   // Si hay skillIds, obtener proyectos que coincidan con esas habilidades
@@ -91,26 +91,19 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
   params.append('limit', limit.toString());
   params.append('page', page.toString());
 
-  const url = `${config.API_URL}/projects?${params.toString()}`;
-  console.log('🌐 API URL:', url);
-
-  const res = await fetch(url, {
+  const res = await fetch(`${config.API_URL}/projects?${params.toString()}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
   });
 
-  console.log('📡 API Response status:', res.status);
-
   if (!res.ok) throw new Error('Error al obtener recomendaciones');
   
   const data = await res.json();
-  console.log('📦 API Response data:', data);
   
   const projects = data?.data?.projects;
   
   if (!Array.isArray(projects)) {
-    console.log('⚠️ No projects array found in response');
     return { projects: [], pagination: { total: 0 } };
   }
   
@@ -120,6 +113,7 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
     title: p.title,
     description: p.description,
     image: p.image,
+    userId: p.userId, // Agregar userId para el filtro de proyectos propios
     owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
     ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
     ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
@@ -162,6 +156,7 @@ export async function fetchMyProjects({ ownerId, active }) {
     title: p.title,
     description: p.description,
     image: p.image,
+    userId: p.userId || p.ownerId || ownerId, // Agregar userId para el filtro de proyectos propios
     // Usar la misma lógica que fetchProjects (que funciona correctamente)
     owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
     ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : p.ownerId || p.userId || ownerId,
@@ -179,3 +174,20 @@ export async function fetchMyProjects({ ownerId, active }) {
     isOwner: p.isOwner,
   }));
 }
+
+export const deleteProjectById = async (projectId, reason) => {
+  const res = await fetch(`${config.API_URL}/projects/${projectId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: 'include',
+    body: JSON.stringify({ reason }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Error al dar de baja el proyecto.");
+  }
+
+  return res.json();
+};

@@ -6,10 +6,12 @@ import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { useRouter } from 'next/navigation';
 import { ROLES } from '@/constants/roles';
+import DeleteProjectModal from '@/components/project/deleteProject/DeleteProjectModal';
 
 export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
@@ -205,7 +207,7 @@ export default function ProjectDetail({ projectId }) {
                   ← Atrás
                 </button>
                 {/* Botones Contactar y Postularse en mobile */}
-                {!isOwner && (
+                {!isOwner ? (
                   <>
                     <button className="md:hidden bg-blue-600 text-white px-3 py-2 rounded font-semibold hover:bg-blue-700 transition text-sm">Contactar</button>
                     {roleName === ROLES.USER && (
@@ -214,6 +216,13 @@ export default function ProjectDetail({ projectId }) {
                       </button>
                     )}
                   </>
+                ) : (
+                  <button
+                    className="md:hidden bg-conexia-coral text-white px-3 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    Eliminar proyecto
+                  </button>
                 )}
               </div>
             </div>
@@ -227,7 +236,24 @@ export default function ProjectDetail({ projectId }) {
                   <button className="hidden md:block bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 transition">Contactar</button>
                 )}
                 {isOwner ? (
-                  <button className="bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition">Eliminar proyecto</button>
+                  <>
+                    <button
+                      className="bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition"
+                      onClick={() => setShowDeleteModal(true)}
+                    >
+                      Eliminar proyecto
+                    </button>
+                    {showDeleteModal && (
+                      <DeleteProjectModal
+                        projectId={projectId}
+                        onCancel={() => setShowDeleteModal(false)}
+                        onProjectDeleted={() => {
+                          setShowDeleteModal(false);
+                          // Opcional: recargar o redirigir
+                        }}
+                      />
+                    )}
+                  </>
                 ) : (
                   roleName === ROLES.USER && (
                     <button className="bg-conexia-green text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition md:block hidden">
