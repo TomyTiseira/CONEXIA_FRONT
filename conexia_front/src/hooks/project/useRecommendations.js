@@ -26,38 +26,62 @@ export const useRecommendations = () => {
         setError(null);
 
         // Para admin y moderator, obtener todos los proyectos directamente
-        if (user.role === ROLES.ADMIN || user.role === ROLES.MODERATOR) {
-          const allProjectsResponse = await fetchProjects({
-            title: '',
-            category: '',
-            skills: [],
-            collaboration: [],
-            contract: []
-          });
-          
-          // Filtrar proyectos donde el usuario no sea el propietario
-          const filteredProjects = allProjectsResponse.filter(project => project.userId !== user.id);
-          const limitedProjects = limitAndCleanProjects(filteredProjects, 20);
-          setAllProjects(limitedProjects);
-          setRecommendations([]);
-          setUserHasSkills(false);
-          setIsLoading(false);
-          return;
+        // Como user.role viene undefined, usamos principalmente user.roleId
+        const isAdmin = user.roleId === 1;
+        const isModerator = user.roleId === 3;
+        
+        if (isAdmin || isModerator) {
+          try {
+            const allProjectsResponse = await fetchProjects({
+              title: '',
+              category: '',
+              skills: [],
+              collaboration: [],
+              contract: []
+            });
+            
+            // Filtrar proyectos donde el usuario no sea el propietario
+            const filteredProjects = allProjectsResponse.filter(project => 
+              project.userId !== user.id && project.ownerId !== user.id
+            );
+            const limitedProjects = limitAndCleanProjects(filteredProjects, 20);
+            setAllProjects(limitedProjects);
+            setRecommendations([]);
+            setUserHasSkills(false);
+            setIsLoading(false);
+            return;
+          } catch (error) {
+            console.error('Error obteniendo proyectos para admin/moderador:', error);
+            setError('Error al cargar proyectos');
+            setAllProjects([]);
+            setRecommendations([]);
+            setUserHasSkills(false);
+            setIsLoading(false);
+            return;
+          }
         }
 
         // Para usuarios regulares, proceder con el flujo normal de recomendaciones
         // 1. Obtener el perfil del usuario para conseguir sus habilidades
-        const profileResponse = await getProfileById(user.id);
-        const userProfile = profileResponse.data || profileResponse;
-        
-        // 2. Extraer las skillIds del perfil - corregir la estructura
-        // El perfil viene en userProfile.profile.skills
-        const profileData = userProfile.profile || userProfile;
-        const userSkills = profileData.skills || [];
-        const userSkillIds = userSkills.map(skill => skill.id || skill);
-        
-        // Guardar si el usuario tiene habilidades
-        setUserHasSkills(userSkillIds.length > 0);
+        let userSkillIds = [];
+        try {
+          const profileResponse = await getProfileById(user.id);
+          const userProfile = profileResponse.data || profileResponse;
+          
+          // 2. Extraer las skillIds del perfil - corregir la estructura
+          // El perfil viene en userProfile.profile.skills
+          const profileData = userProfile.profile || userProfile;
+          const userSkills = profileData.skills || [];
+          userSkillIds = userSkills.map(skill => skill.id || skill);
+          
+          // Guardar si el usuario tiene habilidades
+          setUserHasSkills(userSkillIds.length > 0);
+        } catch (profileError) {
+          console.error('Error obteniendo perfil del usuario:', profileError);
+          // Si no se puede obtener el perfil, tratarlo como usuario sin habilidades
+          setUserHasSkills(false);
+          userSkillIds = [];
+        }
 
         // 3. Si el usuario tiene habilidades, obtener recomendaciones
         if (userSkillIds.length > 0) {
@@ -71,13 +95,14 @@ export const useRecommendations = () => {
           });
 
           // Filtrar proyectos donde el usuario no sea el propietario
-          const filteredProjects = recommendedProjects.filter(project => project.userId !== user.id);
+          const filteredProjects = recommendedProjects.filter(project => 
+            project.userId !== user.id && project.ownerId !== user.id
+          );
 
           // Procesar y limpiar los proyectos - cambiar a 9 para que el carrusel salga completo
-          const processedProjects = limitAndCleanProjects(
-            sortProjectsByRelevance(filteredProjects, userSkillIds),
-            9
-          );
+          // Asegurar que se ordenen por relevancia de skills
+          const sortedProjects = sortProjectsByRelevance(filteredProjects, userSkillIds);
+          const processedProjects = limitAndCleanProjects(sortedProjects, 9);
           
           setRecommendations(processedProjects);
         } else {
@@ -91,7 +116,9 @@ export const useRecommendations = () => {
           });
           
           // Filtrar proyectos donde el usuario no sea el propietario
-          const filteredProjects = allProjectsResponse.filter(project => project.userId !== user.id);
+          const filteredProjects = allProjectsResponse.filter(project => 
+            project.userId !== user.id && project.ownerId !== user.id
+          );
           
           // Limitar a los primeros 20 proyectos para no sobrecargar
           const limitedProjects = limitAndCleanProjects(filteredProjects, 20);
@@ -110,7 +137,7 @@ export const useRecommendations = () => {
     };
 
     fetchRecommendationsData();
-  }, [user?.id, user?.role]);
+  }, [user?.id, user?.roleId]);
 
   return {
     recommendations,

@@ -32,15 +32,31 @@ export const sortProjectsByRelevance = (projects, userSkillIds = []) => {
     const aSkills = a.skills || a.requiredSkills || [];
     const bSkills = b.skills || b.requiredSkills || [];
     
-    const aMatches = aSkills.filter(skill => 
-      userSkillIds.includes(skill.id || skill)
+    // Normalizar las skills para manejar diferentes formatos
+    const normalizeSkills = (skills) => {
+      if (!Array.isArray(skills)) return [];
+      return skills.map(skill => {
+        if (typeof skill === 'object' && skill !== null) {
+          return skill.id || skill.skillId || skill;
+        }
+        return skill;
+      });
+    };
+    
+    const normalizedASkills = normalizeSkills(aSkills);
+    const normalizedBSkills = normalizeSkills(bSkills);
+    
+    const aMatches = normalizedASkills.filter(skillId => 
+      userSkillIds.includes(skillId)
     ).length;
     
-    const bMatches = bSkills.filter(skill => 
-      userSkillIds.includes(skill.id || skill)
+    const bMatches = normalizedBSkills.filter(skillId => 
+      userSkillIds.includes(skillId)
     ).length;
     
     // Ordenar por mayor número de coincidencias primero
+    // Si tienen las mismas coincidencias, mantener el orden original
+    if (bMatches === aMatches) return 0;
     return bMatches - aMatches;
   });
 };

@@ -31,18 +31,8 @@ export default function DeleteProjectModal({ projectId, onCancel, onProjectDelet
         // Redirigir, actualizar UI o llamar callback
         onProjectDeleted?.();
         
-        // Redirigir según el rol del usuario
-        if (user?.id) {
-          // Si es admin o moderador, redirigir a la búsqueda de proyectos
-          if (user.role === "admin" || user.role === "moderator") {
-            router.push("/project");
-          } else {
-            // Si es el dueño, redirigir a sus proyectos
-            router.push(`/projects/user/${user.id}`);
-          }
-        } else {
-          router.push("/project"); // Fallback a la página principal de proyectos
-        }
+        // Siempre redirigir a la búsqueda de proyectos
+        router.push("/project/search");
       }, 1000);
     } catch (err) {
       console.error("Error al eliminar proyecto:", err);

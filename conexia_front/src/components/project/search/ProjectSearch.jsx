@@ -46,10 +46,12 @@ export default function ProjectSearch() {
     JSON.stringify(pendingFilters), [pendingFilters]
   );
 
-  // Cargar todos los proyectos cuando no hay recomendaciones
+  // Cargar todos los proyectos cuando no hay recomendaciones o para admin/moderator
   useEffect(() => {
     const loadAllProjects = async () => {
-      if (roleName === ROLES.USER && !hasRecommendations && !isLoadingRecommendations) {
+      // Para usuarios regulares sin recomendaciones o para admin/moderator
+      if ((roleName === ROLES.USER && !hasRecommendations && !isLoadingRecommendations) ||
+          (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR)) {
         setIsLoadingAllProjects(true);
         try {
           const allProjectsData = await fetchProjects({
@@ -61,7 +63,9 @@ export default function ProjectSearch() {
           });
           
           // Filtrar proyectos donde el usuario no sea el propietario
-          const filteredProjects = allProjectsData.filter(project => project.userId !== user?.id);
+          const filteredProjects = allProjectsData.filter(project => 
+            project.userId !== user?.id && project.ownerId !== user?.id
+          );
           setAllProjectsList(filteredProjects);
         } catch (error) {
           console.error('Error cargando todos los proyectos:', error);
@@ -107,7 +111,11 @@ export default function ProjectSearch() {
             collaboration: [],
             contract: [],
           });
-          setResults(allProjectsData);
+          // Filtrar proyectos propios
+          const filteredResults = allProjectsData.filter(project => 
+            project.userId !== user?.id && project.ownerId !== user?.id
+          );
+          setResults(filteredResults);
         } else {
           // Para otros filtros, aplicar filtrado normal
           const params = {
@@ -118,7 +126,11 @@ export default function ProjectSearch() {
             contract: Array.isArray(pendingFilters.contract) && pendingFilters.contract.includes('all') ? [] : (pendingFilters.contract || []),
           };
           const projects = await fetchProjects(params);
-          setResults(projects);
+          // Filtrar proyectos propios también en los resultados de búsqueda
+          const filteredResults = projects.filter(project => 
+            project.userId !== user?.id && project.ownerId !== user?.id
+          );
+          setResults(filteredResults);
         }
       } else {
         // Si no hay filtros activos, resetear a estado inicial con recomendaciones
@@ -241,18 +253,18 @@ export default function ProjectSearch() {
             {/* Para admin y moderator, mostrar directamente todos los proyectos */}
             {showRecommendations && !searched && (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
               <div>
-                {isLoadingRecommendations ? (
+                {isLoadingAllProjects ? (
                   <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
-                ) : allProjects.length > 0 ? (
+                ) : allProjectsList.length > 0 ? (
                   <div>
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">
                       Todos los proyectos
                     </h2>
-                    <ProjectList projects={allProjects.slice((page-1)*pageSize, page*pageSize)} />
+                    <ProjectList projects={allProjectsList.slice((page-1)*pageSize, page*pageSize)} />
                     <Pagination
                       page={page}
                       hasPreviousPage={page > 1}
-                      hasNextPage={allProjects.length > page * pageSize}
+                      hasNextPage={allProjectsList.length > page * pageSize}
                       onPageChange={setPage}
                     />
                   </div>
