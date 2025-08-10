@@ -31,6 +31,15 @@ export default function NavbarCommunity() {
     const fetchProfile = async () => {
       if (!userId) return;
       
+      // Para admin y moderator, no obtener perfil ya que no tienen perfil en la API
+      const isAdmin = user?.roleId === 1;
+      const isModerator = user?.roleId === 3;
+      
+      if (isAdmin || isModerator) {
+        setProfile(null);
+        return;
+      }
+      
       try {
         const data = await getProfileById(userId);
         setProfile(data.data.profile);
@@ -40,7 +49,7 @@ export default function NavbarCommunity() {
     };
     
     fetchProfile();
-  }, [userId]);
+  }, [userId, user?.roleId]);
 
   const handleLogout = async () => {
     try {

@@ -73,6 +73,8 @@ export async function fetchProjects({ title, category, skills, collaboration, co
     // contractType en backend = tipo de colaboración en UI
     collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
     collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
+    // Skills para ordenamiento por relevancia
+    skills: p.skills || p.requiredSkills || [],
     // Otros campos planos
     isOwner: p.isOwner,
   }));
@@ -123,6 +125,8 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
     contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
     collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
     collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
+    // Skills para ordenamiento por relevancia
+    skills: p.skills || p.requiredSkills || [],
     isOwner: p.isOwner,
   }));
 
