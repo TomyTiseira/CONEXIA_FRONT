@@ -54,7 +54,7 @@ export const sortProjectsByRelevance = (projects, userSkillIds = []) => {
       userSkillIds.includes(skillId)
     ).length;
     
-    // Ordenar por mayor número de coincidencias primero
+    // Ordenar por mayor número de coincidencias primero (descendente)
     // Si tienen las mismas coincidencias, mantener el orden original
     if (bMatches === aMatches) return 0;
     return bMatches - aMatches;

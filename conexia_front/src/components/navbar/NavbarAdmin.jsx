@@ -100,6 +100,7 @@ export default function NavbarAdmin() {
                   }
                   alt="Foto de perfil"
                   fill
+                  sizes="32px"
                   className="object-cover"
                 />
               </div>
@@ -137,6 +138,7 @@ export default function NavbarAdmin() {
                   }
                   alt="Foto de perfil"
                   fill
+                  sizes="32px"
                   className="object-cover"
                 />
               </div>

@@ -40,6 +40,7 @@ export default function DropdownInternalUserMenu({ onLogout, onClose }) {
               src={defaultAvatar}
               alt="Foto de perfil"
               fill
+              sizes="40px"
               className="object-cover"
             />
           </div>
