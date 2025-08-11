@@ -123,6 +123,7 @@ export default function NavbarCommunity() {
                     }
                     alt="Foto de perfil"
                     fill
+                    sizes="32px"
                     className="object-cover"
                   />
                 </div>
@@ -153,6 +154,7 @@ export default function NavbarCommunity() {
                     }
                     alt="Foto de perfil"
                     fill
+                    sizes="32px"
                     className="object-cover"
                   />
                 </div>

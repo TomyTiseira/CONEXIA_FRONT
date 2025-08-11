@@ -99,6 +99,7 @@ export default function NavbarModerator() {
                   }
                   alt="Foto de perfil"
                   fill
+                  sizes="32px"
                   className="object-cover"
                 />
               </div>
@@ -136,6 +137,7 @@ export default function NavbarModerator() {
                   }
                   alt="Foto de perfil"
                   fill
+                  sizes="32px"
                   className="object-cover"
                 />
               </div>

@@ -111,24 +111,24 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
   
   // Adaptar los proyectos al formato esperado por la UI (misma lógica que fetchProjects)
   const adaptedProjects = projects.map(p => ({
-    id: p.id,
-    title: p.title,
-    description: p.description,
-    image: p.image,
-    userId: p.userId, // Agregar userId para el filtro de proyectos propios
-    owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
-    ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
-    ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
-    category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
-    categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
-    contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
-    contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
-    collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
-    collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
-    // Skills para ordenamiento por relevancia
-    skills: p.skills || p.requiredSkills || [],
-    isOwner: p.isOwner,
-  }));
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      image: p.image,
+      userId: p.userId, // Agregar userId para el filtro de proyectos propios
+      owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
+      ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
+      ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
+      category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
+      categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
+      contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
+      contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
+      collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
+      collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
+      // Skills para ordenamiento por relevancia
+      skills: p.skills || p.requiredSkills || [],
+      isOwner: p.isOwner,
+    }));
 
   return {
     projects: adaptedProjects,

@@ -99,6 +99,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               }
               alt="Foto de perfil"
               fill
+              sizes="40px"
               className="object-cover"
             />
           </div>
