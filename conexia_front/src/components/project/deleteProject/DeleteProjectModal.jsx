@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Button from "@/components/ui/Button";
-import { deleteProjectById } from "@/service/projects/projectsFetch"; // Corregido: projectsFetch en plural
+import { deleteProjectById } from "@/service/project/projectFetch"; // Corregido: projectFetch en singular
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ROLES } from "@/constants/roles";
