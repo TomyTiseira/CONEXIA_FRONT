@@ -19,15 +19,6 @@ export default function PostulationButton({
   const [showSuccess, setShowSuccess] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   
-  console.log('🟡 PostulationButton props:', {
-    projectId,
-    projectTitle,
-    isOwner,
-    userRole,
-    initialIsApplied,
-    'typeof initialIsApplied': typeof initialIsApplied
-  });
-  
   const {
     isApplied,
     loading,
@@ -36,12 +27,6 @@ export default function PostulationButton({
     handleApply,
     handleCancel,
   } = usePostulation(projectId, isOwner, initialIsApplied);
-
-  console.log('🔴 PostulationButton state:', {
-    isApplied,
-    loading,
-    'typeof isApplied': typeof isApplied
-  });
 
   // No mostrar botón si es owner o no es USER
   if (isOwner || userRole !== ROLES.USER) {

@@ -12,9 +12,6 @@ export async function fetchProjectById(id) {
   const data = await res.json();
   const p = data.data || {};
   
-  console.log('🟣 RAW DATA del backend antes del mapeo:', p);
-  console.log('🟣 p.isApplied:', p.isApplied, 'typeof:', typeof p.isApplied);
-  
   const result = {
     id: p.id,
     title: p.title,

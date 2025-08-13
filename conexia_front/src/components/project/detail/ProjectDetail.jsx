@@ -20,9 +20,6 @@ export default function ProjectDetail({ projectId }) {
 
   useEffect(() => {
     fetchProjectById(projectId).then((data) => {
-      console.log('🟢 DATA COMPLETA DEL PROYECTO:', data);
-      console.log('🔵 project.isApplied:', data?.isApplied);
-      console.log('🔵 typeof isApplied:', typeof data?.isApplied);
       setProject(data);
       setLoading(false);
     });

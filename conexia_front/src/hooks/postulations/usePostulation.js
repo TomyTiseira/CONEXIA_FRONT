@@ -18,7 +18,6 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
 
   // Actualizar isApplied cuando cambie initialIsApplied
   useEffect(() => {
-    console.log('🟦 usePostulation useEffect - initialIsApplied changed:', initialIsApplied, 'typeof:', typeof initialIsApplied);
     setIsApplied(initialIsApplied);
   }, [initialIsApplied]);
 
