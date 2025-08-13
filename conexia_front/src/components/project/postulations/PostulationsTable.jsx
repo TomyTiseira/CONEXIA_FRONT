@@ -124,7 +124,7 @@ export default function PostulationsTable({ postulations, onEvaluate, isLoading 
                 {postulation.cvUrl ? (
                   <button
                     onClick={() => handleDownloadCV(postulation.cvUrl)}
-                    className="text-blue-600 hover:text-blue-900 text-sm font-medium hover:underline"
+                    className="text-conexia-green hover:text-conexia-green/80 text-sm font-medium hover:underline"
                   >
                     Descargar CV
                   </button>

@@ -127,7 +127,7 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
                   const fullUrl = `${config.DOCUMENT_URL}${postulation.cvUrl}`;
                   window.open(fullUrl, '_blank');
                 }}
-                className="text-blue-600 hover:text-blue-900 text-sm font-medium hover:underline"
+                className="text-conexia-green hover:text-conexia-green/80 text-sm font-medium hover:underline"
                 disabled={isApproving}
               >
                 Descargar CV
