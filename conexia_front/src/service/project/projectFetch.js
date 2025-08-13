@@ -52,3 +52,38 @@ export async function createProject(formData) {
 
   return json;
 }
+
+// Función para eliminar un proyecto por ID
+export async function deleteProjectById(projectId, motivo) {
+  try {
+    const res = await fetch(`${config.API_URL}/projects/${projectId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ reason: motivo })
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Error al eliminar el proyecto';
+      try {
+        const errorData = await res.json();
+        errorMessage = errorData.message || errorData.error || `Error ${res.status}: ${res.statusText}`;
+      } catch (parseError) {
+        errorMessage = `Error ${res.status}: ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    // Verificar si hay contenido en la respuesta
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await res.json();
+      return data;
+    }
+
+    // Si no hay contenido JSON, devolver un objeto de éxito
+    return { success: true, message: 'Proyecto eliminado correctamente' };
+  } catch (error) {
+    throw error;
+  }
+}

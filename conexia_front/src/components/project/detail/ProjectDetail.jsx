@@ -7,6 +7,8 @@ import { useUserStore } from '@/store/userStore';
 import { useRouter } from 'next/navigation';
 import { ROLES } from '@/constants/roles';
 import DeleteProjectModal from '@/components/project/deleteProject/DeleteProjectModal';
+import { PostulationButton } from '@/components/project/postulation';
+import { ProjectValidationStatus } from '@/components/project/validation';
 
 export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
@@ -18,6 +20,9 @@ export default function ProjectDetail({ projectId }) {
 
   useEffect(() => {
     fetchProjectById(projectId).then((data) => {
+      console.log('🟢 DATA COMPLETA DEL PROYECTO:', data);
+      console.log('🔵 project.isApplied:', data?.isApplied);
+      console.log('🔵 typeof isApplied:', typeof data?.isApplied);
       setProject(data);
       setLoading(false);
     });
@@ -45,6 +50,18 @@ export default function ProjectDetail({ projectId }) {
   };
 
   const isOwner = user && project && (String(user.id) === String(project.ownerId) || project.isOwner);
+  
+  // Debug: Log para entender por qué no se muestra el botón
+  console.log('PostulationButton Debug:', {
+    user: user?.id,
+    projectOwnerId: project?.ownerId,
+    projectIsOwner: project?.isOwner,
+    isOwner: isOwner,
+    roleName: roleName,
+    shouldShowButton: !isOwner,
+    roleCheck: roleName === 'USER'
+  });
+  
   const skills = Array.isArray(project.skills) ? project.skills : (project.skills ? [project.skills] : []);
   const ownerName = getShortName(project.owner || ''); // owner ya viene como string del backend
   const ownerImage = project.ownerImage || null; // ownerImage ya viene como string del backend
@@ -193,6 +210,14 @@ export default function ProjectDetail({ projectId }) {
                   <span className="text-xs text-gray-500">Dueño del proyecto</span>
                 </div>
               </div>
+              
+              {/* Estado de validación del proyecto */}
+              <ProjectValidationStatus
+                project={project}
+                user={user}
+                isOwner={isOwner}
+                userRole={roleName}
+              />
             </div>
           </div>
           {/* Fila de botones que abarca ambas columnas */}
@@ -210,11 +235,14 @@ export default function ProjectDetail({ projectId }) {
                 {!isOwner && (
                   <>
                     <button className="md:hidden bg-blue-600 text-white px-3 py-2 rounded font-semibold hover:bg-blue-700 transition text-sm">Contactar</button>
-                    {roleName === ROLES.USER && (
-                      <button className="md:hidden bg-conexia-green text-white px-3 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm">
-                        Postularse
-                      </button>
-                    )}
+                    <PostulationButton
+                      projectId={projectId}
+                      projectTitle={project.title}
+                      isOwner={isOwner}
+                      userRole={roleName}
+                      initialIsApplied={project.isApplied || false}
+                      className="md:hidden text-sm px-3 py-2"
+                    />
                   </>
                 )}
                 {/* Botón Eliminar proyecto en mobile */}
@@ -229,10 +257,10 @@ export default function ProjectDetail({ projectId }) {
               </div>
             </div>
             {/* Espacio entre columnas - solo en desktop */}
-            <div className="hidden md:block md:w-10"></div>
+            <div className="hidden md:block md:w-6"></div>
             {/* Columna derecha - Otros botones alineados a la izquierda */}
-            <div className="flex-1">
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
                 {/* Botón Contactar solo en desktop */}
                 {!isOwner && (
                   <button className="hidden md:block bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 transition">Contactar</button>
@@ -245,11 +273,14 @@ export default function ProjectDetail({ projectId }) {
                     Eliminar proyecto
                   </button>
                 ) : (
-                  roleName === ROLES.USER && (
-                    <button className="bg-conexia-green text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition md:block hidden">
-                      Postularse
-                    </button>
-                  )
+                  <PostulationButton
+                    projectId={projectId}
+                    projectTitle={project.title}
+                    isOwner={isOwner}
+                    userRole={roleName}
+                    initialIsApplied={project.isApplied || false}
+                    className="hidden md:block"
+                  />
                 )}
               </div>
             </div>
