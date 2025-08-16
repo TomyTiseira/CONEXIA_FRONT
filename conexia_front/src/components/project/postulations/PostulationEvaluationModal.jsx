@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { approvePostulation } from '@/service/postulations/postulationService';
+import { approvePostulation, rejectPostulation } from '@/service/postulations/postulationService';
 import { config } from '@/config';
 
 export default function PostulationEvaluationModal({ postulation, onClose, onApproved }) {
   const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
@@ -30,6 +31,28 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
       setError(error.message || 'Error al aprobar la postulación');
     } finally {
       setIsApproving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      setIsRejecting(true);
+      setError('');
+      
+      await rejectPostulation(postulation.id);
+      
+      setSuccess('Postulación rechazada correctamente');
+      
+      // Mostrar mensaje de éxito por un momento antes de cerrar
+      setTimeout(() => {
+        onApproved(); // Same callback to refresh the list
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error rejecting postulation:', error);
+      setError(error.message || 'Error al rechazar la postulación');
+    } finally {
+      setIsRejecting(false);
     }
   };
 
@@ -143,8 +166,14 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
           )}
 
           {success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-green-700 text-sm font-medium">{success}</p>
+            <div className={`${success.includes('rechazada') 
+              ? 'bg-red-50 border border-red-200' 
+              : 'bg-green-50 border border-green-200'} rounded-lg p-3`}>
+              <p className={`${success.includes('rechazada') 
+                ? 'text-red-700' 
+                : 'text-green-700'} text-sm font-medium`}>
+                {success}
+              </p>
             </div>
           )}
         </div>
@@ -154,14 +183,22 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
           <button
             onClick={onClose}
             className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded font-medium hover:bg-gray-400 transition"
-            disabled={isApproving}
+            disabled={isApproving || isRejecting}
           >
-            Cancelar
+            Volver
+          </button>
+          
+          <button
+            onClick={handleReject}
+            disabled={isApproving || isRejecting || success}
+            className="flex-1 bg-red-600 text-white px-4 py-2 rounded font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isRejecting ? 'Rechazando...' : 'Rechazar'}
           </button>
           
           <button
             onClick={handleApprove}
-            disabled={isApproving || success}
+            disabled={isApproving || isRejecting || success}
             className="flex-1 bg-conexia-green text-white px-4 py-2 rounded font-medium hover:bg-conexia-green/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isApproving ? 'Aprobando...' : 'Aprobar'}

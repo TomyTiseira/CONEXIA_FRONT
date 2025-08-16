@@ -45,11 +45,19 @@ export default function ProjectMainPage() {
           </Link>
           
           {roleName === ROLES.USER && (
-            <Link href="/project/create">
-              <button className="bg-white text-conexia-green border-2 border-conexia-green px-6 py-3 rounded-xl shadow-lg hover:bg-conexia-green hover:text-white transition font-semibold text-lg">
-                Crea tu proyecto
-              </button>
-            </Link>
+            <>
+              <Link href="/project/create">
+                <button className="bg-white text-conexia-green border-2 border-conexia-green px-6 py-3 rounded-xl shadow-lg hover:bg-conexia-green hover:text-white transition font-semibold text-lg">
+                  Crea tu proyecto
+                </button>
+              </Link>
+              
+              <Link href="/project/my-postulations">
+                <button className="bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-blue-700 transition font-semibold text-lg">
+                  Mis postulaciones
+                </button>
+              </Link>
+            </>
           )}
         </div>
       </main>
