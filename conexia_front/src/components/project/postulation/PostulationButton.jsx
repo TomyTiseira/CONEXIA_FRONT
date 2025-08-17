@@ -26,6 +26,9 @@ export default function PostulationButton({
     setError,
     handleApply,
     handleCancel,
+    checkingStatus,
+    postulationStatus,
+    initialLoad,
   } = usePostulation(projectId, isOwner, initialIsApplied);
 
   // No mostrar botón si es owner o no es USER
@@ -49,35 +52,109 @@ export default function PostulationButton({
     }
   };
 
+  // Función para obtener el estilo y contenido del botón según el estado
+  const getButtonContent = () => {
+    // Durante la carga inicial, mostrar un estado de carga más sutil
+    if (checkingStatus || initialLoad) {
+      return {
+        className: `bg-gray-400 text-white px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
+        content: (
+          <div className="flex items-center gap-1.5">
+            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+            <span>Verificando...</span>
+          </div>
+        ),
+        disabled: true,
+        onClick: null
+      };
+    }
+
+    if (postulationStatus) {
+      switch (postulationStatus.code) {
+        case 'activo':
+          return {
+            className: `bg-orange-500 text-white px-4 py-2 rounded font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed ${className}`,
+            content: (
+              <div className="flex items-center gap-1.5">
+                <X size={14} />
+                <span>{loading ? 'Cancelando...' : 'Cancelar postulación'}</span>
+              </div>
+            ),
+            disabled: loading,
+            onClick: () => setShowCancelConfirm(true)
+          };
+        
+        case 'aceptada':
+          return {
+            className: `bg-green-600 text-white px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
+            content: (
+              <div className="flex items-center gap-1.5">
+                <CheckCircle size={14} />
+                <span>Postulación aceptada</span>
+              </div>
+            ),
+            disabled: true,
+            onClick: null
+          };
+        
+        case 'rechazada':
+          return {
+            className: `bg-red-600 text-white px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
+            content: (
+              <div className="flex items-center gap-1.5">
+                <X size={14} />
+                <span>Postulación rechazada</span>
+              </div>
+            ),
+            disabled: true,
+            onClick: null
+          };
+        
+        case 'cancelada':
+          // Mostrar que fue cancelada, pero permitir postularse nuevamente
+          return {
+            className: `bg-gray-500 text-white px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
+            content: (
+              <div className="flex items-center gap-1.5">
+                <X size={14} />
+                <span>Postulación cancelada</span>
+              </div>
+            ),
+            disabled: true,
+            onClick: null
+          };
+      }
+    }
+
+    // No hay postulación, permitir postularse
+    return {
+      className: `bg-conexia-green text-white px-4 py-2 rounded font-semibold hover:bg-conexia-green/90 transition disabled:opacity-50 disabled:cursor-not-allowed ${className}`,
+      content: (
+        <div className="flex items-center gap-1.5">
+          <FileText size={14} />
+          <span>{loading ? 'Postulando...' : 'Postularse'}</span>
+        </div>
+      ),
+      disabled: loading,
+      onClick: () => {
+        setError(null);
+        setShowModal(true);
+      }
+    };
+  };
+
+  const buttonConfig = getButtonContent();
+
   return (
     <>
       {/* Botón principal */}
-      {isApplied ? (
-        <button
-          onClick={() => setShowCancelConfirm(true)}
-          disabled={loading}
-          className={`bg-orange-500 text-white px-4 py-2 rounded font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
-        >
-          <div className="flex items-center gap-1.5">
-            <X size={14} />
-            <span>{loading ? 'Cancelando...' : 'Cancelar postulación'}</span>
-          </div>
-        </button>
-      ) : (
-        <button
-          onClick={() => {
-            setError(null);
-            setShowModal(true);
-          }}
-          disabled={loading}
-          className={`bg-conexia-green text-white px-4 py-2 rounded font-semibold hover:bg-conexia-green/90 transition disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
-        >
-          <div className="flex items-center gap-1.5">
-            <FileText size={14} />
-            <span>{loading ? 'Postulando...' : 'Postularse'}</span>
-          </div>
-        </button>
-      )}
+      <button
+        onClick={buttonConfig.onClick}
+        disabled={buttonConfig.disabled}
+        className={buttonConfig.className}
+      >
+        {buttonConfig.content}
+      </button>
 
       {/* Modal de postulación */}
       <PostulationModal

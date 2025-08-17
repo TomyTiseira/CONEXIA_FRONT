@@ -187,13 +187,21 @@ export default function ProjectSearch() {
             </div>
           </div>
           {(roleName === ROLES.USER || user?.roleId === 2) && (
-            <div className="flex justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
               <button
                 className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap"
                 onClick={() => router.push('/project/create')}
               >
                 Publica tu proyecto
               </button>
+              {roleName === ROLES.USER && (
+                <button
+                  className="bg-blue-600 text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-blue-700 transition text-sm whitespace-nowrap"
+                  onClick={() => router.push('/project/my-postulations')}
+                >
+                  Mis postulaciones
+                </button>
+              )}
             </div>
           )}
         </div>
