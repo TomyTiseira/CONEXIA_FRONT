@@ -48,17 +48,6 @@ export default function ProjectDetail({ projectId }) {
 
   const isOwner = user && project && (String(user.id) === String(project.ownerId) || project.isOwner);
   
-  // Debug: Log para entender por qué no se muestra el botón
-  console.log('PostulationButton Debug:', {
-    user: user?.id,
-    projectOwnerId: project?.ownerId,
-    projectIsOwner: project?.isOwner,
-    isOwner: isOwner,
-    roleName: roleName,
-    shouldShowButton: !isOwner,
-    roleCheck: roleName === 'USER'
-  });
-  
   const skills = Array.isArray(project.skills) ? project.skills : (project.skills ? [project.skills] : []);
   const ownerName = getShortName(project.owner || ''); // owner ya viene como string del backend
   const ownerImage = project.ownerImage || null; // ownerImage ya viene como string del backend
@@ -242,14 +231,22 @@ export default function ProjectDetail({ projectId }) {
                     />
                   </>
                 )}
-                {/* Botón Eliminar proyecto en mobile */}
+                {/* Botones Ver Postulaciones y Eliminar proyecto en mobile */}
                 {isOwner && (
-                  <button
-                    className="md:hidden bg-conexia-coral text-white px-3 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
-                    onClick={() => setShowDeleteModal(true)}
-                  >
-                    Eliminar proyecto
-                  </button>
+                  <>
+                    <button
+                      className="md:hidden bg-conexia-green text-white px-3 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
+                      onClick={() => router.push(`/project/${projectId}/postulations`)}
+                    >
+                      Ver Postulaciones
+                    </button>
+                    <button
+                      className="md:hidden bg-conexia-coral text-white px-3 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
+                      onClick={() => setShowDeleteModal(true)}
+                    >
+                      Eliminar proyecto
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -263,12 +260,20 @@ export default function ProjectDetail({ projectId }) {
                   <button className="hidden md:block bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 transition">Contactar</button>
                 )}
                 {isOwner ? (
-                  <button
-                    className="hidden md:block bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition"
-                    onClick={() => setShowDeleteModal(true)}
-                  >
-                    Eliminar proyecto
-                  </button>
+                  <>
+                    <button
+                      className="hidden md:block bg-conexia-green text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition"
+                      onClick={() => router.push(`/project/${projectId}/postulations`)}
+                    >
+                      Ver Postulaciones
+                    </button>
+                    <button
+                      className="hidden md:block bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition"
+                      onClick={() => setShowDeleteModal(true)}
+                    >
+                      Eliminar proyecto
+                    </button>
+                  </>
                 ) : (
                   <PostulationButton
                     projectId={projectId}
