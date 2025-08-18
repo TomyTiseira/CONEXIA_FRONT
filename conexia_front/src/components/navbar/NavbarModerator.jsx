@@ -47,7 +47,6 @@ export default function NavbarModerator() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 select-none">
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
-          <span className="font-bold text-xl text-conexia-coral">CONEXIA</span>
         </Link>
 
         {/* Navigation */}
@@ -119,7 +118,6 @@ export default function NavbarModerator() {
       <nav className="md:hidden flex justify-between items-center px-4 py-2 bg-white shadow h-[56px]">
         <Link href="/" className="flex items-center gap-2 select-none">
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
-          <span className="font-bold text-xl text-conexia-coral">CONEXIA</span>
         </Link>
         <div className="flex items-center gap-4 text-conexia-green">
           <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />

@@ -251,7 +251,7 @@ export default function ProjectPostulations({ projectId }) {
           {/* Botón Atrás */}
           <div className="flex justify-start mt-6">
             <button 
-              className="bg-red-500 text-white px-4 py-2 rounded font-semibold hover:bg-red-600 transition text-sm"
+              className="bg-[#eef6f6] text-conexia-green px-4 py-2 rounded font-semibold hover:bg-[#e0f0f0] transition text-sm border border-[#c6e3e4]"
               onClick={() => router.push(`/project/${projectId}`)}
             >
               ← Atrás

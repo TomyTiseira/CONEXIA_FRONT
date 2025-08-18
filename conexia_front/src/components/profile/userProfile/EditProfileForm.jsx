@@ -1340,7 +1340,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
               </button>   
               <button
                 type="button"
-                className="w-full md:w-auto bg-[#ff4d58] text-white py-2 px-8 rounded font-semibold hover:bg-red-500"
+                className="w-full md:w-auto bg-[#f5f6f6] text-[#777d7d] py-2 px-8 rounded font-semibold hover:bg-[#f1f2f2] border border-[#e1e4e4]"
                 style={{ minWidth: '120px' }}
                 onClick={() => {
                   if (onCancel) {

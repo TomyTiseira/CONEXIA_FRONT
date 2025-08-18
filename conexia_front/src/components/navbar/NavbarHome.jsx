@@ -21,7 +21,6 @@ export default function NavbarHome() {
         {/* Logo */}
         <div className="flex items-center gap-2 select-none">
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
-          <span className="font-bold text-xl text-conexia-coral">CONEXIA</span>
         </div>
 
         {/* Mobile menu toggle */}

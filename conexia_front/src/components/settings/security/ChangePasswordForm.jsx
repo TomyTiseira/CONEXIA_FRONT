@@ -159,7 +159,7 @@ export default function ChangePasswordForm() {
               <Button
                 type="button"
                 onClick={() => router.push('/settings/security')}
-                variant="secondary"
+                variant="cancel"
                 className="min-w-[100px] px-4 py-2"
               >
                 Cancelar

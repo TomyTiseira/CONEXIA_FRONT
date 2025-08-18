@@ -80,7 +80,7 @@ export default function MyProjectsView({ userId }) {
                   {/* En móvil: botón atrás a la izquierda y paginado centrado en la misma línea */}
                   <div className="flex items-center md:hidden px-6 sm:px-0">
                     <button 
-                      className="bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition text-sm whitespace-nowrap h-[38px] flex items-center"
+                      className="bg-[#eef6f6] text-conexia-green px-3 py-2 rounded font-semibold hover:bg-[#e0f0f0] transition text-sm whitespace-nowrap h-[38px] flex items-center border border-[#c6e3e4]"
                       onClick={() => {
                         if (isOwner) {
                           // Si es el dueño, ir a su perfil
@@ -109,7 +109,7 @@ export default function MyProjectsView({ userId }) {
                   {/* En desktop: botón atrás a la izquierda, paginado centrado */}
                   <div className="hidden md:flex md:items-center px-6 sm:px-0">
                     <button 
-                      className="bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition text-sm whitespace-nowrap h-[38px] flex items-center"
+                      className="bg-[#eef6f6] text-conexia-green px-3 py-2 rounded font-semibold hover:bg-[#e0f0f0] transition text-sm whitespace-nowrap h-[38px] flex items-center border border-[#c6e3e4]"
                       onClick={() => {
                         if (isOwner) {
                           // Si es el dueño, ir a su perfil

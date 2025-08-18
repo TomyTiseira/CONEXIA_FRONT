@@ -45,7 +45,7 @@ export default function DeleteInternalUserModal({ email, onConfirm, onCancel, lo
             <Button variant="danger" onClick={handleSubmit} disabled={loading}>
                 {loading ? 'Eliminando...' : 'Eliminar'}
             </Button>
-            <Button variant="neutral" onClick={onCancel} disabled={loading}>
+            <Button variant="cancel" onClick={onCancel} disabled={loading}>
                 Cancelar
             </Button>
             </div>

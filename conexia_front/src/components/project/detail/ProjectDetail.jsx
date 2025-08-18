@@ -212,7 +212,7 @@ export default function ProjectDetail({ projectId }) {
             <div className="w-full md:w-56 flex justify-start">
               <div className="flex gap-3">
                 <button 
-                  className="bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition text-sm"
+                  className="bg-[#eef6f6] text-conexia-green px-3 py-2 rounded font-semibold hover:bg-[#e0f0f0] transition text-sm border border-[#c6e3e4]"
                   onClick={() => router.push('/project/search')}
                 >
                   ← Atrás

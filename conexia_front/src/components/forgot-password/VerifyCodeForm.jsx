@@ -7,6 +7,7 @@ import Image from "next/image";
 import { verifyResetCode } from "@/service/auth/recoveryService";
 import ResendCodeButton from "../auth/ResendCodeButton";
 import { requestPasswordReset } from "@/service/auth/recoveryService";
+import ConexiaLogo from "@/components/ui/ConexiaLogo";
 
 export default function VerifyCodeForm() {
   const email = useResetPasswordStore((state) => state.email);
@@ -86,8 +87,8 @@ export default function VerifyCodeForm() {
 
   return (
     <div className="flex flex-col justify-center items-center w-full md:w-[40%] px-6 py-10 bg-conexia-soft">
-      <div className="flex justify-end mb-4">
-        <Image src="/logo-conexia.png" alt="Logo" width={100} height={40} />
+      <div className="flex justify-center mb-4">
+        <ConexiaLogo width={80} height={32} />
       </div>
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-conexia-green mb-4">Verifica tu cuenta</h1>

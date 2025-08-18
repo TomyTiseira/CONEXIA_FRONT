@@ -214,7 +214,7 @@ export default function EditInternalUserModal({ user, onClose, onUserUpdated }) 
             </Button>
             <Button
               type="button"
-              variant="secondary"
+              variant="cancel"
               onClick={onClose}
               disabled={updatingId === user.id}
             >
