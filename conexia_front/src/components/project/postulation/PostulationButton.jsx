@@ -10,6 +10,7 @@ import Toast from '@/components/ui/Toast';
 export default function PostulationButton({ 
   projectId, 
   projectTitle, 
+  project = null,
   isOwner, 
   userRole,
   initialIsApplied = false,
@@ -31,13 +32,14 @@ export default function PostulationButton({
     initialLoad,
   } = usePostulation(projectId, isOwner, initialIsApplied);
 
-  // No mostrar botón si es owner o no es USER
-  if (isOwner || userRole !== ROLES.USER) {
+  // No mostrar botón si es owner, no es USER, o el proyecto está finalizado
+  const isFinished = project && project.endDate && require('@/utils/postulationValidation').isProjectFinished(project);
+  if (isOwner || userRole !== ROLES.USER || isFinished) {
     return null;
   }
 
   const onApplySuccess = async (cvFile) => {
-    const success = await handleApply(cvFile);
+    const success = await handleApply(cvFile, project);
     if (success) {
       setShowModal(false);
       setShowSuccess(true);
@@ -111,18 +113,8 @@ export default function PostulationButton({
           };
         
         case 'cancelada':
-          // Mostrar que fue cancelada, pero permitir postularse nuevamente
-          return {
-            className: `bg-gray-500 text-white px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
-            content: (
-              <div className="flex items-center gap-1.5">
-                <X size={14} />
-                <span>Postulación cancelada</span>
-              </div>
-            ),
-            disabled: true,
-            onClick: null
-          };
+          // Permitir postularse nuevamente si fue cancelada
+          break;
       }
     }
 
@@ -182,23 +174,23 @@ export default function PostulationButton({
                   {error}
                 </div>
               )}
-              <div className="flex space-x-3">
+              <div className="flex flex-row space-x-3">
                 <button
                   onClick={() => {
                     setShowCancelConfirm(false);
                     setError(null);
                   }}
                   disabled={loading}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded font-semibold hover:bg-gray-400 transition-colors disabled:opacity-50"
+                  className="flex-1 bg-[#f5f6f6] text-[#777d7d] px-4 py-2 rounded font-medium hover:bg-[#f1f2f2] transition border border-[#e1e4e4]"
                 >
-                  No, mantener
+                  Volver
                 </button>
                 <button
                   onClick={onCancelSuccess}
                   disabled={loading}
-                  className="flex-1 bg-red-500 text-white py-2 px-4 rounded font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Cancelando...' : 'Sí, cancelar'}
+                  {loading ? 'Cancelando...' : 'Cancelar postulación'}
                 </button>
               </div>
             </div>

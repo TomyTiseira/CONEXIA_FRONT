@@ -1,5 +1,18 @@
 // Utilidades para validar el estado de los proyectos
 
+// Función para verificar si un proyecto ha finalizado
+export const isProjectFinished = (project) => {
+  if (!project || !project.endDate) {
+    return false; // Si no tiene fecha de fin, no ha finalizado
+  }
+  
+  const endDate = new Date(project.endDate);
+  const now = new Date();
+  // Comparar solo fechas, sin horas
+  endDate.setHours(23, 59, 59, 999); // Fin del día
+  return now > endDate;
+};
+
 export const validateProjectForPostulation = (project, user) => {
   const errors = [];
   
@@ -8,18 +21,23 @@ export const validateProjectForPostulation = (project, user) => {
     return { isValid: false, errors };
   }
 
-  // Verificar que el proyecto está activo
-  if (!project.isActive || project.status !== 'active') {
+  // Debug: Loggear el estado del proyecto
+  console.log('Validando proyecto:', {
+    id: project.id,
+    title: project.title,
+    isActive: project.isActive,
+    status: project.status,
+    endDate: project.endDate
+  });
+
+  // Verificar que el proyecto está activo (solo verificar isActive, el backend maneja el status)
+  if (project.isActive === false) {
     errors.push('El proyecto no está activo');
   }
 
-  // Verificar fecha de fin si existe
-  if (project.endDate) {
-    const endDate = new Date(project.endDate);
-    const now = new Date();
-    if (endDate < now) {
-      errors.push('El proyecto ya ha finalizado');
-    }
+  // Verificar si el proyecto ha finalizado por fecha
+  if (isProjectFinished(project)) {
+    errors.push('El proyecto ya ha finalizado');
   }
 
   // Verificar que no es el dueño

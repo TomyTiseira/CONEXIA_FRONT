@@ -224,6 +224,7 @@ export default function ProjectDetail({ projectId }) {
                     <PostulationButton
                       projectId={projectId}
                       projectTitle={project.title}
+                      project={project}
                       isOwner={isOwner}
                       userRole={roleName}
                       initialIsApplied={project.isApplied || false}
@@ -278,6 +279,7 @@ export default function ProjectDetail({ projectId }) {
                   <PostulationButton
                     projectId={projectId}
                     projectTitle={project.title}
+                    project={project}
                     isOwner={isOwner}
                     userRole={roleName}
                     initialIsApplied={project.isApplied || false}

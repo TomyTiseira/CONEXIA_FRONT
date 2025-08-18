@@ -2,9 +2,15 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { config } from '@/config';
+import { isProjectFinished } from '@/utils/postulationValidation';
 
-export default function ProjectList({ projects }) {
+export default function ProjectList({ projects, showFinished = false }) {
   const router = useRouter();
+  
+  // Filtrar proyectos finalizados si no se deben mostrar
+  const filteredProjects = showFinished 
+    ? projects 
+    : projects?.filter(project => !isProjectFinished(project)) || [];
   
   // Función para mostrar primer nombre y primer apellido
   const getShortName = (fullName) => {
@@ -24,12 +30,14 @@ export default function ProjectList({ projects }) {
     return `${names[0]} ${names[1]}`;
   };
   
-  if (!projects || projects.length === 0) {
+  if (!filteredProjects || filteredProjects.length === 0) {
     return <div className="text-center text-conexia-green mt-12 text-lg opacity-70">No se encontraron proyectos.</div>;
   }
   return (
 <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch mt-0 w-full px-6 sm:px-0">
-  {projects.map(project => (
+  {filteredProjects.map(project => {
+    const projectFinished = isProjectFinished(project);
+    return (
     <div
       key={project.id}
       className="bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col h-full items-stretch w-full hover:shadow-lg transition"
@@ -70,6 +78,7 @@ export default function ProjectList({ projects }) {
         </div>
       </div>
 
+
       {/* Dueño del proyecto */}
       <div 
         className="flex items-center gap-2 mb-3 min-w-0 px-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
@@ -100,7 +109,17 @@ export default function ProjectList({ projects }) {
       </div>
 
       {/* Tipos/Badges - Layout consistente */}
-      <div className="flex flex-col gap-1 mb-4 w-full px-2">
+      <div className="flex flex-col gap-1 mb-4 w-full px-2 min-h-[56px]">
+        {/* Etiqueta de finalizado si aplica, debajo del nombre del usuario */}
+        {projectFinished ? (
+          <div className="flex w-full gap-1">
+            <span className="bg-red-100 text-red-700 px-2 py-2 rounded text-xs font-medium w-full text-center border border-red-200 block" style={{minHeight:'32px'}}>
+              ⏰ Finalizado
+            </span>
+          </div>
+        ) : (
+          <div className="gap-1" style={{minHeight:'32px'}} />
+        )}
         {/* Primera fila: Categoría y Tipo de Contrato */}
         <div className="flex gap-1 w-full">
           {project.category && (
@@ -136,7 +155,8 @@ export default function ProjectList({ projects }) {
         </div>
       </div>
     </div>
-  ))}
+    );
+  })}
 </div>
   );
 }

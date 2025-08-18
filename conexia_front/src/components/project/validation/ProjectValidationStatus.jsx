@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertCircle, Clock, CheckCircle, User, X } from 'lucide-react';
+import { isProjectFinished } from '@/utils/postulationValidation';
 
 export default function ProjectValidationStatus({ 
   project, 
@@ -25,20 +26,21 @@ export default function ProjectValidationStatus({
       });
     }
 
-    // Verificar fecha de fin
-    if (project?.endDate) {
+    // Verificar si el proyecto ha finalizado
+    if (isProjectFinished(project)) {
+      messages.push({
+        type: 'error',
+        icon: Clock,
+        text: 'Este proyecto ya ha finalizado'
+      });
+    } else if (project?.endDate) {
+      // Si no ha finalizado pero tiene fecha de fin, mostrar días restantes si es pronto
       const endDate = new Date(project.endDate);
       const now = new Date();
       const timeDiff = endDate.getTime() - now.getTime();
       const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-      if (daysDiff < 0) {
-        messages.push({
-          type: 'error',
-          icon: Clock,
-          text: 'Este proyecto ya ha finalizado'
-        });
-      } else if (daysDiff <= 7) {
+      if (daysDiff <= 7 && daysDiff > 0) {
         messages.push({
           type: 'warning',
           icon: Clock,
