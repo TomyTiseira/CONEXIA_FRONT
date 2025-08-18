@@ -291,7 +291,7 @@ export default function MyPostulationsPage() {
                   {error}
                 </div>
               )}
-              <div className="flex space-x-3">
+              <div className="flex flex-row space-x-3">
                 <button
                   onClick={() => {
                     setShowCancelModal(false);

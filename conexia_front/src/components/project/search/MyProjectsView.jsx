@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/common/Pagination';
@@ -73,7 +72,7 @@ export default function MyProjectsView({ userId }) {
               <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
             ) : (
               <>
-                <ProjectList projects={projects.slice((page-1)*pageSize, page*pageSize)} />
+                <ProjectList projects={projects.slice((page-1)*pageSize, page*pageSize)} showFinished={true} />
                 
                 {/* Botón Atrás y Paginado */}
                 <div className="mt-6">

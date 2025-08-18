@@ -61,27 +61,27 @@ export default function Toast({
       case 'top-left':
         return 'top-4 left-4';
       case 'bottom-left':
-        return 'bottom-4 left-4';
+        return 'bottom-4 sm:bottom-4 bottom-20 left-4';
       case 'bottom-right':
       default:
-        return 'bottom-4 right-4';
+        return 'bottom-20 sm:bottom-4 right-4';
     }
   };
 
   return (
     <div
-      className={`fixed ${getPositionClasses()} ${getColors()} p-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 transition-all duration-300 max-w-sm ${
+      className={`fixed ${getPositionClasses()} ${getColors()} p-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 transition-all duration-300 max-w-sm sm:max-w-sm mx-4 sm:mx-0 ${
         show ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
       }`}
     >
       {getIcon()}
-      <span className="flex-1 text-sm font-medium">{message}</span>
+      <span className="flex-1 text-sm font-medium break-words">{message}</span>
       <button
         onClick={() => {
           setShow(false);
           setTimeout(onClose, 300);
         }}
-        className="text-white hover:text-gray-200 transition-colors"
+        className="text-white hover:text-gray-200 transition-colors flex-shrink-0"
       >
         <X size={16} />
       </button>

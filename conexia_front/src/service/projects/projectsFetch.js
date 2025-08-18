@@ -28,6 +28,7 @@ export async function fetchProjectById(id) {
     category: Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []),
     maxCollaborators: p.maxCollaborators,
     isActive: p.isActive,
+    status: p.status, // Agregar el campo status desde el backend
     startDate: p.startDate,
     endDate: p.endDate,
     isOwner: p.isOwner,
@@ -101,6 +102,10 @@ export async function fetchProjects({ title, category, skills, collaboration, co
       // Skills para ordenamiento por relevancia
       skills: p.skills || p.requiredSkills || [],
       // Otros campos planos
+      isActive: p.isActive,
+      status: p.status,
+      startDate: p.startDate,
+      endDate: p.endDate,
       isOwner: p.isOwner,
     }));
   } catch (error) {
@@ -178,6 +183,10 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
         collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
         // Skills para ordenamiento por relevancia
         skills: p.skills || p.requiredSkills || [],
+        isActive: p.isActive,
+        status: p.status,
+        startDate: p.startDate,
+        endDate: p.endDate,
         isOwner: p.isOwner,
       }));
 
@@ -240,6 +249,8 @@ export async function fetchMyProjects({ ownerId, active }) {
     skills: p.skills || p.requiredSkills || [],
     isOwner: p.isOwner,
     isActive: p.isActive,
+    startDate: p.startDate,
+    endDate: p.endDate,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   }));
@@ -281,5 +292,8 @@ export async function fetchProjectsByUserId(userId) {
     skills: p.skills || p.requiredSkills || [],
     isOwner: p.isOwner,
     isActive: p.isActive,
+    status: p.status,
+    startDate: p.startDate,
+    endDate: p.endDate,
   }));
 }

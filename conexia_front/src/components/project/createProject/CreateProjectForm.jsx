@@ -123,9 +123,9 @@ export default function CreateProjectForm() {
         form.dates.startDate &&
         form.dates.endDate &&
         !isIndefinite &&
-        form.dates.endDate < form.dates.startDate
+        (form.dates.endDate < form.dates.startDate || form.dates.endDate === form.dates.startDate)
       ) {
-        error = 'La fecha hasta no puede ser menor a la fecha desde';
+        error = 'La fecha de fin debe ser posterior a la fecha de inicio';
       }
     }
 
@@ -285,22 +285,10 @@ export default function CreateProjectForm() {
             onEndChange={(e) => handleDateChange('endDate', e.target.value)}
             isIndefinite={isIndefinite}
             onIndefiniteChange={handleIndefiniteChange}
-            errorStart={
-              errors.dates &&
-              (!form.dates.startDate || (!isIndefinite && form.dates.endDate && form.dates.startDate > form.dates.endDate))
-                ? errors.dates
-                : ''
-            }
-            errorEnd={
-              errors.dates &&
-              (!isIndefinite && (!form.dates.endDate || (form.dates.endDate && form.dates.endDate < form.dates.startDate)))
-                ? errors.dates
-                : ''
-            }
+            errorStart={''}
+            errorEnd={errors.dates || ''}
           />
         </div>
-        
-        {errors.dates && <p className="text-xs text-red-600 mt-1">{errors.dates}</p>}
       </div>
 
       {/* Tipo de colaboración */}
@@ -423,9 +411,12 @@ export default function CreateProjectForm() {
       {/* Mensaje de error o éxito */}
       <div className="md:col-span-2 min-h-[48px] mt-2">
         {msg && (
-          <p className={`text-sm text-center ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
-            {msg.text}
-          </p>
+          // Ocultar mensaje en inglés de fechas
+          msg.text && msg.text.toLowerCase().includes('start date must be before end date') ? null : (
+            <p className={`text-sm text-center ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
+              {msg.text}
+            </p>
+          )
         )}
       </div>
     </form>
