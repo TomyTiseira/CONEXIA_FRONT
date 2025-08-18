@@ -24,6 +24,8 @@ export default function Button({
         add:'bg-[#cde6e6] text-conexia-green hover:bg-[#b9dddd]',
         danger: 'bg-red-600 text-white hover:bg-red-700',
         success: 'bg-conexia-green text-white hover:bg-conexia-green/80 focus:ring-conexia-green/50',
+        cancel: 'bg-[#f5f6f6] text-[#777d7d] hover:bg-[#f1f2f2] border border-[#e1e4e4]',
+        back: 'bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] border border-[#c6e3e4]',
     };
 
     return (

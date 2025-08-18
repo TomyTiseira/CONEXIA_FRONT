@@ -72,7 +72,7 @@ export default function DeleteProjectModal({ projectId, onCancel, onProjectDelet
           <Button variant="success" onClick={handleSubmit} disabled={loading}>
             {loading ? "Procesando..." : "Confirmar"}
           </Button>
-          <Button variant="danger" onClick={onCancel} disabled={loading}>
+          <Button variant="cancel" onClick={onCancel} disabled={loading}>
             Cancelar
           </Button>
         </div>

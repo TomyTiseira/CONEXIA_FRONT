@@ -8,6 +8,7 @@ import { verifyUser } from "@/service/user/userFetch";
 import ResendCodeButton from "../auth/ResendCodeButton"; 
 import { resendVerification } from "@/service/user/userFetch";
 import { useAuth } from "@/context/AuthContext";
+import ConexiaLogo from "@/components/ui/ConexiaLogo";
 
 export default function VerifyForm() {
   const searchParams = useSearchParams();
@@ -105,8 +106,8 @@ const handlePaste = (e) => {
 
   return (
     <div className="flex flex-col justify-center items-center w-full md:w-[40%] px-6 py-10 bg-conexia-soft">
-      <div className="flex justify-end mb-4">
-        <Image src="/logo-conexia.png" alt="Conexia logo" width={100} height={40} />
+      <div className="flex justify-center mb-4">
+        <ConexiaLogo width={80} height={32} />
       </div>
 
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">

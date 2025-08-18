@@ -203,7 +203,7 @@ export default function PostulationModal({
               onClose();
             }}
             disabled={loading}
-            className="flex-1 bg-conexia-coral text-white py-3 px-4 rounded-lg font-semibold hover:bg-conexia-coral/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-[#f5f6f6] text-[#777d7d] py-3 px-4 rounded-lg font-semibold hover:bg-[#f1f2f2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-[#e1e4e4]"
           >
             Cancelar
           </button>

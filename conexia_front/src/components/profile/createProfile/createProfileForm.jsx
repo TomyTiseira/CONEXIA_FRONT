@@ -8,6 +8,7 @@ import Image from "next/image";
 import { getDocumentTypes } from "@/service/profiles/profilesFetch";
 import { handleDynamicFieldChange, validateDynamicField } from "@/components/utils/validations/addElement";
 import { removeItemFromFormArray } from "@/components/utils/removeItemArray";
+import ConexiaLogo from "@/components/ui/ConexiaLogo";
 import { toggleHabilidad } from "@/components/utils/toggleHabilidad";
 import { useAuth } from "@/context/AuthContext";
 import { isValidPhoneNumber, validateSimplePhone } from "@/components/utils/validations/phones";
@@ -734,7 +735,9 @@ export default function CreateProfileForm() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-      <Image src="/logo-conexia.png" alt="Logo" width={100} height={40} className="mx-auto mb-6" />
+      <div className="flex justify-center mb-6">
+        <ConexiaLogo width={80} height={32} />
+      </div>
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded shadow">
         <div className="grid md:grid-cols-2 gap-4">
           <div>
