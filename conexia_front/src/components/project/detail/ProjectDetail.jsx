@@ -22,7 +22,6 @@ export default function ProjectDetail({ projectId }) {
 
   useEffect(() => {
     fetchProjectById(projectId).then((data) => {
-      console.log('Detalle del proyecto:', data); // <-- LOG PARA DEPURACIÓN
       setProject(data);
       setLoading(false);
     });
