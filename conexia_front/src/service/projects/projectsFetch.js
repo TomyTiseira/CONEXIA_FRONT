@@ -28,6 +28,7 @@ export async function fetchProjectById(id) {
     category: Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []),
     maxCollaborators: p.maxCollaborators,
     isActive: p.isActive,
+    deletedAt: p.deletedAt, // <-- AGREGADO
     status: p.status, // Agregar el campo status desde el backend
     startDate: p.startDate,
     endDate: p.endDate,
@@ -253,6 +254,8 @@ export async function fetchMyProjects({ ownerId, active }) {
     endDate: p.endDate,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
+    deletedAt: p.deletedAt,
+    isActive: p.isActive,
   }));
 }
 

@@ -72,7 +72,12 @@ export default function MyProjectsView({ userId }) {
               <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
             ) : (
               <>
-                <ProjectList projects={projects.slice((page-1)*pageSize, page*pageSize)} showFinished={true} />
+                <ProjectList 
+                  projects={projects.slice((page-1)*pageSize, page*pageSize)} 
+                  showFinished={true} 
+                  showInactive={showInactive} 
+                  origin={isOwner ? 'my-projects' : 'user-projects'}
+                />
                 
                 {/* Botón Atrás y Paginado */}
                 <div className="mt-6">
@@ -97,6 +102,7 @@ export default function MyProjectsView({ userId }) {
                       <div className="flex items-center -mt-6">
                         <Pagination
                           page={page}
+                                      origin={isOwner ? 'my-projects' : 'user-projects'}
                           hasPreviousPage={page > 1}
                           hasNextPage={projects.length > page * pageSize}
                           onPageChange={setPage}
