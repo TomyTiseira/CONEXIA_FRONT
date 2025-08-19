@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ROLES } from '@/constants/roles';
 import DeleteProjectModal from '@/components/project/deleteProject/DeleteProjectModal';
 import { PostulationButton } from '@/components/project/postulation';
@@ -17,9 +17,12 @@ export default function ProjectDetail({ projectId }) {
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
 
   useEffect(() => {
     fetchProjectById(projectId).then((data) => {
+      console.log('Detalle del proyecto:', data); // <-- LOG PARA DEPURACIÓN
       setProject(data);
       setLoading(false);
     });
@@ -213,7 +216,17 @@ export default function ProjectDetail({ projectId }) {
               <div className="flex gap-3">
                 <button 
                   className="bg-[#eef6f6] text-conexia-green px-3 py-2 rounded font-semibold hover:bg-[#e0f0f0] transition text-sm border border-[#c6e3e4]"
-                  onClick={() => router.push('/project/search')}
+                  onClick={() => {
+                    // Lógica de navegación según origen
+                    const from = searchParams.get('from');
+                    if (from === 'user-projects' && project.ownerId) {
+                      router.push(`/projects/user/${project.ownerId}`);
+                    } else if (from === 'my-projects' && user && user.id) {
+                      router.push(`/projects/user/${user.id}`);
+                    } else {
+                      router.push('/project/search');
+                    }
+                  }}
                 >
                   ← Atrás
                 </button>
@@ -241,12 +254,14 @@ export default function ProjectDetail({ projectId }) {
                     >
                       Ver Postulaciones
                     </button>
-                    <button
-                      className="md:hidden bg-conexia-coral text-white px-3 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
-                      onClick={() => setShowDeleteModal(true)}
-                    >
-                      Eliminar proyecto
-                    </button>
+                    {!project.isActive || !project.deletedAt && (
+                      <button
+                        className="md:hidden bg-conexia-coral text-white px-3 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
+                        onClick={() => setShowDeleteModal(true)}
+                      >
+                        Eliminar proyecto
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -268,12 +283,14 @@ export default function ProjectDetail({ projectId }) {
                     >
                       Ver Postulaciones
                     </button>
-                    <button
-                      className="hidden md:block bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition"
-                      onClick={() => setShowDeleteModal(true)}
-                    >
-                      Eliminar proyecto
-                    </button>
+                    {!project.isActive || !project.deletedAt && (
+                      <button
+                        className="hidden md:block bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition"
+                        onClick={() => setShowDeleteModal(true)}
+                      >
+                        Eliminar proyecto
+                      </button>
+                    )}
                   </>
                 ) : (
                   <PostulationButton

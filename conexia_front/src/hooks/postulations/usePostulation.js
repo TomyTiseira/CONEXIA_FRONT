@@ -1,6 +1,7 @@
-'use client';
 
-import { useState, useEffect } from 'react';
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import { applyToProject, cancelPostulation, getMyActivePostulationByProject, getMyPostulationByProject } from '@/service/postulations/postulationService';
 import { useAuth } from '@/context/AuthContext';
 import { useRole } from '@/hooks/useRole';
