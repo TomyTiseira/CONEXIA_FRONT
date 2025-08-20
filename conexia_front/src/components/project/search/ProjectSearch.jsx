@@ -196,7 +196,7 @@ export default function ProjectSearch() {
               </button>
               {roleName === ROLES.USER && (
                 <button
-                  className="bg-blue-600 text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-blue-700 transition text-sm whitespace-nowrap"
+                  className="bg-[#367d7d] text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-[#2b6a6a] transition text-sm whitespace-nowrap"
                   onClick={() => router.push('/project/my-postulations')}
                 >
                   Mis postulaciones

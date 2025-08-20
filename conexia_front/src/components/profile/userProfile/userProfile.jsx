@@ -16,7 +16,7 @@ import { updateUserProfile } from "@/service/profiles/updateProfile";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/ui/Button";
 import SkillsDisplay from "@/components/skills/SkillsDisplay";
-
+import UserCollaborativeProjects from "./UserCollaborativeProjects";
 
 
 export default function UserProfile() {
@@ -319,180 +319,172 @@ export default function UserProfile() {
   return (
     <div className="bg-conexia-soft min-h-screen">
       <Navbar />
-      <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-6 mt-4 mx-6 md:mx-auto">        
-        {/* Portada y foto de perfil */}
-        <div className="relative h-48 rounded overflow-hidden bg-gray-100 mb-8">
-          {user.coverPicture && (
-            <Image
-              src={`${config.IMAGE_URL}/${user.coverPicture}`}
-              alt="Foto de portada"
-              layout="fill"
-              objectFit="cover"
-              className="object-cover"
-              priority
-            />
-          )}
-        </div>
-        <div className="relative flex flex-col sm:flex-row sm:items-center mb-4 sm:justify-between" style={{ minHeight: 64 }}>
-          <div className="flex flex-col sm:flex-row sm:items-center">
-            <div className="w-[100px] h-[100px] flex-shrink-0 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-200 flex items-center justify-center mx-auto sm:mx-0 mb-4 sm:mb-0">
-              {user.profilePicture ? (
-                <div className="relative w-full h-full">
-                  <Image
-                    src={`${config.IMAGE_URL}/${user.profilePicture}`}
-                    alt="Foto de perfil"
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center" />
-              )}
-            </div>
-            <div className="sm:ml-8 flex flex-col justify-center h-full text-center sm:text-left">
-              <h2 className="text-2xl font-bold text-conexia-green">
-                {user.name} {user.lastName}
-              </h2>
-              {user.profession && (
-                <p className="text-conexia-coral font-medium text-lg mt-1">
-                  {user.profession}
-                </p>
-              )}
-              {(user.state || user.country) && (
-                <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
-              )}
-            </div>
-          </div>
-          
-          {/* Botón de editar (solo dueño) y botón para ver proyectos (todos) */}
-          <div className="flex gap-2 justify-center sm:justify-end mt-4 sm:mt-0">
-            {isOwner && (
-              <button
-                onClick={() => setEditing(true)}
-                className="flex items-center justify-center w-10 h-10 bg-conexia-green hover:bg-conexia-green/90 text-white rounded-full transition-colors duration-200 shadow-sm flex-shrink-0"
-                title="Editar perfil"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                </svg>
-              </button>
+  <div className="max-w-5xl mx-auto flex flex-col gap-0 mt-4 px-2 md:px-0">
+        {/* Rectángulo de datos personales */}
+  <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
+          {/* Portada y foto de perfil */}
+          <div className="relative h-48 rounded overflow-hidden bg-gray-100 mb-8">
+            {user.coverPicture && (
+              <Image
+                src={`${config.IMAGE_URL}/${user.coverPicture}`}
+                alt="Foto de portada"
+                layout="fill"
+                objectFit="cover"
+                className="object-cover"
+                priority
+              />
             )}
-            <Button 
-              variant="secondary" 
-              className="bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0"
-              onClick={() => router.push(`/projects/user/${id}`)}
-            >
-              Ver proyectos
-            </Button>
+          </div>
+          <div className="relative flex flex-col sm:flex-row sm:items-center mb-4 sm:justify-between" style={{ minHeight: 64 }}>
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-[100px] h-[100px] flex-shrink-0 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-200 flex items-center justify-center mx-auto sm:mx-0 mb-4 sm:mb-0">
+                {user.profilePicture ? (
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={`${config.IMAGE_URL}/${user.profilePicture}`}
+                      alt="Foto de perfil"
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center" />
+                )}
+              </div>
+              <div className="sm:ml-8 flex flex-col justify-center h-full text-center sm:text-left">
+                <h2 className="text-2xl font-bold text-conexia-green">
+                  {user.name} {user.lastName}
+                </h2>
+                {user.profession && (
+                  <p className="text-conexia-coral font-medium text-lg mt-1">
+                    {user.profession}
+                  </p>
+                )}
+                {(user.state || user.country) && (
+                  <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
+                )}
+              </div>
+            </div>
+            {/* Botón de editar (solo dueño) y botón para ver proyectos (todos) */}
+            <div className="flex gap-2 justify-center sm:justify-end mt-4 sm:mt-0">
+              {isOwner && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="flex items-center justify-center w-10 h-10 bg-conexia-green hover:bg-conexia-green/90 text-white rounded-full transition-colors duration-200 shadow-sm flex-shrink-0"
+                  title="Editar perfil"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+          {/* Información en bloques */}
+          <div className="mt-6 space-y-6">
+            {user.description && (
+              <Section title="Descripción">
+                <p className="whitespace-pre-line break-words overflow-x-auto max-w-full">{user.description}</p>
+              </Section>
+            )}
+            {user.birthDate && (
+              <Section title="Fecha de nacimiento">
+                <p>{new Date(user.birthDate).toLocaleDateString()}</p>
+              </Section>
+            )}
+            {isOwner && user.phoneNumber && (
+              <Section title="Número de teléfono">
+                <p>{user.phoneNumber}</p>
+              </Section>
+            )}
+            {Array.isArray(user.skills) && user.skills.length > 0 && (
+              <Section title="Habilidades">
+                <SkillsDisplay skills={user.skills} />
+              </Section>
+            )}
+            {Array.isArray(user.experience) && user.experience.length > 0 && (
+              <Section title="Experiencia">
+                <ul className="ml-2">
+                  {user.experience.map((exp, idx) => {
+                    const start = exp.startDate ? new Date(exp.startDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' }) : '';
+                    const end = exp.isCurrent
+                      ? 'Actualidad'
+                      : exp.endDate
+                        ? new Date(exp.endDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' })
+                        : '';
+                    return (
+                      <li key={idx} className="mb-2">
+                        <div className="font-semibold text-conexia-green">{exp.title}</div>
+                        {exp.project && <div className="text-sm text-conexia-coral">{exp.project}</div>}
+                        <div className="text-xs text-gray-500">
+                          {start} - {end}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Section>
+            )}
+            {Array.isArray(user.education) && user.education.length > 0 && (
+              <Section title="Educación">
+                <ul className="ml-2">
+                  {user.education.map((edu, idx) => {
+                    const start = edu.startDate ? new Date(edu.startDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' }) : '';
+                    const end = edu.isCurrent
+                      ? 'Actualidad'
+                      : edu.endDate
+                        ? new Date(edu.endDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' })
+                        : '';
+                    return (
+                      <li key={idx} className="mb-2">
+                        <div className="font-semibold text-conexia-green">{edu.title}</div>
+                        {edu.institution && <div className="text-sm text-conexia-coral">{edu.institution}</div>}
+                        <div className="text-xs text-gray-500">
+                          {start} - {end}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Section>
+            )}
+            {Array.isArray(user.certifications) && user.certifications.length > 0 && (
+              <Section title="Certificaciones">
+                <ul className="list-disc ml-6">
+                  {user.certifications.map((cert, idx) => (
+                    <li key={idx}>
+                      <span className="font-semibold mr-2">{cert.name}:</span>
+                      <a href={cert.url} target="_blank" className="text-conexia-coral underline">
+                        Ver certificación
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
+            {user.socialLinks && Array.isArray(user.socialLinks) && user.socialLinks.length > 0 && (
+              <Section title="Redes sociales">
+                <ul className="list-disc ml-6">
+                  {user.socialLinks.map((link, idx) => (
+                    <li key={idx}>
+                      <span className="font-semibold mr-2">{link.platform}:</span>
+                      <a href={link.url} target="_blank" className="text-conexia-coral underline">
+                        {link.url}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
           </div>
         </div>
 
-        {/* Información en bloques */}
-        <div className="mt-6 space-y-6">
-          {user.description && (
-            <Section title="Descripción">
-              <p>{user.description}</p>
-            </Section>
-          )}
-          {user.birthDate && (
-            <Section title="Fecha de nacimiento">
-              <p>{new Date(user.birthDate).toLocaleDateString()}</p>
-            </Section>
-          )}
-          {isOwner && user.phoneNumber && (
-            <Section title="Número de teléfono">
-              <p>{user.phoneNumber}</p>
-            </Section>
-          )}
-          {Array.isArray(user.skills) && user.skills.length > 0 && (
-            <Section title="Habilidades">
-              <SkillsDisplay skills={user.skills} />
-            </Section>
-          )}
-          {Array.isArray(user.experience) && user.experience.length > 0 && (
-            <Section title="Experiencia">
-              <ul className="ml-2">
-                {user.experience.map((exp, idx) => {
-                  const start = exp.startDate ? new Date(exp.startDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' }) : '';
-                  const end = exp.isCurrent
-                    ? 'Actualidad'
-                    : exp.endDate
-                      ? new Date(exp.endDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' })
-                      : '';
-                  return (
-                    <li key={idx} className="mb-2">
-                      <div className="font-semibold text-conexia-green">{exp.title}</div>
-                      {exp.project && <div className="text-sm text-conexia-coral">{exp.project}</div>}
-                      <div className="text-xs text-gray-500">
-                        {start} - {end}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Section>
-          )}
-          {Array.isArray(user.education) && user.education.length > 0 && (
-            <Section title="Educación">
-              <ul className="ml-2">
-                {user.education.map((edu, idx) => {
-                  const start = edu.startDate ? new Date(edu.startDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' }) : '';
-                  const end = edu.isCurrent
-                    ? 'Actualidad'
-                    : edu.endDate
-                      ? new Date(edu.endDate).toLocaleDateString('es-AR', { year: 'numeric', month: 'short' })
-                      : '';
-                  return (
-                    <li key={idx} className="mb-2">
-                      <div className="font-semibold text-conexia-green">{edu.title}</div>
-                      {edu.institution && <div className="text-sm text-conexia-coral">{edu.institution}</div>}
-                      <div className="text-xs text-gray-500">
-                        {start} - {end}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Section>
-          )}
-          {Array.isArray(user.certifications) && user.certifications.length > 0 && (
-            <Section title="Certificaciones">
-              <ul className="list-disc ml-6">
-                {user.certifications.map((cert, idx) => (
-                  <li key={idx}>
-                    <span className="font-semibold mr-2">{cert.name}:</span>
-                    <a href={cert.url} target="_blank" className="text-conexia-coral underline">
-                      Ver certificación
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-          {user.socialLinks && Array.isArray(user.socialLinks) && user.socialLinks.length > 0 && (
-            <Section title="Redes sociales">
-              <ul className="list-disc ml-6">
-                {user.socialLinks.map((link, idx) => (
-                  <li key={idx}>
-                    <span className="font-semibold mr-2">{link.platform}:</span>
-                    <a href={link.url} target="_blank" className="text-conexia-coral underline">
-                      {link.url}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-
-        </div>
+        {/* Rectángulo de proyectos colaborativos */}
+        <UserCollaborativeProjects userId={id} />
       </div>
-      {/* Botón de volver a la derecha, fuera del contenedor */}
-      <div className="max-w-5xl mx-auto flex justify-end mt-6 mx-6 md:mx-auto pb-14 md:pb-6">
-        <Button variant="primary" onClick={() => router.push('/')}>← Volver a la comunidad</Button>
-      </div>
-      {/* Margen inferior verde */}
-      <div className="bg-conexia-soft w-full" style={{ height: 20 }} />
+  {/* Margen inferior verde */}
+  <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
     </div>
   );
 }
