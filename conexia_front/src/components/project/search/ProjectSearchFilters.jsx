@@ -55,9 +55,10 @@ export default function ProjectSearchFilters({ filters, onChange }) {
     // (mover handleContract fuera del useEffect)
   }, []);
 
-  // Checkbox múltiple para tipo de contrato
+  // Checkbox múltiple para tipo de contrato, pero si seleccionás una específica, se deselecciona 'all'
   const handleContract = (typeId) => {
     let newContracts = Array.isArray(filters.contract) ? [...filters.contract] : [];
+    newContracts = newContracts.filter((id) => id !== 'all');
     if (newContracts.includes(typeId)) {
       newContracts = newContracts.filter((id) => id !== typeId);
     } else {
@@ -66,27 +67,31 @@ export default function ProjectSearchFilters({ filters, onChange }) {
     onChange({ ...filters, contract: newContracts });
   };
 
-  // Checkbox para categorías (solo una seleccionada a la vez, pero visual tipo checkbox)
+  // Checkbox múltiple para categorías, pero si seleccionás una específica, se deselecciona 'all'
   const handleCategory = (catId) => {
-    // Si ya está seleccionada la misma categoría, deseleccionar (volver a "Todas")
-    if (filters.category === catId) {
-      onChange({ ...filters, category: '' });
+    let newCategories = Array.isArray(filters.category) ? [...filters.category] : [];
+    newCategories = newCategories.filter((id) => id !== 'all');
+    if (newCategories.includes(catId)) {
+      newCategories = newCategories.filter((id) => id !== catId);
     } else {
-      onChange({ ...filters, category: catId });
+      newCategories.push(catId);
     }
+    onChange({ ...filters, category: newCategories });
   };
-  // Checkbox múltiple para skills
+  // Checkbox múltiple para skills, pero si seleccionás una específica, se deselecciona 'all'
   const handleSkill = (skillId) => {
-    const currentSkills = Array.isArray(filters.skills) ? filters.skills : [];
+    let currentSkills = Array.isArray(filters.skills) ? [...filters.skills] : [];
+    currentSkills = currentSkills.filter((s) => s !== 'all');
     const exists = currentSkills.includes(skillId);
     onChange({
       ...filters,
       skills: exists ? currentSkills.filter((s) => s !== skillId) : [...currentSkills, skillId],
     });
   };
-  // Checkbox múltiple para tipo de colaboración
+  // Checkbox múltiple para tipo de colaboración, pero si seleccionás una específica, se deselecciona 'all'
   const handleCollab = (typeId) => {
     let newCollabs = Array.isArray(filters.collaboration) ? [...filters.collaboration] : [];
+    newCollabs = newCollabs.filter((id) => id !== 'all');
     if (newCollabs.includes(typeId)) {
       newCollabs = newCollabs.filter((id) => id !== typeId);
     } else {
@@ -126,12 +131,13 @@ export default function ProjectSearchFilters({ filters, onChange }) {
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.category === 'all'}
+                checked={Array.isArray(filters.category) && filters.category.includes('all')}
                 onChange={() => {
-                  if (filters.category === 'all') {
-                    onChange({ ...filters, category: '' });
+                  const currentCategories = Array.isArray(filters.category) ? filters.category : [];
+                  if (currentCategories.includes('all')) {
+                    onChange({ ...filters, category: [] });
                   } else {
-                    onChange({ ...filters, category: 'all' });
+                    onChange({ ...filters, category: ['all'] });
                   }
                 }}
                 className="accent-conexia-green"
@@ -142,7 +148,7 @@ export default function ProjectSearchFilters({ filters, onChange }) {
               <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={filters.category === cat.id}
+                  checked={Array.isArray(filters.category) && filters.category.includes(cat.id)}
                   onChange={() => handleCategory(cat.id)}
                   className="accent-conexia-green"
                 />
