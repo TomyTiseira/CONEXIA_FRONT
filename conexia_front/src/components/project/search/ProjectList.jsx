@@ -77,8 +77,8 @@ export default function ProjectList({ projects, showFinished = false, showInacti
 
         {/* Título */}
         <div className="flex flex-col flex-1 justify-between w-full min-w-0">
-          <div className="h-12 mb-2 flex items-start justify-center">
-            <h3 className="font-bold text-conexia-green text-lg sm:text-xl leading-tight break-words text-center line-clamp-2">
+          <div className="h-10 mb-2 flex items-start justify-center">
+            <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2">
               {project.title}
             </h3>
           </div>

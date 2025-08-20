@@ -34,14 +34,14 @@ export const useRecommendations = () => {
           try {
             const allProjectsResponse = await fetchProjects({
               title: '',
-              category: '',
+              category: [],
               skills: [],
               collaboration: [],
               contract: []
             });
-            
+            const projects = allProjectsResponse.projects || [];
             // Filtrar proyectos donde el usuario no sea el propietario
-            const filteredProjects = allProjectsResponse.filter(project => 
+            const filteredProjects = projects.filter(project => 
               project.userId !== user.id && project.ownerId !== user.id
             );
             const limitedProjects = limitAndCleanProjects(filteredProjects, 20);
@@ -86,40 +86,37 @@ export const useRecommendations = () => {
         // 3. Si el usuario tiene habilidades, obtener recomendaciones
         if (userSkillIds.length > 0) {
           // Usar la función fetchProjects existente que ya funciona
-          const recommendedProjects = await fetchProjects({
+          const recommendedProjectsResponse = await fetchProjects({
             title: '',
-            category: '',
+            category: [],
             skills: userSkillIds,
             collaboration: [],
             contract: []
           });
-
+          const recommendedProjects = recommendedProjectsResponse.projects || [];
           // Filtrar proyectos donde el usuario no sea el propietario
           const filteredProjects = recommendedProjects.filter(project => 
             project.userId !== user.id && project.ownerId !== user.id
           );
-
           // Procesar y limpiar los proyectos - cambiar a 9 para que el carrusel salga completo
           // Asegurar que se ordenen por relevancia de skills
           const sortedProjects = sortProjectsByRelevance(filteredProjects, userSkillIds);
           const processedProjects = limitAndCleanProjects(sortedProjects, 9);
-          
           setRecommendations(processedProjects);
         } else {
           // Si no tiene habilidades, obtener todos los proyectos para mostrar después
           const allProjectsResponse = await fetchProjects({
             title: '',
-            category: '',
+            category: [],
             skills: [],
             collaboration: [],
             contract: []
           });
-          
+          const allProjects = allProjectsResponse.projects || [];
           // Filtrar proyectos donde el usuario no sea el propietario
-          const filteredProjects = allProjectsResponse.filter(project => 
+          const filteredProjects = allProjects.filter(project => 
             project.userId !== user.id && project.ownerId !== user.id
           );
-          
           // Limitar a los primeros 20 proyectos para no sobrecargar
           const limitedProjects = limitAndCleanProjects(filteredProjects, 20);
           setAllProjects(limitedProjects);

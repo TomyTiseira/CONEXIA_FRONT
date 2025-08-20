@@ -40,21 +40,24 @@ export async function fetchProjectById(id) {
 }
 // Servicio para buscar proyectos según filtros
 
-export async function fetchProjects({ title, category, skills, collaboration, contract}) {
+export async function fetchProjects({ title, category, skills, collaboration, contract, page = 1, limit = 12, currentUserId }) {
   try {
     const params = new URLSearchParams();
     if (title) params.append('search', title);
-    if (category) params.append('categoryIds', category);
+    if (category && Array.isArray(category) && category.length > 0) params.append('categoryIds', category.join(','));
     if (skills && Array.isArray(skills) && skills.length > 0) params.append('skillIds', skills.join(','));
     if (collaboration && Array.isArray(collaboration) && collaboration.length > 0) params.append('collaborationTypeIds', collaboration.join(','));
     if (contract && Array.isArray(contract) && contract.length > 0) params.append('contractTypeIds', contract.join(','));
+    if (currentUserId) params.append('currentUserId', currentUserId);
+    params.append('page', page);
+    params.append('limit', limit);
 
     const res = await fetchWithRefresh(`${config.API_URL}/projects?${params.toString()}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
     });
-    
+
     if (!res.ok) {
       let errorMessage = 'Error al obtener proyectos';
       try {
@@ -63,60 +66,49 @@ export async function fetchProjects({ title, category, skills, collaboration, co
       } catch (parseError) {
         errorMessage = `Error ${res.status}: ${res.statusText}`;
       }
-      
       // Si es un error del servidor (5xx), devolver array vacío en lugar de fallar
       if (res.status >= 500) {
-        return [];
+        return { projects: [], pagination: { currentPage: 1, itemsPerPage: limit, totalItems: 0, totalPages: 1 } };
       }
-      
       throw new Error(errorMessage);
     }
-    
+
     const data = await res.json();
-    
     // El backend devuelve { success, data: { projects, pagination } }
-    const projects = data?.data?.projects;
-    if (!Array.isArray(projects)) {
-      return [];
-    }
-    
+    const projects = data?.data?.projects || [];
+    const pagination = data?.data?.pagination || { currentPage: 1, itemsPerPage: limit, totalItems: projects.length, totalPages: 1 };
     // Adaptar los proyectos al formato esperado por la UI
-    return projects.map(p => ({
-      id: p.id,
-      title: p.title,
-      description: p.description,
-      image: p.image,
-      userId: p.userId, // Agregar userId para el filtro de proyectos propios
-      // Si owner es objeto, extraer nombre y/o id
-      owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
-      ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
-      ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
-      // Si category es objeto, extraer nombre
-      category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
-      categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
-      // collaborationType en backend = tipo de contrato en UI
-      contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
-      contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
-      // contractType en backend = tipo de colaboración en UI
-      collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
-      collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
-      // Skills para ordenamiento por relevancia
-      skills: p.skills || p.requiredSkills || [],
-      // Otros campos planos
-      isActive: p.isActive,
-      status: p.status,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      isOwner: p.isOwner,
-    }));
+    return {
+      projects: projects.map(p => ({
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        image: p.image,
+        userId: p.userId,
+        owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
+        ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
+        ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
+        category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
+        categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
+        contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
+        contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
+        collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
+        collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
+        skills: p.skills || p.requiredSkills || [],
+        isActive: p.isActive,
+        status: p.status,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        isOwner: p.isOwner,
+      })),
+      pagination
+    };
   } catch (error) {
-    // Si es un error de red o del servidor, devolver array vacío como fallback
     if (error.message.includes('Internal server error') || 
         error.message.includes('fetch') || 
         error.message.includes('network')) {
-      return [];
+      return { projects: [], pagination: { currentPage: 1, itemsPerPage: limit, totalItems: 0, totalPages: 1 } };
     }
-    
     throw error;
   }
 }

@@ -9,6 +9,7 @@ import { getMyPostulations, cancelPostulation } from '@/service/postulations/pos
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import Pagination from '@/components/common/Pagination';
 import { ROLES } from '@/constants/roles';
+import BackButton from '@/components/ui/BackButton';
 
 export default function MyPostulationsPage() {
   const { user } = useAuth();
@@ -265,12 +266,10 @@ export default function MyPostulationsPage() {
 
           {/* Back Button */}
           <div className="flex justify-start mt-6">
-            <button 
-              className="bg-conexia-green text-white px-4 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
+            <BackButton
+              text="Volver a Proyectos"
               onClick={() => router.push('/project')}
-            >
-              ← Volver a Proyectos
-            </button>
+            />
           </div>
         </div>
       </div>
