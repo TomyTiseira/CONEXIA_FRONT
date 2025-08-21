@@ -1,10 +1,13 @@
-import Navbar from '@/components/navbar/Navbar';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Navbar from '@/components/navbar/Navbar';
+import { MoreVertical } from 'lucide-react';
+import Image from 'next/image';
+import ReportProjectModal from '@/components/project/report/ReportProjectModal';
+import { createProjectReport } from '@/service/reports/reportsFetch';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
-import { useRouter } from 'next/navigation';
 import { ROLES } from '@/constants/roles';
 import DeleteProjectModal from '@/components/project/deleteProject/DeleteProjectModal';
 import { PostulationButton } from '@/components/project/postulation';
@@ -14,9 +17,31 @@ export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
+
+  // Manejar envío de reporte
+  const handleReportSubmit = async ({ reasons, other, description }) => {
+    setReportLoading(true);
+    try {
+      await createProjectReport({
+        projectId,
+        reason: reasons[0] === 'otro' ? 'Otro' : reasons[0],
+        otherReason: reasons[0] === 'otro' ? other : undefined,
+        description,
+      });
+      setShowReportModal(false);
+      // Opcional: mostrar notificación de éxito
+    } catch (err) {
+      // Opcional: mostrar error
+    } finally {
+      setReportLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchProjectById(projectId).then((data) => {
@@ -108,7 +133,39 @@ export default function ProjectDetail({ projectId }) {
             </div>
             {/* Info principal */}
             <div className="flex-1 flex flex-col gap-4 min-w-0">
-              <h1 className="text-3xl font-bold text-conexia-green break-words">{project.title || 'Sin título'}</h1>
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold text-conexia-green break-words">{project.title || 'Sin título'}</h1>
+                {!isOwner && (
+                  <div className="relative">
+                    <button
+                      className="p-2 rounded-full hover:bg-gray-100"
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      aria-label="Más opciones"
+                    >
+                      <MoreVertical size={22} />
+                    </button>
+                    {menuOpen && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-20">
+                        <button
+                          className="w-full flex items-center justify-center px-6 py-3 hover:bg-gray-50 gap-3 text-conexia-coral font-semibold"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            setShowReportModal(true);
+                          }}
+                        >
+                          <span className="flex items-center gap-2">
+                            {/* Icono de signo de exclamación */}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-conexia-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01" />
+                            </svg>
+                            <span>Reportar proyecto</span>
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2 mb-1">
                 {categories.length > 0 && categories.map((cat) => (
                   <span key={cat} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">{cat}</span>
@@ -256,9 +313,7 @@ export default function ProjectDetail({ projectId }) {
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
                 {/* Botón Contactar solo en desktop */}
-                {!isOwner && (
-                  <button className="hidden md:block bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 transition">Contactar</button>
-                )}
+                {/* ...existing code... */}
                 {isOwner ? (
                   <>
                     <button
@@ -298,6 +353,14 @@ export default function ProjectDetail({ projectId }) {
               setShowDeleteModal(false);
               // Opcional: recargar o redirigir
             }}
+          />
+        )}
+        {/* Modal de reporte de proyecto */}
+        {showReportModal && (
+          <ReportProjectModal
+            onCancel={() => setShowReportModal(false)}
+            onSubmit={handleReportSubmit}
+            loading={reportLoading}
           />
         )}
       </div>

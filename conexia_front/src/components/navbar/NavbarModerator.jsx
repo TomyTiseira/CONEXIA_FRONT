@@ -33,9 +33,10 @@ export default function NavbarModerator() {
   };
 
   const navItems = [
-    { label: 'Inicio', href: '/', icon: Home },
-    { label: 'Servicios', href: '#servicios', icon: Briefcase },
-    { label: 'Proyectos', href: '/project/search', icon: Layers },
+  { label: 'Inicio', href: '/', icon: Home },
+  { label: 'Servicios', href: '#servicios', icon: Briefcase },
+  { label: 'Proyectos', href: '/project/search', icon: Layers },
+  { label: 'Reportes', href: '/reports', icon: Bell },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';
