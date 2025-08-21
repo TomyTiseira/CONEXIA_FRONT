@@ -84,7 +84,7 @@ export default function PostulationModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pt-20">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pt-20 pb-20">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -177,6 +177,10 @@ export default function PostulationModal({
                 onClick={() => {
                   setSelectedFile(null);
                   setFileError(null);
+                  // Reset the file input to allow selecting the same file again
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                  }
                 }}
                 className="mt-2 text-sm text-red-600 hover:text-red-800 transition-colors"
               >
@@ -200,10 +204,14 @@ export default function PostulationModal({
             onClick={() => {
               setFileError(null);
               setSelectedFile(null);
+              // Reset the file input
+              if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+              }
               onClose();
             }}
             disabled={loading}
-            className="flex-1 bg-conexia-coral text-white py-3 px-4 rounded-lg font-semibold hover:bg-conexia-coral/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-[#f5f6f6] text-[#777d7d] py-3 px-4 rounded-lg font-semibold hover:bg-[#f1f2f2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-[#e1e4e4]"
           >
             Cancelar
           </button>
@@ -218,7 +226,7 @@ export default function PostulationModal({
                 <span>Enviando...</span>
               </div>
             ) : (
-              'Confirmar postulación'
+              'Confirmar'
             )}
           </button>
         </div>

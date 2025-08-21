@@ -9,6 +9,7 @@ import { getMyPostulations, cancelPostulation } from '@/service/postulations/pos
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import Pagination from '@/components/common/Pagination';
 import { ROLES } from '@/constants/roles';
+import BackButton from '@/components/ui/BackButton';
 
 export default function MyPostulationsPage() {
   const { user } = useAuth();
@@ -202,7 +203,7 @@ export default function MyPostulationsPage() {
                                   setSelectedPostulation(postulation);
                                   setShowCancelModal(true);
                                 }}
-                                className="text-red-600 hover:text-red-800 text-sm font-medium hover:underline"
+                                className="text-[#777d7d] hover:text-[#5f6464] text-sm font-medium hover:underline"
                               >
                                 Cancelar
                               </button>
@@ -265,12 +266,10 @@ export default function MyPostulationsPage() {
 
           {/* Back Button */}
           <div className="flex justify-start mt-6">
-            <button 
-              className="bg-conexia-green text-white px-4 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
+            <BackButton
+              text="Volver a Proyectos"
               onClick={() => router.push('/project')}
-            >
-              ← Volver a Proyectos
-            </button>
+            />
           </div>
         </div>
       </div>
@@ -291,14 +290,14 @@ export default function MyPostulationsPage() {
                   {error}
                 </div>
               )}
-              <div className="flex space-x-3">
+              <div className="flex flex-row space-x-3">
                 <button
                   onClick={() => {
                     setShowCancelModal(false);
                     setSelectedPostulation(null);
                     setError('');
                   }}
-                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded font-medium hover:bg-gray-400 transition"
+                  className="flex-1 bg-[#f5f6f6] text-[#777d7d] px-4 py-2 rounded font-medium hover:bg-[#f1f2f2] transition border border-[#e1e4e4]"
                   disabled={cancelling}
                 >
                   Volver

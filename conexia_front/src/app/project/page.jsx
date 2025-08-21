@@ -53,7 +53,7 @@ export default function ProjectMainPage() {
               </Link>
               
               <Link href="/project/my-postulations">
-                <button className="bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-blue-700 transition font-semibold text-lg">
+                <button className="bg-[#e4f1f1] text-conexia-green px-6 py-3 rounded-xl shadow-lg hover:bg-[#d6ebeb] transition font-semibold text-lg">
                   Mis postulaciones
                 </button>
               </Link>

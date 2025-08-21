@@ -4,10 +4,28 @@ import Image from 'next/image';
 import { config } from '@/config';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCarouselNavigation } from '@/hooks/project/useCarouselNavigation';
+import { isProjectFinished } from '@/utils/postulationValidation';
 
 export default function RecommendationsCarousel({ projects, onProjectClick }) {
+  // Mapear endDate: si no viene, poner null
+  const normalizedProjects = (projects || []).map(p => ({ ...p, endDate: p.endDate ?? null }));
+  // Log de depuración para ver todos los proyectos y sus fechas de fin
+  if (normalizedProjects.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log('Proyectos recibidos en RecommendationsCarousel:', normalizedProjects.map(p => ({ id: p.id, title: p.title, endDate: p.endDate })));
+  }
   const router = useRouter();
-  
+
+  // Filtrar proyectos finalizados y log para depuración
+  const filteredProjects = normalizedProjects.filter(project => {
+    const finished = isProjectFinished(project);
+    if (finished) {
+      // eslint-disable-next-line no-console
+      console.log('Proyecto filtrado por finalizado:', project.title, project.endDate);
+    }
+    return !finished;
+  });
+
   const {
     currentPage,
     totalPages,
@@ -19,7 +37,7 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
     getCurrentItems,
     getCurrentItemMobile,
     goToPage
-  } = useCarouselNavigation(projects.length, 3, 1);
+  } = useCarouselNavigation(filteredProjects.length, 3, 1);
   // Función para mostrar primer nombre y primer apellido
   const getShortName = (fullName) => {
     if (!fullName) return 'Usuario';
@@ -38,7 +56,7 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
     return `${names[0]} ${names[1]}`;
   };
 
-  if (!projects || projects.length === 0) {
+  if (!filteredProjects || filteredProjects.length === 0) {
     return null;
   }
 
@@ -167,7 +185,7 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
           Proyectos recomendados para ti
         </h2>
         <div className="text-sm text-conexia-green/70">
-          {projects.length} {projects.length === 1 ? 'proyecto' : 'proyectos'}
+          {filteredProjects.length} {filteredProjects.length === 1 ? 'proyecto' : 'proyectos'}
         </div>
       </div>
 
@@ -176,7 +194,7 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
         <div className="relative">
           {/* Contenedor de proyectos */}
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch w-full">
-            {getCurrentItems(projects).map(project => (
+            {getCurrentItems(filteredProjects).map(project => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>
@@ -225,8 +243,8 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
         <div className="relative">
           {/* Contenedor de proyecto */}
           <div className="w-full">
-            {getCurrentItemMobile(projects) && (
-              <ProjectCard project={getCurrentItemMobile(projects)} isMobile={true} />
+            {getCurrentItemMobile(filteredProjects) && (
+              <ProjectCard project={getCurrentItemMobile(filteredProjects)} isMobile={true} />
             )}
           </div>
 

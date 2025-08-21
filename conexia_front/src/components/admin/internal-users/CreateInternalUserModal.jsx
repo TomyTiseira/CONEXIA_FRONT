@@ -157,7 +157,7 @@ export default function CreateInternalUserModal({ onClose, onUserCreated }) {
             <Button type="submit" variant="primary" disabled={loading}>
               {loading ? 'Creando...' : 'Aceptar'}
             </Button>
-            <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
+            <Button type="button" variant="cancel" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
           </div>
