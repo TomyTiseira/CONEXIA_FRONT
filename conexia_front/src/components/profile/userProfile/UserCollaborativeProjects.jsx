@@ -6,7 +6,7 @@ import { fetchMyProjects } from '@/service/projects/projectsFetch';
 import ProjectList from '@/components/project/search/ProjectList';
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
-import { Users } from 'lucide-react';
+import { HiUserGroup } from 'react-icons/hi';
 
 export default function UserCollaborativeProjects({ userId }) {
   const { user: authUser } = useAuth();
@@ -53,7 +53,7 @@ export default function UserCollaborativeProjects({ userId }) {
     <div className="mt-8">
       <div className="bg-white border border-[#e0e0e0] rounded-xl shadow-md p-4 md:p-6 flex flex-col gap-2">
         <div className="flex items-center gap-2 mb-1">
-          <Users className="w-6 h-6 text-conexia-green" strokeWidth={2.2} />
+          <HiUserGroup className="w-6 h-6 text-conexia-green" />
           <h3 className="text-base md:text-lg font-bold text-conexia-green">
             {isOwner ? 'Mis Proyectos Colaborativos' : `Proyectos colaborativos`}
           </h3>

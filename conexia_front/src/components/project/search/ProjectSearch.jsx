@@ -9,6 +9,9 @@ import { useRecommendations } from '@/hooks/project/useRecommendations';
 import { limitAndCleanProjects } from '@/utils/recommendationsUtils';
 
 import Navbar from '@/components/navbar/Navbar';
+import { FaRegLightbulb } from 'react-icons/fa';
+import { HiOutlineClipboardList } from 'react-icons/hi';
+import { MdCleaningServices } from 'react-icons/md';
 import ProjectSearchFilters from './ProjectSearchFilters';
 import ProjectSearchBar from './ProjectSearchBar';
 import ProjectList from './ProjectList';
@@ -196,17 +199,23 @@ export default function ProjectSearch() {
           {(roleName === ROLES.USER || user?.roleId === 2) && (
             <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
               <button
-                className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap"
+                className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"
                 onClick={() => router.push('/project/create')}
               >
-                Publica tu proyecto
+                <span className="flex items-center justify-center gap-2 w-full">
+                  <FaRegLightbulb className="text-base" />
+                  <span>Publica tu proyecto</span>
+                </span>
               </button>
               {roleName === ROLES.USER && (
                 <button
-                  className="bg-[#367d7d] text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-[#2b6a6a] transition text-sm whitespace-nowrap"
+                  className="bg-[#367d7d] text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-[#2b6a6a] transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"
                   onClick={() => router.push('/project/my-postulations')}
                 >
-                  Mis postulaciones
+                  <span className="flex items-center justify-center gap-2 w-full">
+                    <HiOutlineClipboardList className="text-lg" />
+                    <span>Mis postulaciones</span>
+                  </span>
                 </button>
               )}
             </div>
@@ -219,7 +228,7 @@ export default function ProjectSearch() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-conexia-green">Filtrar por</h2>
                 <button
-                  className="ml-2 px-2 py-1 rounded-md border border-conexia-green text-conexia-green hover:bg-conexia-green hover:text-white transition-colors text-xs font-semibold flex items-center gap-1"
+                  className="ml-1 px-1.5 py-1 rounded border border-conexia-green text-conexia-green hover:bg-conexia-green hover:text-white transition-colors text-xs font-semibold flex items-center gap-1"
                   title="Limpiar filtros"
                   onClick={() => {
                     const emptyFilters = {
@@ -232,19 +241,8 @@ export default function ProjectSearch() {
                     handleSearch(emptyFilters);
                   }}
                 >
-                  {/* SVG escobillón personalizado*/}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 225 225" width="20" height="20" className="inline-block align-middle">
-                    <g transform="translate(0,225) scale(0.1,-0.1)" fill="#b45309" stroke="none">
-                      <path d="M1940 2025 l-44 -45 40 -41 40 -40 47 48 c26 26 47 51 47 54 0 12-61 69-74 69-6 0-32-20-56-45z"/>
-                      <path d="M1675 1760 l-180 -180 43 -42 42 -43 182 182 182 183-39 40 c-21 22-42 40-45 40-3 0-86-81-185-180z"/>
-                      <path d="M1275 1360 l-180 -180 43 -42 42 -43 182 182 182 183-39 40 c-21 22-42 40-45 40-3 0-86-81-185-180z"/>
-                      <path d="M1012 1097 l-52 -53 43 -42 43 -42 52 53 52 53-43 42-43 42-52-53z"/>
-                      <path d="M565 990 l-50 -50 213 -212 212 -213 45 45 c78 77 83 67-136 286-126 126-201 194-214 194-12 0-43-22-70-50z"/>
-                      <path d="M837 1002 l-37 -38 83 -82 83 -82 32 33 c18 18 32 42 32 53 0 20-128 154-147 154-5 0-26-17-46-38z"/>
-                      <path d="M401 840 c-41 -27-105 -62-143 -77-37 -15-68 -31-68 -34 0-3 10-15 23-26 l22-21 73 23 c40 13 99 39 132 58 52 31 61 34 77 21 17-13 16-15-12-39-35-30-144-83-186-92-16-3-31-9-34-13-2-4 16-26 41-51 52-51 42-54 179 55 79 63 88 67 103 53 14-15 14-18-4-38-10-12-59-51-107-87 l-88-66 48-48 c26-26 50-45 53-40 4 4 32 41 62 82 66 89 103 125 117 115 21-12 10-36-52-115-100-126-98-121-45-178 l45-48 18 55 c29 93 91 201 116 201 25 0 17-37-25-122-25-51-49-112-54-135-9-37-7-44 12-62 26-24 36-26 36-8 0 20 63 147 110 221 l43 68-199 199 c-109 109-203 199-209 198-5 0-43-23-84-49z"/>
-                    </g>
-                  </svg>
-                  Limpiar filtros
+                  <MdCleaningServices className="w-4 h-4" />
+                  <span className="hidden sm:inline">Limpiar filtros</span>
                 </button>
               </div>
               <ProjectSearchFilters filters={filters} onChange={handleSearch} />
@@ -269,9 +267,14 @@ export default function ProjectSearch() {
                     
                     {/* Mostrar todos los proyectos siempre cuando no hay recomendaciones */}
                     <div className="mt-8">
-                      <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                        Todos los proyectos
-                      </h2>
+                      {/* Proyectos recomendados para ti - mobile: título arriba, cantidad abajo; desktop: igual que antes */}
+                      <>
+                        {/* Título y cantidad apilados y centrados en todas las vistas */}
+                        <div className="mb-4 flex flex-col items-center w-full">
+                          <div className="text-lg xs:text-xl font-semibold text-gray-800 text-center">Proyectos recomendados para ti</div>
+                          <div className="text-conexia-green text-sm xs:text-base font-medium text-center mt-1">{recommendations?.length || 0} proyecto{(recommendations?.length === 1) ? '' : 's'}</div>
+                        </div>
+                      </>
                       {isLoadingAllProjects ? (
                         <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
                       ) : allProjectsList.length > 0 ? (
@@ -328,9 +331,14 @@ export default function ProjectSearch() {
                 <div className="mb-6">
                   <button
                     onClick={handleClearFilters}
-                    className="text-conexia-green hover:text-conexia-green-dark text-sm font-medium flex items-center gap-2"
+                    className="text-conexia-green hover:text-conexia-green-dark text-sm font-medium flex items-center gap-1"
                   >
-                    ← Ver recomendaciones
+                    <svg className="w-5 h-5 mr-1" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="10" cy="10" r="8.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                      <line x1="6.5" y1="10" x2="13.5" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <polyline points="9,7 6,10 9,13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    Ver recomendaciones
                   </button>
                 </div>
 

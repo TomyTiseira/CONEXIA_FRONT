@@ -14,13 +14,47 @@ export default function ProjectSearchFilters({ filters, onChange }) {
   const [loading, setLoading] = useState(true);
 
   // Estados para controlar qué secciones están expandidas
-  const [expandedSections, setExpandedSections] = useState({
-    category: true,
-    skills: true,
-    contract: true,
-    collaboration: true,
+  const [expandedSections, setExpandedSections] = useState(() => {
+    // Por defecto: colapsado en mobile, expandido en desktop
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return {
+        category: false,
+        skills: false,
+        contract: false,
+        collaboration: false,
+      };
+    } else {
+      return {
+        category: true,
+        skills: true,
+        contract: true,
+        collaboration: true,
+      };
+    }
   });
 
+  // Si el usuario cambia el tamaño de la ventana, actualizar el estado solo la primera vez
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setExpandedSections(sections => ({
+          category: false,
+          skills: false,
+          contract: false,
+          collaboration: false,
+        }));
+      } else {
+        setExpandedSections(sections => ({
+          category: true,
+          skills: true,
+          contract: true,
+          collaboration: true,
+        }));
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
       ...prev,
