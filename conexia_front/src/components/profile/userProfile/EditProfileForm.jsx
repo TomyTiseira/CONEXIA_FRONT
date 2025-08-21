@@ -8,7 +8,7 @@ import InputField from "@/components/form/InputField";
 import Button from "@/components/ui/Button";
 import TextArea from "@/components/form/InputField";
 import { config } from "@/config";
-import SkillsSelector from "@/components/skills/SkillsSelector";
+import RubroSkillsSelector from "@/components/skills/RubroSkillsSelector";
 import Image from "next/image";
 import { validateSimplePhone, isValidDate, isCurrentOrFutureDate, calculateAge } from "@/utils/validation";
 import { isValidURL } from "@/components/utils/validations/urls";
@@ -734,7 +734,14 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
       return;
     }
     
-    onSubmit(form);
+    // Unir las skills originales del usuario con las seleccionadas en el formulario, evitando duplicados
+    const originalSkills = user.skills || [];
+    const formSkills = form.skills || [];
+    const allSkills = [
+      ...originalSkills,
+      ...formSkills.filter(s => !originalSkills.some(os => os.id === s.id))
+    ];
+    onSubmit({ ...form, skills: allSkills });
   }
 
   const { user: authUser } = useAuth();
@@ -938,9 +945,22 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           {/* Habilidades */}
           <div className="-mt-6">
             <label className="block font-medium text-conexia-green mb-1">Habilidades (Opcional)</label>
-            <SkillsSelector
+            <RubroSkillsSelector
               selectedSkills={form.skills}
-              onSkillsChange={(newSkills) => setForm(prev => ({ ...prev, skills: newSkills }))}
+              onSkillsChange={(newSkills) => {
+                setForm(prev => {
+                  // Unir las skills actuales con las nuevas, evitando duplicados por id
+                  const allSkills = [...prev.skills];
+                  newSkills.forEach(skill => {
+                    if (!allSkills.some(s => s.id === skill.id)) {
+                      allSkills.push(skill);
+                    }
+                  });
+                  // Si el usuario deselecciona, quitar las que no están en newSkills
+                  const filtered = allSkills.filter(s => newSkills.some(ns => ns.id === s.id));
+                  return { ...prev, skills: filtered };
+                });
+              }}
               maxSkills={20}
             />
           </div>
