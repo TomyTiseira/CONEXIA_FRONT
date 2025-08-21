@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Navbar from '@/components/navbar/Navbar';
 import { MoreVertical } from 'lucide-react';
 import Image from 'next/image';
@@ -357,7 +356,23 @@ export default function ProjectDetail({ projectId }) {
         {showReportModal && (
           <ReportProjectModal
             onCancel={() => setShowReportModal(false)}
-            onSubmit={handleReportSubmit}
+            onSubmit={async (data) => {
+              setReportLoading(true);
+              try {
+                await createProjectReport({
+                  projectId,
+                  reason: data.reasons[0],
+                  otherReason: data.other,
+                  description: data.description,
+                });
+                setShowReportModal(false);
+                // Opcional: mostrar mensaje de éxito
+              } catch (err) {
+                // Opcional: mostrar mensaje de error
+              } finally {
+                setReportLoading(false);
+              }
+            }}
             loading={reportLoading}
           />
         )}
