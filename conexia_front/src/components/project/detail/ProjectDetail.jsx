@@ -19,6 +19,9 @@ export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
@@ -368,24 +371,35 @@ export default function ProjectDetail({ projectId }) {
         {showReportModal && (
           <ReportProjectModal
             onCancel={() => setShowReportModal(false)}
-            onSubmit={async (data) => {
+            loading={reportLoading}
+            onSubmit={async (data, setMsg) => {
               setReportLoading(true);
+              setMsg(null);
               try {
                 await createProjectReport({
-                  projectId,
-                  reason: data.reasons[0],
+                  projectId: Number(projectId),
+                  reason: data.reason,
                   otherReason: data.other,
                   description: data.description,
                 });
-                setShowReportModal(false);
-                // Opcional: mostrar mensaje de éxito
+                setMsg({ ok: true, text: 'Proyecto reportado con éxito.' });
+                setTimeout(() => setShowReportModal(false), 1500);
               } catch (err) {
-                // Opcional: mostrar mensaje de error
+                // Interceptar mensaje exacto del backend
+                const alreadyReportedRegex = /Project with id \d+ has already been reported by user \d+/;
+                if (
+                  (err.message && err.message.toLowerCase().includes('conflict')) ||
+                  (err.message && alreadyReportedRegex.test(err.message))
+                ) {
+                  setMsg({ ok: false, text: 'Ya has reportado este proyecto.' });
+                  setTimeout(() => setShowReportModal(false), 1500);
+                } else {
+                  setMsg({ ok: false, text: err.message || 'Error al reportar el proyecto' });
+                }
               } finally {
                 setReportLoading(false);
               }
             }}
-            loading={reportLoading}
           />
         )}
       </div>

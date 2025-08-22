@@ -29,7 +29,7 @@ export default function ProjectSearch() {
   
   const [filters, setFilters] = useState({
     title: '',
-    category: '',
+    category: [],
     skills: [],
     collaboration: [],
     contract: [],
@@ -89,19 +89,21 @@ export default function ProjectSearch() {
   useEffect(() => {
     const applyFilters = async () => {
       // Detectar filtros "Todas" específicamente
-      const hasAllFilters = 
-        pendingFilters.category === 'all' ||
-        (Array.isArray(pendingFilters.skills) && pendingFilters.skills.includes('all')) ||
-        (Array.isArray(pendingFilters.collaboration) && pendingFilters.collaboration.includes('all')) ||
-        (Array.isArray(pendingFilters.contract) && pendingFilters.contract.includes('all'));
+
+      const isAll = arr => Array.isArray(arr) && arr.length === 1 && arr[0] === 'all';
+      const hasAllFilters =
+        isAll(pendingFilters.category) ||
+        isAll(pendingFilters.skills) ||
+        isAll(pendingFilters.collaboration) ||
+        isAll(pendingFilters.contract);
 
       // Detectar otros filtros activos (no "Todas")
-      const hasActiveFilters = 
+      const hasActiveFilters =
         pendingFilters.title.trim() !== '' ||
-        (pendingFilters.category !== '' && pendingFilters.category !== 'all') ||
-        (Array.isArray(pendingFilters.skills) && pendingFilters.skills.length > 0 && !pendingFilters.skills.includes('all')) ||
-        (Array.isArray(pendingFilters.collaboration) && pendingFilters.collaboration.length > 0 && !pendingFilters.collaboration.includes('all')) ||
-        (Array.isArray(pendingFilters.contract) && pendingFilters.contract.length > 0 && !pendingFilters.contract.includes('all'));
+        (Array.isArray(pendingFilters.category) && pendingFilters.category.length > 0 && !isAll(pendingFilters.category)) ||
+        (Array.isArray(pendingFilters.skills) && pendingFilters.skills.length > 0 && !isAll(pendingFilters.skills)) ||
+        (Array.isArray(pendingFilters.collaboration) && pendingFilters.collaboration.length > 0 && !isAll(pendingFilters.collaboration)) ||
+        (Array.isArray(pendingFilters.contract) && pendingFilters.contract.length > 0 && !isAll(pendingFilters.contract));
 
       if (hasAllFilters && !hasActiveFilters) {
         // Si es "todas" (sin otros filtros), usar allProjectsList y paginar en frontend
@@ -123,7 +125,7 @@ export default function ProjectSearch() {
         setSearched(true);
         setShowRecommendations(false);
         // Normalizar filtros: si el array contiene 'all', enviar array vacío
-        const normalizeArray = (arr) => Array.isArray(arr) ? (arr.includes('all') ? [] : arr) : [];
+  const normalizeArray = (arr) => Array.isArray(arr) ? (arr.length === 1 && arr[0] === 'all' ? [] : arr) : [];
         const params = {
           title: pendingFilters.title,
           category: normalizeArray(pendingFilters.category),
@@ -164,7 +166,7 @@ export default function ProjectSearch() {
   const handleClearFilters = () => {
     const emptyFilters = {
       title: '',
-      category: '',
+      category: [],
       skills: [],
       collaboration: [],
       contract: [],

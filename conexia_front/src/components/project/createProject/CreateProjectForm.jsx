@@ -11,7 +11,7 @@ import { useCreateProject } from '@/hooks/project/useCreateProject';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
 import DateRangePicker from '@/components/form/DateRangePicker';
-import SkillsSelector from '@/components/skills/SkillsSelector';
+import RubroSkillsSelector from '@/components/skills/RubroSkillsSelector';
 import Button from '@/components/ui/Button';
 import LocalitySelector from '@/components/localities/LocalitySelector';
 
@@ -268,7 +268,7 @@ export default function CreateProjectForm() {
           Habilidades requeridas (Opcional)
         </label>
         <div className="min-h-[110px]">
-          <SkillsSelector selectedSkills={form.skills} onSkillsChange={handleSkillsChange} />
+          <RubroSkillsSelector selectedSkills={form.skills} onSkillsChange={handleSkillsChange} />
         </div>
       </div>
 
