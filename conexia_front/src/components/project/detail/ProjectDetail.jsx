@@ -115,7 +115,62 @@ export default function ProjectDetail({ projectId }) {
           }}
           aria-hidden="true"
         ></div>
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative mt-4">
+  <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative mt-4">
+          {/* Botón tres puntos: mobile absolute en la esquina del card */}
+          {!isOwner && !alreadyReported && (
+            <div className="block md:hidden">
+              <div className="absolute top-4 right-4 z-30">
+                <button
+                  className="p-2 rounded-full hover:bg-gray-100"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  aria-label="Más opciones"
+                >
+                  <MoreVertical size={22} />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40">
+                      {roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR ? (
+                        <Button
+                          variant="edit"
+                          className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            router.push(`/reports/project/${projectId}`);
+                          }}
+                        >
+                          <span className="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Ver reportes</span>
+                          </span>
+                        </Button>
+                      ) : (
+                        !alreadyReported && (
+                          <button
+                            className="w-full flex items-center justify-center px-6 py-3 hover:bg-conexia-green/10 gap-3 text-conexia-green font-semibold"
+                            onClick={() => {
+                              setMenuOpen(false);
+                              setShowReportModal(true);
+                            }}
+                          >
+                            <span className="flex items-center gap-2">
+                              {/* Icono advertencia simple */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <circle cx="12" cy="16" r="1.2" fill="currentColor" />
+                                <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                              </svg>
+                              <span>Reportar proyecto</span>
+                            </span>
+                          </button>
+                        )
+                      )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <div className="flex flex-col md:flex-row gap-10">
             {/* Imagen */}
             <div className="flex flex-col items-center md:items-start w-full md:w-56">
@@ -141,10 +196,11 @@ export default function ProjectDetail({ projectId }) {
             </div>
             {/* Info principal */}
             <div className="flex-1 flex flex-col gap-4 min-w-0">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between relative">
                 <h1 className="text-3xl font-bold text-conexia-green break-words">{project.title || 'Sin título'}</h1>
+                {/* Menú tres puntos: solo desktop aquí */}
                 {!isOwner && !alreadyReported && (
-                  <div className="relative">
+                  <div className="hidden md:block relative">
                     <button
                       className="p-2 rounded-full hover:bg-gray-100"
                       onClick={() => setMenuOpen(!menuOpen)}
@@ -173,15 +229,18 @@ export default function ProjectDetail({ projectId }) {
                           ) : (
                             !alreadyReported && (
                               <button
-                                className="w-full flex items-center justify-center px-6 py-3 hover:bg-gray-50 gap-3 text-conexia-coral font-semibold"
+                                className="w-full flex items-center justify-center px-6 py-3 hover:bg-conexia-green/10 gap-3 text-conexia-green font-semibold"
                                 onClick={() => {
                                   setMenuOpen(false);
                                   setShowReportModal(true);
                                 }}
                               >
                                 <span className="flex items-center gap-2">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-conexia-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01" />
+                                  {/* Icono advertencia simple */}
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                                    <circle cx="12" cy="16" r="1.2" fill="currentColor" />
+                                    <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
                                   </svg>
                                   <span>Reportar proyecto</span>
                                 </span>
