@@ -11,18 +11,34 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ROLES } from '@/constants/roles';
 import DeleteProjectModal from '@/components/project/deleteProject/DeleteProjectModal';
 import { PostulationButton } from '@/components/project/postulation';
+import Button from '@/components/ui/Button';
+import BackButton from '@/components/ui/BackButton';
 import { ProjectValidationStatus } from '@/components/project/validation';
 
 export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportLoading, setReportLoading] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageSent, setMessageSent] = useState(false);
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Simulación de envío de mensaje
+  const handleSendMessage = async () => {
+    if (!messageText.trim()) return;
+    setSendingMessage(true);
+    setTimeout(() => {
+      setSendingMessage(false);
+      setMessageSent(true);
+      setMessageText("");
+      setTimeout(() => setMessageSent(false), 2500);
+    }, 1200);
+  };
+
 
   useEffect(() => {
     fetchProjectById(projectId).then((data) => {
@@ -72,23 +88,22 @@ export default function ProjectDetail({ projectId }) {
   return (
     <>
       <Navbar />
-      <div className="min-h-[calc(100vh-64px)] relative py-8 px-6 md:px-6 flex flex-col items-center overflow-x-hidden bg-[#f3f9f8] pb-20 md:pb-8">
-        {/* Fondo decorativo */}
-        <div className="pointer-events-none select-none fixed inset-0 w-screen h-screen z-0">
-          <img
-            src="/window.svg"
-            alt="Decoración fondo"
-            className="absolute top-[-120px] left-[-120px] w-[500px] opacity-20 rotate-12"
-            aria-hidden="true"
-          />
-          <img
-            src="/globe.svg"
-            alt="Decoración fondo"
-            className="absolute bottom-[-100px] right-[-100px] w-[400px] opacity-10"
-            aria-hidden="true"
-          />
-        </div>
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative">
+      <div 
+        className="min-h-[calc(100vh-64px)] relative py-8 px-6 md:px-6 flex flex-col items-center overflow-x-hidden pb-20 md:pb-8 bg-[#f3f9f8]"
+      >
+        {/* Fondo decorativo imagen cubriendo todo */}
+        <div 
+          className="absolute inset-0 w-full h-full z-0"
+          style={{
+            backgroundImage: 'url(/project_funds.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: 0.25
+          }}
+          aria-hidden="true"
+        ></div>
+        <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative mt-4">
           <div className="flex flex-col md:flex-row gap-10">
             {/* Imagen */}
             <div className="flex flex-col items-center md:items-start w-full md:w-56">
@@ -234,6 +249,47 @@ export default function ProjectDetail({ projectId }) {
                   <span className="text-xs text-gray-500">Dueño del proyecto</span>
                 </div>
               </div>
+
+              {/* Mensaje al creador tipo Facebook mejorado y responsivo, alineado y compacto */}
+              {!isOwner && (
+                <div className="mt-1 w-full">
+                  <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-row items-center gap-2 shadow-sm" style={{boxShadow: '0 2px 8px 0 rgba(0,0,0,0.03)'}}>
+                    <div className="flex-1 w-full flex flex-col">
+                      <label htmlFor="mensajeCreador" className="flex items-center gap-1 font-semibold text-conexia-green mb-1 text-[11px] md:text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 md:w-5 md:h-5 text-conexia-green">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-.659 1.591l-7.5 7.5a2.25 2.25 0 01-3.182 0l-7.5-7.5A2.25 2.25 0 012.25 6.993V6.75" />
+                        </svg>
+                        <span className="truncate">Envía un mensaje al creador del proyecto</span>
+                      </label>
+                      <div className="flex flex-row items-center gap-2 w-full">
+                        <input
+                          id="mensajeCreador"
+                          type="text"
+                          placeholder="Escribe tu consulta..."
+                          className="w-full rounded-lg px-3 py-2 bg-white border border-gray-300 focus:outline-none focus:border-gray-500 text-[11px] md:text-sm text-gray-800 transition-all duration-150"
+                          value={messageText}
+                          onChange={e => setMessageText(e.target.value)}
+                          maxLength={300}
+                          style={{minHeight: '34px'}}
+                        />
+                        <Button
+                          type="button"
+                          variant="neutral"
+                          className="text-[11px] md:text-sm px-4 md:px-5 py-2 rounded-lg [&:disabled]:opacity-100"
+                          onClick={handleSendMessage}
+                          disabled={!messageText.trim() || sendingMessage}
+                          style={{minWidth: '70px', height: '34px'}}
+                        >
+                          Enviar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  {messageSent && (
+                    <div className="mt-2 text-green-600 text-sm font-medium">¡Mensaje enviado al creador!</div>
+                  )}
+                </div>
+              )}
               
               {/* Estado de validación del proyecto */}
               <ProjectValidationStatus
@@ -245,98 +301,54 @@ export default function ProjectDetail({ projectId }) {
             </div>
           </div>
           {/* Fila de botones que abarca ambas columnas */}
-          <div className="mt-6 flex flex-col md:flex-row gap-4 md:gap-0">
-            {/* Columna izquierda - Botón Atrás alineado con la imagen */}
-            <div className="w-full md:w-56 flex justify-start">
-              <div className="flex gap-3">
-                <button 
-                  className="bg-[#eef6f6] text-conexia-green px-3 py-2 rounded font-semibold hover:bg-[#e0f0f0] transition text-sm border border-[#c6e3e4]"
-                  onClick={() => {
-                    // Lógica de navegación según origen
-                    const from = searchParams.get('from');
-                    if (from === 'user-projects' && project.ownerId) {
-                      router.push(`/projects/user/${project.ownerId}`);
-                    } else if (from === 'my-projects' && user && user.id) {
-                      router.push(`/projects/user/${user.id}`);
-                    } else {
-                      router.push('/project/search');
-                    }
-                  }}
-                >
-                  ← Atrás
-                </button>
-                {/* Botones Contactar y Postularse en mobile */}
-                {!isOwner && (
-                  <>
-                    <button className="md:hidden bg-blue-600 text-white px-3 py-2 rounded font-semibold hover:bg-blue-700 transition text-sm">Contactar</button>
-                    <PostulationButton
-                      projectId={projectId}
-                      projectTitle={project.title}
-                      project={project}
-                      isOwner={isOwner}
-                      userRole={roleName}
-                      initialIsApplied={project.isApplied || false}
-                      className="md:hidden text-sm px-3 py-2"
-                    />
-                  </>
-                )}
-                {/* Botones Ver Postulaciones y Eliminar proyecto en mobile */}
-                {isOwner && (
-                  <>
-                    <button
-                      className="md:hidden bg-conexia-green text-white px-3 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
-                      onClick={() => router.push(`/project/${projectId}/postulations`)}
-                    >
-                      Ver Postulaciones
-                    </button>
-                    {!project.isActive || !project.deletedAt && (
-                      <button
-                        className="md:hidden bg-conexia-coral text-white px-3 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
-                        onClick={() => setShowDeleteModal(true)}
-                      >
-                        Eliminar proyecto
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
+          <div className="mt-6 w-full flex flex-row items-end justify-between gap-2">
+            {/* Botón Atrás extremo izquierdo */}
+            <div className="flex-shrink-0">
+              <BackButton
+                onClick={() => {
+                  // Lógica de navegación según origen
+                  const from = searchParams.get('from');
+                  if (from === 'user-projects' && project.ownerId) {
+                    router.push(`/projects/user/${project.ownerId}`);
+                  } else if (from === 'my-projects' && user && user.id) {
+                    router.push(`/projects/user/${user.id}`);
+                  } else {
+                    router.push('/project/search');
+                  }
+                }}
+              />
             </div>
-            {/* Espacio entre columnas - solo en desktop */}
-            <div className="hidden md:block md:w-6"></div>
-            {/* Columna derecha - Otros botones alineados a la izquierda */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-                {/* Botón Contactar solo en desktop */}
-                {/* ...existing code... */}
-                {isOwner ? (
-                  <>
+            {/* Botones a la derecha: apilados en mobile, en fila en desktop */}
+            <div className="flex flex-col md:flex-row items-end gap-2">
+              {!isOwner && (
+                <PostulationButton
+                  projectId={projectId}
+                  projectTitle={project.title}
+                  project={project}
+                  isOwner={isOwner}
+                  userRole={roleName}
+                  initialIsApplied={project.isApplied || false}
+                  className="text-sm px-3 py-2"
+                />
+              )}
+              {isOwner && (
+                <>
+                  <button
+                    className="bg-conexia-green text-white px-3 md:px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
+                    onClick={() => router.push(`/project/${projectId}/postulations`)}
+                  >
+                    Ver Postulaciones
+                  </button>
+                  {!project.isActive || !project.deletedAt && (
                     <button
-                      className="hidden md:block bg-conexia-green text-white px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition"
-                      onClick={() => router.push(`/project/${projectId}/postulations`)}
+                      className="bg-conexia-coral text-white px-3 md:px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
+                      onClick={() => setShowDeleteModal(true)}
                     >
-                      Ver Postulaciones
+                      Eliminar proyecto
                     </button>
-                    {!project.isActive || !project.deletedAt && (
-                      <button
-                        className="hidden md:block bg-conexia-coral text-white px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition"
-                        onClick={() => setShowDeleteModal(true)}
-                      >
-                        Eliminar proyecto
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <PostulationButton
-                    projectId={projectId}
-                    projectTitle={project.title}
-                    project={project}
-                    isOwner={isOwner}
-                    userRole={roleName}
-                    initialIsApplied={project.isApplied || false}
-                    className="hidden md:block"
-                  />
-                )}
-              </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

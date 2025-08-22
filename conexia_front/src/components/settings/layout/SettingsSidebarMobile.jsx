@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { User, ShieldCheck, Eye } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import BackButton from '@/components/ui/BackButton';
 
 const sections = [
   { id: 'account', label: 'Cuenta', icon: User, path: '/settings/account' },
@@ -37,13 +38,10 @@ export default function SettingsSidebarMobile({ active, onChange }) {
         ))}
       </ul>
       <div className="mt-4 flex justify-center">
-        <Button
+        <BackButton
           onClick={() => handleClick('/')}
-          variant="informative"
-          className="w-fit"
-        >
-          Volver al inicio
-        </Button>
+          text="Volver al inicio"
+        />
       </div>
     </div>
   );
