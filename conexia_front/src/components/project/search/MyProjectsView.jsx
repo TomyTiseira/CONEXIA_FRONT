@@ -16,9 +16,10 @@ export default function MyProjectsView({ userId }) {
   const router = useRouter();
   const [showInactive, setShowInactive] = useState(false);
   const [projects, setProjects] = useState([]);
+  const [pagination, setPagination] = useState({ currentPage: 1, itemsPerPage: 12, totalItems: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const pageSize = 16;
+  const pageSize = 12;
 
   // Determinar si el usuario autenticado es el dueño de los proyectos que se están viendo
   const isOwner = authUser && userId && String(authUser.id) === String(userId);
@@ -27,13 +28,17 @@ export default function MyProjectsView({ userId }) {
     if (!userId && !authUser) return;
     async function load() {
       setLoading(true);
-      // Si showInactive es true, pasar false para incluir eliminados; si es false, pasar true para solo activos
-      const res = await fetchMyProjects({ ownerId: userId , active: !showInactive});
-      setProjects(res);
+  const res = await fetchMyProjects({ ownerId: userId, active: !showInactive, page, limit: pageSize });
+      setProjects(res.projects);
+      setPagination(res.pagination);
       setLoading(false);
-      setPage(1); // Reiniciar a la primera página al buscar
     }
     load();
+  }, [userId, authUser, showInactive, page]);
+
+  // Reiniciar a la primera página al cambiar filtros
+  useEffect(() => {
+    setPage(1);
   }, [userId, authUser, showInactive]);
 
   // Renderizar la navbar apropiada según el rol
@@ -93,7 +98,7 @@ export default function MyProjectsView({ userId }) {
             ) : (
               <>
                 <ProjectList 
-                  projects={projects.slice((page-1)*pageSize, page*pageSize)} 
+                  projects={projects} 
                   showFinished={true} 
                   showInactive={showInactive} 
                   origin={isOwner ? 'my-projects' : 'user-projects'}
@@ -117,10 +122,11 @@ export default function MyProjectsView({ userId }) {
                     <div className="flex-1 flex justify-center items-center">
                       <div className="flex items-center -mt-6">
                         <Pagination
-                          page={page}
+                          page={pagination.currentPage}
                           origin={isOwner ? 'my-projects' : 'user-projects'}
-                          hasPreviousPage={page > 1}
-                          hasNextPage={projects.length > page * pageSize}
+                          hasPreviousPage={pagination.hasPreviousPage}
+                          hasNextPage={pagination.hasNextPage}
+                          totalPages={pagination.totalPages}
                           onPageChange={setPage}
                         />
                       </div>
@@ -143,9 +149,10 @@ export default function MyProjectsView({ userId }) {
                     <div className="flex-1 flex justify-center items-center">
                       <div className="flex items-center -mt-6">
                         <Pagination
-                          page={page}
-                          hasPreviousPage={page > 1}
-                          hasNextPage={projects.length > page * pageSize}
+                          page={pagination.currentPage}
+                          hasPreviousPage={pagination.hasPreviousPage}
+                          hasNextPage={pagination.hasNextPage}
+                          totalPages={pagination.totalPages}
                           onPageChange={setPage}
                         />
                       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, X, FileText } from 'lucide-react';
+import { CheckCircle, X, FileText, Info } from 'lucide-react';
 import { usePostulation } from '@/hooks/postulations';
 import { ROLES } from '@/constants/roles';
 import PostulationModal from './PostulationModal';
@@ -32,8 +32,10 @@ export default function PostulationButton({
     initialLoad,
   } = usePostulation(projectId, isOwner, initialIsApplied);
 
-  // No mostrar botón si es owner, no es USER, o el proyecto está finalizado
+  // No mostrar botón si es owner, no es USER, está finalizado o el cupo está completo
   const isFinished = project && project.endDate && require('@/utils/postulationValidation').isProjectFinished(project);
+  const isFull = project && typeof project.maxCollaborators === 'number' && typeof project.approvedApplications === 'number' && project.approvedApplications >= project.maxCollaborators;
+  // Mostrar botón deshabilitado si el cupo está lleno y el usuario no está postulado
   if (isOwner || userRole !== ROLES.USER || isFinished) {
     return null;
   }
@@ -118,7 +120,20 @@ export default function PostulationButton({
       }
     }
 
-    // No hay postulación, permitir postularse
+    // No hay postulación
+    if (isFull) {
+      return {
+        className: `bg-gray-300 text-gray-500 px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
+        content: (
+          <div className="flex items-center gap-1.5">
+            <Info size={16} />
+            <span>Cupo completo</span>
+          </div>
+        ),
+        disabled: true,
+        onClick: null
+      };
+    }
     return {
       className: `bg-conexia-green text-white px-4 py-2 rounded font-semibold hover:bg-conexia-green/90 transition disabled:opacity-50 disabled:cursor-not-allowed ${className}`,
       content: (
@@ -130,7 +145,8 @@ export default function PostulationButton({
       disabled: loading,
       onClick: () => {
         setError(null);
-        setShowModal(true);
+        setShowModal(false); // Cierra primero para reiniciar el estado interno
+        setTimeout(() => setShowModal(true), 0); // Reabre el modal en el siguiente ciclo
       }
     };
   };
@@ -149,14 +165,18 @@ export default function PostulationButton({
       </button>
 
       {/* Modal de postulación */}
-      <PostulationModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onConfirm={onApplySuccess}
-        loading={loading}
-        error={error}
-        projectTitle={projectTitle}
-      />
+      {/* Solo mostrar el modal si el cupo NO está lleno */}
+      {!isFull && (
+        <PostulationModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onConfirm={onApplySuccess}
+          loading={loading}
+          error={error}
+          projectTitle={projectTitle}
+          key={showModal ? projectId : undefined} // Forzar remount para limpiar estado interno
+        />
+      )}
 
       {/* Modal de confirmación para cancelar */}
       {showCancelConfirm && (

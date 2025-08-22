@@ -84,6 +84,11 @@ export default function ProjectSearchFilters({ filters, onChange }) {
       }
       return;
     }
+    if (isAllSelected(categories, filters.category)) {
+      // Si estaba en 'Todas', seleccionar solo la nueva
+      onChange({ ...filters, category: [catId] });
+      return;
+    }
     if (current.includes(catId)) {
       current = current.filter((id) => id !== catId);
     } else {
@@ -103,6 +108,10 @@ export default function ProjectSearchFilters({ filters, onChange }) {
       }
       return;
     }
+    if (isAllSelected(contractTypes, filters.contract)) {
+      onChange({ ...filters, contract: [typeId] });
+      return;
+    }
     if (current.includes(typeId)) {
       current = current.filter((id) => id !== typeId);
     } else {
@@ -120,6 +129,10 @@ export default function ProjectSearchFilters({ filters, onChange }) {
       } else {
         onChange({ ...filters, collaboration: [...allIds] });
       }
+      return;
+    }
+    if (isAllSelected(collabTypes, filters.collaboration)) {
+      onChange({ ...filters, collaboration: [typeId] });
       return;
     }
     if (current.includes(typeId)) {
@@ -283,6 +296,11 @@ export default function ProjectSearchFilters({ filters, onChange }) {
                               checked={checked}
                               onChange={() => {
                                 let currentSkills = Array.isArray(filters.skills) ? [...filters.skills] : [];
+                                // Si estaba en 'Todas' general o de rubro, seleccionar solo la nueva
+                                if (onlyThisRubro || allGeneralSelected) {
+                                  onChange({ ...filters, skills: [skill.id] });
+                                  return;
+                                }
                                 const exists = currentSkills.includes(skill.id);
                                 if (exists) {
                                   currentSkills = currentSkills.filter(id => id !== skill.id);
