@@ -1,10 +1,10 @@
-import NavbarModerator from '@/components/navbar/NavbarModerator';
+import Navbar from '@/components/navbar/Navbar';
 import ReportsList from '@/components/reports/ReportsList';
 
 export default function ReportsPage() {
 	return (
 		<>
-			<NavbarModerator />
+			<Navbar />
 			<ReportsList />
 		</>
 	);

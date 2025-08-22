@@ -1,12 +1,12 @@
 
-import NavbarModerator from '@/components/navbar/NavbarModerator';
+import Navbar from '@/components/navbar/Navbar';
 import ProjectReportsGrid from '@/components/reports/ProjectReportsGrid';
 
-export default function ProjectReportsPage({ params }) {
+export default async function ProjectReportsPage({ params }) {
   const { id } = params;
   return (
     <>
-      <NavbarModerator />
+      <Navbar />
       <ProjectReportsGrid projectId={id} />
     </>
   );

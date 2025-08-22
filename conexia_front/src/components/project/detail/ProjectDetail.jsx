@@ -3,7 +3,7 @@ import Navbar from '@/components/navbar/Navbar';
 import { MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import ReportProjectModal from '@/components/project/report/ReportProjectModal';
-import { createProjectReport } from '@/service/reports/reportsFetch';
+import { createProjectReport, fetchProjectReports } from '@/service/reports/reportsFetch';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
@@ -25,6 +25,7 @@ export default function ProjectDetail({ projectId }) {
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
+  const [alreadyReported, setAlreadyReported] = useState(false);
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
@@ -48,7 +49,15 @@ export default function ProjectDetail({ projectId }) {
       setProject(data);
       setLoading(false);
     });
-  }, [projectId]);
+    // Verificar si el usuario ya reportó este proyecto
+    if (user && projectId) {
+      fetchProjectReports(projectId).then((data) => {
+        const reports = data?.data?.reports || [];
+        const found = reports.find(r => String(r.userId) === String(user.id));
+        setAlreadyReported(!!found);
+      }).catch(() => setAlreadyReported(false));
+    }
+  }, [projectId, user]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   if (!project) return <div className="min-h-screen flex items-center justify-center text-conexia-green">Proyecto no encontrado</div>;
@@ -134,7 +143,7 @@ export default function ProjectDetail({ projectId }) {
             <div className="flex-1 flex flex-col gap-4 min-w-0">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-conexia-green break-words">{project.title || 'Sin título'}</h1>
-                {!isOwner && (
+                {!isOwner && !alreadyReported && (
                   <div className="relative">
                     <button
                       className="p-2 rounded-full hover:bg-gray-100"
@@ -145,21 +154,40 @@ export default function ProjectDetail({ projectId }) {
                     </button>
                     {menuOpen && (
                       <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-20">
-                        <button
-                          className="w-full flex items-center justify-center px-6 py-3 hover:bg-gray-50 gap-3 text-conexia-coral font-semibold"
-                          onClick={() => {
-                            setMenuOpen(false);
-                            setShowReportModal(true);
-                          }}
-                        >
-                          <span className="flex items-center gap-2">
-                            {/* Icono de signo de exclamación */}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-conexia-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01" />
-                            </svg>
-                            <span>Reportar proyecto</span>
-                          </span>
-                        </button>
+                          {roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR ? (
+                            <Button
+                              variant="edit"
+                              className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold"
+                              onClick={() => {
+                                setMenuOpen(false);
+                                router.push(`/reports/project/${projectId}`);
+                              }}
+                            >
+                              <span className="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Ver reportes</span>
+                              </span>
+                            </Button>
+                          ) : (
+                            !alreadyReported && (
+                              <button
+                                className="w-full flex items-center justify-center px-6 py-3 hover:bg-gray-50 gap-3 text-conexia-coral font-semibold"
+                                onClick={() => {
+                                  setMenuOpen(false);
+                                  setShowReportModal(true);
+                                }}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-conexia-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01" />
+                                  </svg>
+                                  <span>Reportar proyecto</span>
+                                </span>
+                              </button>
+                            )
+                          )}
                       </div>
                     )}
                   </div>
