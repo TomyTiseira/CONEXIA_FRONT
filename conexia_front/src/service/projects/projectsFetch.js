@@ -27,6 +27,7 @@ export async function fetchProjectById(id) {
     skills: Array.isArray(p.skills) ? p.skills : (p.skills ? [p.skills] : []),
     category: Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []),
     maxCollaborators: p.maxCollaborators,
+    approvedApplications: p.approvedApplications || 0,
     isActive: p.isActive,
     deletedAt: p.deletedAt, // <-- AGREGADO
     status: p.status, // Agregar el campo status desde el backend
@@ -79,7 +80,7 @@ export async function fetchProjects({ title, category, skills, collaboration, co
     const pagination = data?.data?.pagination || { currentPage: 1, itemsPerPage: limit, totalItems: projects.length, totalPages: 1 };
     // Adaptar los proyectos al formato esperado por la UI
     return {
-      projects: projects.map(p => ({
+  projects: projects.map(p => ({
         id: p.id,
         title: p.title,
         description: p.description,
@@ -100,6 +101,9 @@ export async function fetchProjects({ title, category, skills, collaboration, co
         startDate: p.startDate,
         endDate: p.endDate,
         isOwner: p.isOwner,
+        isApplied: p.isApplied || false,
+        approvedApplications: p.approvedApplications || 0,
+        maxCollaborators: p.maxCollaborators,
       })),
       pagination
     };
@@ -181,6 +185,9 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
         startDate: p.startDate,
         endDate: p.endDate,
         isOwner: p.isOwner,
+        approvedApplications: p.approvedApplications || 0,
+        maxCollaborators: p.maxCollaborators,
+        isApplied: p.isApplied || false,
       }));
 
     return {
@@ -199,13 +206,13 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
   }
 }
 
-export async function fetchMyProjects({ ownerId, active }) {
+export async function fetchMyProjects({ ownerId, active, page = 1, limit = 16 }) {
   const params = new URLSearchParams();
-  // Convertir el parámetro 'active' al formato esperado por el backend
   if (typeof active === 'boolean') {
-    // Si active=true, no incluir eliminados; si active=false, incluir eliminados
     params.append('includeDeleted', (!active).toString());
   }
+  params.append('page', page);
+  params.append('limit', limit);
 
   const res = await fetchWithRefresh(`${config.API_URL}/projects/profile/${ownerId}?${params.toString()}`, {
     method: 'GET',
@@ -220,35 +227,38 @@ export async function fetchMyProjects({ ownerId, active }) {
 
   const data = await res.json();
   const projects = data?.data?.projects;
+  const pagination = data?.data?.pagination || { currentPage: page, itemsPerPage: limit, totalItems: Array.isArray(projects) ? projects.length : 0, totalPages: 1 };
 
-  if (!Array.isArray(projects)) return [];
+  if (!Array.isArray(projects)) return { projects: [], pagination };
 
-  // Adaptar los proyectos al formato esperado por la UI
-  return projects.map(p => ({
-    id: p.id,
-    title: p.title,
-    description: p.description,
-    image: p.image,
-    userId: p.userId,
-    owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
-    ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
-    ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
-    category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
-    categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
-    contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
-    contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
-    collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
-    collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
-    skills: p.skills || p.requiredSkills || [],
-    isOwner: p.isOwner,
-    isActive: p.isActive,
-    startDate: p.startDate,
-    endDate: p.endDate,
-    createdAt: p.createdAt,
-    updatedAt: p.updatedAt,
-    deletedAt: p.deletedAt,
-    isActive: p.isActive,
-  }));
+  return {
+    projects: projects.map(p => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      image: p.image,
+      userId: p.userId,
+      owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
+      ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
+      ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
+      category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
+      categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
+      contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
+      contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
+      collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
+      collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
+      skills: p.skills || p.requiredSkills || [],
+      isOwner: p.isOwner,
+      isActive: p.isActive,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      deletedAt: p.deletedAt,
+      isActive: p.isActive,
+    })),
+    pagination
+  };
 }
 
 export async function fetchProjectsByUserId(userId) {

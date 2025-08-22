@@ -30,6 +30,7 @@ export const validateProjectForPostulation = (project, user) => {
     endDate: project.endDate
   });
 
+
   // Verificar que el proyecto está activo (solo verificar isActive, el backend maneja el status)
   if (project.isActive === false) {
     errors.push('El proyecto no está activo');
@@ -43,6 +44,16 @@ export const validateProjectForPostulation = (project, user) => {
   // Verificar que no es el dueño
   if (user && project && (String(user.id) === String(project.ownerId) || project.isOwner)) {
     errors.push('No puedes postularte a tu propio proyecto');
+  }
+
+  // Verificar cupo completo (solo si el usuario no está postulado)
+  if (
+    typeof project.maxCollaborators === 'number' &&
+    typeof project.approvedApplications === 'number' &&
+    project.approvedApplications >= project.maxCollaborators &&
+    !(project.isApplied) // permitir si el usuario ya está postulado
+  ) {
+    errors.push('El proyecto ya alcanzó el cupo de colaboradores');
   }
 
   // Verificar rol de usuario

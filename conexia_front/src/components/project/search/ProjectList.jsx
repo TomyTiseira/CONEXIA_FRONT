@@ -38,22 +38,22 @@ export default function ProjectList({ projects, showFinished = false, showInacti
   {filteredProjects.map(project => {
     const projectFinished = isProjectFinished(project);
     return (
-    <div
-      key={project.id}
-      className="bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col h-full items-stretch w-full hover:shadow-lg transition relative"
-    >
-      {/* Etiqueta Finalizado arriba a la derecha del card */}
-      {projectFinished && (
-        <span className="absolute top-3 right-4 bg-red-100 text-red-700 px-2 py-0.5 rounded text-[12px] font-semibold border border-red-200 shadow select-none whitespace-nowrap z-20" style={{lineHeight:'1.1'}}>⏰ Finalizado</span>
-      )}
-      {/* Etiqueta Inactivo al lado izquierdo de la imagen */}
-        {(!project.isActive || project.deletedAt)&& (
-        <span className="absolute top-3 left-4 bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[12px] font-semibold border border-gray-300 shadow select-none whitespace-nowrap z-20" style={{lineHeight:'1.1'}}>⏸ Inactivo</span>
-      )}
-      {/* Imagen, título y dueño */}
-      <div className="flex flex-col xs:flex-row items-start gap-2 xs:gap-3 mb-3 w-full [@media(max-width:400px)]:flex-col [@media(max-width:400px)]:items-stretch">
-        {/* Imagen centrada */}
-        <div className="w-full flex justify-center items-center">
+      <div
+        key={project.id}
+        className="bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col h-full items-stretch w-full hover:shadow-lg transition relative"
+      >
+        {/* Etiquetas arriba de la imagen, con margen y sin superposición */}
+  <div className="flex flex-row gap-2 mb-2 w-full justify-between items-center px-2" style={{ minHeight: '28px' }}>
+          {(!project.isActive || project.deletedAt) && (
+            <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[12px] font-semibold border border-gray-300 shadow select-none whitespace-nowrap" style={{lineHeight:'1.1'}}>⏸ Inactivo</span>
+          )}
+          <div className="flex-1" />
+          {projectFinished && (
+            <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[12px] font-semibold border border-red-200 shadow select-none whitespace-nowrap" style={{lineHeight:'1.1'}}>⏰ Finalizado</span>
+          )}
+        </div>
+        {/* Imagen única */}
+        <div className="flex justify-center items-center mb-3 w-full">
           <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0">
             {project.image ? (
               <Image
@@ -74,16 +74,12 @@ export default function ProjectList({ projects, showFinished = false, showInacti
             )}
           </div>
         </div>
-
         {/* Título */}
-        <div className="flex flex-col flex-1 justify-between w-full min-w-0">
-          <div className="h-10 mb-2 flex items-start justify-center">
-            <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2">
-              {project.title}
-            </h3>
-          </div>
+        <div className="h-10 mb-2 flex items-start justify-center">
+          <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2">
+            {project.title}
+          </h3>
         </div>
-      </div>
 
 
       {/* Dueño del proyecto */}
@@ -153,6 +149,8 @@ export default function ProjectList({ projects, showFinished = false, showInacti
                 url += '?from=my-projects';
               } else if (origin === 'user-projects') {
                 url += '?from=user-projects';
+              } else if (origin === 'my-projects-preview' || origin === 'user-projects-preview') {
+                url += '?from=profile';
               }
               router.push(url);
             }}

@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { useRecommendations } from '@/hooks/project/useRecommendations';
-import { limitAndCleanProjects } from '@/utils/recommendationsUtils';
+import { limitAndCleanProjects, removeDuplicateProjects } from '@/utils/recommendationsUtils';
 
 import Navbar from '@/components/navbar/Navbar';
 import { FaRegLightbulb } from 'react-icons/fa';
@@ -69,10 +69,12 @@ export default function ProjectSearch() {
             limit: 1000 // traer muchos para recomendaciones, ajustar si es necesario
           });
           const projects = allProjectsResponse.projects || [];
+          console.log('Proyectos recibidos del backend:', projects.length, projects.map(p => ({id: p.id, userId: p.userId, ownerId: p.ownerId})));
           // Filtrar proyectos donde el usuario no sea el propietario
           const filteredProjects = projects.filter(project => 
             project.userId !== user?.id && project.ownerId !== user?.id
           );
+          console.log('Proyectos después del filtro:', filteredProjects.length, filteredProjects.map(p => ({id: p.id, userId: p.userId, ownerId: p.ownerId})));
           setAllProjectsList(filteredProjects);
         } catch (error) {
           console.error('Error cargando todos los proyectos:', error);
@@ -106,22 +108,27 @@ export default function ProjectSearch() {
         (Array.isArray(pendingFilters.contract) && pendingFilters.contract.length > 0 && !isAll(pendingFilters.contract));
 
       if (hasAllFilters && !hasActiveFilters) {
-        // Si es "todas" (sin otros filtros), usar allProjectsList y paginar en frontend
+        console.log('Branch: hasAllFilters && !hasActiveFilters (Todas sin otros filtros)');
+        // Si es "todas" (sin otros filtros), buscar todos los proyectos al backend con paginación real
         setSearched(true);
         setShowRecommendations(false);
-        const totalItems = allProjectsList.length;
-        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-        const paginatedResults = allProjectsList.slice((page - 1) * pageSize, page * pageSize);
-        setResults(paginatedResults);
-        setPagination({
-          currentPage: page,
-          itemsPerPage: pageSize,
-          totalItems,
-          totalPages,
-          hasPreviousPage: page > 1,
-          hasNextPage: page < totalPages
-        });
+        const params = {
+          page,
+          limit: pageSize
+        };
+        console.log('Parámetros enviados a fetchProjects:', params);
+        try {
+          const { projects, pagination: pag } = await fetchProjects(params);
+          console.log('Respuesta del backend (filtros):', projects?.length, projects);
+          // Limpiar duplicados y proyectos inválidos, sin limitar (el backend ya pagina y filtra)
+          const cleaned = removeDuplicateProjects(projects).filter(project => project && project.id);
+          setResults(cleaned);
+          setPagination(pag);
+        } catch (error) {
+          console.error('Error en fetchProjects:', error);
+        }
       } else if (hasAllFilters || hasActiveFilters) {
+        console.log('Branch: hasAllFilters || hasActiveFilters (Filtros activos o Todas con otros filtros)');
         setSearched(true);
         setShowRecommendations(false);
         // Normalizar filtros: si el array contiene 'all', enviar array vacío
@@ -136,15 +143,12 @@ export default function ProjectSearch() {
           limit: pageSize
         };
         const { projects, pagination: pag } = await fetchProjects(params);
-        // Debug: logs para depuración de filtrado
-        // Filtrar ajenos y limpiar igual que recomendaciones
-        // Filtrar solo por ownerId, igual que en recomendaciones
-        const ajenos = projects.filter(project => project.ownerId !== user?.id);
-        // Solo limpiar duplicados y proyectos inválidos, no limitar (el backend ya lo hace)
-        const cleaned = limitAndCleanProjects(ajenos);
-        setResults(cleaned);
-        setPagination(pag);
+  // Limpiar duplicados y proyectos inválidos, sin limitar (el backend ya pagina y filtra)
+  const cleaned = removeDuplicateProjects(projects).filter(project => project && project.id);
+  setResults(cleaned);
+  setPagination(pag);
       } else {
+        console.log('Branch: sin filtros activos (recomendaciones)');
         // Si no hay filtros activos, resetear a estado inicial con recomendaciones
         setSearched(false);
         setShowRecommendations(true);

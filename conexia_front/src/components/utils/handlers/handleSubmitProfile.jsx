@@ -1,4 +1,5 @@
 import { createUserProfile } from "@/service/profiles/profilesFetch";
+import { updateUserProfile } from "@/service/profiles/updateProfile";
 import { validateSimplePhone } from "@/components/utils/validations/phones";
 import { validateAllSocialLinks } from "@/components/utils/validations/socialLinks";
 import { validateAllExperiences } from "@/components/utils/validations/experience";
@@ -137,24 +138,42 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
   }
 
   try {
-    const response = await createUserProfile(formData);
+    let response;
+    try {
+      response = await createUserProfile(formData);
+    } catch (err) {
+      // Si el error es porque el perfil ya existe, intentar actualizarlo
+      if (
+        err.status === 409 ||
+        err.isDuplicateProfile ||
+        (err.message && (err.message.includes('already exists') || err.message.includes('Profile already exists')))
+      ) {
+        // Convertir formData a objeto plano para updateUserProfile
+        const plainPayload = {};
+        for (let [key, value] of formData.entries()) {
+          try {
+            plainPayload[key] = JSON.parse(value);
+          } catch {
+            plainPayload[key] = value;
+          }
+        }
+        response = await updateUserProfile(plainPayload);
+      } else {
+        throw err;
+      }
+    }
     
     // Debug de la respuesta completa
     console.log('Respuesta completa del backend:', response);
-    
     // El usuario puede estar en diferentes ubicaciones según la respuesta del backend
     const userData = response.data?.user || response.user || response.data;
-    
     console.log('Datos del usuario extraídos:', userData);
     console.log('Función updateUser disponible:', !!updateAuthUser);
-    
     if (response.success !== false && userData && updateAuthUser) {
       // Actualizar el usuario en el contexto
       updateAuthUser(userData);
-      
       // Mostrar mensaje de éxito
       setMsg({ ok: true, text: "¡Perfil creado con éxito! Redirigiendo a la comunidad..." });
-      
       // Esperar y redirigir
       setTimeout(() => {
         console.log('Redirigiendo a la comunidad...');
@@ -163,9 +182,7 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
     } else if (userData && updateAuthUser) {
       // Si no hay success pero sí hay userData, asumir éxito
       updateAuthUser(userData);
-      
       setMsg({ ok: true, text: "¡Perfil creado con éxito! Redirigiendo a la comunidad..." });
-      
       setTimeout(() => {
         console.log('Redirigiendo a la comunidad (caso alternativo)...');
         window.location.href = "/";

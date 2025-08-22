@@ -33,7 +33,7 @@ export default function RubroSkillsSelector({ selectedSkills = [], onSkillsChang
 
   const handleRubroChange = e => {
     setSelectedRubro(e.target.value);
-    onSkillsChange([]); // Limpiar habilidades al cambiar rubro
+    // Ya no se borran las habilidades seleccionadas de otros rubros
   };
 
   const handleSkillToggle = skill => {

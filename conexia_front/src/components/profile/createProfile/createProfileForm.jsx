@@ -17,7 +17,7 @@ import { isValidURL } from "@/components/utils/validations/urls";
 import InputField from "@/components/form/InputField";
 import TextArea from "@/components/form/InputField";
 import { handleSubmitProfile } from "@/components/utils/handlers";
-import SkillsSelector from "@/components/skills/SkillsSelector";
+import RubroSkillsSelector from "@/components/skills/RubroSkillsSelector";
 
 
 
@@ -926,10 +926,10 @@ export default function CreateProfileForm() {
           <TextArea name="description" value={form.description} onChange={e => handleChange("description", e.target.value)} />
         </div>
 
-        {/* Habilidades */}
+        {/* Habilidades por Rubro */}
         <div>
           <label className="block font-medium text-conexia-green mb-1">Habilidades (Opcional)</label>
-          <SkillsSelector
+          <RubroSkillsSelector
             selectedSkills={form.skills}
             onSkillsChange={(newSkills) => setForm(prev => ({ ...prev, skills: newSkills }))}
             maxSkills={20}
