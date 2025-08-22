@@ -94,10 +94,16 @@ export const useRecommendations = () => {
             contract: []
           });
           const recommendedProjects = recommendedProjectsResponse.projects || [];
-          // Filtrar proyectos donde el usuario no sea el propietario
-          const filteredProjects = recommendedProjects.filter(project => 
-            project.userId !== user.id && project.ownerId !== user.id
-          );
+            // Filtrar proyectos donde el usuario no sea el propietario, ni ya se haya postulado, ni esté completo el cupo
+            const filteredProjects = recommendedProjects.filter(project => 
+              project.userId !== user.id &&
+              project.ownerId !== user.id &&
+              !project.isApplied &&
+              (typeof project.maxCollaborators !== 'number' || typeof project.approvedApplications !== 'number' || project.approvedApplications < project.maxCollaborators) &&
+              (
+                typeof project.maxCollaborators !== 'number' || typeof project.approvedApplications !== 'number' || project.approvedApplications !== project.maxCollaborators
+              )
+            );
           // Procesar y limpiar los proyectos - cambiar a 9 para que el carrusel salga completo
           // Asegurar que se ordenen por relevancia de skills
           const sortedProjects = sortProjectsByRelevance(filteredProjects, userSkillIds);
@@ -113,9 +119,9 @@ export const useRecommendations = () => {
             contract: []
           });
           const allProjects = allProjectsResponse.projects || [];
-          // Filtrar proyectos donde el usuario no sea el propietario
+          // Filtrar proyectos donde el usuario no sea el propietario ni ya se haya postulado (no filtrar por cupo en búsqueda general)
           const filteredProjects = allProjects.filter(project => 
-            project.userId !== user.id && project.ownerId !== user.id
+            project.userId !== user.id && project.ownerId !== user.id && !project.isApplied
           );
           // Limitar a los primeros 20 proyectos para no sobrecargar
           const limitedProjects = limitAndCleanProjects(filteredProjects, 20);

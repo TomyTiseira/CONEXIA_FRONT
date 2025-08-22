@@ -21,8 +21,8 @@ export default function UserCollaborativeProjects({ userId }) {
     if (!userId) return;
     async function load() {
       setLoading(true);
-      const res = await fetchMyProjects({ ownerId: userId, active: true });
-      setProjects(res || []);
+  const res = await fetchMyProjects({ ownerId: userId, active: true });
+  setProjects(res.projects || []);
       setLoading(false);
     }
     load();

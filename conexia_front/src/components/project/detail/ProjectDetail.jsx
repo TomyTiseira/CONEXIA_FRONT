@@ -273,7 +273,9 @@ export default function ProjectDetail({ projectId }) {
                 onClick={() => {
                   // Lógica de navegación según origen
                   const from = searchParams.get('from');
-                  if (from === 'user-projects' && project.ownerId) {
+                  if (from === 'profile' && user && user.id) {
+                    router.push(`/profile/userProfile/${user.id}`);
+                  } else if (from === 'user-projects' && project.ownerId) {
                     router.push(`/projects/user/${project.ownerId}`);
                   } else if (from === 'my-projects' && user && user.id) {
                     router.push(`/projects/user/${user.id}`);
