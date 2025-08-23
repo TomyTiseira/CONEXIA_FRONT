@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import {
   MessageCircle,
+  AlertTriangle,
   Bell,
   Home,
   Briefcase,
@@ -36,7 +37,7 @@ export default function NavbarAdmin() {
   { label: 'Inicio', href: '/', icon: Home },
   { label: 'Servicios', href: '#servicios', icon: Briefcase },
   { label: 'Proyectos', href: '/project/search', icon: Layers },
-  { label: 'Reportes', href: '/reports', icon: Bell },
+  { label: 'Reportes', href: '/reports', icon: AlertTriangle },
   { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
   ];
 

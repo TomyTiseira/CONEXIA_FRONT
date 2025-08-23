@@ -130,9 +130,9 @@ export default function ProjectDetail({ projectId }) {
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40">
                       {roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR ? (
-                        <Button
-                          variant="edit"
-                          className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold"
+                        <button
+                          className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                          style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
                           onClick={() => {
                             setMenuOpen(false);
                             router.push(`/reports/project/${projectId}`);
@@ -144,11 +144,12 @@ export default function ProjectDetail({ projectId }) {
                             </svg>
                             <span>Ver reportes</span>
                           </span>
-                        </Button>
+                        </button>
                       ) : (
                         !alreadyReported && (
                           <button
-                            className="w-full flex items-center justify-center px-6 py-3 hover:bg-conexia-green/10 gap-3 text-conexia-green font-semibold"
+                            className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-[#fff] text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                            style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
                             onClick={() => {
                               setMenuOpen(false);
                               setShowReportModal(true);
@@ -396,9 +397,15 @@ export default function ProjectDetail({ projectId }) {
             <div className="flex-shrink-0">
               <BackButton
                 onClick={() => {
-                  // Lógica de navegación según origen
+                  // Lógica: si viene de reportes de un proyecto, volver a esa página
+                  // Si viene de la lista general de reportes, volver a /reports
                   const from = searchParams.get('from');
-                  if (from === 'profile' && user && user.id) {
+                  const fromReportsProjectId = searchParams.get('fromReportsProjectId');
+                  if (from === 'reports-project' && fromReportsProjectId) {
+                    router.push(`/reports/project/${fromReportsProjectId}`);
+                  } else if (from === 'reports') {
+                    router.push('/reports');
+                  } else if (from === 'profile' && user && user.id) {
                     router.push(`/profile/userProfile/${user.id}`);
                   } else if (from === 'user-projects' && project.ownerId) {
                     router.push(`/projects/user/${project.ownerId}`);

@@ -1,3 +1,4 @@
+"use client";
 // hooks/useSkills.js
 import { useState, useEffect, useCallback } from 'react';
 import { getSkills } from '@/service/skills/skillsFetch';
