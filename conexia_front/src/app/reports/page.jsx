@@ -9,11 +9,11 @@ import { Suspense } from 'react';
 
 export default function ReportsPage() {
 	return (
-		<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]} fallbackComponent={<NotFound />}>
-			<Navbar />
-			<Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando reportes...</div>}>
+		<Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando reportes...</div>}>
+			<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]} fallbackComponent={<NotFound />}>
+				<Navbar />
 				<ReportsList />
-			</Suspense>
-		</ProtectedRoute>
+			</ProtectedRoute>
+		</Suspense>
 	);
 }
