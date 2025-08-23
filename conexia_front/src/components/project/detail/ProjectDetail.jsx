@@ -197,7 +197,7 @@ export default function ProjectDetail({ projectId }) {
             {/* Info principal */}
             <div className="flex-1 flex flex-col gap-4 min-w-0">
               <div className="flex items-center justify-between relative">
-                <h1 className="text-3xl font-bold text-conexia-green break-words">{project.title || 'Sin título'}</h1>
+                <h1 className="text-3xl font-bold text-conexia-green break-words whitespace-pre-line break-all word-break-break-all">{project.title || 'Sin título'}</h1>
                 {/* Menú tres puntos: solo desktop aquí */}
                 {!isOwner && !alreadyReported && (
                   <div className="hidden md:block relative">

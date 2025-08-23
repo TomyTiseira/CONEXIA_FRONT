@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { fetchReportedProjects } from '@/service/reports/reportsFetch';
+import { MdKeyboardArrowDown } from 'react-icons/md';
 
 const FILTERS = [
   { label: 'Proyectos', value: 'projects' },
@@ -38,36 +39,56 @@ export default function ReportsList() {
   return (
     <div className="max-w-6xl mx-auto pt-8 pb-4">
       <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative mb-6">
-        <h1 className="text-2xl font-bold text-conexia-green text-center">Reportes de proyectos</h1>
+        <h1 className="text-2xl font-bold text-conexia-green text-center">REPORTES</h1>
       </div>
       <div className="bg-white p-4 rounded-xl shadow-sm border mb-8">
         <div className="flex flex-col md:flex-row md:items-center gap-4 flex-wrap">
-          <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto">
-            <label className="text-sm text-conexia-green whitespace-nowrap">Tipo:</label>
-            <select value={filter} onChange={e => setFilter(e.target.value)} className="h-9 border border-conexia-green rounded px-3 text-sm text-conexia-green focus:outline-none focus:ring-1 focus:ring-conexia-green transition w-full md:w-auto">
-              {FILTERS.map(f => (
-                <option key={f.value} value={f.value} disabled={f.disabled}>{f.label}</option>
-              ))}
-            </select>
+          {/* Filtro tipo de reporte */}
+          <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto relative">
+            <label className="text-sm text-conexia-green whitespace-nowrap">Tipo de reporte:</label>
+            <div className="relative w-full md:w-auto">
+              <select value={filter} onChange={e => setFilter(e.target.value)}
+                className="h-9 border border-conexia-green rounded px-3 pr-8 text-sm text-conexia-green focus:outline-none focus:ring-1 focus:ring-conexia-green transition w-full md:w-auto appearance-none bg-white">
+                {FILTERS.map(f => (
+                  <option key={f.value} value={f.value} disabled={f.disabled}>{f.label}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green text-xl">
+                <MdKeyboardArrowDown />
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto">
+          {/* Filtro ordenar por */}
+          <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto relative">
             <label className="text-sm text-conexia-green whitespace-nowrap">Ordenar por:</label>
-            <select value={order} onChange={e => setOrder(e.target.value)} className="h-9 border border-conexia-green rounded px-3 text-sm text-conexia-green focus:outline-none focus:ring-1 focus:ring-conexia-green transition w-full md:w-auto">
-              {ORDER_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+            <div className="relative w-full md:w-auto">
+              <select value={order} onChange={e => setOrder(e.target.value)}
+                className="h-9 border border-conexia-green rounded px-3 pr-8 text-sm text-conexia-green focus:outline-none focus:ring-1 focus:ring-conexia-green transition w-full md:w-auto appearance-none bg-white">
+                {ORDER_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green text-xl">
+                <MdKeyboardArrowDown />
+              </span>
+            </div>
           </div>
         </div>
       </div>
       <div className="bg-white rounded-xl shadow-sm border p-0 overflow-x-auto">
         <table className="min-w-full table-auto text-sm mb-0">
+          <colgroup>
+            <col style={{ width: '32%' }} />
+            <col style={{ width: '18%' }} />
+            <col style={{ width: '28%' }} />
+            <col style={{ width: '22%' }} />
+          </colgroup>
           <thead>
             <tr className="text-left border-b">
-              <th className="p-4">Proyecto</th>
-              <th className="p-4">Cantidad de reportes</th>
-              <th className="p-4">Fecha de último reporte</th>
-              <th className="p-4 text-center">Acciones</th>
+              <th className="p-4 min-w-[160px] md:min-w-[220px]">Proyecto</th>
+              <th className="p-4 min-w-[90px] max-w-[120px] text-center">Cantidad de reportes</th>
+              <th className="p-4 min-w-[120px] max-w-[180px] text-center">Fecha de último reporte</th>
+              <th className="p-4 min-w-[110px] max-w-[140px] text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -81,14 +102,15 @@ export default function ReportsList() {
               </tr>
             ) : (
               projects.map(p => (
-                <tr key={p.projectId} className="border-b hover:bg-gray-50 h-[52px]">
-                  <td className="p-4">
-                    <Link href={`/reports/project/${p.projectId}`} className="text-conexia-green font-semibold hover:underline truncate max-w-[300px]">{p.projectTitle}</Link>
+                <tr key={p.projectId} className="border-b hover:bg-gray-50 h-auto align-top">
+                  <td className="p-4 align-top">
+                    <Link href={`/reports/project/${p.projectId}`} className="text-conexia-green font-semibold hover:underline break-words whitespace-pre-line">
+                      {p.projectTitle}
+                    </Link>
                   </td>
-                  <td className="p-4">{p.reportCount}</td>
-                  <td className="p-4">{new Date(p.lastReportDate).toLocaleString()}</td>
+                  <td className="p-4 text-center align-middle">{p.reportCount}</td>
+                  <td className="p-4 text-center align-middle">{new Date(p.lastReportDate).toLocaleString()}</td>
                   <td className="p-4 text-center align-middle">
-                    {/* Aquí puedes agregar los botones de acción necesarios, por ejemplo: */}
                     <div className="flex justify-center gap-x-2">
                       <Button
                         variant="edit"
@@ -105,7 +127,6 @@ export default function ReportsList() {
                         Ver proyecto
                       </Button>
                     </div>
-                    {/* <button className="bg-conexia-coral text-white px-3 py-1 rounded font-semibold hover:bg-conexia-coral/90 transition">Eliminar</button> */}
                   </td>
                 </tr>
               ))
