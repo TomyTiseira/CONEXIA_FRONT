@@ -1,6 +1,9 @@
-import Navbar from '@/components/navbar/Navbar';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import Navbar from '@/components/navbar/Navbar';
+import { MoreVertical } from 'lucide-react';
+import Image from 'next/image';
+import ReportProjectModal from '@/components/project/report/ReportProjectModal';
+import { createProjectReport, fetchProjectReports } from '@/service/reports/reportsFetch';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
@@ -16,9 +19,13 @@ export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
+  const [alreadyReported, setAlreadyReported] = useState(false);
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
@@ -42,7 +49,15 @@ export default function ProjectDetail({ projectId }) {
       setProject(data);
       setLoading(false);
     });
-  }, [projectId]);
+    // Verificar si el usuario ya reportó este proyecto
+    if (user && projectId) {
+      fetchProjectReports(projectId).then((data) => {
+        const reports = data?.data?.reports || [];
+        const found = reports.find(r => String(r.userId) === String(user.id));
+        setAlreadyReported(!!found);
+      }).catch(() => setAlreadyReported(false));
+    }
+  }, [projectId, user]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   if (!project) return <div className="min-h-screen flex items-center justify-center text-conexia-green">Proyecto no encontrado</div>;
@@ -100,7 +115,61 @@ export default function ProjectDetail({ projectId }) {
           }}
           aria-hidden="true"
         ></div>
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative mt-4">
+  <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative mt-4">
+          {/* Botón tres puntos: absolute en la esquina del card, tanto mobile como desktop */}
+          {!isOwner && !alreadyReported && (
+            <div className="absolute top-4 right-6 md:right-8 z-30">
+              <button
+                className="p-2 rounded-full hover:bg-gray-100"
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Más opciones"
+              >
+                <MoreVertical size={22} />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40">
+                    {roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR ? (
+                      <button
+                        className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                        style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          router.push(`/reports/project/${projectId}`);
+                        }}
+                      >
+                        <span className="flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Ver reportes</span>
+                        </span>
+                      </button>
+                    ) : (
+                      !alreadyReported && (
+                        <button
+                          className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                          style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            setShowReportModal(true);
+                          }}
+                        >
+                          <span className="flex items-center gap-2">
+                            {/* Icono advertencia simple */}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                              <circle cx="12" cy="16" r="1.2" fill="currentColor" />
+                              <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                            </svg>
+                            <span>Reportar proyecto</span>
+                          </span>
+                        </button>
+                      )
+                    )}
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex flex-col md:flex-row gap-10">
             {/* Imagen */}
             <div className="flex flex-col items-center md:items-start w-full md:w-56">
@@ -126,7 +195,9 @@ export default function ProjectDetail({ projectId }) {
             </div>
             {/* Info principal */}
             <div className="flex-1 flex flex-col gap-4 min-w-0">
-              <h1 className="text-3xl font-bold text-conexia-green break-words">{project.title || 'Sin título'}</h1>
+              <div className="flex items-center justify-between relative">
+                <h1 className="text-3xl font-bold text-conexia-green break-words whitespace-pre-line break-all word-break-break-all max-w-[90vw] md:max-w-[80%] truncate">{project.title || 'Sin título'}</h1>
+              </div>
               <div className="flex flex-wrap gap-2 mb-1">
                 {categories.length > 0 && categories.map((cat) => (
                   <span key={cat} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">{cat}</span>
@@ -271,9 +342,15 @@ export default function ProjectDetail({ projectId }) {
             <div className="flex-shrink-0">
               <BackButton
                 onClick={() => {
-                  // Lógica de navegación según origen
+                  // Lógica: si viene de reportes de un proyecto, volver a esa página
+                  // Si viene de la lista general de reportes, volver a /reports
                   const from = searchParams.get('from');
-                  if (from === 'profile' && user && user.id) {
+                  const fromReportsProjectId = searchParams.get('fromReportsProjectId');
+                  if (from === 'reports-project' && fromReportsProjectId) {
+                    router.push(`/reports/project/${fromReportsProjectId}`);
+                  } else if (from === 'reports') {
+                    router.push('/reports');
+                  } else if (from === 'profile' && user && user.id) {
                     router.push(`/profile/userProfile/${user.id}`);
                   } else if (from === 'user-projects' && project.ownerId) {
                     router.push(`/projects/user/${project.ownerId}`);
@@ -328,6 +405,41 @@ export default function ProjectDetail({ projectId }) {
             onProjectDeleted={() => {
               setShowDeleteModal(false);
               // Opcional: recargar o redirigir
+            }}
+          />
+        )}
+        {/* Modal de reporte de proyecto */}
+        {showReportModal && (
+          <ReportProjectModal
+            onCancel={() => setShowReportModal(false)}
+            loading={reportLoading}
+            onSubmit={async (data, setMsg) => {
+              setReportLoading(true);
+              setMsg(null);
+              try {
+                await createProjectReport({
+                  projectId: Number(projectId),
+                  reason: data.reason,
+                  otherReason: data.other,
+                  description: data.description,
+                });
+                setMsg({ ok: true, text: 'Proyecto reportado con éxito.' });
+                setTimeout(() => setShowReportModal(false), 1500);
+              } catch (err) {
+                // Interceptar mensaje exacto del backend
+                const alreadyReportedRegex = /Project with id \d+ has already been reported by user \d+/;
+                if (
+                  (err.message && err.message.toLowerCase().includes('conflict')) ||
+                  (err.message && alreadyReportedRegex.test(err.message))
+                ) {
+                  setMsg({ ok: false, text: 'Ya has reportado este proyecto.' });
+                  setTimeout(() => setShowReportModal(false), 1500);
+                } else {
+                  setMsg({ ok: false, text: err.message || 'Error al reportar el proyecto' });
+                }
+              } finally {
+                setReportLoading(false);
+              }
             }}
           />
         )}

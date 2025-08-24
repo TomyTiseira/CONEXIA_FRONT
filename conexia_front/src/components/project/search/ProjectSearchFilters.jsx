@@ -9,12 +9,53 @@ export default function ProjectSearchFilters({ filters, onChange }) {
   const [collabTypes, setCollabTypes] = useState([]);
   const [contractTypes, setContractTypes] = useState([]);
   const [loading, setLoading] = useState(true);
+  // By default, all collapsed (mobile). We'll expand on desktop in useEffect.
   const [expandedSections, setExpandedSections] = useState({
-    category: true,
-    skills: true,
-    contract: true,
-    collaboration: true,
+    category: false,
+    skills: false,
+    contract: false,
+    collaboration: false,
   });
+  // Detect screen size on mount and set expanded/collapsed accordingly
+  useEffect(() => {
+    // Function to check if desktop (md: 768px+)
+    const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
+    if (isDesktop()) {
+      setExpandedSections({
+        category: true,
+        skills: true,
+        contract: true,
+        collaboration: true,
+      });
+    } else {
+      setExpandedSections({
+        category: false,
+        skills: false,
+        contract: false,
+        collaboration: false,
+      });
+    }
+    // Listen for resize to update expanded state if user resizes window
+    const handleResize = () => {
+      if (isDesktop()) {
+        setExpandedSections(prev => ({
+          category: true,
+          skills: true,
+          contract: true,
+          collaboration: true,
+        }));
+      } else {
+        setExpandedSections(prev => ({
+          category: false,
+          skills: false,
+          contract: false,
+          collaboration: false,
+        }));
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Estado para saber si el usuario interactuó con los filtros
   const [touched, setTouched] = useState({
