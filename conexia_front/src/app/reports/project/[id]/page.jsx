@@ -8,7 +8,7 @@ import { ROLES } from '@/constants/roles';
 import { NotFound } from '@/components/ui';
 
 export default function ProjectReportsPage({ params }) {
-  const id = params?.id;
+  const { id } = React.use(params);
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando reportes del proyecto...</div>}>
       <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]} fallbackComponent={<NotFound />}>
