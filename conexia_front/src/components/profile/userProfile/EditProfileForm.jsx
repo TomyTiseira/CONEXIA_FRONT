@@ -280,9 +280,14 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
 
   function handleExpChange(i, field, value) {
     const updated = [...form.experience];
-    updated[i][field] = value;
+    if (field === 'isCurrent' && value) {
+      // Si se marca 'Actualmente trabajo aquí', limpiar endDate
+      updated[i][field] = value;
+      updated[i]['endDate'] = '';
+    } else {
+      updated[i][field] = value;
+    }
     setForm({ ...form, experience: updated });
-    
     if (expTouched[i]) {
       const errs = getExperienceErrors(updated[i]);
       setExpErrors(prev => prev.map((e, idx) => idx === i ? errs : e));
@@ -385,9 +390,14 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
 
   function handleEducationChange(i, field, value) {
     const updated = [...form.education];
-    updated[i][field] = value;
+    if (field === 'isCurrent' && value) {
+      // Si se marca 'Actualmente estudio aquí', limpiar endDate
+      updated[i][field] = value;
+      updated[i]['endDate'] = '';
+    } else {
+      updated[i][field] = value;
+    }
     setForm({ ...form, education: updated });
-    
     if (eduTouched[i]) {
       const errs = getEducationErrors(updated[i]);
       setEduErrors(prev => prev.map((e, idx) => idx === i ? errs : e));
@@ -1019,7 +1029,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
                     <input 
                       type="date" 
                       className={`border rounded p-2 ${expTouched[i]?.endDate && expErrors[i]?.endDate ? 'border-red-500 ring-red-300' : ''}`}
-                      value={exp.endDate} 
+                      value={exp.endDate || ""} 
                       onChange={e => handleExpChange(i, 'endDate', e.target.value)} 
                       onBlur={() => handleExpBlur(i, 'endDate')}
                       disabled={exp.isCurrent || exp.confirmed} 
@@ -1134,7 +1144,7 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
                     <input 
                       type="date" 
                       className={`border rounded p-2 ${eduTouched[i]?.endDate && eduErrors[i]?.endDate ? 'border-red-500 ring-red-300' : ''}`}
-                      value={edu.endDate} 
+                      value={edu.endDate || ""} 
                       onChange={e => handleEducationChange(i, 'endDate', e.target.value)} 
                       onBlur={() => handleEducationBlur(i, 'endDate')}
                       disabled={edu.isCurrent || edu.confirmed} 

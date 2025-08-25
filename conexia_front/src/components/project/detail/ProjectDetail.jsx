@@ -287,7 +287,7 @@ export default function ProjectDetail({ projectId }) {
               </div>
 
               {/* Mensaje al creador tipo Facebook mejorado y responsivo, alineado y compacto */}
-              {!isOwner && (
+              {!isOwner && roleName !== ROLES.ADMIN && roleName !== ROLES.MODERATOR && (
                 <div className="mt-1 w-full">
                   <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-row items-center gap-2 shadow-sm" style={{boxShadow: '0 2px 8px 0 rgba(0,0,0,0.03)'}}>
                     <div className="flex-1 w-full flex flex-col">

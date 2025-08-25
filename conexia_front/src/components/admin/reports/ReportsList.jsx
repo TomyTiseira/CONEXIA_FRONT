@@ -107,7 +107,7 @@ export default function ReportsList() {
                 projects.map(p => (
                   <tr key={p.projectId} className="border-b hover:bg-gray-50 h-auto align-top">
                     <td className="p-4 align-top">
-                      <Link href={`/reports/project/${p.projectId}`} className="text-conexia-green font-semibold hover:underline break-all whitespace-normal">
+                      <Link href={`/project/${p.projectId}?from=reports`} className="text-conexia-green font-semibold hover:underline break-all whitespace-normal">
                         {p.projectTitle}
                       </Link>
                     </td>

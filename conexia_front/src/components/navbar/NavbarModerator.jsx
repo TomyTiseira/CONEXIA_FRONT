@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import {
   MessageCircle,
   Bell,
+  AlertTriangle,
   Home,
   Briefcase,
   Layers,
@@ -36,7 +37,7 @@ export default function NavbarModerator() {
   { label: 'Inicio', href: '/', icon: Home },
   { label: 'Servicios', href: '#servicios', icon: Briefcase },
   { label: 'Proyectos', href: '/project/search', icon: Layers },
-  { label: 'Reportes', href: '/reports', icon: Bell },
+  { label: 'Reportes', href: '/reports', icon: AlertTriangle },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';
