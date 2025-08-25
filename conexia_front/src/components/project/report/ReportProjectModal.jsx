@@ -65,6 +65,8 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
             <div className="text-conexia-coral font-semibold text-xs">¿Por qué reportar este proyecto?</div>
             <div className="text-conexia-coral text-xs mt-0.5 leading-tight">
               Al reportar un proyecto, ayudas a mantener la comunidad segura y confiable. El reporte será revisado por nuestro equipo y, si corresponde, se tomarán las medidas necesarias. El dueño del proyecto no sabrá quién realizó el reporte.
+              <br />
+              <span className="text-xs text-conexia-coral font-semibold">Importante: Si realizas reportes falsos de manera reiterada, tu cuenta podrá ser suspendida o dada de baja.</span>
             </div>
           </div>
         </div>
@@ -91,12 +93,14 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
           <div className="mb-2 ml-6">
             <InputField
               type="text"
-              placeholder="Completa el motivo..."
+              placeholder="Completa el motivo... (máx. 30 caracteres)"
               value={otherText}
-              onChange={(e) => setOtherText(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 30) setOtherText(e.target.value);
+              }}
               required
               name="otherReason"
-              maxLength={100}
+              maxLength={30}
             />
           </div>
         )}
