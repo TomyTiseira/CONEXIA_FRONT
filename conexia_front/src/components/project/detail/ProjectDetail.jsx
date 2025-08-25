@@ -350,8 +350,8 @@ export default function ProjectDetail({ projectId }) {
                     router.push(`/reports/project/${fromReportsProjectId}`);
                   } else if (from === 'reports') {
                     router.push('/reports');
-                  } else if (from === 'profile' && user && user.id) {
-                    router.push(`/profile/userProfile/${user.id}`);
+            } else if (from === 'profile' && project && project.ownerId) {
+              router.push(`/profile/userProfile/${project.ownerId}`);
                   } else if (from === 'user-projects' && project.ownerId) {
                     router.push(`/projects/user/${project.ownerId}`);
                   } else if (from === 'my-projects' && user && user.id) {

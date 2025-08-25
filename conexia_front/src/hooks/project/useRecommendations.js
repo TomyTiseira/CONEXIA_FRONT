@@ -96,15 +96,26 @@ export const useRecommendations = () => {
           });
           const recommendedProjects = recommendedProjectsResponse.projects || [];
             // Filtrar proyectos donde el usuario no sea el propietario, ni ya se haya postulado, ni esté completo el cupo
-            const filteredProjects = recommendedProjects.filter(project => 
-              project.userId !== user.id &&
-              project.ownerId !== user.id &&
-              !project.isApplied &&
-              (typeof project.maxCollaborators !== 'number' || typeof project.approvedApplications !== 'number' || project.approvedApplications < project.maxCollaborators) &&
-              (
-                typeof project.maxCollaborators !== 'number' || typeof project.approvedApplications !== 'number' || project.approvedApplications !== project.maxCollaborators
-              )
-            );
+            const filteredProjects = recommendedProjects.filter(project => {
+              // Excluir si es propio o del owner
+              if (project.userId === user.id || project.ownerId === user.id) return false;
+              // Si tiene postulación, solo excluir si está activa, aceptada o rechazada
+              if (project.postulationStatus && project.postulationStatus.code) {
+                const code = project.postulationStatus.code;
+                if (code === 'activo' || code === 'aceptada' || code === 'rechazada') return false;
+                // Si está cancelada o null, permitir mostrar
+              } else if (project.isApplied) {
+                // Si solo hay isApplied true pero no status, mantener lógica anterior
+                return false;
+              }
+              // Excluir si el cupo está completo
+              if (
+                typeof project.maxCollaborators === 'number' &&
+                typeof project.approvedApplications === 'number' &&
+                project.approvedApplications >= project.maxCollaborators
+              ) return false;
+              return true;
+            });
           // Procesar y limpiar los proyectos - cambiar a 9 para que el carrusel salga completo
           // Asegurar que se ordenen por relevancia de skills
           const sortedProjects = sortProjectsByRelevance(filteredProjects, userSkillIds);

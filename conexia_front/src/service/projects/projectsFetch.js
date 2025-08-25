@@ -104,6 +104,7 @@ export async function fetchProjects({ title, category, skills, collaboration, co
         isApplied: p.isApplied || false,
         approvedApplications: p.approvedApplications || 0,
         maxCollaborators: p.maxCollaborators,
+        postulationStatus: p.postulationStatus || null,
       })),
       pagination
     };
@@ -188,6 +189,7 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
         approvedApplications: p.approvedApplications || 0,
         maxCollaborators: p.maxCollaborators,
         isApplied: p.isApplied || false,
+        postulationStatus: p.postulationStatus || null,
       }));
 
     return {
