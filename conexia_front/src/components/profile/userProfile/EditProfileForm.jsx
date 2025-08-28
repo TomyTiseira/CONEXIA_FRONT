@@ -744,14 +744,8 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
       return;
     }
     
-    // Unir las skills originales del usuario con las seleccionadas en el formulario, evitando duplicados
-    const originalSkills = user.skills || [];
-    const formSkills = form.skills || [];
-    const allSkills = [
-      ...originalSkills,
-      ...formSkills.filter(s => !originalSkills.some(os => os.id === s.id))
-    ];
-    onSubmit({ ...form, skills: allSkills });
+  // Enviar solo las skills seleccionadas actualmente (puede ser array vacío o con nuevas/viejas)
+  onSubmit({ ...form, skills: form.skills });
   }
 
   const { user: authUser } = useAuth();
