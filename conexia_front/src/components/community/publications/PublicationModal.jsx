@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import Button from '@/components/ui/Button';
 import Image from 'next/image';
+import { config } from '@/config';
 import dynamic from 'next/dynamic';
 import { createPublication } from '@/service/publications/publicationsFetch';
 import { FaGlobeAmericas, FaUsers } from 'react-icons/fa';
@@ -87,10 +88,13 @@ function VisibilityModal({ open, onClose, value, onChange }) {
 }
 
 export default function PublicationModal({ open, onClose, onPublish, user }) {
+  const avatar = user?.profilePicture
+    ? `${config.IMAGE_URL}/${user.profilePicture}`
+    : '/images/default-avatar.png';
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState('');
-  const [visibility, setVisibility] = useState('all');
+  const [visibility, setVisibility] = useState('all'); // 'all' o 'friends'
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const fileInputRef = useRef();
@@ -142,9 +146,12 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
     if (!description.trim() || loading) return;
     setLoading(true);
     setSubmitError('');
+    // Mapear visibility a privacy
+  let privacy = 'public';
+  if (visibility === 'contacts') privacy = 'onlyFriends';
     try {
-      await createPublication({ description, file });
-      if (onPublish) onPublish({ description, file, visibility });
+      await createPublication({ description, file, privacy });
+      if (onPublish) onPublish({ description, file, privacy });
       handleClose();
     } catch (err) {
       setSubmitError(err.message || 'Error al crear publicación');
@@ -185,7 +192,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
         {/* Header */}
         <div className="p-4 border-b border-[#e0f0f0] bg-[#eef6f6] rounded-t-2xl">
           <div className="flex items-center gap-3 relative">
-            <Image src={user.avatar} alt="avatar" width={48} height={48} className="rounded-full object-cover" />
+            <Image src={avatar} alt="avatar" width={48} height={48} className="rounded-full aspect-square object-cover" />
             <div className="flex flex-col flex-1 min-w-0">
               <span className="font-semibold text-conexia-green text-base leading-tight">{user.name}</span>
               <button
