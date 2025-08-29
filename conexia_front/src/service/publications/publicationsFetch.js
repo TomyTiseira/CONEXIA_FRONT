@@ -1,3 +1,13 @@
+// Obtener publicaciones de la comunidad
+export async function getCommunityPublications() {
+  const res = await fetchWithRefresh(`${config.API_URL}/publications`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  const response = await res.json();
+  if (!res.ok) throw new Error(response.message || 'Error al obtener publicaciones');
+  return response;
+}
 import { config } from '@/config';
 import { fetchWithRefresh } from '@/service/auth/fetchWithRefresh';
 

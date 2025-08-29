@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/ui/Button";
 import SkillsDisplay from "@/components/skills/SkillsDisplay";
 import UserCollaborativeProjects from "./UserCollaborativeProjects";
+import UserActivity from "./UserActivity";
 
 
 export default function UserProfile() {
@@ -480,8 +481,10 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* Rectángulo de proyectos colaborativos */}
-        <UserCollaborativeProjects userId={id} />
+  {/* Rectángulo de proyectos colaborativos */}
+  <UserCollaborativeProjects userId={id} />
+  {/* Rectángulo de actividad */}
+  <UserActivity userId={id} isOwner={isOwner} />
       </div>
   {/* Margen inferior verde */}
   <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
