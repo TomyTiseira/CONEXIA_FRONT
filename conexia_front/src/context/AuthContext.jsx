@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getProfile, logoutUser } from '@/service/auth/authService';
+import { getProfileById } from '@/service/profiles/profilesFetch';
 import { useUserStore } from '@/store/userStore';
 import { useRole } from '@/hooks/useRole';
 
@@ -18,7 +19,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { setUser: setUserStore, clearUser: clearUserStore, setRoleName } = useUserStore();
+  const { setUser: setUserStore, setProfile: setProfileStore, clearUser: clearUserStore, setRoleName } = useUserStore();
   const roleId = user?.roleId || null;
   const { role: roleName } = useRole(roleId);
 
@@ -29,6 +30,17 @@ export const AuthProvider = ({ children }) => {
       const userData = await getProfile();
       setUser(userData);
       setUserStore(userData, roleName); // Guardar en Zustand con roleName
+      // Obtener perfil extendido solo si hay id
+      if (userData?.id) {
+        try {
+          const profileRes = await getProfileById(userData.id);
+          setProfileStore(profileRes.data.profile);
+        } catch (e) {
+          setProfileStore(null);
+        }
+      } else {
+        setProfileStore(null);
+      }
     } catch (err) {
       setUser(null);
       setError(err.message);
@@ -36,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [setUserStore, clearUserStore, roleName]);
+  }, [setUserStore, setProfileStore, clearUserStore, roleName]);
 
   const logout = useCallback(async () => {
     try {
