@@ -263,14 +263,13 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
               {/* Bloque scrolleable: textarea + imagen/video/gif juntos, con controles pegados */}
               <div className="flex flex-col w-full" style={{ alignItems: 'center' }}>
                 <div
-                  className="bg-[#f8fcfc] border border-[#c6e3e4] rounded-t-lg flex flex-col p-0 relative overflow-y-scroll w-full mx-auto"
+                  className="bg-[#f8fcfc] border border-[#c6e3e4] rounded-t-2xl flex flex-col p-0 relative overflow-y-scroll w-full"
                   style={{
                     minHeight: 160,
                     maxHeight: 280,
                     height: 280,
-                    maxWidth: '98%',
-                    marginLeft: '1%',
-                    marginRight: '1%',
+                    margin: 0,
+                    borderBottom: 'none',
                   }}
                 >
                   <div className="flex flex-col gap-2 px-1 pt-3 pb-3 w-full">
@@ -336,7 +335,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
                   </div>
                 </div>
                 {/* Controles de adjuntos pegados abajo del input, sin separación */}
-                <div className="flex items-center gap-3 px-1 py-2 border-x border-b border-[#e0f0f0] bg-[#f8fcfc] rounded-b-lg w-full" style={{ maxWidth: '100%', margin: 0, borderTop: 'none' }}>
+                <div className="flex items-center gap-3 px-3 py-2 border border-[#c6e3e4] border-t-0 bg-[#f8fcfc] rounded-b-2xl w-full" style={{ margin: 0 }}>
                   <button
                     type="button"
                     className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#e0f0f0] text-conexia-green/60 hover:text-conexia-green"

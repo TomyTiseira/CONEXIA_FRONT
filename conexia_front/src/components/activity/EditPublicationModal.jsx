@@ -90,6 +90,20 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
   const fileInputRef = useRef();
   const textareaRef = useRef();
 
+  // Para textarea dinámico
+  const MIN_TEXTAREA_HEIGHT = 38;
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.max(MIN_TEXTAREA_HEIGHT, textarea.scrollHeight) + 'px';
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [description]);
+
   useEffect(() => {
     setDescription(initialDescription || '');
     setFile(null);
@@ -98,6 +112,7 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
     setShowEmoji(false);
     setRemoveOriginalMedia(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    setTimeout(() => adjustTextareaHeight(), 0);
   }, [initialDescription, initialMediaUrl, initialPrivacy, open]);
 
   const handleFileIconClick = (type) => {
@@ -178,30 +193,20 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
           setShowVisibilityModal(false);
         }}
       />
-      <div className="relative w-full max-w-2xl mx-2 bg-white rounded-2xl shadow-2xl border border-[#c6e3e4] animate-fadeIn flex flex-col" style={{ minHeight: 420, maxHeight: 600, height: 480 }}>
+  <div className="relative w-full max-w-2xl mx-2 bg-white rounded-2xl shadow-2xl border border-[#c6e3e4] animate-fadeIn flex flex-col" style={{ minHeight: 420, maxHeight: 600, height: 480 }}>
         {/* Header */}
         <div className="p-4 border-b border-[#e0f0f0] bg-[#eef6f6] rounded-t-2xl">
           <div className="flex items-center gap-3 relative">
-            {(() => {
-              let avatar = '/images/default-avatar.png';
-              if (user?.profilePicture) {
-                avatar = user.profilePicture.startsWith('http')
-                  ? user.profilePicture
-                  : `${require('@/config').config.IMAGE_URL}/${user.profilePicture}`;
-              }
-              return (
-                <Image
-                  src={avatar}
-                  alt="avatar"
-                  width={48}
-                  height={48}
-                  className="rounded-full aspect-square object-cover"
-                  onError={e => { e.target.onerror = null; e.target.src = '/images/default-avatar.png'; }}
-                />
-              );
-            })()}
+            <Image
+              src={user?.profilePicture ? `${require('@/config').config.IMAGE_URL}/${user.profilePicture}` : '/images/default-avatar.png'}
+              alt="avatar"
+              width={48}
+              height={48}
+              className="rounded-full aspect-square object-cover"
+              onError={e => { e.target.onerror = null; e.target.src = '/images/default-avatar.png'; }}
+            />
             <div className="flex flex-col flex-1 min-w-0">
-              <span className="font-semibold text-conexia-green text-base leading-tight">{user?.name || ''}</span>
+              <span className="font-semibold text-conexia-green text-base leading-tight">{user?.name && user?.lastName ? `${user.name} ${user.lastName}` : 'Usuario'}</span>
               <button
                 className="flex items-center gap-1 text-xs text-conexia-green/80 bg-[#e0f0f0] px-2.5 py-1 rounded-md border border-[#c6e3e4] hover:bg-[#eef6f6] mt-1 w-fit truncate transition-colors"
                 onClick={() => setShowVisibilityModal(true)}
@@ -223,27 +228,45 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
             </button>
           </div>
         </div>
-        {/* Body */}
+        {/* Body (scrollable, LinkedIn style) */}
         <div className="flex-1 flex flex-col items-center justify-center px-2 py-4">
           <div className="w-full max-w-xl flex flex-col items-center justify-center">
             <div className="flex flex-col w-full" style={{ alignItems: 'center' }}>
-              <div className="bg-[#f8fcfc] border border-[#c6e3e4] rounded-t-lg flex flex-col p-0 relative overflow-y-auto w-full" style={{ minHeight: 160, maxHeight: 280, height: 280, maxWidth: '98%', margin: '0 6px' }}>
-                <div className="flex flex-col gap-2 px-3 pt-3 pb-3">
+              <div
+                className="bg-[#f8fcfc] border border-[#c6e3e4] rounded-t-2xl flex flex-col p-0 relative overflow-y-scroll w-full"
+                style={{
+                  minHeight: 160,
+                  maxHeight: 280,
+                  height: 280,
+                  margin: 0,
+                  borderBottom: 'none',
+                }}
+              >
+                <div className="flex flex-col gap-2 px-1 pt-3 pb-3 w-full">
                   <textarea
                     ref={textareaRef}
-                    className="w-full border-none outline-none bg-transparent resize-none text-conexia-green placeholder:text-conexia-green/50 text-base min-h-[100px] max-h-[140px]"
+                    className="w-full border-none outline-none bg-transparent resize-none text-conexia-green placeholder:text-conexia-green/50 text-base"
                     placeholder="¿Qué tienes en mente?"
                     maxLength={MAX_DESCRIPTION}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    style={{ minHeight: 100, maxHeight: 140, height: 100, boxShadow: 'none', margin: 0, paddingBottom: 0, transition: 'padding-bottom 0.2s', overflow: 'hidden', resize: 'none' }}
-                    rows={4}
+                    style={{
+                      minHeight: MIN_TEXTAREA_HEIGHT,
+                      height: 'auto',
+                      boxShadow: 'none',
+                      margin: 0,
+                      paddingBottom: 0,
+                      transition: 'padding-bottom 0.2s',
+                      overflow: 'hidden',
+                      resize: 'none',
+                    }}
+                    rows={1}
                   />
-                  {/* Preview archivos */}
-                  {file && file.type.startsWith('image/') && (
+                  {/* Preview archivos SIEMPRE debajo del textarea, dentro del mismo bloque scrolleable */}
+                  {file && file.type.startsWith('image/') && file.type !== 'image/gif' && (
                     <div className="relative w-full flex justify-center items-center mt-2 mb-2">
-                      <div className="relative w-full max-w-[260px] flex justify-center">
-                        <img src={URL.createObjectURL(file)} alt="preview" className="max-h-40 w-full object-contain mx-auto" />
+                      <div className="relative w-full flex justify-center" style={{ maxWidth: '480px' }}>
+                        <img src={URL.createObjectURL(file)} alt="preview" className="max-h-56 w-full object-contain mx-auto" />
                         <button
                           type="button"
                           onClick={handleRemoveFile}
@@ -279,7 +302,7 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
                       </button>
                     </div>
                   )}
-                  {/* Si no hay file pero hay mediaUrl original, mostrar preview y permitir eliminar */}
+                  {/* Preview original si no hay file */}
                   {!file && initialMediaUrl && !removeOriginalMedia && (
                     <div className="relative w-full flex justify-center items-center mt-2 mb-2">
                       {initialMediaType === 'image' || initialMediaType === 'gif' ? (
@@ -298,7 +321,8 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-3 px-2 py-2 border-x border-b border-[#e0f0f0] bg-[#f8fcfc] rounded-b-lg w-full" style={{ maxWidth: '98%', margin: '0 6px', borderTop: 'none' }}>
+              {/* Controles de adjuntos pegados abajo del input, sin separación */}
+              <div className="flex items-center gap-3 px-3 py-2 border border-[#c6e3e4] border-t-0 bg-[#f8fcfc] rounded-b-2xl w-full" style={{ margin: 0 }}>
                 <button
                   type="button"
                   className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#e0f0f0] text-conexia-green/60 hover:text-conexia-green"
@@ -322,6 +346,7 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
               {fileError && <div className="text-red-500 text-xs">{fileError}</div>}
               {showEmoji && (
                 <div className="absolute bottom-20 left-6 z-50">
+                  {/* Overlay para cerrar el picker al hacer click fuera */}
                   <div
                     className="fixed inset-0 z-40"
                     style={{ background: 'transparent' }}
@@ -375,3 +400,4 @@ EditPublicationModal.propTypes = {
   initialPrivacy: PropTypes.string,
   user: PropTypes.object
 };
+

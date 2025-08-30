@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { config } from '@/config';
 import { MoreVertical, AlertCircle, Trash2, Pencil } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useUserStore } from '@/store/userStore';
 import DeletePublicationModal from './DeletePublicationModal';
 import EditPublicationModal from './EditPublicationModal';
 import { deletePublication } from '@/service/publications/deletePublication';
@@ -19,6 +20,7 @@ const getMediaUrl = (mediaUrl) => {
 
 export default function PublicationCard({ publication }) {
   const { user } = useAuth();
+  const { profile } = useUserStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const isOwner = user && publication.userId && String(user.id) === String(publication.userId);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -58,6 +60,12 @@ export default function PublicationCard({ publication }) {
       setDeleteLoading(false);
     }
   };
+
+  // Avatar y nombre igual que en ClientCommunity
+  const avatar = profile?.profilePicture
+    ? `${config.IMAGE_URL}/${profile.profilePicture}`
+    : '/images/default-avatar.png';
+  const displayName = profile?.name && profile?.lastName ? `${profile.name} ${profile.lastName}` : 'Usuario';
 
   return (
     <div className="bg-[#f8fcfc] rounded-xl shadow-sm p-4 border border-[#c6e3e4] flex flex-col relative">
@@ -119,7 +127,13 @@ export default function PublicationCard({ publication }) {
         initialMediaUrl={publication.mediaUrl ? getMediaUrl(publication.mediaUrl) : ''}
         initialMediaType={publication.mediaType}
         initialPrivacy={publication.privacy}
-        user={user}
+        user={{
+          profilePicture: profile?.profilePicture,
+          name: profile?.name,
+          lastName: profile?.lastName,
+          profession: profile?.profession,
+          location: profile?.location,
+        }}
       />
       <div className="text-conexia-green font-semibold mb-2">{publication.description}</div>
       {publication.mediaUrl && publication.mediaType === 'image' && (
