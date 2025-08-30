@@ -15,41 +15,16 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
-import { getProfileById } from '@/service/profiles/profilesFetch';
+import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
 
 export default function NavbarCommunity() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
+  const { profile } = useUserStore();
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
-  const userId = user?.id;
   const defaultAvatar = '/images/default-avatar.png';
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!userId) return;
-      
-      // Para admin y moderator, no obtener perfil ya que no tienen perfil en la API
-      const isAdmin = user?.roleId === 1;
-      const isModerator = user?.roleId === 3;
-      
-      if (isAdmin || isModerator) {
-        setProfile(null);
-        return;
-      }
-      
-      try {
-        const data = await getProfileById(userId);
-        setProfile(data.data.profile);
-      } catch (err) {
-        setProfile(null);
-      }
-    };
-    
-    fetchProfile();
-  }, [userId, user?.roleId]);
 
   const handleLogout = async () => {
     try {

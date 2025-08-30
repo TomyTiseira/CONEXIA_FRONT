@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useUserStore } from '@/store/userStore';
 import {
   MessageCircle,
   Bell,
@@ -20,7 +21,8 @@ import { config } from '@/config';
 
 export default function NavbarModerator() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { user } = useUserStore();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -92,7 +94,7 @@ export default function NavbarModerator() {
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
                 <Image
                   src={
-                    (user?.role === 'admin' || user?.role === 'moderator') 
+                    (user?.roleName === 'admin' || user?.roleName === 'moderator')
                       ? defaultAvatar
                       : (user && user.profilePicture
                         ? `${config.IMAGE_URL}/${user.profilePicture}`
