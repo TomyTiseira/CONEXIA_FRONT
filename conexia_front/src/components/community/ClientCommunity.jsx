@@ -19,8 +19,11 @@ export default function ClientCommunity() {
   const { user, isLoading } = useAuth();
   const { profile } = useUserStore();
   const [publications, setPublications] = useState([]);
-  const [loadingPublications, setLoadingPublications] = useState(true);
+  const [loadingPublications, setLoadingPublications] = useState(false);
   const [errorPublications, setErrorPublications] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 10;
 
 
 
@@ -30,10 +33,12 @@ export default function ClientCommunity() {
       setLoadingPublications(true);
       setErrorPublications(null);
       try {
-        const res = await getCommunityPublications();
-        const data = res.data || [];
-        const filtered = data.filter(pub => pub.isOwner === false);
-        setPublications(filtered);
+        const res = await getCommunityPublications({ page, limit });
+        // res debe tener: { data: [...], total, page, limit, hasMore }
+  const data = Array.isArray(res.data?.publications) ? res.data.publications : [];
+  const filtered = data.filter(pub => pub.isOwner === false);
+  setPublications(prev => page === 1 ? filtered : [...prev, ...filtered]);
+  setHasMore(res.data?.pagination?.hasNextPage ?? false);
       } catch (err) {
         setErrorPublications('Error al cargar publicaciones');
         console.error('Error al cargar publicaciones:', err);
@@ -41,12 +46,24 @@ export default function ClientCommunity() {
         setLoadingPublications(false);
       }
     };
-    try {
-      fetchPublications();
-    } catch (e) {
-      console.error('Error global useEffect:', e);
-    }
-  }, []);
+    fetchPublications();
+    // eslint-disable-next-line
+  }, [page]);
+
+  // Scroll infinito
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loadingPublications || !hasMore) return;
+      const scrollY = window.scrollY || window.pageYOffset;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+      if (scrollY + windowHeight >= docHeight - 200) {
+        setPage(prev => prev + 1);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadingPublications, hasMore]);
 
     // Simulación de publicación
     const handlePublish = (data) => {
@@ -139,13 +156,22 @@ export default function ClientCommunity() {
 
             {/* Publicaciones de la comunidad (no propias) */}
             {errorPublications && <div className="text-red-500">{errorPublications}</div>}
-            {publications.length === 0 && !errorPublications && (
-              <div className="text-conexia-green/70">No hay publicaciones de la comunidad para mostrar.</div>
-            )}
             <div className="flex flex-col gap-0 w-full max-w-2xl">
+              {loadingPublications && publications.length === 0 && (
+                <div className="text-conexia-green/70 py-4 text-center">Cargando publicaciones...</div>
+              )}
+              {!loadingPublications && publications.length === 0 && !errorPublications && (
+                <div className="text-conexia-green/70">No hay publicaciones de la comunidad para mostrar.</div>
+              )}
               {publications.map(pub => (
                 <PublicationCard key={pub.id} publication={pub} />
               ))}
+              {loadingPublications && publications.length > 0 && (
+                <div className="text-conexia-green/70 py-4 text-center">Cargando más publicaciones...</div>
+              )}
+              {!hasMore && publications.length > 0 && (
+                <div className="text-conexia-green/60 py-4 text-center">No hay más publicaciones.</div>
+              )}
             </div>
           </div>
         </div>

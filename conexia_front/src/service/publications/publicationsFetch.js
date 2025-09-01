@@ -1,6 +1,6 @@
-// Obtener publicaciones de la comunidad
-export async function getCommunityPublications() {
-  const res = await fetchWithRefresh(`${config.API_URL}/publications`, {
+// Obtener publicaciones de la comunidad paginadas
+export async function getCommunityPublications({ page = 1, limit = 10 } = {}) {
+  const res = await fetchWithRefresh(`${config.API_URL}/publications?page=${page}&limit=${limit}`, {
     method: 'GET',
     credentials: 'include',
   });

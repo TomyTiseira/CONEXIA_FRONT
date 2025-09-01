@@ -1,23 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { MdBarChart } from 'react-icons/md';
 import PublicationCard from './PublicationCard';
 import Button from '@/components/ui/Button';
 import PropTypes from 'prop-types';
-import { config } from '@/config';
+import { useRouter } from 'next/navigation';
 
-// Helper para asegurar URLs absolutas (igual que en ProjectDetail)
-const getMediaUrl = (mediaUrl) => {
-  if (!mediaUrl) return null;
-  if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) return mediaUrl;
-  if (mediaUrl.startsWith('/uploads')) return `${config.IMAGE_URL}${mediaUrl.replace('/uploads', '')}`;
-  if (mediaUrl.startsWith('/')) return `${config.IMAGE_URL}${mediaUrl}`;
-  return `${config.IMAGE_URL}/${mediaUrl}`;
-};
-
-export default function ActivityFeed({ publications, isOwner }) {
-  const [showAll, setShowAll] = useState(false);
-  const visiblePublications = showAll ? publications : publications.slice(0, 2);
-
+export default function ActivityFeed({ publications, isOwner, userId }) {
+  const router = useRouter();
+  const visiblePublications = publications.slice(0, 2);
   return (
     <section className="w-full mt-8">
       <div className="bg-white rounded-2xl shadow p-6 border border-[#c6e3e4]">
@@ -39,12 +29,12 @@ export default function ActivityFeed({ publications, isOwner }) {
             ))}
           </div>
         )}
-        {publications.length > 2 && !showAll && (
+        {publications.length > 2 && (
           <div className="flex flex-col sm:flex-row justify-end mt-4">
             <Button
               variant="informative"
               className="w-full sm:w-auto flex items-center gap-2 px-5 py-2 rounded-lg font-semibold shadow bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] text-base border border-[#c6e3e4]"
-              onClick={() => setShowAll(true)}
+              onClick={() => router.push(`/activities/${userId}`)}
             >
               <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m4-4H8" /></svg>
               Ver más…
@@ -58,5 +48,6 @@ export default function ActivityFeed({ publications, isOwner }) {
 
 ActivityFeed.propTypes = {
   publications: PropTypes.array.isRequired,
-  isOwner: PropTypes.bool
+  isOwner: PropTypes.bool,
+  userId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 };

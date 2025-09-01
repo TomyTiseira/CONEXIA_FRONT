@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
 import { config } from '@/config';
 import { MoreVertical, AlertCircle, Trash2, Pencil } from 'lucide-react';
@@ -21,9 +22,8 @@ const getMediaUrl = (mediaUrl) => {
 
 function PublicationCard({ publication }) {
   const { user } = useAuth();
-  // Estado para el perfil del autor de la publicación
-  const [authorProfile, setAuthorProfile] = useState(null);
-  const [authorLoading, setAuthorLoading] = useState(true);
+  const router = useRouter();
+  // Ya no se necesita estado de perfil del autor, los datos vienen en publication.owner
   // Estados para menú y modales
   const [menuOpen, setMenuOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -31,29 +31,17 @@ function PublicationCard({ publication }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchAuthor() {
-      setAuthorLoading(true);
-      try {
-        const res = await getProfileById(publication.userId);
-        if (isMounted) setAuthorProfile(res.data?.profile || null);
-      } catch (e) {
-        if (isMounted) setAuthorProfile(null);
-      } finally {
-        if (isMounted) setAuthorLoading(false);
-      }
-    }
-    fetchAuthor();
-    return () => { isMounted = false; };
-  }, [publication.userId]);
+  // No más useEffect para buscar perfil, los datos vienen en publication.owner
 
-  // Avatar, nombre, profesión y privacidad
-  const avatar = authorProfile?.profilePicture
-    ? `${config.IMAGE_URL}/${authorProfile.profilePicture}`
+  // Avatar, nombre, profesión y privacidad desde publication.owner
+  const avatar = publication.owner?.profilePicture
+    ? (publication.owner.profilePicture.startsWith('http')
+        ? publication.owner.profilePicture
+        : `${config.IMAGE_URL}${publication.owner.profilePicture.startsWith('/') ? '' : '/'}${publication.owner.profilePicture}`)
     : '/images/default-avatar.png';
-  const displayName = authorProfile?.name && authorProfile?.lastName ? `${authorProfile.name} ${authorProfile.lastName}` : 'Usuario';
-  const profession = authorProfile?.profession || '';
+  const ownerId = publication.owner?.id;
+  const displayName = publication.owner?.name && publication.owner?.lastName ? `${publication.owner.name} ${publication.owner.lastName}` : publication.owner?.name || 'Usuario';
+  const profession = publication.owner?.profession || '';
 
   // Fecha relativa o absoluta
   function getRelativeOrAbsoluteDate(dateString) {
@@ -76,10 +64,13 @@ function PublicationCard({ publication }) {
     }
   }
 
-  // Icono de privacidad
-  const privacyIcon = publication.privacy === 'contacts'
-    ? <FaUsers size={16} className="inline text-conexia-green ml-1 align-text-bottom" title="Solo amigos" />
-    : <FaGlobeAmericas size={16} className="inline text-conexia-green ml-1 align-text-bottom" title="Público" />;
+  // Icono de privacidad (igual que en crear publicación)
+  let privacyIcon = null;
+  if (publication.privacy === 'public') {
+    privacyIcon = <FaGlobeAmericas size={16} className="inline text-conexia-green ml-1 align-text-bottom" title="Público" />;
+  } else if (publication.privacy === 'onlyFriends' || publication.privacy === 'contacts') {
+    privacyIcon = <FaUsers size={16} className="inline text-conexia-green ml-1 align-text-bottom" title="Solo amigos" />;
+  }
 
   // Lógica de edición y borrado (igual que antes)
   const isOwner = user && publication.userId && String(user.id) === String(publication.userId);
@@ -119,11 +110,20 @@ function PublicationCard({ publication }) {
   <div className="bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl" style={{ minWidth: 0 }}>
       {/* Header autor y menú */}
       <div className="flex items-center gap-2 px-5 pt-3 pb-2 relative min-h-0">
-        <img src={avatar} alt="avatar" className="w-12 h-12 rounded-full border-2 border-[#c6e3e4] object-cover bg-white" />
+        <img
+          src={avatar}
+          alt="avatar"
+          className="w-12 h-12 rounded-full border-2 border-[#c6e3e4] object-cover bg-white cursor-pointer"
+          onClick={() => ownerId && router.push(`/profile/userProfile/${ownerId}`)}
+        />
         <div className="flex flex-col min-w-0 flex-1">
-          <span className="text-conexia-green font-semibold text-base truncate max-w-xs flex items-center gap-1 leading-tight" style={{lineHeight:'1.1'}}>
+          <span
+            className="text-conexia-green font-semibold text-base truncate max-w-xs flex items-center gap-1 leading-tight cursor-pointer transition-colors hover:text-[#367d7d] px-1 rounded"
+            style={{lineHeight:'1.1'}}
+            onClick={() => ownerId && router.push(`/profile/userProfile/${ownerId}`)}
+          >
             {displayName}
-            {/* LinkedIn badge, opcional: <span className="ml-1 bg-[#e0f0f0] text-[#1e6e5c] text-xs px-1.5 py-0.5 rounded font-bold">in</span> */}
+            {/* LinkedIn badge, opcional: <span className=\"ml-1 bg-[#e0f0f0] text-[#1e6e5c] text-xs px-1.5 py-0.5 rounded font-bold\">in</span> */}
           </span>
           {profession && (
             <span className="text-xs text-conexia-green/80 truncate max-w-xs leading-tight mt-0.5" style={{lineHeight:'1.1'}}>{profession}</span>
@@ -181,13 +181,10 @@ function PublicationCard({ publication }) {
         initialMediaUrl={publication.mediaUrl ? getMediaUrl(publication.mediaUrl) : ''}
         initialMediaType={publication.mediaType}
         initialPrivacy={publication.privacy}
-        user={authorProfile ? {
-          profilePicture: authorProfile.profilePicture,
-          name: authorProfile.name,
-          lastName: authorProfile.lastName,
-          profession: authorProfile.profession,
-          location: authorProfile.location,
-        } : {}}
+        user={{
+          profilePicture: publication.owner?.profilePicture || '/images/default-avatar.png',
+          displayName: publication.owner?.name && publication.owner?.lastName ? `${publication.owner.name} ${publication.owner.lastName}` : publication.owner?.name || 'Usuario',
+        }}
       />
       {/* Línea divisoria entre header y contenido */}
       <div className="border-t border-[#e0f0f0] mx-6" />
@@ -240,8 +237,10 @@ function PublicationCard({ publication }) {
           </div>
         </div>
       </div>
+      {/* Línea divisoria */}
+      <div className="border-t border-[#e0f0f0] mx-6" />
       {/* Acciones: Reaccionar y Comentar (cada uno ocupa la mitad y centrados en su mitad) */}
-      <div className="flex w-full px-6 py-2 border-t border-[#e0f0f0]">
+      <div className="flex w-full px-6 py-2">
         {/* Mitad izquierda: Reaccionar */}
         <div className="w-1/2 flex justify-center">
           <div className="relative group">
@@ -327,8 +326,6 @@ function PublicationCard({ publication }) {
           </button>
         </div>
       </div>
-      {/* Línea divisoria */}
-      <div className="border-t border-[#e0f0f0] mx-6" />
       <DeletePublicationModal
         open={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
