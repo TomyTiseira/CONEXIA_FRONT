@@ -32,6 +32,19 @@ function PublicationCard({ publication }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const menuRef = React.useRef(null);
+
+  // Cerrar menú al hacer click fuera
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
 
   // Avatar, nombre, profesión y privacidad desde publication.owner
   const avatar = publication.owner?.profilePicture
@@ -143,7 +156,7 @@ function PublicationCard({ publication }) {
             <MoreVertical size={22} className="text-conexia-green" />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 mt-2 min-w-[220px] bg-white border border-[#c6e3e4] rounded-lg shadow-lg py-1 flex flex-col animate-fade-in z-20">
+            <div ref={menuRef} className="absolute right-0 mt-2 min-w-[220px] bg-white border border-[#c6e3e4] rounded-lg shadow-lg py-1 flex flex-col animate-fade-in z-20">
               {/* Admin o moderador: solo ver reportes */}
               {(isAdmin || isModerator) && (
                 <button
