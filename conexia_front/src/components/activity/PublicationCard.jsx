@@ -5,11 +5,12 @@ import { config } from '@/config';
 import { MoreVertical, AlertCircle, Trash2, Pencil } from 'lucide-react';
 import { FaGlobeAmericas, FaUsers, FaThumbsUp, FaCommentAlt, FaRegHandPaper, FaHeart, FaRegLightbulb, FaLaughBeam, FaHandsHelping } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
-import { getProfileById } from '@/service/profiles/profilesFetch';
+import { useUserStore } from '@/store/userStore';
 import DeletePublicationModal from './DeletePublicationModal';
 import EditPublicationModal from './EditPublicationModal';
 import { deletePublication } from '@/service/publications/deletePublication';
 import { editPublication } from '@/service/publications/editPublication';
+import { ROLES } from '@/constants/roles';
 
 const getMediaUrl = (mediaUrl) => {
   if (!mediaUrl) return null;
@@ -20,18 +21,17 @@ const getMediaUrl = (mediaUrl) => {
 };
 
 
+
 function PublicationCard({ publication }) {
   const { user } = useAuth();
+  const { roleName } = useUserStore();
   const router = useRouter();
-  // Ya no se necesita estado de perfil del autor, los datos vienen en publication.owner
   // Estados para menú y modales
   const [menuOpen, setMenuOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-
-  // No más useEffect para buscar perfil, los datos vienen en publication.owner
 
   // Avatar, nombre, profesión y privacidad desde publication.owner
   const avatar = publication.owner?.profilePicture
@@ -53,7 +53,6 @@ function PublicationCard({ publication }) {
     const diffHrs = Math.floor(diffMin / 60);
     const diffDays = Math.floor(diffHrs / 24);
     if (diffDays >= 1) {
-      // Mostrar: 5 de mar de 2023
       return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
     } else if (diffHrs >= 1) {
       return `hace ${diffHrs} ${diffHrs === 1 ? 'hora' : 'horas'}`;
@@ -72,8 +71,13 @@ function PublicationCard({ publication }) {
     privacyIcon = <FaUsers size={16} className="inline text-conexia-green ml-1 align-text-bottom" title="Solo amigos" />;
   }
 
-  // Lógica de edición y borrado (igual que antes)
+  // Lógica de edición y borrado
   const isOwner = user && publication.userId && String(user.id) === String(publication.userId);
+
+  // Lógica de menú: admin/moderador solo ve "Ver reportes", usuario general ve "Reportar publicación", dueño ve editar/eliminar
+  const isAdmin = roleName === ROLES.ADMIN;
+  const isModerator = roleName === ROLES.MODERATOR;
+
   const handleEdit = async ({ description, file, privacy }) => {
     setEditLoading(true);
     try {
@@ -140,7 +144,21 @@ function PublicationCard({ publication }) {
           </button>
           {menuOpen && (
             <div className="absolute right-0 mt-2 min-w-[220px] bg-white border border-[#c6e3e4] rounded-lg shadow-lg py-1 flex flex-col animate-fade-in z-20">
-              {!isOwner && (
+              {/* Admin o moderador: solo ver reportes */}
+              {(isAdmin || isModerator) && (
+                <button
+                  className="flex items-center gap-2 px-4 py-2 text-conexia-green hover:bg-[#eef6f6] text-base font-semibold w-full whitespace-nowrap"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    router.push(`/reports/publication/${publication.id}`);
+                  }}
+                  style={{maxWidth: 'none'}}>
+                  <span className="flex-shrink-0 flex items-center justify-center"><AlertCircle size={22} strokeWidth={2} className="text-conexia-green" /></span>
+                  <span>Ver reportes</span>
+                </button>
+              )}
+              {/* Usuario general (no admin/moderador/owner): reportar */}
+              {!isAdmin && !isModerator && !isOwner && (
                 <button
                   className="flex items-center gap-2 px-4 py-2 text-conexia-green hover:bg-[#eef6f6] text-base font-semibold w-full whitespace-nowrap"
                   onClick={() => { setMenuOpen(false); /* TODO: abrir modal reportar */ }}
@@ -149,6 +167,7 @@ function PublicationCard({ publication }) {
                   <span>Reportar publicación</span>
                 </button>
               )}
+              {/* Dueño: editar y eliminar */}
               {isOwner && (
                 <div>
                   <button

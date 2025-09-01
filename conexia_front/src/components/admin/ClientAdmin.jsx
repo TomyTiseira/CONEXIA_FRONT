@@ -50,7 +50,7 @@ export default function ClientAdmin() {
 
   return (
     <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8">
-      <h1 className="text-2xl font-bold text-conexia-green mb-6">Bienvenido Admin</h1>
+      <h1 className="text-2xl font-bold text-conexia-green mb-6">¡Bienvenido Admin!</h1>
       <div className="flex flex-col gap-0 w-full max-w-2xl mx-auto">
         {errorPublications && <div className="text-red-500">{errorPublications}</div>}
         {loadingPublications && publications.length === 0 && (
