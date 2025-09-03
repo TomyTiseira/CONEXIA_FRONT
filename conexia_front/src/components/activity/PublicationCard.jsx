@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import DeletePublicationModal from './DeletePublicationModal';
 import EditPublicationModal from './EditPublicationModal';
+import CommentSection from './CommentSection';
 import { deletePublication } from '@/service/publications/deletePublication';
 import { editPublication } from '@/service/publications/editPublication';
 import { ROLES } from '@/constants/roles';
@@ -33,6 +34,8 @@ function PublicationCard({ publication }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [showCommentSection, setShowCommentSection] = useState(false);
+  const [comments, setComments] = useState([]);
   const menuRef = React.useRef(null);
 
   // Cerrar menú al hacer click fuera
@@ -121,6 +124,12 @@ function PublicationCard({ publication }) {
       alert(err.message || 'Error al eliminar publicación');
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const handleAddComment = (text) => {
+    if (text.trim().length > 0) {
+      setComments(prev => [...prev, { text, user: user?.name || 'Usuario', date: new Date() }]);
     }
   };
 
@@ -283,7 +292,7 @@ function PublicationCard({ publication }) {
             <span className="ml-1">5889</span>
           </div>
           <div>
-            61 comentarios
+            {comments.length} comentarios
           </div>
         </div>
       </div>
@@ -366,16 +375,25 @@ function PublicationCard({ publication }) {
           </div>
         </div>
         {/* Mitad derecha: Comentar */}
-        <div className="w-1/2 flex justify-center">
+        <div className="w-1/2 flex flex-col items-center justify-center">
           <button
             className="flex items-center gap-2 text-conexia-green font-semibold py-1 px-4 rounded hover:bg-[#e0f0f0] transition-colors focus:outline-none"
             type="button"
+            onClick={() => setShowCommentSection((v) => !v)}
           >
             <span className="text-xl">💬</span>
             Comentar
           </button>
         </div>
       </div>
+      {showCommentSection && (
+        <div className="w-full flex justify-center mt-2">
+          <CommentSection
+            onComment={handleAddComment}
+            user={user}
+          />
+        </div>
+      )}
       <DeletePublicationModal
         open={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
