@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
 import { config } from '@/config';
 import { MoreVertical, AlertCircle, Trash2, Pencil } from 'lucide-react';
+import { HiOutlinePlus } from 'react-icons/hi';
 import { FaGlobeAmericas, FaUsers, FaThumbsUp, FaCommentAlt, FaRegHandPaper, FaHeart, FaRegLightbulb, FaLaughBeam, FaHandsHelping } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
@@ -126,7 +127,7 @@ function PublicationCard({ publication }) {
   return (
   <div className="bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl" style={{ minWidth: 0 }}>
       {/* Header autor y menú */}
-      <div className="flex items-center gap-2 px-5 pt-3 pb-2 relative min-h-0">
+  <div className="flex items-center gap-2 px-5 pt-3 pb-2 relative min-h-0">
         <img
           src={avatar}
           alt="avatar"
@@ -151,8 +152,25 @@ function PublicationCard({ publication }) {
             {privacyIcon}
           </span>
         </div>
-        <div className="ml-auto relative">
-          <button className="p-1 rounded-full hover:bg-[#e0f0f0] focus:outline-none" onClick={() => setMenuOpen((v) => !v)}>
+        {/* Botones a la derecha: Seguir y menú */}
+        {/* Botón Seguir a la derecha, menú de opciones en la esquina superior derecha */}
+        <div className="flex items-center gap-2 ml-auto">
+          {(!publication.isContact && !isOwner) && (
+            <button
+              className="flex items-center gap-1 bg-[#367d7d] text-white font-semibold px-2 py-0.5 rounded-lg border border-[#e0f0f0] hover:bg-[#285c5c] transition-colors focus:outline-none whitespace-nowrap text-xs sm:text-sm shadow-sm min-h-0 min-w-0 mr-8"
+              type="button"
+              style={{ minWidth: 0, height: '28px' }}
+            >
+              <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-white bg-transparent">
+                <HiOutlinePlus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" style={{strokeWidth: 3}} />
+              </span>
+              <span className="inline text-xs sm:text-sm">Conectar</span>
+            </button>
+          )}
+        </div>
+        {/* Menú de opciones absolutamente posicionado en la esquina superior derecha */}
+        <div className="absolute top-3 right-5 z-30">
+          <button className="p-1 rounded-full focus:outline-none" style={{background: 'transparent'}} onClick={() => setMenuOpen((v) => !v)}>
             <MoreVertical size={22} className="text-conexia-green" />
           </button>
           {menuOpen && (
