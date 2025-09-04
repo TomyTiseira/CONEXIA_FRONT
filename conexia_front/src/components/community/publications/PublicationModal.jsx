@@ -284,7 +284,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
                         minHeight: MIN_TEXTAREA_HEIGHT,
                         height: 'auto',
                         boxShadow: 'none',
-                        margin: 0,
+                        margin: '8px',
                         paddingBottom: 0,
                         transition: 'padding-bottom 0.2s',
                         overflow: 'hidden',
