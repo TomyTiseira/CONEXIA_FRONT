@@ -173,6 +173,18 @@ export default function ClientCommunity() {
                 <div className="text-conexia-green/60 py-4 text-center">No hay más publicaciones.</div>
               )}
             </div>
+            {/* MiniRecommendations sidebar derecho */}
+            <div className="hidden md:block w-full md:w-1/4 lg:w-1/5">
+              <MiniRecommendations
+                allUsers={[]} // TODO: pasar datos reales
+                myContacts={[]} // TODO: pasar datos reales
+                mySkills={[]} // TODO: pasar datos reales
+                friendsMap={{}} // TODO: pasar datos reales
+                myId={profile?.id}
+                onConnect={id => {}}
+                onViewAll={() => {}}
+              />
+            </div>
           </div>
         </div>
       </main>

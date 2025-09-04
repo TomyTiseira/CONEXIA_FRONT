@@ -36,9 +36,10 @@ export default function NavbarCommunity() {
   };
 
   const navItems = [
-    { label: 'Inicio', href: '/', icon: Home },
-    { label: 'Servicios', href: '#servicios', icon: Briefcase },
-    { label: 'Proyectos', href: "/project/search", icon: Layers },
+  { label: 'Inicio', href: '/', icon: Home },
+  { label: 'Servicios', href: '#servicios', icon: Briefcase },
+  { label: 'Proyectos', href: "/project/search", icon: Layers },
+  { label: 'Conexiones', href: '/connections', icon: MessageCircle },
   ];
 
   return (
@@ -58,7 +59,7 @@ export default function NavbarCommunity() {
               <li key={label}>
                 <Link
                   href={href}
-                  className="flex flex-col items-center relative group cursor-pointer"
+                  className="flex flex-col items-center relative group cursor-pointer min-w-[70px] max-w-[70px] justify-center"
                 >
                   <Icon
                     size={18}
