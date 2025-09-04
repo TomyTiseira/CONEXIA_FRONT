@@ -14,11 +14,14 @@ import {
   Layers,
   ChevronDown,
 } from 'lucide-react';
+import { HiUserGroup } from 'react-icons/hi';
+import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
 
 export default function NavbarCommunity() {
+  const { count: connectionRequestsCount } = useConnectionRequests();
   const [menuOpen, setMenuOpen] = useState(false);
   const { profile } = useUserStore();
   const pathname = usePathname();
@@ -39,6 +42,7 @@ export default function NavbarCommunity() {
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Servicios', href: '#servicios', icon: Briefcase },
     { label: 'Proyectos', href: "/project/search", icon: Layers },
+    { label: 'Conexiones', href: '/connections', icon: HiUserGroup, showDot: connectionRequestsCount > 0 },
   ];
 
   return (
@@ -52,20 +56,27 @@ export default function NavbarCommunity() {
 
         {/* Navigation */}
         <ul className="flex items-end gap-8 font-medium text-xs">
-          {navItems.map(({ label, href, icon: Icon }) => {
+          {navItems.map(({ label, href, icon: Icon, showDot }) => {
             const isActive = pathname === href;
             return (
-              <li key={label}>
+              <li key={label} className="relative">
                 <Link
                   href={href}
                   className="flex flex-col items-center relative group cursor-pointer"
                 >
-                  <Icon
-                    size={18}
-                    className={`mb-1 transition-colors ${
-                      isActive ? 'text-conexia-green' : 'text-conexia-green/70'
-                    } group-hover:text-conexia-green`}
-                  />
+                  <span className="relative">
+                    <Icon
+                      size={18}
+                      className={`mb-1 transition-colors ${
+                        isActive ? 'text-conexia-green' : 'text-conexia-green/70'
+                      } group-hover:text-conexia-green`}
+                    />
+                    {showDot && (
+                      <span className="absolute -top-1 -right-2 w-3 h-3 rounded-full bg-[#ff4953] border-2 border-white flex items-center justify-center">
+                        {/* punto coral */}
+                      </span>
+                    )}
+                  </span>
                   <span
                     className={`transition-colors ${
                       isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
@@ -140,17 +151,22 @@ export default function NavbarCommunity() {
 
       {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-md border-t flex justify-around py-2 z-40">
-        {navItems.map(({ label, href, icon: Icon }) => {
+        {navItems.map(({ label, href, icon: Icon, showDot }) => {
           const isActive = pathname === href;
           return (
             <Link
               key={label}
               href={href}
-              className={`flex flex-col items-center text-xs ${
+              className={`flex flex-col items-center text-xs relative ${
                 isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
               }`}
             >
-              <Icon size={20} />
+              <span className="relative">
+                <Icon size={20} />
+                {showDot && (
+                  <span className="absolute -top-1 -right-2 w-3 h-3 rounded-full bg-[#ff4953] border-2 border-white flex items-center justify-center"></span>
+                )}
+              </span>
               <span>{label}</span>
               {isActive && (
                 <span className="mt-[2px] h-[2px] w-4 bg-conexia-green rounded"></span>
