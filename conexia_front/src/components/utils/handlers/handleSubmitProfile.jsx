@@ -86,19 +86,9 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
 
   const formData = new FormData();
   
-  // Debug temporal - verificar estructura exacta que esperan
-  console.log('=== ESTRUCTURA COMPLETA ENVIADA ===');
-  console.log('Form completo:', form);
-  console.log('Skills:', JSON.stringify(form.skills));
-  console.log('Experience:', JSON.stringify(updatedExperience));
-  console.log('Education:', JSON.stringify(form.education));
-  console.log('Certifications:', JSON.stringify(form.certifications));
-  console.log('Social Links:', JSON.stringify(form.socialLinks));
-  
   Object.entries(form).forEach(([key, value]) => {
     // No enviar phoneNumber si está vacío
     if (key === 'phoneNumber' && (!value || value.trim() === '')) {
-      console.log(`Skipping empty phoneNumber`);
       return;
     }
     
@@ -115,28 +105,17 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
       }
       
       const jsonString = JSON.stringify(processedValue);
-      console.log(`${key} as JSON string:`, jsonString);
       formData.set(key, jsonString);
     } else if (value instanceof File) {
-      console.log(`${key}: File - ${value.name}`);
       formData.set(key, value);
     } else if (typeof value === "number") {
-      console.log(`${key}: ${value} (as string: ${value.toString()})`);
       formData.set(key, value.toString());
     } else if (value !== null && value !== undefined) {
-      console.log(`${key}: ${value}`);
       formData.set(key, value);
     } else {
-      console.log(`Skipping ${key}: null or undefined`);
     }
   });
   
-  // Mostrar todo lo que va en FormData
-  console.log('=== FORMDATA FINAL ===');
-  for (let [key, value] of formData.entries()) {
-    console.log(`FormData ${key}:`, value);
-  }
-
   try {
     let response;
     try {
@@ -163,12 +142,8 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
       }
     }
     
-    // Debug de la respuesta completa
-    console.log('Respuesta completa del backend:', response);
     // El usuario puede estar en diferentes ubicaciones según la respuesta del backend
     const userData = response.data?.user || response.user || response.data;
-    console.log('Datos del usuario extraídos:', userData);
-    console.log('Función updateUser disponible:', !!updateAuthUser);
     if (response.success !== false && userData && updateAuthUser) {
       // Actualizar el usuario en el contexto
       updateAuthUser(userData);
@@ -176,7 +151,6 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
       setMsg({ ok: true, text: "¡Perfil creado con éxito! Redirigiendo a la comunidad..." });
       // Esperar y redirigir
       setTimeout(() => {
-        console.log('Redirigiendo a la comunidad...');
         window.location.href = "/";  // Usar window.location para forzar recarga completa
       }, 2000);
     } else if (userData && updateAuthUser) {
@@ -184,7 +158,6 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
       updateAuthUser(userData);
       setMsg({ ok: true, text: "¡Perfil creado con éxito! Redirigiendo a la comunidad..." });
       setTimeout(() => {
-        console.log('Redirigiendo a la comunidad (caso alternativo)...');
         window.location.href = "/";
       }, 2000);
     } else {

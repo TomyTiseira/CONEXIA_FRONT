@@ -74,8 +74,7 @@ export default function ClientCommunity() {
 
     // Simulación de publicación
     const handlePublish = (data) => {
-      // Aquí iría la lógica para enviar la publicación al backend
-      // console.log('Publicación:', data);
+
     };
 
     const avatar = profile?.profilePicture

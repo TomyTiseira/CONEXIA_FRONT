@@ -1,7 +1,5 @@
 // utils/formUtils.js (opcional)
 export const handleDynamicFieldChange = (form, setForm, fieldName, index, key, value) => {
-  console.log(form)
-  console.log(fieldName)
   const updatedArray = [...form[fieldName]];
   updatedArray[index][key] = value;
   setForm({ ...form, [fieldName]: updatedArray });

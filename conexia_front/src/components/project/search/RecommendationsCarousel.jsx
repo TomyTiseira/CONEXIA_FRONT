@@ -12,7 +12,6 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
   // Log de depuración para ver todos los proyectos y sus fechas de fin
   if (normalizedProjects.length > 0) {
     // eslint-disable-next-line no-console
-    console.log('Proyectos recibidos en RecommendationsCarousel:', normalizedProjects.map(p => ({ id: p.id, title: p.title, endDate: p.endDate })));
   }
   const router = useRouter();
 
@@ -21,7 +20,6 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
     const finished = isProjectFinished(project);
     if (finished) {
       // eslint-disable-next-line no-console
-      console.log('Proyecto filtrado por finalizado:', project.title, project.endDate);
     }
     return !finished;
   });
