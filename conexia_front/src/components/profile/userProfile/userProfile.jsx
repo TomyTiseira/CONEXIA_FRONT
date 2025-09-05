@@ -468,9 +468,22 @@ export default function UserProfile() {
               <Section title="Redes sociales">
                 <ul className="list-disc ml-6">
                   {user.socialLinks.map((link, idx) => (
-                    <li key={idx}>
-                      <span className="font-semibold mr-2">{link.platform}:</span>
-                      <a href={link.url} target="_blank" className="text-conexia-coral underline">
+                    <li key={idx} className="break-words max-w-full">
+                      <span className="font-semibold mr-2 align-top">{link.platform}:</span>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        className="text-conexia-coral underline align-top break-words inline-block max-w-full"
+                        style={{
+                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word',
+                          whiteSpace: 'normal',
+                          display: 'inline-block',
+                          verticalAlign: 'top',
+                          maxWidth: '100%'
+                        }}
+                        onClick={e => e.stopPropagation()}
+                      >
                         {link.url}
                       </a>
                     </li>

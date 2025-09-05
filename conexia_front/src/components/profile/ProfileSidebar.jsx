@@ -30,11 +30,11 @@ export default function ProfileSidebar({ profile }) {
           <Image src={avatar} alt="avatar" width={96} height={96} className="object-cover w-full h-full" />
         </div>
       </div>
-      {/* Avatar y fondo decorativo DESKTOP: centrado */}
+      {/* Avatar y fondo decorativo DESKTOP: alineado a la izquierda */}
       <div className="w-full h-20 bg-center bg-cover relative hidden md:block" style={{ backgroundImage: 'url(/bg-smoke.png)' }}>
         <div
           className="absolute -bottom-10 w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center"
-          style={{ left: '50%', transform: 'translateX(-50%)' }}
+          style={{ left: '24px' }}
         >
           <Image src={avatar} alt="avatar" width={96} height={96} className="object-cover w-full h-full" />
         </div>
@@ -62,11 +62,11 @@ export default function ProfileSidebar({ profile }) {
           <div className="flex items-center text-xs text-gray-500 mb-1 mt-1 justify-start"><FaMapMarkerAlt className="mr-1" />{location}</div>
         )}
       </div>
-      {/* DESKTOP: datos completos, alineados al centro */}
-      <div className="hidden md:flex flex-col items-center w-full px-4 pb-4 pt-14">
+      {/* DESKTOP: datos completos, alineados a la izquierda */}
+      <div className="hidden md:flex flex-col items-start w-full px-6 pb-4 pt-14">
         <h2
           className={
-            `font-bold text-conexia-green text-center leading-tight mb-2 ` +
+            `font-bold text-conexia-green text-left leading-tight mb-2 ` +
             (displayName.length > 18 ? 'text-base' : 'text-lg')
           }
           style={displayName.length > 24 ? { fontSize: '1rem' } : {}}
@@ -75,14 +75,14 @@ export default function ProfileSidebar({ profile }) {
         </h2>
         {profile.profession && (
           <div
-            className="text-[0.85rem] text-conexia-green/80 text-center mb-2"
-            style={{ lineHeight: '1.13', maxWidth: 180, margin: '0 auto' }}
+            className="text-[0.85rem] text-conexia-green/80 text-left mb-2"
+            style={{ lineHeight: '1.13' }}
           >
             {profile.profession}
           </div>
         )}
         {location && (
-          <div className="flex items-center text-xs text-gray-500 mb-2 mt-1 justify-center"><FaMapMarkerAlt className="mr-1" />{location}</div>
+          <div className="flex items-center text-xs text-gray-500 mb-2 mt-1 justify-start"><FaMapMarkerAlt className="mr-1" />{location}</div>
         )}
         {/* Experiencia actual */}
         {currentExperiences.map((exp, idx) => (

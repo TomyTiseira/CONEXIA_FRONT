@@ -34,11 +34,18 @@ export default function ClientCommunity() {
       setErrorPublications(null);
       try {
         const res = await getCommunityPublications({ page, limit });
-        // res debe tener: { data: [...], total, page, limit, hasMore }
-  const data = Array.isArray(res.data?.publications) ? res.data.publications : [];
-  const filtered = data.filter(pub => pub.isOwner === false);
-  setPublications(prev => page === 1 ? filtered : [...prev, ...filtered]);
-  setHasMore(res.data?.pagination?.hasNextPage ?? false);
+        
+        // Obtener publicaciones del response
+        const data = Array.isArray(res.data?.publications) ? res.data.publications : [];
+        
+        // Filtrar publicaciones que no sean propias
+        const validPublications = data
+          .filter(pub => pub && pub.id)
+          .filter(pub => pub.isOwner === false);
+        
+        // Actualizar estado de publicaciones
+        setPublications(prev => page === 1 ? validPublications : [...prev, ...validPublications]);
+        setHasMore(res.data?.pagination?.hasNextPage ?? false);
       } catch (err) {
         setErrorPublications('Error al cargar publicaciones');
         console.error('Error al cargar publicaciones:', err);
@@ -103,7 +110,7 @@ export default function ClientCommunity() {
               <div className="flex items-center gap-3">
                 <Image src={avatar} alt="avatar" width={40} height={40} className="rounded-full aspect-square object-cover" />
                 <button
-                  className="flex-1 text-left bg-[#eef6f6] text-conexia-green/70 px-4 py-2 rounded-lg border border-[#c6e3e4] focus:outline-none hover:bg-[#e0f0f0] transition-colors"
+                  className="flex-1 text-left bg-[#eef6f6] text-conexia-green/70 px-6 py-3 rounded-lg border border-[#c6e3e4] focus:outline-none hover:bg-[#e0f0f0] transition-colors"
                   onClick={() => setModalOpen(true)}
                   disabled={isLoading || !user}
                 >
@@ -163,9 +170,23 @@ export default function ClientCommunity() {
               {!loadingPublications && publications.length === 0 && !errorPublications && (
                 <div className="text-conexia-green/70">No hay publicaciones de la comunidad para mostrar.</div>
               )}
-              {publications.map(pub => (
-                <PublicationCard key={pub.id} publication={pub} />
-              ))}
+              {publications.map(pub => {
+                // Asegurarse de que todos los campos necesarios están presentes
+                const publicationComplete = {
+                  ...pub,
+                  reactionsCount: pub.reactionsCount || 0,
+                  commentsCount: pub.commentsCount || 0,
+                  reactionsSummary: pub.reactionsSummary || [],
+                  latestComments: pub.latestComments || [],
+                };
+                
+                return (
+                  <PublicationCard 
+                    key={publicationComplete.id} 
+                    publication={publicationComplete} 
+                  />
+                );
+              })}
               {loadingPublications && publications.length > 0 && (
                 <div className="text-conexia-green/70 py-4 text-center">Cargando más publicaciones...</div>
               )}
