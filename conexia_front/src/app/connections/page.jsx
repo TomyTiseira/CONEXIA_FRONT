@@ -1,10 +1,13 @@
-'use client';
-import React, { useState } from 'react';
-import NavbarCommunity from '@/components/navbar/NavbarCommunity';
-import ConnectionsSidebar from '@/components/connections/ConnectionsSidebar';
-import ConnectionRequestsSection from '@/components/connections/ConnectionRequestsSection';
+// ...existing code...
+"use client";
+import React, { useState } from "react";
+import NavbarCommunity from "@/components/navbar/NavbarCommunity";
+import ConnectionsSidebar from "@/components/connections/ConnectionsSidebar";
+import ConnectionRequestsSection from "@/components/connections/ConnectionRequestsSection";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { NotFound } from "@/components/ui";
+import { ROLES } from "@/constants/roles";
 
-// Placeholder components for otras secciones
 function RecommendedSection() {
   return (
     <div className="w-full">
@@ -36,36 +39,41 @@ function SentRequestsSection() {
 const sectionComponents = {
   recommended: RecommendedSection,
   requests: ConnectionRequestsSection,
-  'my-connections': MyConnectionsSection,
+  "my-connections": MyConnectionsSection,
   sent: SentRequestsSection,
 };
 
 export default function ConnectionsPage() {
-  const [selected, setSelected] = useState('recommended');
+  const [selected, setSelected] = useState("recommended");
   const SectionComponent = sectionComponents[selected] || (() => null);
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen">
-      <NavbarCommunity />
-  <main className="max-w-7xl mx-auto flex flex-col md:flex-row gap-0 md:gap-8 px-2 md:px-6 mt-2 md:mt-4 pb-16 items-start">
-        {/* Mobile: Panel de conexiones arriba del contenido, Desktop: sidebar a la izquierda */}
-  <div className="w-full md:w-[270px] lg:w-[300px] flex-shrink-0 flex flex-col items-stretch md:items-start md:mr-2 md:mt-4">
-          <div className="block md:hidden mt-2 mb-2">
-            <ConnectionsSidebar selected={selected} onSelect={setSelected} />
-          </div>
-          <div className="hidden md:block">
-            <ConnectionsSidebar selected={selected} onSelect={setSelected} />
-          </div>
-        </div>
-        {/* Contenido principal en rectángulo */}
-        <div className="flex-1 min-w-0 flex flex-col md:mt-4">
-          <div className="w-full bg-white rounded-2xl shadow-xl border-2 border-conexia-green/20 px-4 sm:px-8 py-6 md:py-8 mt-2 md:mt-0 mb-2 transition-all">
-            <div className="w-full h-full">
-              <SectionComponent />
+    <ProtectedRoute
+      allowedRoles={[ROLES.USER]}
+      fallbackComponent={<NotFound />}
+    >
+      <div className="w-full bg-gray-50 min-h-screen">
+        <NavbarCommunity />
+        <main className="max-w-7xl mx-auto flex flex-col md:flex-row gap-0 md:gap-8 px-2 md:px-6 mt-2 md:mt-4 pb-16 items-start">
+          {/* Mobile: Panel de conexiones arriba del contenido, Desktop: sidebar a la izquierda */}
+          <div className="w-full md:w-[270px] lg:w-[300px] flex-shrink-0 flex flex-col items-stretch md:items-start md:mr-2 md:mt-4">
+            <div className="block md:hidden mt-2 mb-2">
+              <ConnectionsSidebar selected={selected} onSelect={setSelected} />
+            </div>
+            <div className="hidden md:block">
+              <ConnectionsSidebar selected={selected} onSelect={setSelected} />
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+          {/* Contenido principal en rectángulo */}
+          <div className="flex-1 min-w-0 flex flex-col md:mt-4">
+            <div className="w-full bg-white rounded-2xl shadow-xl border-2 border-conexia-green/20 px-4 sm:px-8 py-6 md:py-8 mt-2 md:mt-0 mb-2 transition-all">
+              <div className="w-full h-full">
+                <SectionComponent />
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </ProtectedRoute>
   );
 }

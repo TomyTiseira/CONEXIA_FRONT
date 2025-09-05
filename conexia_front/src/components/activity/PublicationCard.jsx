@@ -897,16 +897,14 @@ function PublicationCard({ publication }) {
         {/* Botones en la esquina superior derecha: Seguir y menú */}
         <div className="absolute top-3 right-5 z-30 flex flex-row items-center">
           <div className="flex flex-row items-center w-full">
-            {(!publication.isContact && !isOwner && !isAdmin && !isModerator) && (
+            {( !publication.isContact && publication.connectionStatus == null && !isOwner && !isAdmin && !isModerator) && (
               (connectSuccess || connectLoading) ? (
                 <button
-                  className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] w-8 h-8 sm:w-auto sm:h-auto sm:px-2 sm:py-0.5 gap-0 sm:gap-1 mr-0 sm:mr-2 cursor-default"
+                  className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] w-8 h-8 sm:w-auto sm:h-auto sm:px-2 sm:py-0.5 gap-1 mr-0 sm:mr-2 cursor-default"
                   type="button"
                   disabled
                 >
-                  <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-white bg-transparent">
-                    <Check className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-conexia-green" />
-                  </span>
+                  <Check className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-conexia-green" />
                   <span className="hidden sm:inline text-xs sm:text-sm">Conectando</span>
                 </button>
               ) : (
