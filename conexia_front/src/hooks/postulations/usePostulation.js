@@ -84,7 +84,6 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
             return false;
           case 'cancelada':
             // Permitir postularse nuevamente si fue cancelada
-            console.log('Postulación anterior cancelada, permitiendo nueva postulación');
             break;
           default:
             setError('Ya te has postulado a este proyecto anteriormente');

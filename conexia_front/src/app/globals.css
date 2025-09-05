@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Estilos para tarjetas de publicación en cuadrícula */
+.grid-publication-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-publication-card.publication-card-open {
+  height: auto;
+}
+
+.grid-publication-card[data-comment-open="true"] {
+  height: auto;
+}
+
+.grid-publication-card[data-comment-open="false"] {
+  height: auto;
+  min-height: 0;
+}
+
+/* Asegurar que las tarjetas en la cuadrícula tengan comportamiento independiente */
+.grid-cols-2 > div {
+  align-self: flex-start;
+  height: fit-content;
+}
+
+/* Forzar que las publicaciones en la cuadrícula no afecten a las demás */
+div[class*="grid-cols-1"][class*="md:grid-cols-2"][class*="gap-6"][class*="items-start"] {
+  display: grid;
+  grid-auto-rows: auto;
+}

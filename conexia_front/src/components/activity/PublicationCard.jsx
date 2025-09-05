@@ -1,9 +1,14 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
 import { config } from '@/config';
 import { MoreVertical, AlertCircle, Trash2, Pencil, Flag } from 'lucide-react';
 import { FaGlobeAmericas, FaUsers, FaThumbsUp, FaCommentAlt, FaRegHandPaper, FaHeart, FaRegLightbulb, FaLaughBeam, FaHandsHelping, FaUser } from 'react-icons/fa';
+import { BsEmojiSmile } from 'react-icons/bs';
+import dynamic from 'next/dynamic';
+
+const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
+import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import DeletePublicationModal from './DeletePublicationModal';
@@ -28,11 +33,26 @@ const getMediaUrl = (mediaUrl) => {
 
 
 
-function PublicationCard({ publication }) {
+function PublicationCard({ publication, isGridItem = false }) {
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
   const publicationId = publication?.id;
+  
+  // Función de utilidad para manejar eventos de forma segura
+  const safelyHandleTooltip = (element, action, tooltipClass) => {
+    try {
+      const tooltip = element?.parentElement?.querySelector(tooltipClass);
+      if (tooltip) {
+        if (action === 'show') {
+          tooltip.classList.remove('hidden');
+        } else if (action === 'hide') {
+          tooltip.classList.add('hidden');
+        }
+      }
+    } catch (error) {
+    }
+  };
   
   // Estados para menú y modales
   const [menuOpen, setMenuOpen] = useState(false);
@@ -49,6 +69,8 @@ function PublicationCard({ publication }) {
   const [editingComment, setEditingComment] = useState(null);
   const [editCommentText, setEditCommentText] = useState('');
   const [commentMenuOpen, setCommentMenuOpen] = useState({});
+  const [showEmojiPickerForComment, setShowEmojiPickerForComment] = useState(false);
+  const editCommentTextareaRef = useRef(null);
   // Estados para la eliminación de comentarios
   const [commentToDelete, setCommentToDelete] = useState(null); // ID del comentario a eliminar
   const [showDeleteCommentModal, setShowDeleteCommentModal] = useState(false); // Modal visible/oculto
@@ -65,11 +87,32 @@ function PublicationCard({ publication }) {
     content: '',
     isEditing: false 
   });
+  const emojiPickerRef = React.useRef(null);
   
   // Observar cambios en estados importantes
   useEffect(() => {
     // Los estados se observan para reaccionar a sus cambios
   }, [editingComment, commentToDelete, showDeleteCommentModal, publicationId, user, publication]);
+  
+  // Manejar cierre del selector de emojis al hacer clic fuera
+  useEffect(() => {
+    if (!showEmojiPickerForComment) return;
+    
+    function handleClickOutside(event) {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target) &&
+        event.target.getAttribute('aria-label') !== 'Agregar emoji'
+      ) {
+        setShowEmojiPickerForComment(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPickerForComment]);
   
   // Sincronizar editingRef.current con editingComment
   useEffect(() => {
@@ -284,6 +327,7 @@ function PublicationCard({ publication }) {
       case 'support': return '🤝';
       case 'insightful': return '💡';
       case 'celebrate': return '🎉';
+      case 'fun': return '😂';
       default: return '👍';
     }
   };
@@ -296,13 +340,33 @@ function PublicationCard({ publication }) {
       case 'support': return 'Apoyo';
       case 'insightful': return 'Interesante';
       case 'celebrate': return 'Celebro';
+      case 'fun': return 'Divierte';
       default: return 'Reacción';
+    }
+  };
+  
+  // Función utilitaria para interactuar de forma segura con elementos del DOM
+  const handleSafeElementInteraction = (elementId, action) => {
+    try {
+      const element = typeof elementId === 'string' ? document.getElementById(elementId) : elementId;
+      if (element) {
+        action(element);
+      }
+    } catch (error) {
+      console.error('Error en interacción con elemento:', error);
     }
   };
   
   // Maneja las reacciones
   const handleReaction = async (type) => {
     try {
+      // Ocultar menú de reacciones al hacer clic de forma segura
+      handleSafeElementInteraction('reaction-options', (menu) => {
+        menu.classList.add('hidden');
+        menu.setAttribute('data-active', 'false');
+        menu.setAttribute('data-hover', 'false');
+      });
+      
       // Si el usuario ya reaccionó con este tipo, eliminar la reacción
       if (userReaction && userReaction.type === type) {
         // Eliminar la reacción existente
@@ -377,11 +441,8 @@ function PublicationCard({ publication }) {
 
       // Mostrar mensaje de error más específico
       const errorMessage = error.message || 'Error desconocido';
-      if (errorMessage.includes('publicationId is required')) {
-        alert('Error: No se pudo procesar tu reacción. El ID de la publicación es necesario.');
-      } else {
-        alert(`No se pudo procesar tu reacción: ${errorMessage}`);
-      }
+      // Error silencioso - no mostramos alertas
+      console.error('Error al procesar reacción:', errorMessage);
     }
   };
 
@@ -402,14 +463,23 @@ function PublicationCard({ publication }) {
       if (file) {
         formData.append('media', file);
       }
-      if (privacy) formData.append('privacy', privacy);
+      
+      // Asegurar que siempre se envíe el campo privacy con un valor válido
+      formData.append('privacy', privacy || 'public');
 
       // Iniciar proceso de edición
       await editPublication(publicationId, formData);
+      
+      // Mostrar mensaje de éxito y esperar antes de recargar
       setShowEditModal(false);
-      window.location.reload();
+      
+      // Esperar un momento para que el usuario vea el mensaje de éxito
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (err) {
-      alert(err.message || 'Error al editar publicación');
+      // Error silencioso - no mostramos alertas
+      console.error('Error al editar publicación:', err);
     } finally {
       setEditLoading(false);
     }
@@ -427,7 +497,8 @@ function PublicationCard({ publication }) {
       setShowDeleteModal(false);
       window.location.reload();
     } catch (err) {
-      alert(err.message || 'Error al eliminar publicación');
+      // Error silencioso - no mostramos alertas
+      console.error('Error al eliminar publicación:', err);
     } finally {
       setDeleteLoading(false);
     }
@@ -498,7 +569,7 @@ function PublicationCard({ publication }) {
       setCommentsPagination(responseData.pagination || {});
     } catch (error) {
       console.error('Error al cargar comentarios:', error);
-      alert('No se pudieron cargar los comentarios. Inténtalo de nuevo.');
+      // Error silencioso - no mostramos alertas
     } finally {
       setCommentsLoading(false);
     }
@@ -609,7 +680,7 @@ function PublicationCard({ publication }) {
       setCommentsPagination(responseData.pagination || {});
     } catch (error) {
       console.error('Error al cargar más comentarios:', error);
-      alert('No se pudieron cargar más comentarios. Inténtalo de nuevo.');
+      // Error silencioso - no mostramos alertas
     } finally {
       setCommentsLoading(false);
     }
@@ -647,13 +718,9 @@ function PublicationCard({ publication }) {
     } catch (error) {
       console.error('Error al añadir comentario:', error);
 
-      // Mostrar mensaje de error más específico
+      // Error silencioso - no mostramos alertas
       const errorMessage = error.message || 'Error desconocido';
-      if (errorMessage.includes('publicationId is required')) {
-        alert('Error: No se pudo agregar el comentario. El ID de la publicación es necesario.');
-      } else {
-        alert(`No se pudo agregar el comentario: ${errorMessage}`);
-      }
+      console.error('No se pudo agregar el comentario:', errorMessage);
     }
   };
 
@@ -800,7 +867,7 @@ function PublicationCard({ publication }) {
       
     } catch (error) {
       console.error('Error al editar comentario:', error);
-      alert('No se pudo editar el comentario. Inténtalo de nuevo.');
+      // Error silencioso - no mostramos alertas
     }
   };
 
@@ -846,12 +913,12 @@ function PublicationCard({ publication }) {
       // Cerrar el modal de eliminación incluso en caso de error
       setShowDeleteCommentModal(false);
       setCommentToDelete(null);
-      alert('No se pudo eliminar el comentario. Inténtalo de nuevo.');
+      // Error silencioso - no mostramos alertas
     }
   };
 
   return (
-  <div className="bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl" style={{ minWidth: 0 }}>
+  <div id={`pub-${publicationId}`} className={`publication-card bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl ${showCommentSection ? 'publication-card-open' : ''} ${isGridItem ? 'grid-publication-card' : ''}`} style={{ minWidth: 0, height: isGridItem && !showCommentSection ? 'auto' : 'auto' }}>
       {/* Header autor y menú */}
       <div className="flex items-center gap-2 px-5 pt-3 pb-2 relative min-h-0">
         <img
@@ -1007,6 +1074,7 @@ function PublicationCard({ publication }) {
                           case 'support': emoji = '🤝'; break;
                           case 'insightful': emoji = '💡'; break;
                           case 'celebrate': emoji = '🎉'; break;
+                          case 'fun': emoji = '😂'; break;
                           default: emoji = '👍';
                         }
                         return (
@@ -1031,10 +1099,21 @@ function PublicationCard({ publication }) {
           <div>
             <button 
               onClick={() => {
+                // Usar nuestra utilidad para cerrar todas las demás publicaciones
+                closeAllPublicationCommentsExcept(publicationId);
+                
                 // Forzar la carga de comentarios pero mostrar inicialmente solo 2
                 loadAllComments();
                 setShowCommentSection(true);
                 setShowAllComments(false);
+                
+                // Si estamos en un grid, marcar este elemento como abierto para CSS
+                if (isGridItem) {
+                  const currentCard = document.getElementById(`pub-${publicationId}`);
+                  if (currentCard) {
+                    currentCard.setAttribute('data-comment-open', 'true');
+                  }
+                }
               }}
               className="hover:underline text-gray-600 hover:text-conexia-green cursor-pointer"
             >
@@ -1054,20 +1133,23 @@ function PublicationCard({ publication }) {
                  const menu = e.currentTarget.querySelector('#reaction-options');
                  if (menu) {
                    menu.classList.remove('hidden');
-                   // AÃ±adir un retraso para desaparecer
                    menu.setAttribute('data-active', 'true');
                  }
                }}
                onMouseLeave={(e) => {
+                 // Verificamos si el ratón se movió al menú de reacciones o está fuera del contenedor
+                 const relatedTarget = e.relatedTarget;
                  const menu = e.currentTarget.querySelector('#reaction-options');
-                 if (menu) {
-                   // Añadir un retraso antes de ocultar para dar tiempo a mover el cursor al menú
+                 
+                 if (menu && !menu.contains(relatedTarget)) {
+                   // Solo ocultamos si el ratón no se movió al menú de reacciones
                    setTimeout(() => {
-                     if (menu.getAttribute('data-hover') !== 'true') {
+                     // Doble verificación: si el menú no tiene hover y data-active es false
+                     if (menu.getAttribute('data-hover') !== 'true' && 
+                         menu.getAttribute('data-active') === 'false') {
                        menu.classList.add('hidden');
-                       menu.setAttribute('data-active', 'false');
                      }
-                   }, 300);
+                   }, 100);
                  }
                }}>
             <button
@@ -1076,22 +1158,26 @@ function PublicationCard({ publication }) {
               }`}
               type="button"
             >
-              <span className="text-xl">
+              <span className="text-xl flex items-center justify-center">
                 {userReaction ? (
                   userReaction.type === 'like' ? '👍' :
                   userReaction.type === 'love' ? '❤️' :
                   userReaction.type === 'support' ? '🤝' :
                   userReaction.type === 'insightful' ? '💡' :
-                  userReaction.type === 'celebrate' ? '🎉' : '👥'
+                  userReaction.type === 'celebrate' ? '🎉' :
+                  userReaction.type === 'fun' ? '😂' : '👥'
                 ) : '👥'}
               </span>
-              {userReaction ? (
-                userReaction.type === 'like' ? 'Me gusta' :
-                userReaction.type === 'love' ? 'Me encanta' :
-                userReaction.type === 'support' ? 'Apoyo' :
-                userReaction.type === 'insightful' ? 'Interesante' :
-                userReaction.type === 'celebrate' ? 'Celebro' : 'Reaccionar'
-              ) : 'Reaccionar'}
+              <span className="ml-1">
+                {userReaction ? (
+                  userReaction.type === 'like' ? 'Me gusta' :
+                  userReaction.type === 'love' ? 'Me encanta' :
+                  userReaction.type === 'support' ? 'Apoyo' :
+                  userReaction.type === 'insightful' ? 'Interesante' :
+                  userReaction.type === 'celebrate' ? 'Celebro' :
+                  userReaction.type === 'fun' ? 'Divierte' : 'Reaccionar'
+                ) : 'Reaccionar'}
+              </span>
             </button>
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden bg-white rounded-full shadow-lg px-3 py-2 z-30 border border-[#e0f0f0] gap-2 animate-fade-in flex flex-row" 
                  id="reaction-options"
@@ -1099,38 +1185,83 @@ function PublicationCard({ publication }) {
                  data-active="false"
                  onMouseEnter={(e) => {
                    e.currentTarget.setAttribute('data-hover', 'true');
+                   // Aseguramos que esté visible mientras el ratón esté sobre él
+                   e.currentTarget.classList.remove('hidden');
                  }}
                  onMouseLeave={(e) => {
-                   e.currentTarget.setAttribute('data-hover', 'false');
-                   if (e.currentTarget.getAttribute('data-active') !== 'true') {
-                     e.currentTarget.classList.add('hidden');
+                   try {
+                     // Al salir, marcamos que ya no tiene hover
+                     const menuId = e.currentTarget.id;
+                     handleSafeElementInteraction(e.currentTarget, menu => {
+                       menu.setAttribute('data-hover', 'false');
+                       menu.setAttribute('data-active', 'false');
+                     });
+                     
+                     // Programamos ocultar el menú después de un breve retraso
+                     // para permitir tiempo de mover al botón principal si es necesario
+                     setTimeout(() => {
+                       handleSafeElementInteraction(menuId, menu => {
+                         const isHovering = menu.getAttribute('data-hover') === 'true';
+                         const isActive = menu.getAttribute('data-active') === 'true';
+                         
+                         if (!isHovering && !isActive) {
+                           menu.classList.add('hidden');
+                         }
+                       });
+                     }, 100);
+                   } catch (error) {
+                     console.error('Error en el manejo del menú de reacciones:', error);
                    }
                  }}>
               {/* Me gusta */}
-              <div className="relative flex flex-col items-center">
+              <div className="relative flex flex-col items-center" 
+                   onMouseEnter={(e) => {
+                     // Mantener el menú visible mientras el mouse está en el botón
+                     const menu = e.currentTarget.closest('#reaction-options');
+                     if (menu) {
+                       menu.setAttribute('data-hover', 'true');
+                     }
+                   }}>
                 <button 
                   className={`hover:scale-110 transition-transform ${isReactionActive('like') ? 'scale-110 border-2 border-conexia-green rounded-full' : ''}`} 
                   type="button"
                   onClick={() => handleReaction('like')}
                   onMouseEnter={e => {
-                    // Mostrar tooltip
-                    e.currentTarget.parentElement.querySelector('.tooltip').classList.remove('hidden');
-                    // Mantener el menú visible
-                    const menu = e.currentTarget.closest('.group').querySelector('#reaction-options');
-                    if (menu) {
-                      menu.classList.remove('hidden');
-                      menu.setAttribute('data-hover', 'true');
-                    }
+                    try {
+                      // Mostrar tooltip
+                      handleSafeElementInteraction(
+                        e.currentTarget.parentElement.querySelector('.tooltip'),
+                        elem => elem.classList.remove('hidden')
+                      );
+                      
+                      // Mantener el menú visible
+                      handleSafeElementInteraction(
+                        e.currentTarget.closest('.group')?.querySelector('#reaction-options'),
+                        menu => {
+                          menu.classList.remove('hidden');
+                          menu.setAttribute('data-hover', 'true');
+                        }
+                      )
+                    } catch (error) {
+                      }
                   }}
                   onMouseLeave={e => {
-                    // Ocultar tooltip
-                    e.currentTarget.parentElement.querySelector('.tooltip').classList.add('hidden');
-                    // Mantener menú visible si hay interacción
-                    const menu = e.currentTarget.closest('.group').querySelector('#reaction-options');
-                    if (menu) {
+                    try {
+                      // Ocultar tooltip
+                      handleSafeElementInteraction(
+                        e.currentTarget.parentElement.querySelector('.tooltip'),
+                        elem => elem.classList.add('hidden')
+                      );
+                      
+                      // Actualizar estado del menú después de un breve retraso
+                      const menuId = 'reaction-options';
                       setTimeout(() => {
-                        menu.setAttribute('data-hover', 'false');
+                        handleSafeElementInteraction(menuId, menu => {
+                          menu.setAttribute('data-hover', 'false');
+                        });
                       }, 100);
+                    } catch (error) {
+                      console.error('Error en evento mouseLeave:', error);
                     }
                   }}
                 >
@@ -1139,7 +1270,14 @@ function PublicationCard({ publication }) {
                 <span className="tooltip hidden absolute -top-9 left-1/2 -translate-x-1/2 px-3 py-1 rounded-md bg-conexia-green text-white text-xs font-semibold shadow-lg whitespace-nowrap z-50">Me gusta</span>
               </div>
                 {/* Me encanta */}
-              <div className="relative flex flex-col items-center">
+              <div className="relative flex flex-col items-center"
+                   onMouseEnter={(e) => {
+                     // Mantener el menú visible mientras el mouse está en el botón
+                     const menu = e.currentTarget.closest('#reaction-options');
+                     if (menu) {
+                       menu.setAttribute('data-hover', 'true');
+                     }
+                   }}>
                 <button 
                   className={`hover:scale-110 transition-transform ${isReactionActive('love') ? 'scale-110 border-2 border-conexia-green rounded-full' : ''}`}
                   type="button"
@@ -1171,7 +1309,14 @@ function PublicationCard({ publication }) {
                 <span className="tooltip hidden absolute -top-9 left-1/2 -translate-x-1/2 px-3 py-1 rounded-md bg-conexia-green text-white text-xs font-semibold shadow-lg whitespace-nowrap z-50">Me encanta</span>
               </div>
               {/* Apoyo */}
-              <div className="relative flex flex-col items-center">
+              <div className="relative flex flex-col items-center"
+                   onMouseEnter={(e) => {
+                     // Mantener el menú visible mientras el mouse está en el botón
+                     const menu = e.currentTarget.closest('#reaction-options');
+                     if (menu) {
+                       menu.setAttribute('data-hover', 'true');
+                     }
+                   }}>
                 <button 
                   className={`hover:scale-110 transition-transform ${isReactionActive('support') ? 'scale-110 border-2 border-conexia-green rounded-full' : ''}`}
                   type="button"
@@ -1203,7 +1348,14 @@ function PublicationCard({ publication }) {
                 <span className="tooltip hidden absolute -top-9 left-1/2 -translate-x-1/2 px-3 py-1 rounded-md bg-conexia-green text-white text-xs font-semibold shadow-lg whitespace-nowrap z-50">Apoyo</span>
               </div>
               {/* Interesante */}
-              <div className="relative flex flex-col items-center">
+              <div className="relative flex flex-col items-center"
+                   onMouseEnter={(e) => {
+                     // Mantener el menú visible mientras el mouse está en el botón
+                     const menu = e.currentTarget.closest('#reaction-options');
+                     if (menu) {
+                       menu.setAttribute('data-hover', 'true');
+                     }
+                   }}>
                 <button 
                   className={`hover:scale-110 transition-transform ${isReactionActive('insightful') ? 'scale-110 border-2 border-conexia-green rounded-full' : ''}`}
                   type="button"
@@ -1235,7 +1387,14 @@ function PublicationCard({ publication }) {
                 <span className="tooltip hidden absolute -top-9 left-1/2 -translate-x-1/2 px-3 py-1 rounded-md bg-conexia-green text-white text-xs font-semibold shadow-lg whitespace-nowrap z-50">Interesante</span>
               </div>
               {/* Celebro */}
-              <div className="relative flex flex-col items-center">
+              <div className="relative flex flex-col items-center"
+                   onMouseEnter={(e) => {
+                     // Mantener el menú visible mientras el mouse está en el botón
+                     const menu = e.currentTarget.closest('#reaction-options');
+                     if (menu) {
+                       menu.setAttribute('data-hover', 'true');
+                     }
+                   }}>
                 <button 
                   className={`hover:scale-110 transition-transform ${isReactionActive('celebrate') ? 'scale-110 border-2 border-conexia-green rounded-full' : ''}`}
                   type="button"
@@ -1267,10 +1426,57 @@ function PublicationCard({ publication }) {
                   <span className="tooltip hidden absolute -top-9 left-1/2 -translate-x-1/2 px-3 py-1 rounded-md bg-conexia-green text-white text-xs font-semibold shadow-lg whitespace-nowrap z-50">Celebro</span>
                 </div>
                 {/* Me divierte */}
-                <div className="relative flex flex-col items-center">
-                  <button className="hover:scale-110 transition-transform" type="button"
-                    onMouseEnter={e => e.currentTarget.parentElement.querySelector('.tooltip').classList.remove('hidden')}
-                    onMouseLeave={e => e.currentTarget.parentElement.querySelector('.tooltip').classList.add('hidden')}
+                <div className="relative flex flex-col items-center" 
+                   onMouseEnter={(e) => {
+                     // Mantener el menú visible mientras el mouse está en el botón
+                     const menu = e.currentTarget.closest('#reaction-options');
+                     if (menu) {
+                       menu.setAttribute('data-hover', 'true');
+                     }
+                   }}>
+                  <button 
+                    className={`hover:scale-110 transition-transform ${isReactionActive('fun') ? 'scale-110 border-2 border-conexia-green rounded-full' : ''}`}
+                    type="button"
+                    onClick={() => handleReaction('fun')}
+                    onMouseEnter={e => {
+                      try {
+                        // Mostrar tooltip
+                        handleSafeElementInteraction(
+                          e.currentTarget.parentElement.querySelector('.tooltip'),
+                          elem => elem.classList.remove('hidden')
+                        );
+                        
+                        // Mantener el menú visible
+                        handleSafeElementInteraction(
+                          e.currentTarget.closest('.group')?.querySelector('#reaction-options'),
+                          menu => {
+                            menu.classList.remove('hidden');
+                            menu.setAttribute('data-hover', 'true');
+                          }
+                        )
+                      } catch (error) {
+                        console.error('Error en tooltip divierte:', error);
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      try {
+                        // Ocultar tooltip
+                        handleSafeElementInteraction(
+                          e.currentTarget.parentElement.querySelector('.tooltip'),
+                          elem => elem.classList.add('hidden')
+                        );
+                        
+                        // Actualizar estado del menú después de un breve retraso
+                        const menuId = 'reaction-options';
+                        setTimeout(() => {
+                          handleSafeElementInteraction(menuId, menu => {
+                            menu.setAttribute('data-hover', 'false');
+                          });
+                        }, 100);
+                      } catch (error) {
+                        console.error('Error en evento mouseLeave:', error);
+                      }
+                    }}
                   >
                     <span className="text-[26px]">😂</span>
                   </button>
@@ -1285,11 +1491,22 @@ function PublicationCard({ publication }) {
             className="flex items-center gap-2 text-conexia-green font-semibold py-1 px-4 rounded hover:bg-[#e0f0f0] transition-colors focus:outline-none"
             type="button"
             onClick={() => {
+              // Usar nuestra utilidad para cerrar todas las demás publicaciones
+              closeAllPublicationCommentsExcept(publicationId);
+              
               // Forzar siempre la carga de comentarios con toda la información
               // pero no mostrar todos inicialmente
               loadAllComments();
               setShowCommentSection(true);
               setShowAllComments(false);
+              
+              // Si estamos en un grid, marcar este elemento como abierto para CSS
+              if (isGridItem) {
+                const currentCard = document.getElementById(`pub-${publicationId}`);
+                if (currentCard) {
+                  currentCard.setAttribute('data-comment-open', 'true');
+                }
+              }
             }}
           >
             <span className="text-xl">💬</span>
@@ -1315,8 +1532,8 @@ function PublicationCard({ publication }) {
                 {/* Mostrar solo los primeros 2 comentarios inicialmente */}
                 {(allComments.length > 0 ? allComments.slice(0, showAllComments ? allComments.length : 2) : comments.slice(0, showAllComments ? comments.length : 2)).map(comment => (
                   <div key={comment.id} className="bg-[#f3f9f8] rounded-lg p-3 border border-[#e0f0f0] relative">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start">
+                    <div className={`flex items-start ${editingComment === comment.id ? 'justify-start' : 'justify-between'}`}>
+                      <div className="flex items-start flex-1">
                         <div className="h-8 w-8 flex-shrink-0 mr-2">
                           {/* Imagen de perfil del comentario - con fallbacks mejorados */}
                           {comment.user?.profilePicture ? (
@@ -1369,32 +1586,76 @@ function PublicationCard({ publication }) {
                           <div className="text-xs text-gray-500 mb-1">
                             {formatTimeDifference(new Date(comment.createdAt))}
                           </div>
-                          {/* Modo edición de comentario - Simplificado */}
+                          {/* Modo edición de comentario - Con emoji picker */}
                           {editingComment === comment.id ? (
-                            <div className="flex flex-col mt-1">
-                              <textarea
-                                className="w-full border border-[#c6e3e4] rounded-lg p-2 text-conexia-green focus:outline-none focus:ring-1 focus:ring-conexia-green"
-                                value={editCommentText}
-                                onChange={e => {
-                                  setEditCommentText(e.target.value || '');
-                                }}
-                                rows={2}
-                                autoFocus
-                                placeholder="Editar tu comentario..."
-                              />
-                              <div className="flex justify-end gap-2 mt-2">
+                            <div className="flex flex-col mt-1 relative w-full" style={{marginRight: '-24px'}}>
+                              <div className="w-full flex items-center bg-[#f3f9f8] border border-[#e0f0f0] rounded-xl px-4 py-3 relative">
+                                <button
+                                  type="button"
+                                  className="p-2 rounded-full hover:bg-gray-100 mr-2 flex-shrink-0"
+                                  onClick={() => setShowEmojiPickerForComment(prev => !prev)}
+                                  aria-label="Agregar emoji"
+                                >
+                                  <BsEmojiSmile size={22} className="text-conexia-green" />
+                                </button>
+                                <input
+                                  type="text"
+                                  className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-conexia-green w-full"
+                                  value={editCommentText}
+                                  onChange={e => {
+                                    setEditCommentText(e.target.value || '');
+                                  }}
+                                  autoFocus
+                                  placeholder="Editar tu comentario..."
+                                  ref={editCommentTextareaRef}
+                                  maxLength={300}
+                                />
+                              </div>
+                              {showEmojiPickerForComment && (
+                                <div ref={emojiPickerRef} className="absolute z-50 bg-white border rounded shadow p-2 mt-1 left-0">
+                                  <Picker
+                                    onEmojiClick={(emojiData) => {
+                                      const emoji = emojiData.emoji;
+                                      const textarea = editCommentTextareaRef.current;
+                                      if (textarea) {
+                                        const start = textarea.selectionStart;
+                                        const end = textarea.selectionEnd;
+                                        const newText = editCommentText.slice(0, start) + emoji + editCommentText.slice(end);
+                                        setEditCommentText(newText);
+                                        setTimeout(() => {
+                                          textarea.focus();
+                                          textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+                                        }, 0);
+                                      } else {
+                                        setEditCommentText(prev => prev + emoji);
+                                      }
+                                      setShowEmojiPickerForComment(false);
+                                    }}
+                                    theme="light"
+                                    height={260}
+                                    width={260}
+                                    searchDisabled={false}
+                                    emojiStyle="native"
+                                    lazyLoadEmojis={true}
+                                    skinTonesDisabled={false}
+                                    previewConfig={{ showPreview: false }}
+                                  />
+                                </div>
+                              )}
+                              <div className="flex justify-center sm:justify-end gap-3 mt-3 w-full">
                                 <button 
-                                  className="px-3 py-1.5 border border-[#c6e3e4] text-conexia-green rounded-lg text-sm hover:bg-[#eef6f6]"
+                                  className="w-1/3 sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
                                   onClick={() => {
                                     // Simplemente resetear el estado de edición
                                     setEditingComment(null);
                                     setEditCommentText('');
+                                    setShowEmojiPickerForComment(false);
                                   }}
                                 >
                                   Cancelar
                                 </button>
                                 <button 
-                                  className="px-4 py-1.5 bg-conexia-green text-white rounded-lg text-sm hover:bg-[#1e6e5c]"
+                                  className="w-1/3 sm:w-auto px-4 py-2 bg-conexia-green text-white rounded-lg text-sm hover:bg-[#1e6e5c] disabled:opacity-50 disabled:cursor-not-allowed"
                                   onClick={() => {
                                     // Guardar edición directamente aquí
                                     if (!editCommentText.trim()) return;
@@ -1441,7 +1702,7 @@ function PublicationCard({ publication }) {
                                       })
                                       .catch(error => {
                                         console.error('Error al editar comentario:', error);
-                                        alert('No se pudo editar el comentario. Inténtalo de nuevo.');
+                                        // Error silencioso - no mostramos alertas
                                       });
                                   }}
                                   disabled={!editCommentText.trim()}
@@ -1460,7 +1721,7 @@ function PublicationCard({ publication }) {
 
                       {/* Menú de 3 puntos (para todos los usuarios) */}
                       {editingComment !== comment.id && (
-                        <div className="relative ml-2">
+                        <div className="relative ml-2 flex-shrink-0">
                           <button 
                             className="p-1 rounded-full hover:bg-[#e0f0f0] focus:outline-none text-gray-500"
                             onClick={() => {
@@ -1532,8 +1793,6 @@ function PublicationCard({ publication }) {
                                       ...prevState,
                                       [comment.id]: false
                                     }));
-                                    // Mostrar una alerta indicando que la funcionalidad se implementará más adelante
-                                    alert("La funcionalidad de reportar comentarios estará disponible próximamente.");
                                   }}
                                 >
                                   <Flag size={16} className="mr-2" />
@@ -1647,7 +1906,7 @@ function PublicationCard({ publication }) {
                     })
                     .catch(error => {
                       console.error('Error al eliminar comentario:', error);
-                      alert('No se pudo eliminar el comentario. Inténtalo de nuevo.');
+                      // Error silencioso - no mostramos alertas
                     })
                     .finally(() => {
                       // Siempre cerramos el modal al finalizar
@@ -1703,6 +1962,7 @@ function PublicationCard({ publication }) {
                     case 'support': emoji = '🤝'; break;
                     case 'insightful': emoji = '💡'; break;
                     case 'celebrate': emoji = '🎉'; break;
+                    case 'fun': emoji = '😂'; break;
                     default: emoji = '👍';
                   }
                   
@@ -1739,6 +1999,7 @@ function PublicationCard({ publication }) {
                       case 'support': emoji = '🤝'; break;
                       case 'insightful': emoji = '💡'; break;
                       case 'celebrate': emoji = '🎉'; break;
+                      case 'fun': emoji = '😂'; break;
                       default: emoji = '👍';
                     }
                     return (
