@@ -1,13 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MdBarChart } from 'react-icons/md';
 import PublicationCard from './PublicationCard';
 import Button from '@/components/ui/Button';
 import PropTypes from 'prop-types';
 import { useRouter } from 'next/navigation';
+import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 
 export default function ActivityFeed({ publications, isOwner, userId }) {
   const router = useRouter();
   const visiblePublications = publications.slice(0, 2);
+  
+  // Cuando este componente se monte, asegurémonos de que todas las publicaciones estén cerradas
+  useEffect(() => {
+    // Cerrar todas las publicaciones al montar el componente
+    const allCards = document.querySelectorAll('.publication-card');
+    allCards.forEach(card => {
+      card.classList.remove('publication-card-open');
+      card.setAttribute('data-comment-open', 'false');
+    });
+  }, []);
   return (
     <section className="w-full mt-8">
       <div className="bg-white rounded-2xl shadow p-6 border border-[#c6e3e4]">
@@ -23,9 +34,9 @@ export default function ActivityFeed({ publications, isOwner, userId }) {
         {publications.length === 0 ? (
           <div className="text-conexia-green/70">No hay actividad para mostrar.</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {visiblePublications.map(pub => (
-              <PublicationCard key={pub.id} publication={pub} />
+              <PublicationCard key={pub.id} publication={pub} isGridItem={true} />
             ))}
           </div>
         )}

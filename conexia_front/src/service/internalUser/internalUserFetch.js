@@ -87,7 +87,6 @@ export async function updateInternalUser(id, data) {
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || 'Error al actualizar usuario');
-    console.log(error.message);
   }
 
   return res.json();

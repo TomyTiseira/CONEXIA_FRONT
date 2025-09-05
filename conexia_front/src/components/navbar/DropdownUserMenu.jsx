@@ -47,8 +47,14 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
     useEffect(() => {
     const handleClickOutside = (event) => {
         // Si se hizo clic fuera del menú, cerrar
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        onClose?.();
+        try {
+            if (dropdownRef.current && event.target && dropdownRef.current.contains && !dropdownRef.current.contains(event.target)) {
+                onClose?.();
+            }
+        } catch (error) {
+            console.error("Error en handleClickOutside:", error);
+            // Si hay algún error en el método contains, cerramos el menú
+            onClose?.();
         }
     };
 
