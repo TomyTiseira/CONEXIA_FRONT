@@ -49,18 +49,18 @@ export default function ConnectionsPage() {
   const SectionComponent = sectionComponents[selected] || (() => null);
 
   return (
-    <ProtectedRoute
-      allowedRoles={[ROLES.USER]}
-      fallbackComponent={<NotFound />}
-    >
-      <Suspense fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-            <p className="text-conexia-green">Cargando conexiones...</p>
-          </div>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
+          <p className="text-conexia-green">Cargando conexiones...</p>
         </div>
-      }>
+      </div>
+    }>
+      <ProtectedRoute
+        allowedRoles={[ROLES.USER]}
+        fallbackComponent={<NotFound />}
+      >
         <div className="w-full bg-gray-50 min-h-screen">
           <NavbarCommunity />
           <main className="max-w-7xl mx-auto flex flex-col md:flex-row gap-0 md:gap-8 px-2 md:px-6 mt-2 md:mt-4 pb-16 items-start">
@@ -83,7 +83,7 @@ export default function ConnectionsPage() {
             </div>
           </main>
         </div>
-      </Suspense>
-    </ProtectedRoute>
+      </ProtectedRoute>
+    </Suspense>
   );
 }
