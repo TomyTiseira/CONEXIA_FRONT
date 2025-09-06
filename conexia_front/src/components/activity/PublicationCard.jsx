@@ -30,7 +30,7 @@ const getMediaUrl = (mediaUrl) => {
 
 
 
-function PublicationCard({ publication }) {
+function PublicationCard({ publication, isGridItem = false }) {
   const { sendRequest, loading: connectLoading, success: connectSuccess, error: connectError } = useSendConnectionRequest();
   const { user } = useAuth();
   const { roleName } = useUserStore();

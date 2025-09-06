@@ -37,6 +37,7 @@ export default function ConnectionRequestsSection() {
               profession={req.sender?.profession || 'Sin profesión'}
               image={req.sender?.image}
               requestId={req.id}
+              senderId={req.senderId}
               onIgnore={() => handleIgnore(req.id)}
               onAccepted={handleAccepted}
             />
