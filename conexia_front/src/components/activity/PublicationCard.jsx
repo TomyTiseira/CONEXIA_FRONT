@@ -16,6 +16,7 @@ import { editPublication } from '@/service/publications/editPublication';
 import { createComment, getPublicationComments, updateComment, deleteComment } from '@/service/publications/comments';
 import { createOrUpdateReaction, deleteReaction, getPublicationReactions } from '@/service/publications/reactions';
 import { ROLES } from '@/constants/roles';
+import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 
 const getMediaUrl = (mediaUrl) => {
   if (!mediaUrl) return null;
