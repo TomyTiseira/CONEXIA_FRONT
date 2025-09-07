@@ -392,7 +392,7 @@ export default function UserProfile() {
             </div>
           </div>
           {/* Banner horizontal refinado para solicitud de conexión */}
-          {profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id && !accepting && (
+          {!isOwner && profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id && !accepting && (
             <div className="w-full py-2 px-4 mb-4 rounded-lg shadow-sm border border-[#d0ecec] bg-[#e6f7f7] flex flex-col sm:flex-row sm:items-center sm:justify-between">
               {/* Texto e ícono */}
               <div className="flex items-center gap-2 mb-2 sm:mb-0 justify-center sm:justify-start text-center sm:text-left">
