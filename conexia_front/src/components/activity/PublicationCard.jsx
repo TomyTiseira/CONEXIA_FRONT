@@ -2,13 +2,10 @@
 import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
 import { config } from '@/config';
-import { MoreVertical, AlertCircle, Trash2, Pencil, Flag } from 'lucide-react';
-import { FaGlobeAmericas, FaUsers, FaThumbsUp, FaCommentAlt, FaRegHandPaper, FaHeart, FaRegLightbulb, FaLaughBeam, FaHandsHelping, FaUser } from 'react-icons/fa';
-import { BsEmojiSmile } from 'react-icons/bs';
-import dynamic from 'next/dynamic';
-
-const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
-import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
+import { MoreVertical, AlertCircle, Trash2, Pencil, Check } from 'lucide-react';
+import { HiOutlinePlus } from 'react-icons/hi';
+import { useSendConnectionRequest } from '@/hooks/connections/useSendConnectionRequest';
+import { FaGlobeAmericas, FaUsers, FaThumbsUp, FaCommentAlt, FaRegHandPaper, FaHeart, FaRegLightbulb, FaLaughBeam, FaHandsHelping } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import DeletePublicationModal from './DeletePublicationModal';
@@ -19,6 +16,7 @@ import { editPublication } from '@/service/publications/editPublication';
 import { createComment, getPublicationComments, updateComment, deleteComment } from '@/service/publications/comments';
 import { createOrUpdateReaction, deleteReaction, getPublicationReactions } from '@/service/publications/reactions';
 import { ROLES } from '@/constants/roles';
+import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 
 const getMediaUrl = (mediaUrl) => {
   if (!mediaUrl) return null;
@@ -34,6 +32,7 @@ const getMediaUrl = (mediaUrl) => {
 
 
 function PublicationCard({ publication, isGridItem = false }) {
+  const { sendRequest, loading: connectLoading, success: connectSuccess, error: connectError } = useSendConnectionRequest();
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
@@ -273,7 +272,17 @@ function PublicationCard({ publication, isGridItem = false }) {
         : `${config.IMAGE_URL}${publication.owner.profilePicture.startsWith('/') ? '' : '/'}${publication.owner.profilePicture}`)
     : '/images/default-avatar.png';
   const ownerId = publication.owner?.id;
-  const displayName = publication.owner?.name && publication.owner?.lastName ? `${publication.owner.name} ${publication.owner.lastName}` : publication.owner?.name || 'Usuario';
+  // Nombre completo para desktop, solo primer y último nombre para mobile
+  let displayName = publication.owner?.name || 'Usuario';
+  let displayNameMobile = displayName;
+  if (publication.owner?.name) {
+    const nameParts = publication.owner.name.trim().split(' ');
+    if (nameParts.length > 1) {
+      displayNameMobile = `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+    } else {
+      displayNameMobile = nameParts[0];
+    }
+  }
   const profession = publication.owner?.profession || '';
 
   // Fecha relativa o absoluta
@@ -940,7 +949,7 @@ function PublicationCard({ publication, isGridItem = false }) {
   return (
   <div id={`pub-${publicationId}`} className={`publication-card bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl ${showCommentSection ? 'publication-card-open' : ''} ${isGridItem ? 'grid-publication-card' : ''}`} style={{ minWidth: 0, height: isGridItem && !showCommentSection ? 'auto' : 'auto' }}>
       {/* Header autor y menú */}
-      <div className="flex items-center gap-2 px-5 pt-3 pb-2 relative min-h-0">
+  <div className="flex items-center gap-2 px-5 pt-3 pb-2 relative min-h-0">
         <img
           src={avatar}
           alt="avatar"
@@ -951,25 +960,57 @@ function PublicationCard({ publication, isGridItem = false }) {
           <div className="flex flex-col items-start">
             <span
               className="text-conexia-green font-semibold text-base truncate max-w-xs flex items-center gap-1 leading-tight cursor-pointer transition-colors hover:text-[#367d7d] rounded"
+              style={{lineHeight:'1.05'}}
               onClick={() => ownerId && router.push(`/profile/userProfile/${ownerId}`)}
             >
-              {displayName}
+              <span className="block sm:hidden">{displayNameMobile}</span>
+              <span className="hidden sm:block">{displayName}</span>
               {/* LinkedIn badge, opcional: <span className=\"ml-1 bg-[#e0f0f0] text-[#1e6e5c] text-xs px-1.5 py-0.5 rounded font-bold\">in</span> */}
             </span>
             {profession && (
-              <span className="text-xs text-conexia-green/80 truncate max-w-xs leading-tight">{profession}</span>
+              <span className="text-xs text-conexia-green/80 truncate max-w-xs leading-tight mt-0.5" style={{lineHeight:'1.25'}}>{profession}</span>
             )}
-            <span className="text-xs text-gray-500 flex items-center gap-1">
+            <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5" style={{lineHeight:'1.1'}}>
               {getRelativeOrAbsoluteDate(publication.createdAt)}
               <span className="mx-1 text-[18px] font-bold leading-none text-conexia-green">·</span>
               {privacyIcon}
             </span>
           </div>
         </div>
-        <div className="ml-auto relative">
-          <button className="p-1 rounded-full hover:bg-[#e0f0f0] focus:outline-none" onClick={() => setMenuOpen((v) => !v)}>
-            <MoreVertical size={22} className="text-conexia-green" />
-          </button>
+        {/* Botones en la esquina superior derecha: Seguir y menú */}
+        <div className="absolute top-3 right-5 z-30 flex flex-row items-center">
+          <div className="flex flex-row items-center w-full">
+            {( !publication.isContact && publication.connectionStatus == null && !isOwner && !isAdmin && !isModerator) && (
+              (connectSuccess || connectLoading) ? (
+                <button
+                  className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] w-8 h-8 sm:w-auto sm:h-auto sm:px-2 sm:py-0.5 gap-1 mr-0 sm:mr-2 cursor-default"
+                  type="button"
+                  disabled
+                >
+                  <Check className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-conexia-green" />
+                  <span className="hidden sm:inline text-xs sm:text-sm">Conectando</span>
+                </button>
+              ) : (
+                <button
+                  className="flex items-center justify-center bg-[#367d7d] text-white font-semibold rounded-lg border border-[#e0f0f0] hover:bg-[#285c5c] transition-colors focus:outline-none shadow-sm w-8 h-8 sm:w-auto sm:h-auto sm:px-2 sm:py-0.5 gap-0 sm:gap-1 mr-0 sm:mr-2"
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await sendRequest(publication.owner?.id);
+                    } catch {}
+                  }}
+                >
+                  <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-white bg-transparent">
+                    <HiOutlinePlus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white stroke-[3]" />
+                  </span>
+                  <span className="hidden sm:inline text-xs sm:text-sm">Conectar</span>
+                </button>
+              )
+            )}
+            <button className="p-1 rounded-full focus:outline-none" style={{background: 'transparent'}} onClick={() => setMenuOpen((v) => !v)}>
+              <MoreVertical size={22} className="text-conexia-green" />
+            </button>
+          </div>
           {menuOpen && (
             <div ref={menuRef} className="absolute right-0 mt-2 min-w-[220px] bg-white border border-[#c6e3e4] rounded-lg shadow-lg py-1 flex flex-col animate-fade-in z-20">
               {/* Admin o moderador: solo ver reportes */}

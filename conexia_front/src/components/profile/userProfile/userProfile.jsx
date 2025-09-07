@@ -1,10 +1,12 @@
 // src/components/profile/UserProfile.jsx
 "use client";
-
+import { useUserStore } from '@/store/userStore';
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getProfileById } from "@/service/profiles/profilesFetch";
 import Image from "next/image";
+import { useAcceptConnectionRequest } from '@/hooks/connections/useAcceptConnectionRequest';
+import { HiUserAdd } from 'react-icons/hi';
 import { config } from "@/config";
 import { NotFound } from "@/components/ui";
 import NavbarHome from "@/components/navbar/NavbarHome";
@@ -18,10 +20,13 @@ import Button from "@/components/ui/Button";
 import SkillsDisplay from "@/components/skills/SkillsDisplay";
 import UserCollaborativeProjects from "./UserCollaborativeProjects";
 import UserActivity from "./UserActivity";
-
+import ProfileConnectionButtons from "./ProfileConnectionButtons";
 
 export default function UserProfile() {
+  const [accepting, setAccepting] = useState(false);
+  const { acceptRequest, loading: acceptLoading } = useAcceptConnectionRequest();
   const { user: authUser, updateUser } = useAuth();
+  const { user: storeUser } = useUserStore();
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -365,6 +370,10 @@ export default function UserProfile() {
                 {(user.state || user.country) && (
                   <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
                 )}
+                  {/* Solo mostrar el botón de conexión si no hay solicitud pendiente */}
+                  {!(profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id) && (
+                    <ProfileConnectionButtons profile={profile} id={storeUser?.id} isOwner={isOwner} receiverId={Number(id)}/>
+                  )}
               </div>
             </div>
             {/* Botón de editar (solo dueño) y botón para ver proyectos (todos) */}
@@ -382,6 +391,49 @@ export default function UserProfile() {
               )}
             </div>
           </div>
+          {/* Banner horizontal refinado para solicitud de conexión */}
+          {profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id && !accepting && (
+            <div className="w-full py-2 px-4 mb-4 rounded-lg shadow-sm border border-[#d0ecec] bg-[#e6f7f7] flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              {/* Texto e ícono */}
+              <div className="flex items-center gap-2 mb-2 sm:mb-0 justify-center sm:justify-start text-center sm:text-left">
+                <HiUserAdd className="w-5 h-5 text-conexia-green" />
+                <span className="text-conexia-green text-sm font-medium">
+                  {(() => {
+                    const name = profile.profile?.name?.split(' ')[0] || '';
+                    const lastName = profile.profile?.lastName?.split(' ')[0] || '';
+                    return `${name} ${lastName} quiere conectar con vos`;
+                  })()}
+                </span>
+              </div>
+              {/* Botones */}
+              <div className="flex gap-2 w-full sm:w-auto sm:justify-end justify-center">
+                <button
+                  className="flex items-center justify-center bg-conexia-green text-white font-semibold rounded-lg border border-[#e0f0f0] hover:bg-[#285c5c] transition-colors focus:outline-none shadow-sm px-4 py-1 text-sm"
+                  type="button"
+                  onClick={async () => {
+                    setAccepting(true);
+                    await acceptRequest(profile.profile?.connectionData?.id);
+                    // Refrescar perfil
+                    const data = await getProfileById(id);
+                    setProfile(data.data);
+                    setAccepting(false);
+                  }}
+                  disabled={acceptLoading || accepting}
+                  style={{ minWidth: 80 }}
+                >
+                  {acceptLoading || accepting ? 'Aceptando...' : 'Aceptar'}
+                </button>
+                <button
+                  className="flex items-center justify-center bg-[#f5f6f6] text-[#777d7d] hover:bg-[#f1f2f2] border border-[#e1e4e4] font-semibold rounded-lg focus:outline-none shadow-sm px-4 py-1 text-sm"
+                  type="button"
+                  // onClick={...} // lógica para eliminar/rechazar
+                  style={{ minWidth: 80 }}
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          )}
           {/* Información en bloques */}
           <div className="mt-6 space-y-6">
             {user.description && (
@@ -468,9 +520,22 @@ export default function UserProfile() {
               <Section title="Redes sociales">
                 <ul className="list-disc ml-6">
                   {user.socialLinks.map((link, idx) => (
-                    <li key={idx}>
-                      <span className="font-semibold mr-2">{link.platform}:</span>
-                      <a href={link.url} target="_blank" className="text-conexia-coral underline">
+                    <li key={idx} className="break-words max-w-full">
+                      <span className="font-semibold mr-2 align-top">{link.platform}:</span>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        className="text-conexia-coral underline align-top break-words inline-block max-w-full"
+                        style={{
+                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word',
+                          whiteSpace: 'normal',
+                          display: 'inline-block',
+                          verticalAlign: 'top',
+                          maxWidth: '100%'
+                        }}
+                        onClick={e => e.stopPropagation()}
+                      >
                         {link.url}
                       </a>
                     </li>
