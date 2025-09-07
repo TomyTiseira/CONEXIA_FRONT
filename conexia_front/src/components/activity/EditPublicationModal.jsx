@@ -189,7 +189,11 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
     };
     if (file) {
       send.file = file;
+      // Si se añade un nuevo archivo, no se debe enviar removeMedia
+      send.removeMedia = false;
     } else if (removeOriginalMedia) {
+      // Si se elimina el archivo sin añadir uno nuevo, enviar removeMedia: true
+      send.removeMedia = true;
       send.file = null;
     }
     // Si onEdit es async, esperar a que termine

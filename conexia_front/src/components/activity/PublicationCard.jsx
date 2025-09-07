@@ -4,8 +4,10 @@ import PropTypes from 'prop-types';
 import { config } from '@/config';
 import { MoreVertical, AlertCircle, Trash2, Pencil, Check } from 'lucide-react';
 import { HiOutlinePlus } from 'react-icons/hi';
+import { BsEmojiSmile } from 'react-icons/bs';
 import { useSendConnectionRequest } from '@/hooks/connections/useSendConnectionRequest';
-import { FaGlobeAmericas, FaUsers, FaThumbsUp, FaCommentAlt, FaRegHandPaper, FaHeart, FaRegLightbulb, FaLaughBeam, FaHandsHelping } from 'react-icons/fa';
+import { FaGlobeAmericas, FaUsers, FaThumbsUp, FaCommentAlt, FaRegHandPaper, FaHeart, FaRegLightbulb, FaLaughBeam, FaHandsHelping, FaUser } from 'react-icons/fa';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import DeletePublicationModal from './DeletePublicationModal';
@@ -17,6 +19,8 @@ import { createComment, getPublicationComments, updateComment, deleteComment } f
 import { createOrUpdateReaction, deleteReaction, getPublicationReactions } from '@/service/publications/reactions';
 import { ROLES } from '@/constants/roles';
 import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
+
+const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
 const getMediaUrl = (mediaUrl) => {
   if (!mediaUrl) return null;
@@ -480,7 +484,7 @@ function PublicationCard({ publication, isGridItem = false }) {
     return userReaction && userReaction.type === type;
   };
 
-  const handleEdit = async ({ description, file, privacy }) => {
+  const handleEdit = async ({ description, file, privacy, removeMedia }) => {
     setEditLoading(true);
     try {
       if (!publicationId) {
@@ -491,6 +495,11 @@ function PublicationCard({ publication, isGridItem = false }) {
       formData.append('description', description);
       if (file) {
         formData.append('media', file);
+        // Si se sube un nuevo archivo, no se debe incluir removeMedia o debe ser false
+        formData.append('removeMedia', 'false');
+      } else if (removeMedia) {
+        // Si se elimina un archivo sin reemplazarlo, incluir removeMedia: true
+        formData.append('removeMedia', 'true');
       }
       
       // Asegurar que siempre se envíe el campo privacy con un valor válido
@@ -910,30 +919,23 @@ function PublicationCard({ publication, isGridItem = false }) {
     }
     
     try {
-      // Llamada a la API con retry en caso de fallo
-      let response;
-      try {
-        response = await deleteComment(commentId);
-      } catch (apiError) {
-        console.error("Error en la primera llamada a la API:", apiError);
-        // Intentar una vez más
-        response = await deleteComment(commentId);
-      }
+      // Primero cerramos el modal para mejor UX
+      setShowDeleteCommentModal(false);
       
-      // Eliminar del estado local
-      if (allComments.length > 0) {
-        setAllComments(prev => prev.filter(comment => comment.id !== commentId));
-      } else {
-        setComments(prev => prev.filter(comment => comment.id !== commentId));
-      }
+      // Eliminar inmediatamente del estado local para feedback inmediato
+      // Actualizar AMBOS arrays independientemente de su longitud
+      setAllComments(prev => prev.filter(comment => comment.id !== commentId));
+      setComments(prev => prev.filter(comment => comment.id !== commentId));
       
       // Decrementar contador de comentarios si existe
       if (publication.commentsCount !== undefined && publication.commentsCount > 0) {
         publication.commentsCount -= 1;
       }
       
-      // Cerrar el modal de eliminación
-      setShowDeleteCommentModal(false);
+      // Luego eliminar del backend
+      await deleteComment(commentId);
+      
+      // Limpiar el ID del comentario
       setCommentToDelete(null);
       
     } catch (error) {
@@ -942,7 +944,6 @@ function PublicationCard({ publication, isGridItem = false }) {
       // Cerrar el modal de eliminación incluso en caso de error
       setShowDeleteCommentModal(false);
       setCommentToDelete(null);
-      // Error silencioso - no mostramos alertas
     }
   };
 
@@ -1644,7 +1645,10 @@ function PublicationCard({ publication, isGridItem = false }) {
             ) : (
               <div className="space-y-4">
                 {/* Mostrar solo los primeros 2 comentarios inicialmente */}
-                {(allComments.length > 0 ? allComments.slice(0, showAllComments ? allComments.length : 2) : comments.slice(0, showAllComments ? comments.length : 2)).map(comment => (
+                {(allComments.length > 0 ? allComments : comments)
+                  .slice(0, showAllComments ? (allComments.length > 0 ? allComments.length : comments.length) : 2)
+                  .filter(comment => comment && comment.id) // Asegurarnos de que el comentario existe y tiene ID
+                  .map(comment => (
                   <div key={comment.id} className="bg-[#f3f9f8] rounded-lg p-3 border border-[#e0f0f0] relative">
                     <div className={`flex items-start ${editingComment === comment.id ? 'justify-start' : 'justify-between'}`}>
                       <div className="flex items-start flex-1">
@@ -1999,34 +2003,8 @@ function PublicationCard({ publication, isGridItem = false }) {
               </button>
               <button 
                 onClick={() => {
-                  
-                  // Eliminar el comentario directamente sin manejar el cierre del modal en handleDeleteComment
-                  // ya que lo haremos aquí explícitamente
-                  deleteComment(commentToDelete)
-                    .then(response => {
-                      
-                      // Eliminar del estado local
-                      if (allComments.length > 0) {
-                        setAllComments(prev => prev.filter(comment => comment.id !== commentToDelete));
-                      } else {
-                        setComments(prev => prev.filter(comment => comment.id !== commentToDelete));
-                      }
-                      
-                      // Decrementar contador de comentarios si existe
-                      if (publication.commentsCount !== undefined && publication.commentsCount > 0) {
-                        publication.commentsCount -= 1;
-                      }
-
-                    })
-                    .catch(error => {
-                      console.error('Error al eliminar comentario:', error);
-                      // Error silencioso - no mostramos alertas
-                    })
-                    .finally(() => {
-                      // Siempre cerramos el modal al finalizar
-                      setShowDeleteCommentModal(false);
-                      setCommentToDelete(null);
-                    });
+                  // Usar la función handleDeleteComment que ya tiene la lógica correcta
+                  handleDeleteComment(commentToDelete);
                 }}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
               >
