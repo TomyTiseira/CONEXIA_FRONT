@@ -7,7 +7,7 @@ import { FaRegClock } from 'react-icons/fa';
 import Button from '@/components/ui/Button';
 
 export default function ProfileConnectionButtons({ profile, id, isOwner, receiverId}) {
-  if (isOwner) return nul
+  if (isOwner) return null
   const { sendRequest, loading: sendLoading } = useSendConnectionRequest();
   const { acceptRequest, loading: acceptLoading } = useAcceptConnectionRequest();
   const connection = profile.profile?.connectionData;
