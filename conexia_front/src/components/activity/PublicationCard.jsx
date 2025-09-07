@@ -480,7 +480,7 @@ function PublicationCard({ publication, isGridItem = false }) {
     return userReaction && userReaction.type === type;
   };
 
-  const handleEdit = async ({ description, file, privacy }) => {
+  const handleEdit = async ({ description, file, privacy, removeMedia }) => {
     setEditLoading(true);
     try {
       if (!publicationId) {
@@ -491,6 +491,11 @@ function PublicationCard({ publication, isGridItem = false }) {
       formData.append('description', description);
       if (file) {
         formData.append('media', file);
+        // Si se sube un nuevo archivo, no se debe incluir removeMedia o debe ser false
+        formData.append('removeMedia', 'false');
+      } else if (removeMedia) {
+        // Si se elimina un archivo sin reemplazarlo, incluir removeMedia: true
+        formData.append('removeMedia', 'true');
       }
       
       // Asegurar que siempre se envíe el campo privacy con un valor válido
