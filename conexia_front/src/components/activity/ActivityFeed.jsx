@@ -40,15 +40,15 @@ export default function ActivityFeed({ publications, isOwner, userId }) {
             ))}
           </div>
         )}
-        <div className="flex flex-col sm:flex-row justify-end mt-4">
-          <Button
-            variant="informative"
-            className="w-full sm:w-auto flex items-center gap-2 px-5 py-2 rounded-lg font-semibold shadow bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] text-base border border-[#c6e3e4]"
-            onClick={() => router.push(`/activities/${userId}`)}
+        <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
+          <a
+            href={`/activities/${userId}`}
+            className="w-full sm:w-auto flex items-center gap-2 px-5 py-2 rounded-lg font-semibold shadow bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] text-base border border-[#c6e3e4] justify-center text-center"
+            style={{ minHeight: '40px' }}
           >
-            <span>Mostrar toda la actividad</span>
+            <span className="w-full text-center">Mostrar toda la actividad</span>
             <svg
-              className="w-5 h-5 text-conexia-green"
+              className="w-5 h-5 text-conexia-green hidden sm:inline"
               width="20"
               height="20"
               viewBox="0 0 20 20"
@@ -81,7 +81,7 @@ export default function ActivityFeed({ publications, isOwner, userId }) {
                 strokeLinejoin="round"
               />
             </svg>
-          </Button>
+          </a>
         </div>
       </div>
     </section>

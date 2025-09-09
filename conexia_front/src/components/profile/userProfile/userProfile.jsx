@@ -21,6 +21,7 @@ import SkillsDisplay from "@/components/skills/SkillsDisplay";
 import UserCollaborativeProjects from "./UserCollaborativeProjects";
 import UserActivity from "./UserActivity";
 import ProfileConnectionButtons from "./ProfileConnectionButtons";
+import UserConnections from "./UserConnections"
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
@@ -325,9 +326,9 @@ export default function UserProfile() {
   return (
     <div className="bg-conexia-soft min-h-screen">
       <Navbar />
-  <div className="max-w-5xl mx-auto flex flex-col gap-0 mt-4 px-2 md:px-0">
+      <div className="max-w-5xl mx-auto flex flex-col gap-0 mt-4 px-2 md:px-0">
         {/* Rectángulo de datos personales */}
-  <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
+        <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
           {/* Portada y foto de perfil */}
           <div className="relative h-48 rounded overflow-hidden bg-gray-100 mb-8">
             {user.coverPicture && (
@@ -370,10 +371,10 @@ export default function UserProfile() {
                 {(user.state || user.country) && (
                   <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
                 )}
-                  {/* Solo mostrar el botón de conexión si no hay solicitud pendiente */}
-                  {!(profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id) && (
-                    <ProfileConnectionButtons profile={profile} id={storeUser?.id} isOwner={isOwner} receiverId={Number(id)}/>
-                  )}
+                {/* Solo mostrar el botón de conexión si no hay solicitud pendiente */}
+                {!(profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id) && (
+                  <ProfileConnectionButtons profile={profile} id={storeUser?.id} isOwner={isOwner} receiverId={Number(id)}/>
+                )}
               </div>
             </div>
             {/* Botón de editar (solo dueño) y botón para ver proyectos (todos) */}
@@ -545,14 +546,15 @@ export default function UserProfile() {
             )}
           </div>
         </div>
-
-  {/* Rectángulo de proyectos colaborativos */}
-  <UserCollaborativeProjects userId={id} />
-  {/* Rectángulo de actividad */}
-  <UserActivity userId={id} isOwner={isOwner} />
+  {/* Apartado de conexiones del usuario */}
+  <UserConnections userId={id} profile={profile} />
+        {/* Rectángulo de proyectos colaborativos */}
+        <UserCollaborativeProjects userId={id} />
+        {/* Rectángulo de actividad */}
+        <UserActivity userId={id} isOwner={isOwner} />
       </div>
-  {/* Margen inferior verde */}
-  <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
+      {/* Margen inferior verde */}
+      <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
     </div>
   );
 }
