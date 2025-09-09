@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { getSentConnectionRequests } from '@/service/connections/getSentConnectionRequests';
 import { useCancelConnectionRequest } from '@/hooks/connections/useCancelConnectionRequest';
 import SentConnectionRequestCard from '@/components/connections/SentConnectionRequestCard';
-import { ConfirmModal } from '@/components/ui';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function SentRequestsSection() {
   const [requests, setRequests] = useState([]);

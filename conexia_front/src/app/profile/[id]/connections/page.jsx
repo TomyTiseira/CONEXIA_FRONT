@@ -79,32 +79,16 @@ export default function UserConnectionsPage() {
                   <div className="text-conexia-green/70 text-center py-8">No tiene contactos aún.</div>
                 ) : (
                   <div
-                    className="grid connections-grid w-full"
+                    className="grid w-full"
                     style={{
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-                      gap: '16px 8px',
-                      justifyContent: 'center',
+                      gridTemplateColumns: 'repeat(auto-fill, 170px)',
+                      gap: '12px',
+                      justifyContent: 'start',
+                      padding: '0 12px',
                     }}
                   >
-                    <style jsx>{`
-                      .connection-card {
-                        width: 100%;
-                        max-width: 170px;
-                        min-width: 140px;
-                      }
-                      @media (min-width: 640px) {
-                        .connections-grid {
-                          gap: 20px 12px !important;
-                          grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
-                          padding-left: 48px !important;
-                          padding-right: 48px !important;
-                        }
-                      }
-                    `}</style>
                     {friends.map(friend => (
-                      <div className="connection-card" key={friend.id}>
-                        <ConnectionFriendCard friend={friend} />
-                      </div>
+                      <ConnectionFriendCard key={friend.id} friend={friend} />
                     ))}
                   </div>
                 )}

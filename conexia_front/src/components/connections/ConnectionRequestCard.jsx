@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import { config } from '@/config';
 import { useAcceptConnectionRequest } from '@/hooks/connections/useAcceptConnectionRequest';
+import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
 
 export default function ConnectionRequestCard({ name, profession, image, requestId, senderId, onIgnore, onAccepted }) {
   const defaultAvatar = '/images/default-avatar.png';
@@ -19,10 +20,13 @@ export default function ConnectionRequestCard({ name, profession, image, request
   const profileImage = getProfileImageUrl(image);
 
   const { acceptRequest, loading: acceptLoading, success: acceptSuccess, error: acceptError } = useAcceptConnectionRequest();
+  const { refreshRequests } = useConnectionRequests();
 
   const handleAccept = async () => {
     try {
       await acceptRequest(requestId);
+      // Actualizar el contexto para reflejar el cambio en toda la aplicación
+      refreshRequests();
       if (onAccepted) onAccepted(requestId);
     } catch (err) {
       // Opcional: mostrar error

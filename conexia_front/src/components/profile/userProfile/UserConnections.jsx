@@ -7,7 +7,7 @@ import ConnectionFriendCard from '@/components/connections/ConnectionFriendCard'
 import { useUserFriends } from '@/hooks/connections/useUserFriends';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
 
-export default function UserConnections({ userId, profile }) {
+export default function UserConnections({ userId, profile, isOwner }) {
   // Traemos los primeros 8 amigos, pero solo mostramos los que entran en una fila (como actividad)
   const { friends, loading, error } = useUserFriends(userId, 1, 8);
   // Determinar cuántos mostrar según el tamaño de pantalla
@@ -27,9 +27,13 @@ export default function UserConnections({ userId, profile }) {
         <div className="flex flex-col items-start mb-2">
           <div className="flex items-center gap-2 mb-1">
             <HiUserGroup className="w-6 h-6 text-conexia-green" />
-            <h3 className="text-base md:text-lg font-bold text-conexia-green">Conexiones</h3>
+            <h3 className="text-base md:text-lg font-bold text-conexia-green">
+              {isOwner ? 'Mis Conexiones' : 'Conexiones'}
+            </h3>
           </div>
-          <div className="text-gray-500 text-xs md:text-sm mb-2">Contactos de este usuario en Conexia.</div>
+          <div className="text-gray-500 text-xs md:text-sm mb-2">
+            {isOwner ? 'Tus contactos en Conexia.' : 'Contactos de este usuario en Conexia.'}
+          </div>
         </div>
         {loading ? (
           <div className="text-conexia-green/70 text-center py-8">Cargando conexiones...</div>
@@ -44,47 +48,17 @@ export default function UserConnections({ userId, profile }) {
             ))}
           </div>
         )}
-        <div className="flex flex-col sm:flex-row justify-end mt-4">
+        <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
           <a
             href={`/profile/${userId}/connections`}
-            className="w-full sm:w-auto flex items-center gap-2 px-5 py-2 rounded-lg font-semibold shadow bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] text-base border border-[#c6e3e4] justify-center text-center"
+            className="w-full sm:w-auto flex items-center gap-1.5 px-5 py-2 rounded-lg font-semibold shadow bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] text-base border border-[#c6e3e4] justify-center text-center"
             style={{ minHeight: '40px' }}
           >
-            <span className="w-full text-center">Mostrar todas las conexiones</span>
-            <svg
-              className="w-5 h-5 text-conexia-green hidden sm:inline"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="10"
-                cy="10"
-                r="8.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                fill="none"
-              />
-              <line
-                x1="13.5"
-                y1="10"
-                x2="6.5"
-                y2="10"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <polyline
-                points="11,7 14,10 11,13"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg className="w-7 h-7 hidden sm:inline" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" style={{ verticalAlign: 'middle' }}>
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.2" fill="none"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m4-4H8" />
             </svg>
+            <span className="w-full text-center">Ver más…</span>
           </a>
         </div>
       </div>

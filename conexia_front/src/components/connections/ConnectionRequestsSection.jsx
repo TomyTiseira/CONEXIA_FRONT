@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import ConnectionRequestCard from '@/components/connections/ConnectionRequestCard';
 import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
 import { useRejectConnectionRequest } from '@/hooks/connections/useRejectConnectionRequest';
-import { ConfirmModal } from '@/components/ui';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function ConnectionRequestsSection() {
-  const { requests, loading, error } = useConnectionRequests();
+  const { requests, loading, error, refreshRequests } = useConnectionRequests();
   const [localRequests, setLocalRequests] = useState([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState(null);
@@ -33,6 +33,8 @@ export default function ConnectionRequestsSection() {
       setLocalRequests((prev) => prev.filter((req) => req.id !== selectedRequestId));
       setShowRejectModal(false);
       setSelectedRequestId(null);
+      // Actualizar el contexto para reflejar el cambio en toda la aplicación
+      refreshRequests();
     } catch (err) {
       console.error('Error al rechazar solicitud:', err);
       // Opcional: Mostrar mensaje de error

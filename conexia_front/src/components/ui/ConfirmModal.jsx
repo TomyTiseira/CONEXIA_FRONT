@@ -22,22 +22,22 @@ export default function ConfirmModal({
       >
         <h3 className="text-conexia-green text-xl font-bold mb-2">{title}</h3>
         <p className="text-gray-600 mb-6">{message}</p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+        <div className="flex justify-end gap-2 mt-4">
           <Button
-            variant="neutral-outline"
-            className="py-2 px-4 text-sm"
-            onClick={onClose}
-            disabled={isLoading}
-          >
-            {cancelButtonText}
-          </Button>
-          <Button
-            variant="cancel"
+            variant="success"
             className="py-2 px-4 text-sm"
             onClick={onConfirm}
             disabled={isLoading}
           >
             {isLoading ? 'Procesando...' : confirmButtonText}
+          </Button>
+          <Button
+            variant="cancel"
+            className="py-2 px-4 text-sm"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            {cancelButtonText}
           </Button>
         </div>
       </div>
