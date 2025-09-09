@@ -16,7 +16,33 @@ function RecommendedSection() {
       <div className="text-conexia-green/70 text-center py-8">No hay recomendaciones por ahora. ¡Vuelve pronto!</div>
     </div>
   );
+  // TODO: Reemplazar estos mocks por datos reales del contexto/store/API
+  const allUsers = [];
+  const myContacts = [];
+  const mySkills = [];
+  const friendsMap = {};
+  const myId = null;
+  const connectUser = (id) => {
+    // Implementar lógica de conexión
+    console.log('Conectar con usuario', id);
+  };
+  return (
+    <div className="w-full">
+      <div className="text-conexia-green text-2xl font-bold mb-1">Personas recomendadas</div>
+      <div className="text-conexia-green/80 mb-6">Conecta con personas sugeridas según tus intereses y actividad en Conexia.</div>
+      <RecommendationsList
+        allUsers={allUsers}
+        myContacts={myContacts}
+        mySkills={mySkills}
+        friendsMap={friendsMap}
+        myId={myId}
+        onConnect={connectUser}
+        max={12}
+      />
+    </div>
+  );
 }
+import { RecommendationsList } from "@/components/connections/RecommendationsList";
 function MyConnectionsSection() {
   return (
     <div className="w-full">
