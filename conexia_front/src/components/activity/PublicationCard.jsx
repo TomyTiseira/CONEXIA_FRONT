@@ -19,6 +19,7 @@ import { createComment, getPublicationComments, updateComment, deleteComment } f
 import { createOrUpdateReaction, deleteReaction, getPublicationReactions } from '@/service/publications/reactions';
 import { ROLES } from '@/constants/roles';
 import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
+import ReportPublicationModal from './report/ReportPublicationModal';
 
 const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
@@ -947,8 +948,26 @@ function PublicationCard({ publication, isGridItem = false }) {
     }
   };
 
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  // Handler para enviar el reporte
+  const handleReportSubmit = async (data, setMsg) => {
+    setReportLoading(true);
+    try {
+      // Aquí deberías llamar a la API para reportar la publicación
+      // await reportPublication(publication.id, data);
+      setMsg('Reporte enviado correctamente.');
+      setShowReportModal(false);
+    } catch (err) {
+      setMsg('Error al enviar el reporte.');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   return (
-  <div id={`pub-${publicationId}`} className={`publication-card bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl ${showCommentSection ? 'publication-card-open' : ''} ${isGridItem ? 'grid-publication-card' : ''}`} style={{ minWidth: 0, height: isGridItem && !showCommentSection ? 'auto' : 'auto' }}>
+    <div id={`pub-${publicationId}`} className={`publication-card bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl ${showCommentSection ? 'publication-card-open' : ''} ${isGridItem ? 'grid-publication-card' : ''}`} style={{ minWidth: 0, height: isGridItem && !showCommentSection ? 'auto' : 'auto' }}>
       {/* Header autor y menú */}
   <div className="flex items-center gap-2 px-5 pt-3 pb-2 relative min-h-0">
         <img
@@ -1014,6 +1033,16 @@ function PublicationCard({ publication, isGridItem = false }) {
           </div>
           {menuOpen && (
             <div ref={menuRef} className="absolute right-0 mt-2 min-w-[220px] bg-white border border-[#c6e3e4] rounded-lg shadow-lg py-1 flex flex-col animate-fade-in z-20">
+              {/* Usuario general (no admin/moderador/owner): reportar */}
+              {!isAdmin && !isModerator && !isOwner && (
+                <button
+                  className="flex items-center gap-2 px-4 py-2 text-conexia-green hover:bg-[#eef6f6] text-base font-semibold w-full whitespace-nowrap"
+                  onClick={() => { setMenuOpen(false); setShowReportModal(true); }}
+                  style={{maxWidth: 'none'}}>
+                  <span className="flex-shrink-0 flex items-center justify-center"><AlertCircle size={22} strokeWidth={2} className="text-conexia-green" /></span>
+                  <span>Reportar publicación</span>
+                </button>
+              )}
               {/* Admin o moderador: solo ver reportes */}
               {(isAdmin || isModerator) && (
                 <button
@@ -1025,16 +1054,6 @@ function PublicationCard({ publication, isGridItem = false }) {
                   style={{maxWidth: 'none'}}>
                   <span className="flex-shrink-0 flex items-center justify-center"><AlertCircle size={22} strokeWidth={2} className="text-conexia-green" /></span>
                   <span>Ver reportes</span>
-                </button>
-              )}
-              {/* Usuario general (no admin/moderador/owner): reportar */}
-              {!isAdmin && !isModerator && !isOwner && (
-                <button
-                  className="flex items-center gap-2 px-4 py-2 text-conexia-green hover:bg-[#eef6f6] text-base font-semibold w-full whitespace-nowrap"
-                  onClick={() => { setMenuOpen(false); /* TODO: abrir modal reportar */ }}
-                  style={{maxWidth: 'none'}}>
-                  <span className="flex-shrink-0 flex items-center justify-center"><AlertCircle size={22} strokeWidth={2} className="text-conexia-green" /></span>
-                  <span>Reportar publicación</span>
                 </button>
               )}
               {/* Dueño: editar y eliminar */}
@@ -1075,6 +1094,14 @@ function PublicationCard({ publication, isGridItem = false }) {
           displayName: publication.owner?.name && publication.owner?.lastName ? `${publication.owner.name} ${publication.owner.lastName}` : publication.owner?.name || 'Usuario',
         }}
       />
+      {/* Modal de reporte de publicación */}
+      {showReportModal && (
+        <ReportPublicationModal
+          onCancel={() => setShowReportModal(false)}
+          onSubmit={handleReportSubmit}
+          loading={reportLoading}
+        />
+      )}
       {/* Línea divisoria entre header y contenido */}
       <div className="border-t border-[#e0f0f0] mx-6" />
       {/* Contenido publicación con truncado y ver más */}
