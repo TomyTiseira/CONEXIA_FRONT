@@ -19,15 +19,7 @@ function RecommendedSection() {
   );
 }
 import MyConnectionsSection from '@/components/connections/MyConnectionsSection';
-function SentRequestsSection() {
-  return (
-    <div className="w-full">
-      <div className="text-conexia-green text-2xl font-bold mb-1">Solicitudes enviadas</div>
-      <div className="text-conexia-green/80 mb-6">Solicitudes de conexión que enviaste a otros usuarios.</div>
-      <div className="text-conexia-green/70 text-center py-8">No has enviado solicitudes recientemente.</div>
-    </div>
-  );
-}
+import SentRequestsSection from '@/components/connections/SentRequestsSection';
 
 const sectionComponents = {
   recommended: RecommendedSection,
