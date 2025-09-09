@@ -6,6 +6,8 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getProfileById } from "@/service/profiles/profilesFetch";
 import Image from "next/image";
 import { useAcceptConnectionRequest } from '@/hooks/connections/useAcceptConnectionRequest';
+import { useRejectConnectionRequest } from '@/hooks/connections/useRejectConnectionRequest';
+import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
 import { HiUserAdd } from 'react-icons/hi';
 import { config } from "@/config";
 import { NotFound } from "@/components/ui";
@@ -21,10 +23,14 @@ import SkillsDisplay from "@/components/skills/SkillsDisplay";
 import UserCollaborativeProjects from "./UserCollaborativeProjects";
 import UserActivity from "./UserActivity";
 import ProfileConnectionButtons from "./ProfileConnectionButtons";
+import UserConnections from "./UserConnections"
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
   const { acceptRequest, loading: acceptLoading } = useAcceptConnectionRequest();
+  const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
+  const { refreshRequests } = useConnectionRequests();
   const { user: authUser, updateUser } = useAuth();
   const { user: storeUser } = useUserStore();
   const { id } = useParams();
@@ -325,9 +331,9 @@ export default function UserProfile() {
   return (
     <div className="bg-conexia-soft min-h-screen">
       <Navbar />
-  <div className="max-w-5xl mx-auto flex flex-col gap-0 mt-4 px-2 md:px-0">
+      <div className="max-w-5xl mx-auto flex flex-col gap-0 mt-4 px-2 md:px-0">
         {/* Rectángulo de datos personales */}
-  <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
+        <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
           {/* Portada y foto de perfil */}
           <div className="relative h-48 rounded overflow-hidden bg-gray-100 mb-8">
             {user.coverPicture && (
@@ -344,19 +350,15 @@ export default function UserProfile() {
           <div className="relative flex flex-col sm:flex-row sm:items-center mb-4 sm:justify-between" style={{ minHeight: 64 }}>
             <div className="flex flex-col sm:flex-row sm:items-center">
               <div className="w-[100px] h-[100px] flex-shrink-0 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-200 flex items-center justify-center mx-auto sm:mx-0 mb-4 sm:mb-0">
-                {user.profilePicture ? (
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={`${config.IMAGE_URL}/${user.profilePicture}`}
-                      alt="Foto de perfil"
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center" />
-                )}
+                <div className="relative w-full h-full">
+                  <Image
+                    src={user.profilePicture ? `${config.IMAGE_URL}/${user.profilePicture}` : '/images/default-avatar.png'}
+                    alt="Foto de perfil"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
               </div>
               <div className="sm:ml-8 flex flex-col justify-center h-full text-center sm:text-left">
                 <h2 className="text-2xl font-bold text-conexia-green">
@@ -370,10 +372,10 @@ export default function UserProfile() {
                 {(user.state || user.country) && (
                   <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
                 )}
-                  {/* Solo mostrar el botón de conexión si no hay solicitud pendiente */}
-                  {!(profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id) && (
-                    <ProfileConnectionButtons profile={profile} id={storeUser?.id} isOwner={isOwner} receiverId={Number(id)}/>
-                  )}
+                {/* Solo mostrar el botón de conexión si no hay solicitud pendiente */}
+                {!(profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id) && (
+                  <ProfileConnectionButtons profile={profile} id={storeUser?.id} isOwner={isOwner} receiverId={Number(id)}/>
+                )}
               </div>
             </div>
             {/* Botón de editar (solo dueño) y botón para ver proyectos (todos) */}
@@ -413,6 +415,8 @@ export default function UserProfile() {
                   onClick={async () => {
                     setAccepting(true);
                     await acceptRequest(profile.profile?.connectionData?.id);
+                    // Refrescar el contexto global para actualizar el contador de solicitudes en la navbar
+                    await refreshRequests();
                     // Refrescar perfil
                     const data = await getProfileById(id);
                     setProfile(data.data);
@@ -426,10 +430,20 @@ export default function UserProfile() {
                 <button
                   className="flex items-center justify-center bg-[#f5f6f6] text-[#777d7d] hover:bg-[#f1f2f2] border border-[#e1e4e4] font-semibold rounded-lg focus:outline-none shadow-sm px-4 py-1 text-sm"
                   type="button"
-                  // onClick={...} // lógica para eliminar/rechazar
+                  onClick={async () => {
+                    setRejecting(true);
+                    await rejectRequest(profile.profile?.connectionData?.id);
+                    // Refrescar el contexto global para actualizar el contador de solicitudes en la navbar
+                    await refreshRequests();
+                    // Refrescar perfil
+                    const data = await getProfileById(id);
+                    setProfile(data.data);
+                    setRejecting(false);
+                  }}
+                  disabled={rejectLoading || rejecting}
                   style={{ minWidth: 80 }}
                 >
-                  Eliminar
+                  {rejectLoading || rejecting ? 'Rechazando...' : 'Rechazar'}
                 </button>
               </div>
             </div>
@@ -545,14 +559,15 @@ export default function UserProfile() {
             )}
           </div>
         </div>
-
-  {/* Rectángulo de proyectos colaborativos */}
-  <UserCollaborativeProjects userId={id} />
-  {/* Rectángulo de actividad */}
-  <UserActivity userId={id} isOwner={isOwner} />
+  {/* Apartado de conexiones del usuario */}
+  <UserConnections userId={id} profile={profile} isOwner={isOwner} />
+        {/* Rectángulo de proyectos colaborativos */}
+        <UserCollaborativeProjects userId={id} />
+        {/* Rectángulo de actividad */}
+        <UserActivity userId={id} isOwner={isOwner} />
       </div>
-  {/* Margen inferior verde */}
-  <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
+      {/* Margen inferior verde */}
+      <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
     </div>
   );
 }

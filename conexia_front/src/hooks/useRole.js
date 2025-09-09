@@ -1,4 +1,4 @@
-import { useFetch } from '@/hooks';
+import { useFetch } from './useFetch';
 import { getRoleById } from '@/service/user/userFetch';
 import { useCallback } from 'react';
 

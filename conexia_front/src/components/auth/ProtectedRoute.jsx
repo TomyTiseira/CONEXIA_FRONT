@@ -1,3 +1,4 @@
+"use client";
 import { useRoleValidation } from "@/hooks";
 import { LoadingSpinner, ErrorDisplay, NotFound } from "@/components/ui";
 import { useSearchParams } from "next/navigation";
