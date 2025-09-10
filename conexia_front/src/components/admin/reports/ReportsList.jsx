@@ -3,12 +3,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { fetchReportedProjects } from '@/service/reports/reportsFetch';
+import { fetchReportedPublications } from '@/service/reports/publicationReportsFetch';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import Pagination from '@/components/common/Pagination';
 
 const FILTERS = [
   { label: 'Proyectos', value: 'projects' },
-  { label: 'Publicaciones', value: 'posts', disabled: true },
+  { label: 'Publicaciones', value: 'publications' },
   { label: 'Comentarios', value: 'comments', disabled: true },
   { label: 'Servicios', value: 'services', disabled: true },
 ];
@@ -22,19 +23,30 @@ export default function ReportsList() {
   const [filter, setFilter] = useState('projects');
   const [order, setOrder] = useState('reportCount');
   const [projects, setProjects] = useState([]);
+  const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
 
   useEffect(() => {
-    if (filter !== 'projects') return;
     setLoading(true);
-    fetchReportedProjects({ page, orderBy: order, pageSize: 15 })
-      .then(data => {
-        setProjects(data?.data?.projects || []);
-        setPagination(data?.data?.pagination || null);
-        setLoading(false);
-      });
+    if (filter === 'projects') {
+      fetchReportedProjects({ page, orderBy: order, pageSize: 15 })
+        .then(data => {
+          setProjects(data?.data?.projects || []);
+          setPagination(data?.data?.pagination || null);
+          setLoading(false);
+        });
+    } else if (filter === 'publications') {
+      fetchReportedPublications({ page, orderBy: order, pageSize: 15 })
+        .then(data => {
+          setPublications(data?.data?.publications || []);
+          setPagination(data?.data?.pagination || null);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
   }, [filter, order, page]);
 
   return (
@@ -88,7 +100,7 @@ export default function ReportsList() {
             </colgroup>
             <thead>
               <tr className="text-left border-b">
-                <th className="p-4 min-w-[140px] md:min-w-[180px]">Proyecto</th>
+                <th className="p-4 min-w-[140px] md:min-w-[180px]">{filter === 'projects' ? 'Proyecto' : 'Publicación'}</th>
                 <th className="p-4 min-w-[90px] max-w-[120px] text-center">Cantidad de reportes</th>
                 <th className="p-4 min-w-[120px] max-w-[180px] text-center">Fecha de último reporte</th>
                 <th className="p-4 min-w-[110px] max-w-[140px] text-center">Acciones</th>
@@ -99,40 +111,78 @@ export default function ReportsList() {
                 <tr>
                   <td colSpan="4" className="p-6 text-center text-conexia-green">Cargando reportes...</td>
                 </tr>
-              ) : projects.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron proyectos reportados.</td>
-                </tr>
-              ) : (
-                projects.map(p => (
-                  <tr key={p.projectId} className="border-b hover:bg-gray-50 h-auto align-top">
-                    <td className="p-4 align-top">
-                      <Link href={`/project/${p.projectId}?from=reports`} className="text-conexia-green font-semibold hover:underline break-all whitespace-normal">
-                        {p.projectTitle}
-                      </Link>
-                    </td>
-                    <td className="p-4 text-center align-middle">{p.reportCount}</td>
-                    <td className="p-4 text-center align-middle">{new Date(p.lastReportDate).toLocaleString()}</td>
-                    <td className="p-4 text-center align-middle">
-                      <div className="flex justify-center gap-x-2">
-                        <Button
-                          variant="add"
-                          className="px-3 py-1 text-xs"
-                          onClick={() => window.location.href = `/reports/project/${p.projectId}`}
-                        >
-                          Ver reportes
-                        </Button>
-                        <Button
-                          variant="edit"
-                          className="px-3 py-1 text-xs"
-                          onClick={() => window.location.href = `/project/${p.projectId}?from=reports`}
-                        >
-                          Ver proyecto
-                        </Button>
-                      </div>
-                    </td>
+              ) : filter === 'projects' ? (
+                projects.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron proyectos reportados.</td>
                   </tr>
-                ))
+                ) : (
+                  projects.map(p => (
+                    <tr key={p.projectId} className="border-b hover:bg-gray-50 h-auto align-top">
+                      <td className="p-4 align-top">
+                        <Link href={`/project/${p.projectId}?from=reports`} className="text-conexia-green font-semibold hover:underline break-all whitespace-normal">
+                          {p.projectTitle}
+                        </Link>
+                      </td>
+                      <td className="p-4 text-center align-middle">{p.reportCount}</td>
+                      <td className="p-4 text-center align-middle">{new Date(p.lastReportDate).toLocaleString()}</td>
+                      <td className="p-4 text-center align-middle">
+                        <div className="flex justify-center gap-x-2">
+                          <Button
+                            variant="add"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => window.location.href = `/reports/project/${p.projectId}`}
+                          >
+                            Ver reportes
+                          </Button>
+                          <Button
+                            variant="edit"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => window.location.href = `/project/${p.projectId}?from=reports`}
+                          >
+                            Ver proyecto
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )
+              ) : (
+                publications.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron publicaciones reportadas.</td>
+                  </tr>
+                ) : (
+                  publications.map(pub => (
+                    <tr key={pub.publicationId} className="border-b hover:bg-gray-50 h-auto align-top">
+                      <td className="p-4 align-top">
+                        <Link href={`/publication/${pub.publicationId}?from=reports`} className="text-conexia-green font-semibold hover:underline break-all whitespace-normal">
+                          {pub.publicationTitle}
+                        </Link>
+                      </td>
+                      <td className="p-4 text-center align-middle">{pub.reportCount}</td>
+                      <td className="p-4 text-center align-middle">{new Date(pub.lastReportDate).toLocaleString()}</td>
+                      <td className="p-4 text-center align-middle">
+                        <div className="flex justify-center gap-x-2">
+                          <Button
+                            variant="add"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => window.location.href = `/reports/publication/${pub.publicationId}`}
+                          >
+                            Ver reportes
+                          </Button>
+                          <Button
+                            variant="edit"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => window.location.href = `/publication/${pub.publicationId}?from=reports`}
+                          >
+                            Ver publicación
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )
               )}
             </tbody>
           </table>
@@ -148,7 +198,7 @@ export default function ReportsList() {
           )}
         </div>
         {/* Espacio celeste y márgenes en mobile */}
-  <div className="block md:hidden w-full absolute left-0 right-0" style={{ background: '#eaf6f4', height: 56, bottom: -56, zIndex: 0 }}></div>
+        <div className="block md:hidden w-full absolute left-0 right-0" style={{ background: '#eaf6f4', height: 56, bottom: -56, zIndex: 0 }}></div>
       </div>
     </div>
   );
