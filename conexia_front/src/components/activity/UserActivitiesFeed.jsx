@@ -70,11 +70,11 @@ export default function UserActivitiesFeed({ userId }) {
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
         {/* Sidebar perfil mobile (arriba de la caja de inicio) */}
         <div className="block md:hidden w-full mb-1">
-          <ProfileSidebar profile={profile} />
+          <ProfileSidebar profile={profile} userId={userId} />
         </div>
         {/* Sidebar perfil desktop/tablet */}
         <div className="hidden md:block w-full md:w-1/4 lg:w-1/5">
-          <ProfileSidebar profile={profile} />
+          <ProfileSidebar profile={profile} userId={userId} />
         </div>
         {/* Feed principal */}
         <div className="w-full md:w-3/4 lg:w-3/5 flex flex-col items-center">

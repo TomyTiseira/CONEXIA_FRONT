@@ -25,6 +25,8 @@ export default function ClientCommunity() {
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
 
+  const { user: userStore } = useUserStore();
+
 
 
   // Obtener publicaciones de la comunidad (solo las que no son propias)
@@ -93,19 +95,23 @@ export default function ClientCommunity() {
 
     return (
   <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8">
-  <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
+  <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
           {/* Sidebar perfil mobile (arriba de la caja de inicio) */}
-          <div className="block md:hidden w-full mb-1">
-            <ProfileSidebar profile={profile} />
-          </div>
+          {userStore?.id && (
+            <div className="block md:hidden w-full mb-1">
+              <ProfileSidebar profile={profile} userId={userStore.id} />
+            </div>
+          )}
           {/* Sidebar perfil desktop/tablet */}
-          <div className="hidden md:block w-full md:w-1/4 lg:w-1/5">
-            <ProfileSidebar profile={profile} />
-          </div>
+          {userStore?.id && (
+            <div className="hidden md:block w-full md:w-1/4 lg:w-1/5">
+              <ProfileSidebar profile={profile} userId={userStore.id} />
+            </div>
+          )}
           {/* Feed principal */}
           <div className="w-full md:w-3/4 lg:w-3/5 flex flex-col items-center">
             {/* Caja de inicio de publicación */}
-            <div className="bg-white rounded-2xl shadow border border-[#c6e3e4] px-6 pt-4 pb-2 mb-3 flex flex-col gap-2 w-full max-w-2xl">
+            <div className="bg-white rounded-2xl shadow border border-[#c6e3e4] px-2 sm:px-4 md:px-6 pt-4 pb-2 mb-3 flex flex-col gap-2 w-full max-w-full md:max-w-2xl">
               <div className="flex items-center gap-3">
                 <Image src={avatar} alt="avatar" width={40} height={40} className="rounded-full aspect-square object-cover" />
                 <button
@@ -162,7 +168,7 @@ export default function ClientCommunity() {
 
             {/* Publicaciones de la comunidad (no propias) */}
             {errorPublications && <div className="text-red-500">{errorPublications}</div>}
-            <div className="flex flex-col gap-0 w-full max-w-2xl">
+            <div className="flex flex-col gap-0 w-full max-w-full md:max-w-2xl">
               {loadingPublications && publications.length === 0 && (
                 <div className="text-conexia-green/70 py-4 text-center">Cargando publicaciones...</div>
               )}
