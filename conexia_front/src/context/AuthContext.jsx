@@ -31,17 +31,26 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setUserStore(userData, roleName); // Guardar en Zustand con roleName
       
-      // Obtener perfil extendido solo para usuarios regulares (no admin/moderator)
-      if (userData?.id && userData?.role && !['admin', 'moderator'].includes(userData.role.toLowerCase())) {
-        try {
-          const profileRes = await getProfileById(userData.id);
-          setProfileStore(profileRes.data.profile);
-        } catch (e) {
-          // No es un error crítico, continuar sin perfil extendido
+      // Obtener perfil extendido solo si hay id y no es admin/moderator
+      if (userData?.id) {
+        // Verificar si es admin o moderator usando tanto userData.role como roleName
+        const userRole = userData?.role?.toLowerCase() || '';
+        const currentRoleName = roleName?.toLowerCase() || '';
+        const isAdminOrModerator = ['admin', 'moderator'].includes(userRole) || 
+                                  ['admin', 'moderator'].includes(currentRoleName);
+        
+        if (!isAdminOrModerator) {
+          try {
+            const profileRes = await getProfileById(userData.id);
+            setProfileStore(profileRes.data.profile);
+          } catch (e) {
+            setProfileStore(null);
+          }
+        } else {
+          // Para admin/moderator, no buscar perfil extendido
           setProfileStore(null);
         }
       } else {
-        // Para admins/moderadores, no intentar buscar perfil extendido
         setProfileStore(null);
       }
     } catch (err) {
