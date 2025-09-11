@@ -38,7 +38,7 @@ export default function ReportsList() {
           setLoading(false);
         });
     } else if (filter === 'publications') {
-      fetchReportedPublications({ page, orderBy: order, pageSize: 15 })
+      fetchReportedPublications({ page, orderBy: order, limit: 15 })
         .then(data => {
           setPublications(data?.data?.publications || []);
           setPagination(data?.data?.pagination || null);

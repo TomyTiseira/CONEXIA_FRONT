@@ -30,15 +30,18 @@ export const AuthProvider = ({ children }) => {
       const userData = await getProfile();
       setUser(userData);
       setUserStore(userData, roleName); // Guardar en Zustand con roleName
-      // Obtener perfil extendido solo si hay id
-      if (userData?.id) {
+      
+      // Obtener perfil extendido solo para usuarios regulares (no admin/moderator)
+      if (userData?.id && userData?.role && !['admin', 'moderator'].includes(userData.role.toLowerCase())) {
         try {
           const profileRes = await getProfileById(userData.id);
           setProfileStore(profileRes.data.profile);
         } catch (e) {
+          // No es un error crítico, continuar sin perfil extendido
           setProfileStore(null);
         }
       } else {
+        // Para admins/moderadores, no intentar buscar perfil extendido
         setProfileStore(null);
       }
     } catch (err) {

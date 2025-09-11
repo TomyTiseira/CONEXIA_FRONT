@@ -29,6 +29,17 @@ export async function getCommunityPublications({ page = 1, limit = 10 } = {}) {
   return response;
 }
 
+// Obtener una publicación específica por ID
+export async function getPublicationById(publicationId) {
+  const res = await fetchWithRefresh(`${config.API_URL}/publications/${publicationId}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  const response = await res.json();
+  if (!res.ok) throw new Error(response.message || 'Error al obtener la publicación');
+  return response;
+}
+
 // Crear publicación
 export async function createPublication({ description, file, privacy }) {
   const formData = new FormData();

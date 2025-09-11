@@ -17,6 +17,7 @@ import { deletePublication } from '@/service/publications/deletePublication';
 import { editPublication } from '@/service/publications/editPublication';
 import { createComment, getPublicationComments, updateComment, deleteComment } from '@/service/publications/comments';
 import { createOrUpdateReaction, deleteReaction, getPublicationReactions } from '@/service/publications/reactions';
+import { createPublicationReport } from '@/service/reports/publicationReportsFetch';
 import { ROLES } from '@/constants/roles';
 import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 import ReportPublicationModal from './report/ReportPublicationModal';
@@ -207,7 +208,21 @@ function PublicationCard({ publication, isGridItem = false }) {
       setReactionsSummary(publication.reactionsSummary);
     }
     if (publication.reactionsCount !== undefined) {
-      setReactionsCount(publication.reactionsCount);
+      if (typeof publication.reactionsCount === 'object') {
+        // Nueva estructura: objeto con conteos por tipo
+        setReactionsCount(calculateTotalReactions(publication.reactionsCount));
+        
+        // Si no hay reactionsSummary, generar desde reactionsCount
+        if (!publication.reactionsSummary) {
+          const summary = Object.entries(publication.reactionsCount)
+            .filter(([type, count]) => count > 0)
+            .map(([type, count]) => ({ type, count }));
+          setReactionsSummary(summary);
+        }
+      } else {
+        // Estructura anterior: número total
+        setReactionsCount(publication.reactionsCount);
+      }
     }
     if (publication.latestComments) {
       
@@ -277,17 +292,18 @@ function PublicationCard({ publication, isGridItem = false }) {
         : `${config.IMAGE_URL}${publication.owner.profilePicture.startsWith('/') ? '' : '/'}${publication.owner.profilePicture}`)
     : '/images/default-avatar.png';
   const ownerId = publication.owner?.id;
-  // Nombre completo para desktop, solo primer y último nombre para mobile
-  let displayName = publication.owner?.name || 'Usuario';
-  let displayNameMobile = displayName;
-  if (publication.owner?.name) {
-    const nameParts = publication.owner.name.trim().split(' ');
-    if (nameParts.length > 1) {
-      displayNameMobile = `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
-    } else {
-      displayNameMobile = nameParts[0];
-    }
+  // Combinar name + lastName del backend
+  let displayName = 'Usuario';
+  let displayNameMobile = 'Usuario';
+  
+  if (publication.owner?.name && publication.owner?.lastName) {
+    displayName = `${publication.owner.name} ${publication.owner.lastName}`;
+    displayNameMobile = `${publication.owner.name} ${publication.owner.lastName}`;
+  } else if (publication.owner?.name) {
+    displayName = publication.owner.name;
+    displayNameMobile = publication.owner.name;
   }
+  
   const profession = publication.owner?.profession || '';
 
   // Fecha relativa o absoluta
@@ -348,7 +364,18 @@ function PublicationCard({ publication, isGridItem = false }) {
   // Estados para reacciones
   const [userReaction, setUserReaction] = useState(publication.userReaction || null);
   const [reactionsSummary, setReactionsSummary] = useState(publication.reactionsSummary || []);
-  const [reactionsCount, setReactionsCount] = useState(publication.reactionsCount || 0);
+  
+  // Calcular el total de reacciones desde reactionsCount object
+  const calculateTotalReactions = (reactionsObj) => {
+    if (!reactionsObj || typeof reactionsObj !== 'object') return 0;
+    return Object.values(reactionsObj).reduce((sum, count) => sum + (count || 0), 0);
+  };
+  
+  const [reactionsCount, setReactionsCount] = useState(
+    typeof publication.reactionsCount === 'object' 
+      ? calculateTotalReactions(publication.reactionsCount)
+      : publication.reactionsCount || 0
+  );
   
   // ID del usuario actual para filtrar reacciones
   const currentUserId = user?.id;
@@ -954,13 +981,32 @@ function PublicationCard({ publication, isGridItem = false }) {
   // Handler para enviar el reporte
   const handleReportSubmit = async (data, setMsg) => {
     setReportLoading(true);
+    setMsg(null);
     try {
-      // Aquí deberías llamar a la API para reportar la publicación
-      // await reportPublication(publication.id, data);
-      setMsg('Reporte enviado correctamente.');
-      setShowReportModal(false);
+      await createPublicationReport({
+        publicationId: publication.id,
+        reason: data.reason,
+        otherReason: data.other,
+        description: data.description
+      });
+      setMsg({ ok: true, text: 'Publicación reportada con éxito.' });
+      setTimeout(() => setShowReportModal(false), 1500);
     } catch (err) {
-      setMsg('Error al enviar el reporte.');
+      // Verificar si es un conflicto (ya reportado)
+      const alreadyReportedRegex = /User \d+ has already reported publication \d+/;
+      const isConflictError = (
+        (err.message && err.message.toLowerCase().includes('conflict')) ||
+        (err.message && alreadyReportedRegex.test(err.message)) ||
+        (err.message && err.message.includes('has already reported'))
+      );
+      
+      if (isConflictError) {
+        setMsg({ ok: false, text: 'Ya has reportado esta publicación.' });
+      } else {
+        // Solo loguear errores inesperados, no los conflictos normales
+        console.error('Error al reportar publicación:', err);
+        setMsg({ ok: false, text: 'Error al enviar el reporte. Inténtalo nuevamente.' });
+      }
     } finally {
       setReportLoading(false);
     }

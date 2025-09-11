@@ -4,8 +4,8 @@ import InputField from "@/components/form/InputField";
 import { MdErrorOutline } from "react-icons/md";
 
 const REPORT_REASONS = [
-  { value: "Contenido ofensivo", label: "Contenido ofensivo o inapropiado" },
-  { value: "Proyecto engañoso", label: "Proyecto engañoso o fraudulento" },
+  { value: "Contenido ofensivo o inapropiado", label: "Contenido ofensivo o inapropiado" },
+  { value: "Proyecto engañoso o fraudulento", label: "Proyecto engañoso o fraudulento" },
   { value: "Información falsa", label: "Información falsa" },
   { value: "Otro", label: "Otro" },
 ];
@@ -109,10 +109,20 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
           />
         </div>
         {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-        {msg && <div className="text-conexia-green text-sm mb-2">{msg}</div>}
+        {msg && (
+          <div className={`text-sm mb-2 ${
+            typeof msg === 'object' 
+              ? (msg.ok ? 'text-green-600' : 'text-red-600')
+              : 'text-conexia-green'
+          }`}>
+            {typeof msg === 'object' ? msg.text : msg}
+          </div>
+        )}
         <div className="flex justify-end gap-2 mt-4">
-          <Button onClick={onCancel} variant="secondary" disabled={!!loading}>Cancelar</Button>
-          <Button onClick={handleSubmit} {...(loading ? { loading: true } : {})} variant="primary">Aceptar</Button>
+          <Button onClick={onCancel} variant="secondary" disabled={loading}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="primary" disabled={loading}>
+            {loading ? "Procesando..." : "Aceptar"}
+          </Button>
         </div>
       </div>
     </div>
