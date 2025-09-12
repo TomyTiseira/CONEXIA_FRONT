@@ -13,6 +13,8 @@ import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
 import { getCommunityPublications } from '@/service/publications/publicationsFetch';
 import { MiniRecommendations } from '@/components/connections/MiniRecommendations';
+import { useRecommendations } from '@/hooks/connections/useRecommendations';
+import { sendConnectionRequest } from '@/service/connections/sendConnectionRequest';
 
 export default function ClientCommunity() {
   useSessionTimeout();
@@ -27,6 +29,25 @@ export default function ClientCommunity() {
   const limit = 10;
 
   const { user: userStore } = useUserStore();
+
+  // Hook para recomendaciones
+  const { 
+    recommendations, 
+    loading: loadingRecommendations, 
+    error: errorRecommendations, 
+    refetch: refetchRecommendations 
+  } = useRecommendations();
+
+  // Función para conectar con un usuario
+  const handleConnect = async (userId) => {
+    try {
+      await sendConnectionRequest(userId);
+      // Actualizar las recomendaciones para remover el usuario conectado
+      refetchRecommendations();
+    } catch (err) {
+      console.error('Error al enviar solicitud de conexión:', err);
+    }
+  };
 
 
 
@@ -204,13 +225,10 @@ export default function ClientCommunity() {
           {/* MiniRecommendations sidebar derecho */}
           <div className="hidden md:block col-span-1 md:col-span-1 flex flex-col items-start" style={{minWidth:'200px',maxWidth:'240px'}}>
             <MiniRecommendations
-              allUsers={[]} // TODO: pasar datos reales
-              myContacts={[]} // TODO: pasar datos reales
-              mySkills={[]} // TODO: pasar datos reales
-              friendsMap={{}} // TODO: pasar datos reales
-              myId={profile?.id}
-              onConnect={id => {}}
-              onViewAll={() => {}}
+              recommendations={recommendations}
+              onConnect={handleConnect}
+              loading={loadingRecommendations}
+              error={errorRecommendations}
             />
           </div>
         </div>

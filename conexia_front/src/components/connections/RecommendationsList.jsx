@@ -1,33 +1,35 @@
 import React from 'react';
-import { ConnectionCard, filterRecommendations } from './ConnectionCard';
+import { ConnectionCard } from './ConnectionCard';
 
 /**
  * RecommendationsList: Muestra una lista de tarjetas de conexiones recomendadas
  * Props:
- * - allUsers: array de usuarios
- * - myContacts: array de IDs de contactos actuales
- * - mySkills: array de habilidades del usuario logueado
- * - friendsMap: { userId: [friendIds] }
- * - myId: ID del usuario logueado
+ * - recommendations: array de usuarios recomendados del backend
  * - onConnect: función para conectar
+ * - onViewProfile: función para ver perfil
  * - max: cantidad máxima de recomendaciones a mostrar (default: 12)
+ * - mini: si true, renderiza lista vertical compacta tipo LinkedIn
  */
-export function RecommendationsList({ allUsers, myContacts, mySkills, friendsMap, myId, onConnect, max = 12 }) {
-  const recommendations = filterRecommendations(allUsers, myContacts, mySkills, friendsMap, myId).slice(0, max);
+export function RecommendationsList({ recommendations = [], onConnect, onViewProfile, max = 12, mini = false }) {
+  const displayedRecommendations = recommendations.slice(0, max);
 
-  // mini: si true, renderiza lista vertical compacta tipo LinkedIn
+  if (!displayedRecommendations.length) {
+    return (
+      <div className="text-conexia-green/70 text-center py-8">
+        No hay recomendaciones disponibles en este momento.
+      </div>
+    );
+  }
+
   return (
-    <div className={"flex flex-col gap-1 w-full" + (arguments[0].mini ? "" : " grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6") }>
-      {recommendations.map(user => (
+    <div className={mini ? "flex flex-col gap-1 w-full" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"}>
+      {displayedRecommendations.map(user => (
         <ConnectionCard
           key={user.id}
-          profilePhoto={user.profilePhoto}
-          coverPhoto={user.coverPhoto}
-          firstName={user.firstName}
-          lastName={user.lastName}
-          profession={user.profession}
+          user={user}
           onConnect={() => onConnect(user.id)}
-          mini={arguments[0].mini}
+          onViewProfile={() => onViewProfile && onViewProfile(user.id)}
+          mini={mini}
         />
       ))}
     </div>
