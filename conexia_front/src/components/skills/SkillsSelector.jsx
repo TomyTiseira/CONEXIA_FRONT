@@ -72,7 +72,6 @@ const SkillsSelector = ({ selectedSkills = [], onSkillsChange, maxSkills = 20, c
   // Seleccionar habilidad
   const handleSelectSkill = (skill) => {
     if (selectedSkills.length >= maxSkills) {
-      alert(`No puedes seleccionar más de ${maxSkills} habilidades`);
       return;
     }
 

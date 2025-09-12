@@ -69,15 +69,12 @@ export default function ProjectSearch() {
             limit: 1000 // traer muchos para recomendaciones, ajustar si es necesario
           });
           const projects = allProjectsResponse.projects || [];
-          console.log('Proyectos recibidos del backend:', projects.length, projects.map(p => ({id: p.id, userId: p.userId, ownerId: p.ownerId})));
           // Filtrar proyectos donde el usuario no sea el propietario
           const filteredProjects = projects.filter(project => 
             project.userId !== user?.id && project.ownerId !== user?.id
           );
-          console.log('Proyectos después del filtro:', filteredProjects.length, filteredProjects.map(p => ({id: p.id, userId: p.userId, ownerId: p.ownerId})));
           setAllProjectsList(filteredProjects);
         } catch (error) {
-          console.error('Error cargando todos los proyectos:', error);
           setAllProjectsList([]);
         } finally {
           setIsLoadingAllProjects(false);
@@ -108,7 +105,6 @@ export default function ProjectSearch() {
         (Array.isArray(pendingFilters.contract) && pendingFilters.contract.length > 0 && !isAll(pendingFilters.contract));
 
       if (hasAllFilters && !hasActiveFilters) {
-        console.log('Branch: hasAllFilters && !hasActiveFilters (Todas sin otros filtros)');
         // Si es "todas" (sin otros filtros), buscar todos los proyectos al backend con paginación real
         setSearched(true);
         setShowRecommendations(false);
@@ -116,10 +112,8 @@ export default function ProjectSearch() {
           page,
           limit: pageSize
         };
-        console.log('Parámetros enviados a fetchProjects:', params);
         try {
           const { projects, pagination: pag } = await fetchProjects(params);
-          console.log('Respuesta del backend (filtros):', projects?.length, projects);
           // Limpiar duplicados y proyectos inválidos, sin limitar (el backend ya pagina y filtra)
           const cleaned = removeDuplicateProjects(projects).filter(project => project && project.id);
           setResults(cleaned);
@@ -128,7 +122,6 @@ export default function ProjectSearch() {
           console.error('Error en fetchProjects:', error);
         }
       } else if (hasAllFilters || hasActiveFilters) {
-        console.log('Branch: hasAllFilters || hasActiveFilters (Filtros activos o Todas con otros filtros)');
         setSearched(true);
         setShowRecommendations(false);
         // Normalizar filtros: si el array contiene 'all', enviar array vacío
@@ -148,7 +141,6 @@ export default function ProjectSearch() {
   setResults(cleaned);
   setPagination(pag);
       } else {
-        console.log('Branch: sin filtros activos (recomendaciones)');
         // Si no hay filtros activos, resetear a estado inicial con recomendaciones
         setSearched(false);
         setShowRecommendations(true);

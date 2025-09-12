@@ -21,16 +21,6 @@ export const validateProjectForPostulation = (project, user) => {
     return { isValid: false, errors };
   }
 
-  // Debug: Loggear el estado del proyecto
-  console.log('Validando proyecto:', {
-    id: project.id,
-    title: project.title,
-    isActive: project.isActive,
-    status: project.status,
-    endDate: project.endDate
-  });
-
-
   // Verificar que el proyecto está activo (solo verificar isActive, el backend maneja el status)
   if (project.isActive === false) {
     errors.push('El proyecto no está activo');

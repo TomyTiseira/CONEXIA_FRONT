@@ -11,7 +11,6 @@ import { fetchWithRefresh } from '@/service';
 export async function getPublicationComments(publicationId, page = 1, limit = 10) {
   // Llamar a la API para obtener los comentarios
   const url = `${config.API_URL}/publications/${publicationId}/comments?page=${page}&limit=${limit}`;
-  console.log(`Llamando a la API: ${url}`);
   const res = await fetchWithRefresh(url, {
     method: 'GET',
     headers: {
@@ -77,12 +76,6 @@ export async function createComment(publicationId, content) {
 export async function updateComment(commentId, content) {
   const url = `${config.API_URL}/publications/comments/${commentId}`;
   
-  console.log('Enviando petición para actualizar comentario:', {
-    url,
-    commentId,
-    content
-  });
-  
   const res = await fetchWithRefresh(url, {
     method: 'PATCH',
     headers: {
@@ -106,11 +99,6 @@ export async function updateComment(commentId, content) {
  */
 export async function deleteComment(commentId) {
   const url = `${config.API_URL}/publications/comments/${commentId}`;
-  
-  console.log('Enviando petición para eliminar comentario:', {
-    url,
-    commentId
-  });
   
   const res = await fetchWithRefresh(url, {
     method: 'DELETE',

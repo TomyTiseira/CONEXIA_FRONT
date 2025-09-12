@@ -40,12 +40,12 @@ export async function getPublicationReactions(publicationId, page = 1, limit = 1
 /**
  * Crea o actualiza una reacción en una publicación
  * @param {number} publicationId - ID de la publicación
- * @param {string} type - Tipo de reacción ('like', 'love', 'support', 'celebrate', 'insightful')
+ * @param {string} type - Tipo de reacción ('like', 'love', 'support', 'celebrate', 'insightful', 'fun')
  * @returns {Promise<Object>} - Reacción creada o actualizada
  */
 export async function createOrUpdateReaction(publicationId, type) {
   // Validar que el tipo sea uno de los permitidos
-  const allowedTypes = ['like', 'love', 'support', 'celebrate', 'insightful'];
+  const allowedTypes = ['like', 'love', 'support', 'celebrate', 'insightful', 'fun'];
   if (!allowedTypes.includes(type)) {
     throw new Error(`Tipo de reacción inválido. Debe ser uno de: ${allowedTypes.join(', ')}`);
   }

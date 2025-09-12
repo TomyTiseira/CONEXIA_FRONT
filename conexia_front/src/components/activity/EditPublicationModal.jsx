@@ -18,7 +18,7 @@ function SuccessModal({ open }) {
         <div className="flex items-center justify-center w-16 h-16 rounded-full bg-conexia-green/10 mb-4">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#e0f0f0"/><path d="M7 13.5l3 3 7-7" stroke="#1e6e5c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
-        <div className="text-conexia-green text-xl font-semibold mb-2">Se ha editado la publicación.</div>
+        <div className="text-conexia-green text-lg font-semibold mb-2">Publicación actualizada con éxito</div>
       </div>
     </div>
   );
@@ -189,7 +189,11 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
     };
     if (file) {
       send.file = file;
+      // Si se añade un nuevo archivo, no se debe enviar removeMedia
+      send.removeMedia = false;
     } else if (removeOriginalMedia) {
+      // Si se elimina el archivo sin añadir uno nuevo, enviar removeMedia: true
+      send.removeMedia = true;
       send.file = null;
     }
     // Si onEdit es async, esperar a que termine

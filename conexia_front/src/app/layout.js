@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ConnectionRequestsProvider } from "@/context/ConnectionRequestsContext";
 
 export const metadata = {
   title: "Conexia",
@@ -15,7 +16,9 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body className="bg-[#eaf5f2] text-conexia-green">
         <AuthProvider>
-          {children}
+          <ConnectionRequestsProvider>
+            {children}
+          </ConnectionRequestsProvider>
         </AuthProvider>
       </body>
     </html>

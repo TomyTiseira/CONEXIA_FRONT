@@ -1,11 +1,16 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import ConnectionRequestCard from '@/components/connections/ConnectionRequestCard';
 import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
+import { useRejectConnectionRequest } from '@/hooks/connections/useRejectConnectionRequest';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function ConnectionRequestsSection() {
-  const { requests, loading, error } = useConnectionRequests();
-  const [localRequests, setLocalRequests] = React.useState([]);
+  const { requests, loading, error, refreshRequests } = useConnectionRequests();
+  const [localRequests, setLocalRequests] = useState([]);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
+  const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
 
   React.useEffect(() => {
     setLocalRequests(requests);
@@ -14,8 +19,26 @@ export default function ConnectionRequestsSection() {
   const handleAccepted = (id) => {
     setLocalRequests((prev) => prev.filter((req) => req.id !== id));
   };
-  const handleIgnore = (id) => {
-    // TODO: llamada a API para ignorar
+  
+  const handleOpenRejectModal = (id) => {
+    setSelectedRequestId(id);
+    setShowRejectModal(true);
+  };
+
+  const handleReject = async () => {
+    if (!selectedRequestId) return;
+    
+    try {
+      await rejectRequest(selectedRequestId);
+      setLocalRequests((prev) => prev.filter((req) => req.id !== selectedRequestId));
+      setShowRejectModal(false);
+      setSelectedRequestId(null);
+      // Actualizar el contexto para reflejar el cambio en toda la aplicación
+      refreshRequests();
+    } catch (err) {
+      console.error('Error al rechazar solicitud:', err);
+      // Opcional: Mostrar mensaje de error
+    }
   };
 
   return (
@@ -37,12 +60,24 @@ export default function ConnectionRequestsSection() {
               profession={req.sender?.profession || 'Sin profesión'}
               image={req.sender?.image}
               requestId={req.id}
-              onIgnore={() => handleIgnore(req.id)}
+              senderId={req.senderId}
+              onIgnore={() => handleOpenRejectModal(req.id)}
               onAccepted={handleAccepted}
             />
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        onConfirm={handleReject}
+        title="Rechazar solicitud"
+        message="¿Estás seguro que deseas rechazar esta solicitud de conexión?"
+        confirmButtonText="Rechazar"
+        cancelButtonText="Cancelar"
+        isLoading={rejectLoading}
+      />
     </div>
   );
 }

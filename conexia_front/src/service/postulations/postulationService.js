@@ -164,7 +164,6 @@ export const getMyActivePostulationByProject = async (projectId) => {
     
     return foundPostulation;
   } catch (error) {
-    console.error('Error getting active postulation:', error);
     throw new Error('Error al obtener la postulación activa');
   }
 };
@@ -197,16 +196,8 @@ export const getMyPostulationByProject = async (projectId, exhaustiveSearch = fa
       page++;
     }
     
-    // Log para debug
-    if (foundPostulation) {
-      console.log(`Found postulation for project ${projectId}:`, foundPostulation);
-    } else {
-      console.log(`No postulation found for project ${projectId} after searching ${page - 1} pages`);
-    }
-    
     return foundPostulation;
   } catch (error) {
-    console.error('Error getting postulation:', error);
     throw new Error('Error al obtener la postulación');
   }
 };

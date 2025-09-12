@@ -5,7 +5,7 @@ import { FaLinkedin, FaCertificate, FaUniversity, FaBriefcase, FaBirthdayCake, F
 import { config } from '@/config';
 
 
-export default function ProfileSidebar({ profile }) {
+export default function ProfileSidebar({ profile, userId}) {
   if (!profile) return null;
   const avatar = profile.profilePicture ? `${config.IMAGE_URL}/${profile.profilePicture}` : '/images/default-avatar.png';
   // Solo primer nombre y apellido
@@ -16,6 +16,8 @@ export default function ProfileSidebar({ profile }) {
   // Educación y experiencia actuales
   const currentEducations = (profile.education || []).filter(e => e.isCurrent);
   const currentExperiences = (profile.experience || []).filter(e => e.isCurrent);
+  // Usar siempre el id del usuario para la redirección
+  const profileUrl = `/profile/userProfile/${userId}`;
 
   return (
     <aside
@@ -23,24 +25,39 @@ export default function ProfileSidebar({ profile }) {
       style={{ minWidth: 220, maxWidth: '100%' }}
     >
       {/* Avatar y fondo decorativo MOBILE: alineado a la izquierda */}
-      <div className="w-full h-20 bg-center bg-cover relative md:hidden" style={{ backgroundImage: 'url(/bg-smoke.png)' }}>
+      <a
+        href={profileUrl}
+        className="w-full h-20 bg-center bg-cover relative md:hidden block"
+        style={{ backgroundImage: 'url(/bg-smoke.png)' }}
+        tabIndex={0}
+      >
         <div
           className="absolute left-6 -bottom-10 w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center"
         >
           <Image src={avatar} alt="avatar" width={96} height={96} className="object-cover w-full h-full" />
         </div>
-      </div>
+      </a>
       {/* Avatar y fondo decorativo DESKTOP: alineado a la izquierda */}
-      <div className="w-full h-20 bg-center bg-cover relative hidden md:block" style={{ backgroundImage: 'url(/bg-smoke.png)' }}>
+      <a
+        href={profileUrl}
+        className="w-full h-20 bg-center bg-cover relative hidden md:block"
+        style={{ backgroundImage: 'url(/bg-smoke.png)' }}
+        tabIndex={0}
+      >
         <div
           className="absolute -bottom-10 w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center"
           style={{ left: '24px' }}
         >
           <Image src={avatar} alt="avatar" width={96} height={96} className="object-cover w-full h-full" />
         </div>
-      </div>
+      </a>
       {/* MOBILE: solo datos básicos, alineados a la izquierda */}
-      <div className="flex flex-col items-start w-full px-4 pb-4 pt-14 md:hidden" style={{ minHeight: 120 }}>
+      <a
+        href={profileUrl}
+        className="flex flex-col items-start w-full px-4 pb-4 pt-14 md:hidden no-underline"
+        style={{ minHeight: 120 }}
+        tabIndex={0}
+      >
         <h2
           className={
             `font-bold text-conexia-green text-left leading-tight mb-1 ` +
@@ -61,9 +78,13 @@ export default function ProfileSidebar({ profile }) {
         {location && (
           <div className="flex items-center text-xs text-gray-500 mb-1 mt-1 justify-start"><FaMapMarkerAlt className="mr-1" />{location}</div>
         )}
-      </div>
+      </a>
       {/* DESKTOP: datos completos, alineados a la izquierda */}
-      <div className="hidden md:flex flex-col items-start w-full px-6 pb-4 pt-14">
+      <a
+        href={profileUrl}
+        className="hidden md:flex flex-col items-start w-full px-6 pb-4 pt-14 no-underline"
+        tabIndex={0}
+      >
         <h2
           className={
             `font-bold text-conexia-green text-left leading-tight mb-2 ` +
@@ -108,7 +129,7 @@ export default function ProfileSidebar({ profile }) {
             </div>
           </div>
         ))}
-      </div>
+      </a>
     </aside>
   );
 }
