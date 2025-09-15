@@ -24,6 +24,7 @@ import UserCollaborativeProjects from "./UserCollaborativeProjects";
 import UserActivity from "./UserActivity";
 import ProfileConnectionButtons from "./ProfileConnectionButtons";
 import UserConnections from "./UserConnections"
+import MessagingWidget from "@/components/messaging/MessagingWidget";
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
@@ -32,7 +33,7 @@ export default function UserProfile() {
   const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
   const { refreshRequests } = useConnectionRequests();
   const { user: authUser, updateUser } = useAuth();
-  const { user: storeUser } = useUserStore();
+  const { user: storeUser, profile: storeProfile } = useUserStore();
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -93,6 +94,11 @@ export default function UserProfile() {
   }
 
   const user = profile.profile;
+
+  // Build avatar like ClientCommunity / Navbar
+  const avatar = storeProfile?.profilePicture
+    ? `${config.IMAGE_URL}/${storeProfile.profilePicture}`
+    : '/images/default-avatar.png';
 
   // Manejar actualización inmediata del perfil
   const handleUpdate = async (formData) => {
@@ -568,6 +574,10 @@ export default function UserProfile() {
       </div>
       {/* Margen inferior verde */}
       <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
+      {/* NUEVO: Widget de Mensajes flotante en perfil */}
+      <MessagingWidget
+        avatar={avatar}
+      />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
 import { getCommunityPublications } from '@/service/publications/publicationsFetch';
+import MessagingWidget from '@/components/messaging/MessagingWidget';
 
 export default function ClientCommunity() {
   useSessionTimeout();
@@ -24,7 +26,6 @@ export default function ClientCommunity() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
-
   const { user: userStore } = useUserStore();
 
 
@@ -94,8 +95,8 @@ export default function ClientCommunity() {
     };
 
     return (
-  <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8">
-  <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
+      <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8 relative">
+        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
           {/* Sidebar perfil mobile (arriba de la caja de inicio) */}
           {userStore?.id && (
             <div className="block md:hidden w-full mb-1">
@@ -110,7 +111,9 @@ export default function ClientCommunity() {
           )}
           {/* Feed principal */}
           <div className="w-full md:w-3/4 lg:w-3/5 flex flex-col items-center">
-            {/* Caja de inicio de publicación */}
+            {/* ...existing code for publication feed... */}
+            {/* Caja de inicio de publicación, publicaciones, etc. */}
+            {/* ...no se modifica el sidebar... */}
             <div className="bg-white rounded-2xl shadow border border-[#c6e3e4] px-2 sm:px-4 md:px-6 pt-4 pb-2 mb-3 flex flex-col gap-2 w-full max-w-full md:max-w-2xl">
               <div className="flex items-center gap-3">
                 <Image src={avatar} alt="avatar" width={40} height={40} className="rounded-full aspect-square object-cover" />
@@ -201,6 +204,23 @@ export default function ClientCommunity() {
             </div>
           </div>
         </div>
+        {/* Widget de mensajería reutilizable */}
+        <MessagingWidget
+          avatar={avatar}
+          chats={[{
+            id: 1,
+            avatar: '/images/default-avatar.png',
+            name: 'Javier Carrizo',
+            lastMessage: 'Hola Alex, el entorno laboral exige crecer...',
+            date: '30 ago',
+          }, {
+            id: 2,
+            avatar: '/images/default-avatar.png',
+            name: 'Rocío Brageda',
+            lastMessage: 'Tú: Hola linda, soy papá soltero de una beba',
+            date: '22 may',
+          }]}
+        />
       </main>
     );
   }

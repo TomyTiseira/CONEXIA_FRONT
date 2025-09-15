@@ -95,7 +95,7 @@ export default function NavbarCommunity() {
 
         {/* Actions */}
         <div className="flex items-center gap-4 text-conexia-green">
-          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" onClick={() => router.push('/messaging')} />
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
