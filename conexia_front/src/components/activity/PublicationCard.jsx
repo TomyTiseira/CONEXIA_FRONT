@@ -17,8 +17,10 @@ import { deletePublication } from '@/service/publications/deletePublication';
 import { editPublication } from '@/service/publications/editPublication';
 import { createComment, getPublicationComments, updateComment, deleteComment } from '@/service/publications/comments';
 import { createOrUpdateReaction, deleteReaction, getPublicationReactions } from '@/service/publications/reactions';
+import { createPublicationReport } from '@/service/reports/publicationReportsFetch';
 import { ROLES } from '@/constants/roles';
 import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
+import ReportPublicationModal from './report/ReportPublicationModal';
 
 const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
@@ -206,7 +208,21 @@ function PublicationCard({ publication, isGridItem = false }) {
       setReactionsSummary(publication.reactionsSummary);
     }
     if (publication.reactionsCount !== undefined) {
-      setReactionsCount(publication.reactionsCount);
+      if (typeof publication.reactionsCount === 'object') {
+        // Nueva estructura: objeto con conteos por tipo
+        setReactionsCount(calculateTotalReactions(publication.reactionsCount));
+        
+        // Si no hay reactionsSummary, generar desde reactionsCount
+        if (!publication.reactionsSummary) {
+          const summary = Object.entries(publication.reactionsCount)
+            .filter(([type, count]) => count > 0)
+            .map(([type, count]) => ({ type, count }));
+          setReactionsSummary(summary);
+        }
+      } else {
+        // Estructura anterior: número total
+        setReactionsCount(publication.reactionsCount);
+      }
     }
     if (publication.latestComments) {
       
@@ -276,17 +292,18 @@ function PublicationCard({ publication, isGridItem = false }) {
         : `${config.IMAGE_URL}${publication.owner.profilePicture.startsWith('/') ? '' : '/'}${publication.owner.profilePicture}`)
     : '/images/default-avatar.png';
   const ownerId = publication.owner?.id;
-  // Nombre completo para desktop, solo primer y último nombre para mobile
-  let displayName = publication.owner?.name || 'Usuario';
-  let displayNameMobile = displayName;
-  if (publication.owner?.name) {
-    const nameParts = publication.owner.name.trim().split(' ');
-    if (nameParts.length > 1) {
-      displayNameMobile = `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
-    } else {
-      displayNameMobile = nameParts[0];
-    }
+  // Combinar name + lastName del backend
+  let displayName = 'Usuario';
+  let displayNameMobile = 'Usuario';
+  
+  if (publication.owner?.name && publication.owner?.lastName) {
+    displayName = `${publication.owner.name} ${publication.owner.lastName}`;
+    displayNameMobile = `${publication.owner.name} ${publication.owner.lastName}`;
+  } else if (publication.owner?.name) {
+    displayName = publication.owner.name;
+    displayNameMobile = publication.owner.name;
   }
+  
   const profession = publication.owner?.profession || '';
 
   // Fecha relativa o absoluta
@@ -347,7 +364,18 @@ function PublicationCard({ publication, isGridItem = false }) {
   // Estados para reacciones
   const [userReaction, setUserReaction] = useState(publication.userReaction || null);
   const [reactionsSummary, setReactionsSummary] = useState(publication.reactionsSummary || []);
-  const [reactionsCount, setReactionsCount] = useState(publication.reactionsCount || 0);
+  
+  // Calcular el total de reacciones desde reactionsCount object
+  const calculateTotalReactions = (reactionsObj) => {
+    if (!reactionsObj || typeof reactionsObj !== 'object') return 0;
+    return Object.values(reactionsObj).reduce((sum, count) => sum + (count || 0), 0);
+  };
+  
+  const [reactionsCount, setReactionsCount] = useState(
+    typeof publication.reactionsCount === 'object' 
+      ? calculateTotalReactions(publication.reactionsCount)
+      : publication.reactionsCount || 0
+  );
   
   // ID del usuario actual para filtrar reacciones
   const currentUserId = user?.id;
@@ -947,8 +975,45 @@ function PublicationCard({ publication, isGridItem = false }) {
     }
   };
 
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  // Handler para enviar el reporte
+  const handleReportSubmit = async (data, setMsg) => {
+    setReportLoading(true);
+    setMsg(null);
+    try {
+      await createPublicationReport({
+        publicationId: publication.id,
+        reason: data.reason,
+        otherReason: data.other,
+        description: data.description
+      });
+      setMsg({ ok: true, text: 'Publicación reportada con éxito.' });
+      setTimeout(() => setShowReportModal(false), 1500);
+    } catch (err) {
+      // Verificar si es un conflicto (ya reportado)
+      const alreadyReportedRegex = /User \d+ has already reported publication \d+/;
+      const isConflictError = (
+        (err.message && err.message.toLowerCase().includes('conflict')) ||
+        (err.message && alreadyReportedRegex.test(err.message)) ||
+        (err.message && err.message.includes('has already reported'))
+      );
+      
+      if (isConflictError) {
+        setMsg({ ok: false, text: 'Ya has reportado esta publicación.' });
+      } else {
+        // Solo loguear errores inesperados, no los conflictos normales
+        console.error('Error al reportar publicación:', err);
+        setMsg({ ok: false, text: 'Error al enviar el reporte. Inténtalo nuevamente.' });
+      }
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   return (
-  <div id={`pub-${publicationId}`} className={`publication-card bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl ${showCommentSection ? 'publication-card-open' : ''} ${isGridItem ? 'grid-publication-card' : ''}`} style={{ minWidth: 0, height: isGridItem && !showCommentSection ? 'auto' : 'auto' }}>
+    <div id={`pub-${publicationId}`} className={`publication-card bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl ${showCommentSection ? 'publication-card-open' : ''} ${isGridItem ? 'grid-publication-card' : ''}`} style={{ minWidth: 0, height: isGridItem && !showCommentSection ? 'auto' : 'auto' }}>
       {/* Header autor y menú */}
   <div className="flex items-center gap-2 px-5 pt-3 pb-2 relative min-h-0">
         <img
@@ -1014,6 +1079,16 @@ function PublicationCard({ publication, isGridItem = false }) {
           </div>
           {menuOpen && (
             <div ref={menuRef} className="absolute right-0 mt-2 min-w-[220px] bg-white border border-[#c6e3e4] rounded-lg shadow-lg py-1 flex flex-col animate-fade-in z-20">
+              {/* Usuario general (no admin/moderador/owner): reportar */}
+              {!isAdmin && !isModerator && !isOwner && (
+                <button
+                  className="flex items-center gap-2 px-4 py-2 text-conexia-green hover:bg-[#eef6f6] text-base font-semibold w-full whitespace-nowrap"
+                  onClick={() => { setMenuOpen(false); setShowReportModal(true); }}
+                  style={{maxWidth: 'none'}}>
+                  <span className="flex-shrink-0 flex items-center justify-center"><AlertCircle size={22} strokeWidth={2} className="text-conexia-green" /></span>
+                  <span>Reportar publicación</span>
+                </button>
+              )}
               {/* Admin o moderador: solo ver reportes */}
               {(isAdmin || isModerator) && (
                 <button
@@ -1025,16 +1100,6 @@ function PublicationCard({ publication, isGridItem = false }) {
                   style={{maxWidth: 'none'}}>
                   <span className="flex-shrink-0 flex items-center justify-center"><AlertCircle size={22} strokeWidth={2} className="text-conexia-green" /></span>
                   <span>Ver reportes</span>
-                </button>
-              )}
-              {/* Usuario general (no admin/moderador/owner): reportar */}
-              {!isAdmin && !isModerator && !isOwner && (
-                <button
-                  className="flex items-center gap-2 px-4 py-2 text-conexia-green hover:bg-[#eef6f6] text-base font-semibold w-full whitespace-nowrap"
-                  onClick={() => { setMenuOpen(false); /* TODO: abrir modal reportar */ }}
-                  style={{maxWidth: 'none'}}>
-                  <span className="flex-shrink-0 flex items-center justify-center"><AlertCircle size={22} strokeWidth={2} className="text-conexia-green" /></span>
-                  <span>Reportar publicación</span>
                 </button>
               )}
               {/* Dueño: editar y eliminar */}
@@ -1075,6 +1140,14 @@ function PublicationCard({ publication, isGridItem = false }) {
           displayName: publication.owner?.name && publication.owner?.lastName ? `${publication.owner.name} ${publication.owner.lastName}` : publication.owner?.name || 'Usuario',
         }}
       />
+      {/* Modal de reporte de publicación */}
+      {showReportModal && (
+        <ReportPublicationModal
+          onCancel={() => setShowReportModal(false)}
+          onSubmit={handleReportSubmit}
+          loading={reportLoading}
+        />
+      )}
       {/* Línea divisoria entre header y contenido */}
       <div className="border-t border-[#e0f0f0] mx-6" />
       {/* Contenido publicación con truncado y ver más */}
