@@ -6,8 +6,7 @@ import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
-// Importa tu librería de emojis aquí (ejemplo: 'emoji-mart')
-// import { Picker } from 'emoji-mart';
+import { getMessagingSocket } from '@/lib/socket/messagingSocket';
 
 export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, allowAttachments = true }) {
   const [message, setMessage] = useState('');
@@ -16,13 +15,15 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
   const [pendingAttachment, setPendingAttachment] = useState(null); // { file, type, url }
   const [attachmentError, setAttachmentError] = useState(null); // string
   const panelRef = useRef(null);
-  const { selectedChatId, selectedOtherUserId, leaveConversation, selectConversation } = useMessaging();
+  const { selectedChatId, selectedOtherUserId, leaveConversation, selectConversation, loadConversations, refreshUnreadCount } = useMessaging(); // <- agrega refreshUnreadCount
   const { messages, messagesPagination, typingStates, loadMessages, sendTextMessage, sendFileMessage, emitTyping, markCurrentAsRead } = useChatMessages();
   const me = useUserStore((s) => s.user);
   const myProfile = useUserStore((s) => s.profile);
   const scrollerRef = useRef(null);
   const fileInputRef = useRef(null);
-  const isOtherTyping = !!(selectedOtherUserId && typingStates?.[selectedOtherUserId]);
+  // Fallback robusto: si todavía no está seteado en store, usar el id del prop "user"
+  const otherIdForTyping = selectedOtherUserId || user?.id;
+  const isOtherTyping = !!(otherIdForTyping && typingStates?.[otherIdForTyping]);
   const [imageModal, setImageModal] = useState(null); // { url, name }
 
   // Caches de blobs
@@ -189,11 +190,16 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
           scrollToBottom();
           scrollToBottom(50); // segundo tick por si hay imágenes/medidas pendientes
         } finally {
-          setTimeout(() => markCurrentAsRead(), 0);
+          // marcar leídos y refrescar lista + contador
+          setTimeout(async () => {
+            try { await markCurrentAsRead(); } finally {
+              refreshUnreadCount();
+              loadConversations({ page: 1, limit: 10, append: false });
+            }
+          }, 0);
         }
       })();
     }
-    // limpiar adjuntos al cambiar de chat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChatId, collapsed]);
 
@@ -239,7 +245,12 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
     }
     if (message.trim()) {
       await sendTextMessage({ content: message.trim() });
+      // detener indicador de escritura al enviar
+      emitTyping(false);
       setMessage('');
+      // refrescar historial + no leídos
+      loadConversations({ page: 1, limit: 10, append: false });
+      refreshUnreadCount();
     }
   };
 
@@ -251,6 +262,9 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
       await sendFileMessage({ file: pendingAttachment.file, type: pendingAttachment.type });
       setPendingAttachment(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      // refrescar historial + no leídos
+      loadConversations({ page: 1, limit: 10, append: false });
+      refreshUnreadCount();
     } catch (err) {
       setAttachmentError(err?.message || 'Error al enviar archivo');
     }
@@ -296,6 +310,9 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
     const s = String(u);
     // si ya es blob o http(s), provar directamente
     if (s.startsWith('blob:') || /^https?:\/\//i.test(s)) return [s];
+    // data: no se debe fetch-ear; devolver vacío y manejarlo en UI
+    if (s.startsWith('data:')) return [];
+    // FIX: candidates debe estar inicializado
     const candidates = [];
     // rutas absolutas del server
     if (s.startsWith('/uploads')) {
@@ -346,8 +363,13 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
         if (local) {
           href = local;
         } else if (m.fileUrl || m.fileName) {
-          const blob = await fetchBlobAuthTry(m.fileUrl || m.fileName);
-          href = URL.createObjectURL(blob);
+          const src = m.fileUrl || m.fileName;
+          if (typeof src === 'string' && src.startsWith('data:')) {
+            href = src;
+          } else {
+            const blob = await fetchBlobAuthTry(src);
+            href = URL.createObjectURL(blob);
+          }
         }
       }
       if (!href) return;
@@ -368,9 +390,10 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
         if (normalizeType(m.type) !== 'image') continue;
         const urlCandidate = m.fileUrl || m.fileName;
         if (!urlCandidate) continue;
+        // Evitar fetch para data:
+        if (String(urlCandidate).startsWith('data:')) continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (imageBlobByMsgRef.current[stableId]) continue;
-
         try {
           const blob = await fetchBlobAuthTry(urlCandidate, ctrl.signal);
           const href = URL.createObjectURL(blob);
@@ -392,14 +415,14 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
         if (normalizeType(m.type) !== 'pdf') continue;
         const urlCandidate = m.fileUrl || m.fileName;
         if (!urlCandidate) continue;
+        // Evitar fetch para data:
+        if (String(urlCandidate).startsWith('data:')) continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (pdfBlobByMsgRef.current[stableId]) continue;
-
         try {
           const blob = await fetchBlobAuthTry(urlCandidate, ctrl.signal);
           const href = URL.createObjectURL(blob);
           pdfBlobByMsgRef.current[stableId] = href;
-          // no hace falta forzar render hasta que el usuario haga click
         } catch {}
       }
     })();
@@ -417,9 +440,15 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
           href = local;
           pdfBlobByMsgRef.current[stableId] = local;
         } else if (m.fileUrl || m.fileName) {
-          const blob = await fetchBlobAuthTry(m.fileUrl || m.fileName);
-          href = URL.createObjectURL(blob);
-          pdfBlobByMsgRef.current[stableId] = href;
+          const src = m.fileUrl || m.fileName;
+          if (typeof src === 'string' && src.startsWith('data:')) {
+            href = src; // abrir/descargar directamente desde data:
+            pdfBlobByMsgRef.current[stableId] = href;
+          } else {
+            const blob = await fetchBlobAuthTry(src);
+            href = URL.createObjectURL(blob);
+            pdfBlobByMsgRef.current[stableId] = href;
+          }
         }
       }
       if (!href) return;
@@ -441,9 +470,15 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
           src = local;
           imageBlobByMsgRef.current[stableId] = local;
         } else if (m.fileUrl || m.fileName) {
-          const blob = await fetchBlobAuth(m.fileUrl || m.fileName);
-          src = URL.createObjectURL(blob);
-          imageBlobByMsgRef.current[stableId] = src;
+          const u = m.fileUrl || m.fileName;
+          if (typeof u === 'string' && u.startsWith('data:')) {
+            src = u; // usar data: directamente
+            imageBlobByMsgRef.current[stableId] = src;
+          } else {
+            const blob = await fetchBlobAuth(u);
+            src = URL.createObjectURL(blob);
+            imageBlobByMsgRef.current[stableId] = src;
+          }
         }
       }
       if (src) setImageModal({ url: src, name: m.fileName });
@@ -460,9 +495,10 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
   }, []);
 
   // Fuerza setear el otherUserId y unirse a la sala activa al abrir el panel
+  // ANTES: solo si había selectedChatId; AHORA: siempre que conozcamos el otro usuario
   useEffect(() => {
-    if (selectedChatId && user?.id && String(selectedOtherUserId || '') !== String(user.id)) {
-      selectConversation({ conversationId: selectedChatId, otherUserId: user.id });
+    if (user?.id && String(selectedOtherUserId || '') !== String(user.id)) {
+      selectConversation({ conversationId: selectedChatId || null, otherUserId: user.id });
     }
   }, [selectedChatId, user?.id, selectedOtherUserId, selectConversation]);
 
@@ -472,6 +508,14 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
     const s = typeof raw === 'string' ? raw : String(raw || '');
     return s;
   };
+
+  // Garantizar join a la sala 1-1 al montar el panel (aunque no haya conversationId todavía)
+  useEffect(() => {
+    if (user?.id) {
+      selectConversation({ conversationId: user.conversationId || selectedChatId || null, otherUserId: user.id });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   return (
     <div ref={panelRef} className={`${containerBase} ${containerHeight}`} style={{ background: '#fff' }}>
@@ -565,7 +609,7 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
               // Texto normalizado para decidir si es renderizable
               const textValue = (() => {
                 const raw = m?.content ?? m?.message ?? m?.body ?? m?.text ?? '';
-                return (typeof raw === 'string' ? raw : String(raw || '')).trim();
+                return (typeof raw === 'string' ? raw : String(raw || '').trim());
               })();
 
               // tipo normalizado (con fallback por nombre/url) PERO solo "text" si hay contenido
@@ -594,7 +638,10 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
                   <div key={key} className={`flex items-end gap-2 ${isMe ? 'self-end flex-row-reverse' : 'self-start'}`}>
                     {commonLeft}
                     <div className={`max-w-[72%] min-w-0 ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
-                      <div className={`px-3 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${isMe ? 'bg-[#3a8586] text-white' : 'bg-[#d6ececff] text-gray-900'}`}>
+                      <div
+                        className={`px-3 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${isMe ? 'bg-[#3a8586] text-white' : 'bg-[#d6ececff] text-gray-900'}`}
+                        style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+                      >
                         {textValue}
                       </div>
                       {timeChip}
@@ -633,13 +680,12 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
               } else if (msgType === 'image') {
                 const sid = stableId ?? `idx-${idx}`;
                 const imgBlob = imageBlobByMsgRef.current[sid];
-                // si soy el emisor y tengo el blob local por nombre/tamaño, úsalo como fallback inmediato
                 const localKey = nameSizeKey(m.fileName, m.fileSize);
                 const localBlob = sentBlobByNameRef.current[localKey];
-                // Evita usar URL protegida sin headers; usa pública solo si es http(s), si no, placeholder transparente hasta que llegue el blob
+                // Permitir data: como fuente directa
                 const publicUrl = (() => {
                   const s = String(m.fileUrl || '');
-                  return /^https?:\/\//i.test(s) ? s : null;
+                  return /^https?:\/\//i.test(s) || s.startsWith('data:') ? s : null;
                 })();
                 const displaySrc = imgBlob || localBlob || publicUrl || transparentGif;
 
@@ -688,7 +734,7 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
             });
             // WhatsApp-like typing bubble for the other user
             if (isOtherTyping) {
-              const key = `typing-${selectedOtherUserId}`;
+              const key = `typing-${otherIdForTyping}`;
               items.push(
                 <div key={key} className="flex items-end gap-2 self-start">
                   <Image src={getProfilePictureUrl(user?.avatar)} alt="avatar" width={22} height={22} className="w-[22px] h-[22px] rounded-full object-cover" />
@@ -740,7 +786,7 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
           }} />
           {/* Imagen */}
           <button type="button" className="text-conexia-green/70 hover:text-conexia-green" title="Imagen JPG/PNG · hasta 5MB" onClick={() => { fileInputRef.current?.setAttribute('accept','image/jpeg,image/png'); fileInputRef.current?.click(); }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#1e6e5c" strokeWidth="2"/><circle cx="8" cy="11" r="2" fill="#1e6e5c"/><path d="M5 17l4-4 3 3 3-3 4 4" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#1e6e61ff" strokeWidth="2"/><circle cx="8" cy="11" r="2" fill="#1e6e61ff"/><path d="M5 17l4-4 3 3 3-3 4 4" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
           {/* PDF */}
           <button type="button" className="text-conexia-green/70 hover:text-conexia-green" title="PDF · hasta 10MB" onClick={() => { fileInputRef.current?.setAttribute('accept','application/pdf'); fileInputRef.current?.click(); }}>
@@ -762,7 +808,13 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
               value={message}
               onChange={e => {
                 setMessage(e.target.value);
-                emitTyping(true);
+                // emitir typing solo si hay texto; si se borra, detener
+                const val = e.target.value;
+                if (val && val.trim().length > 0) {
+                  emitTyping(true);
+                } else {
+                  emitTyping(false);
+                }
                 const ta = e.target;
                 ta.style.height = 'auto';
                 ta.style.height = Math.min(120, ta.scrollHeight) + 'px';
@@ -775,7 +827,12 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
               }}
               onBlur={() => emitTyping(false)}
             />
-            <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green/70 hover:text-conexia-green leading-none flex items-center justify-center h-5" title="Emoji" onClick={() => setShowEmojis(v => !v)}>
+            <button
+              type="button"
+              className="absolute right-2 inset-y-0 my-auto text-conexia-green/70 hover:text-conexia-green leading-none flex items-center justify-center h-5"
+              title="Emoji"
+              onClick={() => setShowEmojis(v => !v)}
+            >
               <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#1e6e5c" strokeWidth="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="10" r="1" fill="#1e6e5c"/><circle cx="15" cy="10" r="1" fill="#1e6e5c"/></svg>
             </button>
           </div>
@@ -795,6 +852,12 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
           0%, 80%, 100% { opacity: 0.3; transform: translateY(0px); }
           40% { opacity: 0.9; transform: translateY(-1px); }
         }
+
+        /* Scrollbar del chat (fina, color celeste claro) */
+        .scrollbar-soft::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-soft::-webkit-scrollbar-thumb { background: #d3d8d8ff; border-radius: 8px; }
+        .scrollbar-soft::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-soft { scrollbar-color: #d3d8d8ff transparent; scrollbar-width: thin; }
       `}</style>
     </div>
   );

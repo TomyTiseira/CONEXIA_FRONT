@@ -12,6 +12,8 @@ import { useUserStore } from './userStore';
 
 // Timers para auto-ocultar typing si el backend no envía "stop typing"
 const typingTimers = {};
+// NUEVO: timers para auto-enviar "stop typing" desde el emisor tras inactividad
+const typingOutTimers = {};
 
 export const useMessagingStore = create((set, get) => ({
   // State
@@ -220,9 +222,19 @@ export const useMessagingStore = create((set, get) => ({
 
         msg.createdAt = msg.createdAt || msg.created_at || msg.timestamp || new Date().toISOString();
 
-        // SOLO campos de archivo explícitos del backend (evitar url/path genéricos)
-        msg.fileName = msg.fileName ?? m.filename ?? null; // quitar m.name
-        msg.fileUrl = msg.fileUrl ?? m.fileUrl ?? m.file_path ?? m.file ?? null; // quitar m.url y m.path
+        // Mapear fileName / fileUrl
+        msg.fileName = msg.fileName ?? m.filename ?? null;
+        msg.fileUrl = msg.fileUrl ?? m.fileUrl ?? m.file_path ?? m.file ?? null;
+        // NUEVO: tamaño del archivo (para reconciliar y cache local)
+        msg.fileSize = msg.fileSize ?? m.fileSize ?? m.size ?? null;
+
+        // Nuevo: si backend guardó/retornó la URL (o data:) en content, úsala
+        if (!msg.fileUrl && typeof m.content === 'string') {
+          const s = m.content;
+          if (s.startsWith('data:') || s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/')) {
+            msg.fileUrl = s;
+          }
+        }
 
         // si no hay URL pero hay nombre, intenta derivar una ruta
         if (!msg.fileUrl && msg.fileName) {
@@ -394,6 +406,7 @@ export const useMessagingStore = create((set, get) => ({
     const { selectedChatId, selectedOtherUserId } = get();
     const me = useUserStore.getState().user;
     if (!me?.id || !selectedOtherUserId) throw new Error('Contexto inválido');
+
     // optimistic add BEFORE API
     const now = new Date().toISOString();
     const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -415,25 +428,81 @@ export const useMessagingStore = create((set, get) => ({
     };
     set((state) => {
       const next = [...state.messages, optimisticMsg];
-      
       return { messages: next };
     });
     // Preview optimista: sin insertar ni reordenar
     get().upsertConversationPreview(optimisticMsg, { allowInsert: false, moveTop: false });
+
+    // 1) Emitir por WebSocket el archivo como base64 (tiempo real)
+    try {
+      const socket = getMessagingSocket();
+      if (socket && selectedOtherUserId) {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+        const convId = get().selectedChatId || null;
+        socket.emit('sendMessage', {
+          conversationId: convId,
+          receiverId: selectedOtherUserId,
+          type,                 // 'image' | 'pdf'
+          content: base64,      // data:...;base64,....
+          fileName: file?.name, // opcional
+        });
+        // asegurar pertenecer a la sala
+        socket.emit('joinConversation', { conversationId: convId, otherUserId: selectedOtherUserId });
+      }
+    } catch {
+      // si falla, seguimos con HTTP + optimista
+    }
+
+    // 2) Mantener REST para persistencia y obtener ids reales
     try {
       const data = await sendFileMessageApi({ receiverId: selectedOtherUserId, conversationId: selectedChatId, file, type });
       set((state) => {
         const msgs = state.messages.slice();
-        const idx = msgs.findIndex(m => m.id === tempId);
+        // Reconciliar por tempId o id
+        const idx = msgs.findIndex(m => m.tempId === tempId || m.id === tempId);
         if (idx !== -1) {
           msgs[idx] = {
             ...msgs[idx],
             id: data?.messageId || msgs[idx].id,
             fileUrl: data?.fileUrl || msgs[idx].fileUrl,
+            // opcional: actualizar fileName/Size si REST los retorna
+            fileName: data?.fileName || msgs[idx].fileName,
+            fileSize: data?.fileSize ?? msgs[idx].fileSize,
             conversationId: data?.conversationId || msgs[idx].conversationId,
           };
         }
-        // De-dup by id
+
+        // NUEVO: remover duplicado emitido por socket (no-temp) si existe
+        const kind = (t) => String(t || '').toLowerCase().includes('image') ? 'image'
+          : String(t || '').toLowerCase().includes('pdf') ? 'pdf'
+          : String(t || '').toLowerCase().includes('text') ? 'text' : 'file';
+        const base = (u) => (String(u || '').split('?')[0] || '').toLowerCase();
+        const close = (a, b) => {
+          const ta = new Date(a || 0).getTime(), tb = new Date(b || 0).getTime();
+          return Math.abs(ta - tb) <= 60000;
+        };
+        if (idx !== -1) {
+          const ref = msgs[idx];
+          const dupIdx = msgs.findIndex((m, j) => {
+            if (j === idx) return false;
+            if (String(m.senderId) !== String(ref.senderId)) return false;
+            if (kind(m.type) !== kind(ref.type)) return false;
+            const sameSize = !!(m.fileSize && ref.fileSize && Number(m.fileSize) === Number(ref.fileSize));
+            const sameUrl = !!(m.fileUrl && ref.fileUrl && base(m.fileUrl) === base(ref.fileUrl));
+            return (sameSize || sameUrl) && close(m.createdAt, ref.createdAt);
+          });
+          if (dupIdx !== -1) {
+            // conservar el que tiene id real (REST)
+            msgs.splice(dupIdx, 1);
+          }
+        }
+
+        // De-dup por id (conservar último)
         const seen = new Set();
         const dedup = [];
         for (let i = msgs.length - 1; i >= 0; i--) {
@@ -441,7 +510,6 @@ export const useMessagingStore = create((set, get) => ({
           const key = mid != null ? String(mid) : `idx-${i}`;
           if (!seen.has(key)) { seen.add(key); dedup.unshift(msgs[i]); }
         }
-  
         return {
           messages: dedup,
           selectedChatId: data?.conversationId || state.selectedChatId,
@@ -460,7 +528,7 @@ export const useMessagingStore = create((set, get) => ({
         createdAt: new Date().toISOString(),
       }, { allowInsert: true, moveTop: true });
 
-      // NUEVO: si se creó la conversación, unirse a la sala para RT futuros
+      // Unirse a la sala si se creó conversación
       try {
         const socket = getMessagingSocket();
         const convId = data?.conversationId || get().selectedChatId || null;
@@ -468,11 +536,10 @@ export const useMessagingStore = create((set, get) => ({
           socket.emit('joinConversation', { conversationId: convId, otherUserId: selectedOtherUserId });
         }
       } catch {}
-
       return data;
     } catch (e) {
-      // rollback
-      set((state) => ({ messages: state.messages.filter(m => m.id !== tempId) }));
+      // rollback si falla HTTP (el mensaje RT ya pudo llegar; evitamos duplicado)
+      set((state) => ({ messages: state.messages.filter(m => m.tempId !== tempId && m.id !== tempId) }));
       throw e;
     }
   },
@@ -481,14 +548,32 @@ export const useMessagingStore = create((set, get) => ({
   emitTyping: (isTyping) => {
     const { selectedChatId, selectedOtherUserId } = get();
     const socket = getMessagingSocket();
-    // Antes exigía selectedChatId; permitir chats 1-1 sin id aún
-    if (socket && selectedOtherUserId) {
-      socket.emit('typing', {
-        conversationId: selectedChatId || null,
-        otherUserId: selectedOtherUserId,
-        isTyping: !!isTyping
-      });
-    }
+    if (!socket || !selectedOtherUserId) return;
+
+    // emitir estado actual
+    socket.emit('typing', {
+      conversationId: selectedChatId || null,
+      otherUserId: selectedOtherUserId,
+      isTyping: !!isTyping
+    });
+
+    // programar auto-stop luego de 2s sin actividad
+    try {
+      if (typingOutTimers[selectedOtherUserId]) clearTimeout(typingOutTimers[selectedOtherUserId]);
+      if (isTyping) {
+        typingOutTimers[selectedOtherUserId] = setTimeout(() => {
+          const s = getMessagingSocket();
+          s?.emit('typing', {
+            conversationId: get().selectedChatId || null,
+            otherUserId: selectedOtherUserId,
+            isTyping: false
+          });
+          delete typingOutTimers[selectedOtherUserId];
+        }, 2000);
+      } else {
+        delete typingOutTimers[selectedOtherUserId];
+      }
+    } catch {}
   },
 
   // Mark current conversation messages as read (for received ones)
@@ -556,29 +641,55 @@ export const useMessagingStore = create((set, get) => ({
 
       msg.createdAt = msg.createdAt || msg.created_at || msg.timestamp || new Date().toISOString();
 
-      // SOLO campos de archivo explícitos (evitar url/path genéricos)
-      msg.fileName = msg.fileName ?? rawMsg.filename ?? null; // quitar rawMsg.name
-      msg.fileUrl = msg.fileUrl ?? rawMsg.fileUrl ?? rawMsg.file_path ?? rawMsg.file ?? null; // quitar rawMsg.url y rawMsg.path
+      // Mapear fileName / fileUrl
+      msg.fileName = msg.fileName ?? rawMsg.filename ?? rawMsg.fileName ?? null;
+      msg.fileUrl = msg.fileUrl ?? rawMsg.fileUrl ?? rawMsg.file_path ?? rawMsg.file ?? null;
+      // NUEVO: tamaño de archivo
+      msg.fileSize = msg.fileSize ?? rawMsg.fileSize ?? rawMsg.size ?? null;
 
-      if (!msg.fileUrl && msg.fileName) {
-        msg.fileUrl = String(msg.fileName).startsWith('/') ? msg.fileName : `/uploads/${msg.fileName}`;
+      // Nuevo: si la URL (o data:) viene en content para archivos, úsala como fileUrl
+      if (!msg.fileUrl && typeof rawMsg.content === 'string') {
+        const s = rawMsg.content;
+        if (s.startsWith('data:') || s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/')) {
+          msg.fileUrl = s;
+        }
       }
 
-      const mime = String(rawMsg?.mimeType || rawMsg?.mimetype || rawMsg?.contentType || rawMsg?.type || '').toLowerCase();
+      // Detección de tipo (priorizar type explícito del backend)
+      const rawType = String(rawMsg?.type || '').toLowerCase();
+      const mime = String(rawMsg?.mimeType || rawMsg?.mimetype || rawMsg?.contentType || '').toLowerCase();
       const name = String(msg.fileName || '').toLowerCase();
       const url = String(msg.fileUrl || '').toLowerCase();
-      const looksPdf = mime.includes('pdf') || name.endsWith('.pdf') || /\.pdf(\?|$)/.test(url);
-      const looksImg = mime.startsWith('image/') || /\.(png|jpg|jpeg|gif|webp)(\?|$)/.test(name) || /\.(png|jpg|jpeg|gif|webp)(\?|$)/.test(url);
+      const looksPdf = rawType === 'pdf' || mime.includes('pdf') || name.endsWith('.pdf') || /\.pdf(\?|$)/.test(url);
+      const looksImg = rawType === 'image' || mime.startsWith('image/') || /\.(png|jpg|jpeg|gif|webp)(\?|$)/.test(name) || /\.(png|jpg|jpeg|gif|webp)(\?|$)/.test(url);
 
       if (looksPdf) msg.type = 'pdf';
       else if (looksImg) msg.type = 'image';
       else if (msg.content && !msg.fileUrl && !msg.fileName) msg.type = 'text';
-      else msg.type = msg.type || 'file';
+      else msg.type = msg.type || rawType || 'file';
 
       const incomingId = normalizeId(msg);
 
       set((state) => {
         const existsById = incomingId != null && state.messages.some((m) => normalizeId(m) === incomingId);
+
+        // NUEVO: reglas utilitarias
+        const eq = (a, b) => String(a) === String(b);
+        const normText = (t) => (String(t || '')).trim().replace(/\s+/g, ' ');
+        const kind = (t) => {
+          const v = String(t || '').toLowerCase();
+          if (v.includes('text')) return 'text';
+          if (v.includes('image') || v.includes('png') || v.includes('jpg') || v.includes('jpeg') || v.includes('webp') || v.includes('gif')) return 'image';
+          if (v.includes('pdf')) return 'pdf';
+          if (v.includes('file') || v.includes('attach')) return 'file';
+          return v || 'unknown';
+        };
+        const base = (u) => (String(u || '').split('?')[0] || '').toLowerCase();
+        const isClose = (a, b) => {
+          const ta = new Date(a || 0).getTime();
+          const tb = new Date(b || 0).getTime();
+          return Math.abs(ta - tb) <= 60000;
+        };
 
         // NUEVO: fallback por participantes si falta conversationId
         const meId = useUserStore.getState().user?.id;
@@ -588,78 +699,41 @@ export const useMessagingStore = create((set, get) => ({
             (String(msg.senderId) === String(selectedOtherUserId) && String(msg.receiverId) === String(meId)) ||
             (String(msg.senderId) === String(meId) && String(msg.receiverId) === String(selectedOtherUserId))
           );
-
         const inCurrentByConv = selectedChatId && msg.conversationId != null && String(msg.conversationId) === String(selectedChatId);
         const inCurrent = !!(inCurrentByConv || samePair);
 
         if (inCurrent) {
-          // si no trae conversationId, fijarlo a la conversación abierta
           if (!msg.conversationId && selectedChatId) msg.conversationId = selectedChatId;
-
-          const eq = (a, b) => String(a) === String(b);
-          const normText = (t) => (t || '').trim().replace(/\s+/g, ' ');
-          const kind = (t) => {
-            const v = String(t || '').toLowerCase();
-            if (v.includes('text')) return 'text';
-            if (v.includes('image') || v.includes('png') || v.includes('jpg') || v.includes('jpeg') || v.includes('webp') || v.includes('gif')) return 'image';
-            if (v.includes('pdf')) return 'pdf';
-            if (v.includes('file') || v.includes('attach')) return 'file';
-            return v || 'unknown';
-          };
           if (existsById) return {};
 
-          // Reconciliar con optimistas
-          const isClose = (a, b) => {
-            if (!a || !b) return true;
-            const ta = new Date(a).getTime();
-            const tb = new Date(b).getTime();
-            return Math.abs(ta - tb) <= 60000;
-          };
+          // 1) Reconciliar con optimista (temp)
           const isTemp = (m) => !!m?.tempId || String(m?.id || '').startsWith('tmp-');
-          let idx = -1;
+          let idxTemp = -1;
           for (let i = state.messages.length - 1; i >= 0; i--) {
             const mm = state.messages[i];
             if (!isTemp(mm)) continue;
             const sameSender = eq(mm.senderId, msg.senderId);
             const sameKind = kind(mm.type) === kind(msg.type);
-
-            // reemplazo del ternario por if/else legible
             let sameContent = false;
             if (sameKind) {
               if (kind(mm.type) === 'text') {
                 sameContent = normText(mm.content) === normText(msg.content);
               } else {
-                const sameName =
-                  !!(mm.fileName && msg.fileName &&
-                     String(mm.fileName).toLowerCase() === String(msg.fileName).toLowerCase());
-                const mmUrlBase = mm.fileUrl ? String(mm.fileUrl).split('?')[0] : null;
-                const msgUrlBase = msg.fileUrl ? String(msg.fileUrl).split('?')[0] : null;
-                const sameUrl = !!(mmUrlBase && msgUrlBase && mmUrlBase === msgUrlBase);
-                sameContent = sameName || sameUrl;
+                const sameSize = !!(mm.fileSize && msg.fileSize && Number(mm.fileSize) === Number(msg.fileSize));
+                const sameUrl = !!(mm.fileUrl && msg.fileUrl && base(mm.fileUrl) === base(msg.fileUrl));
+                const sameName = !!(mm.fileName && msg.fileName && String(mm.fileName).toLowerCase() === String(msg.fileName).toLowerCase());
+                sameContent = sameSize || sameUrl || sameName;
               }
             }
-
-            if (sameSender && sameKind && sameContent && isClose(mm.createdAt, msg.createdAt)) { idx = i; break; }
+            if (sameSender && sameKind && sameContent && isClose(mm.createdAt, msg.createdAt)) { idxTemp = i; break; }
           }
-          if (idx >= 0) {
+          if (idxTemp >= 0) {
             const updated = state.messages.slice();
-            const normText = (t) => (t || '').trim().replace(/\s+/g, ' ');
-            const kind = (t) => {
-              const v = String(t || '').toLowerCase();
-              if (v.includes('text')) return 'text';
-              if (v.includes('image') || v.includes('png') || v.includes('jpg') || v.includes('jpeg') || v.includes('webp') || v.includes('gif')) return 'image';
-              if (v.includes('pdf')) return 'pdf';
-              if (v.includes('file') || v.includes('attach')) return 'file';
-              return v || 'unknown';
-            };
-
-            // no pisar contenido de texto con vacío
-            const merged = { ...updated[idx], ...msg, id: incomingId ?? updated[idx].id };
+            const merged = { ...updated[idxTemp], ...msg, id: incomingId ?? updated[idxTemp].id };
             if (kind(merged.type) === 'text' && !normText(merged.content)) {
-              merged.content = updated[idx].content;
+              merged.content = updated[idxTemp].content;
             }
-            updated[idx] = merged;
-
+            updated[idxTemp] = merged;
             // de-dup por id
             const seen = new Set();
             const dedup = [];
@@ -669,45 +743,45 @@ export const useMessagingStore = create((set, get) => ({
               if (!seen.has(key)) { seen.add(key); dedup.unshift(updated[i]); }
             }
             return { messages: dedup };
-          } else {
-            const appended = [...state.messages, { ...msg, id: incomingId ?? msg.id }];
-            // eliminar optimistas duplicados suaves
-            const buildKey = (m) => `${String(m.senderId)}|${kind(m.type)}|${kind(m.type) === 'text' ? normText(m.content) : (String(m.fileName || '').toLowerCase() || String(m.fileUrl || '').split('?')[0])}`;
-            const isTemp2 = (m) => !!m?.tempId || String(m?.id || '').startsWith('tmp-');
-            const nonTemps = appended.filter((m) => !isTemp2(m));
-            const nonTempKeys = new Set(nonTemps.map(buildKey));
-            const dedupSoft = appended.filter((m) => !(isTemp2(m) && nonTempKeys.has(buildKey(m))));
-            return { messages: dedupSoft };
           }
+
+          // 2) Evitar duplicados entre dos mensajes del servidor (WS + REST)
+          const dupIdx = state.messages.findIndex((m) => {
+            // ambos no temporales
+            if ((m.tempId || String(m.id || '').startsWith('tmp-'))) return false;
+            if (String(m.senderId) !== String(msg.senderId)) return false;
+            if (kind(m.type) !== kind(msg.type)) return false;
+            if (!isClose(m.createdAt, msg.createdAt)) return false;
+            if (kind(msg.type) === 'text') return normText(m.content) === normText(msg.content);
+            const sameSize = !!(m.fileSize && msg.fileSize && Number(m.fileSize) === Number(msg.fileSize));
+            const sameUrl = !!(m.fileUrl && msg.fileUrl && base(m.fileUrl) === base(msg.fileUrl));
+            return sameSize || sameUrl;
+          });
+          if (dupIdx !== -1) {
+            // merge info faltante y NO agregar otro
+            const updated = state.messages.slice();
+            updated[dupIdx] = { ...updated[dupIdx], ...msg, id: incomingId ?? updated[dupIdx].id };
+            return { messages: updated };
+          }
+
+          // 3) No hay duplicado → agregar
+          const appended = [...state.messages, { ...msg, id: incomingId ?? msg.id }];
+          // limpiar optimistas blandos si existe no-temp equivalente
+          const buildKey = (m) => `${String(m.senderId)}|${kind(m.type)}|${kind(m.type) === 'text' ? normText(m.content) : (String(m.fileSize || '') || base(m.fileUrl || '') || String(m.fileName || '').toLowerCase())}`;
+          const isTemp2 = (m) => !!m?.tempId || String(m?.id || '').startsWith('tmp-');
+          const nonTemps = appended.filter((m) => !isTemp2(m));
+          const nonTempKeys = new Set(nonTemps.map(buildKey));
+          const dedupSoft = appended.filter((m) => !(isTemp2(m) && nonTempKeys.has(buildKey(m))));
+          return { messages: dedupSoft };
         }
 
         // fuera del chat abierto → contar como no leído
         return existsById ? {} : { unreadCount: (state.unreadCount || 0) + 1 };
       });
     });
-
+    // Escucha global de "userTyping" => actualiza typingStates[userId]
     socket.on('userTyping', ({ userId, isTyping /*, conversationId*/ }) => {
       set((state) => ({ typingStates: { ...state.typingStates, [userId]: !!isTyping } }));
-      // Auto-stop después de 3s si no llega "stop typing"
-      try {
-        if (typingTimers[userId]) clearTimeout(typingTimers[userId]);
-        if (isTyping) {
-          typingTimers[userId] = setTimeout(() => {
-            set((state) => ({ typingStates: { ...state.typingStates, [userId]: false } }));
-            delete typingTimers[userId];
-          }, 3000);
-        } else {
-          delete typingTimers[userId];
-        }
-      } catch {}
-    });
-
-    socket.on('messagesRead', ({ messageIds }) => {
-      set((state) => ({ messages: state.messages.map(m => (messageIds || []).includes(m.id) ? { ...m, isRead: true } : m) }));
-    });
-
-    socket.on('messageNotification', () => {
-      set((state) => ({ unreadCount: (state.unreadCount || 0) + 1 }));
     });
   },
 
@@ -715,9 +789,20 @@ export const useMessagingStore = create((set, get) => ({
   leaveConversation: () => {
     const { selectedChatId, selectedOtherUserId } = get();
     const socket = getMessagingSocket();
+    // enviar stop typing antes de salir
+    try {
+      socket?.emit('typing', { conversationId: selectedChatId || null, otherUserId: selectedOtherUserId || null, isTyping: false });
+    } catch {}
     if (socket && selectedChatId) {
       socket.emit('leaveConversation', { conversationId: selectedChatId, otherUserId: selectedOtherUserId || null });
     }
+    // limpiar timers locales de typing-out
+    try {
+      if (selectedOtherUserId && typingOutTimers[selectedOtherUserId]) {
+        clearTimeout(typingOutTimers[selectedOtherUserId]);
+        delete typingOutTimers[selectedOtherUserId];
+      }
+    } catch {}
     set({ selectedChatId: null, selectedOtherUserId: null, messages: [], messagesPagination: { currentPage: 1, itemsPerPage: 50, totalPages: 0, hasNextPage: false } });
   },
 
@@ -727,6 +812,7 @@ export const useMessagingStore = create((set, get) => ({
     // Limpia timers de typing
     try {
       Object.keys(typingTimers).forEach((k) => { clearTimeout(typingTimers[k]); delete typingTimers[k]; });
+      Object.keys(typingOutTimers).forEach((k) => { clearTimeout(typingOutTimers[k]); delete typingOutTimers[k]; });
     } catch {}
     set({ socketConnected: false, typingStates: {}, selectedChatId: null, selectedOtherUserId: null, messages: [] });
   },

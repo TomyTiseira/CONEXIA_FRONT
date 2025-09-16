@@ -8,6 +8,8 @@ import { useUserStore } from '@/store/userStore';
 import { useUserFriends } from '@/hooks/connections/useUserFriends';
 import { config } from '@/config';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
+import { getMessagingSocket } from '@/lib/socket/messagingSocket';
+import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 
 export default function MessagingWidget({ avatar = '/images/default-avatar.png', chats = [] }) {
   const [open, setOpen] = useState(false);
@@ -31,12 +33,56 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
   const { friends, loading, error, pagination, loadMore } = useUserFriends(userId, 1, 12);
 
   // Store chats
-  const { chats: convs, loading: chatsLoading, loadConversations, selectConversation } = useMessaging();
+  const { chats: convs, loading: chatsLoading, loadConversations, selectConversation, refreshUnreadCount } = useMessaging();
+  const { messages } = useChatMessages(); // <- NUEVO
 
   useEffect(() => {
     // cargar conversaciones iniciales
     loadConversations({ page: 1, limit: 10 });
   }, [loadConversations]);
+
+  // Escuchar eventos socket y refrescar historial + no leídos (con throttle)
+  useEffect(() => {
+    const socket = getMessagingSocket();
+    let ticking = false;
+    const doRefresh = () => {
+      if (ticking) return;
+      ticking = true;
+      const term = (convSearch || '').trim();
+      // Refresco ligero y seguro
+      Promise.resolve().then(() => {
+        loadConversations({ page: 1, limit: 10, append: false, search: term || undefined });
+        refreshUnreadCount();
+      }).finally(() => {
+        // permitir otro refresh tras un breve respiro
+        setTimeout(() => { ticking = false; }, 350);
+      });
+    };
+
+    const onConnect = () => doRefresh();
+    const onNewMsg = () => doRefresh();
+    const onNotif = () => doRefresh();
+
+    socket?.on?.('connect', onConnect);
+    socket?.on?.('reconnect', onConnect);
+    socket?.on?.('newMessage', onNewMsg);
+    socket?.on?.('messageNotification', onNotif);
+
+    return () => {
+      socket?.off?.('connect', onConnect);
+      socket?.off?.('reconnect', onConnect);
+      socket?.off?.('newMessage', onNewMsg);
+      socket?.off?.('messageNotification', onNotif);
+    };
+  }, [loadConversations, refreshUnreadCount, convSearch]);
+
+  // Fallback: si cambian los mensajes del chat activo, refrescar historial + no leídos
+  useEffect(() => {
+    if (!open) return; // refrescar solo si el modal está visible
+    const term = (convSearch || '').trim();
+    loadConversations({ page: 1, limit: 10, append: false, search: term || undefined });
+    refreshUnreadCount();
+  }, [messages?.length, open, convSearch, loadConversations, refreshUnreadCount]);
 
   // Debounce de búsqueda: 350ms
   useEffect(() => {
@@ -48,6 +94,29 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
     }, 350);
     return () => clearTimeout(handle);
   }, [convSearch, open, showContacts, loadConversations]);
+
+  // Fallback 2: refrescar al volver a la pestaña
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        const term = (convSearch || '').trim();
+        loadConversations({ page: 1, limit: 10, append: false, search: term || undefined });
+        refreshUnreadCount();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [convSearch, loadConversations, refreshUnreadCount]);
+
+  // Fallback 3: polling suave cada 30s mientras el widget vive
+  useEffect(() => {
+    const id = setInterval(() => {
+      const term = (convSearch || '').trim();
+      loadConversations({ page: 1, limit: 10, append: false, search: term || undefined });
+      refreshUnreadCount();
+    }, 30000);
+    return () => clearInterval(id);
+  }, [convSearch, loadConversations, refreshUnreadCount]);
 
   // Helpers: display name (first and last token) and date label (Hoy/Ayer/fecha + hora)
   const getDisplayName = (userName, fallbackId) => {
@@ -170,12 +239,12 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
               </div>
             )}
             {/* Sección de contactos o historial */}
-            <div className="flex-1 overflow-y-auto bg-white">
+            <div className="flex-1 overflow-y-auto bg-white scrollbar-soft-lg">
               {showContacts ? (
                 <>
                   <div className="px-3 py-2 text-xs text-gray-500 font-semibold">Conexiones</div>
                   <div
-                    className="flex flex-col gap-0 w-full"
+                    className="flex flex-col gap-0 w-full scrollbar-soft-lg"
                     onScroll={e => {
                       const el = e.target;
                       if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40 && pagination?.hasNextPage && !loading) {
@@ -246,6 +315,7 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
                           dateLabel={dateLabel}
                           time={time}
                           online={false}
+                          unreadCount={chat.unreadCount || 0}  
                           onClick={() => {
                             setActiveChat({ id: other.id, avatar: avatarUrl, name: displayName, conversationId: chat.id });
                             // pasar también metadatos del otro usuario
@@ -275,6 +345,13 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
           />
         )}
       </div>
+      <style jsx>{`
+        /* Scrollbar del modal principal (más ancha, color celeste claro) */
+        .scrollbar-soft-lg::-webkit-scrollbar { width: 10px; height: 10px; }
+        .scrollbar-soft-lg::-webkit-scrollbar-thumb { background: #d3d8d8ff; border-radius: 10px; }
+        .scrollbar-soft-lg::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-soft-lg { scrollbar-color: #d3d8d8ff transparent; scrollbar-width: auto; }
+      `}</style>
     </div>
   );
 }
