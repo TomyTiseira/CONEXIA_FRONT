@@ -33,6 +33,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false); // Nuevo estado para evitar duplicados
   const dropdownRef = useRef(null);
+  const mobileDropdownRef = useRef(null); // Ref separado para mobile
+  const desktopDropdownRef = useRef(null); // Ref separado para desktop
   const deletingRef = useRef(false); // Referencia adicional para prevenir llamadas duplicadas
   
   // Si tenemos datos de conexión del perfil, los usamos primero, sino usamos los del hook
@@ -47,7 +49,9 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   // Cerrar el dropdown al hacer clic fuera de él
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+          mobileDropdownRef.current && !mobileDropdownRef.current.contains(event.target) &&
+          desktopDropdownRef.current && !desktopDropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
     };
@@ -317,7 +321,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
       <>
         {/* Mobile: centrado debajo del nombre */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden">
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative" ref={mobileDropdownRef}>
             <Button
               variant="informative"
               className="flex items-center justify-center px-4 py-2 text-sm min-w-[160px]"
@@ -345,7 +349,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         </div>
         {/* Desktop: extremo derecho y centrado verticalmente */}
         <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6">
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative" ref={desktopDropdownRef}>
             <Button
               variant="informative"
               className="flex items-center justify-center px-4 py-2 text-sm min-w-[160px]"
