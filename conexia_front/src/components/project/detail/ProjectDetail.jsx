@@ -14,6 +14,11 @@ import { PostulationButton } from '@/components/project/postulation';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import { ProjectValidationStatus } from '@/components/project/validation';
+// NUEVO: hooks de mensajería + emojis
+import { useMessaging } from '@/hooks/messaging/useMessaging';
+import { useChatMessages } from '@/hooks/messaging/useChatMessages';
+import EmojiPicker from 'emoji-picker-react';
+import { IoCheckmarkCircleSharp } from 'react-icons/io5'; // <- NUEVO icono
 
 export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
@@ -26,23 +31,41 @@ export default function ProjectDetail({ projectId }) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
   const [alreadyReported, setAlreadyReported] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { selectConversation, loadConversations, refreshUnreadCount } = useMessaging(); // NUEVO
+  const { sendTextMessage } = useChatMessages(); // NUEVO
 
-  // Simulación de envío de mensaje
+  // Envío real de mensaje (texto + emojis, sin archivos)
   const handleSendMessage = async () => {
-    if (!messageText.trim()) return;
+    if (!messageText.trim() || !project?.ownerId) return;
     setSendingMessage(true);
-    setTimeout(() => {
-      setSendingMessage(false);
-      setMessageSent(true);
-      setMessageText("");
-      setTimeout(() => setMessageSent(false), 2500);
-    }, 1200);
-  };
+    try {
+      // preparar selección silenciosa (no abre UI) con meta del receptor
+      await selectConversation({
+        conversationId: null,
+        otherUserId: project.ownerId,
+        otherUser: { id: project.ownerId, userName: project.owner, userProfilePicture: project.ownerImage || null }
+      });
+      // enviar texto (incluye emojis)
+      await sendTextMessage({ content: messageText.trim() });
+      // refrescos ligeros
+      loadConversations({ page: 1, limit: 10, append: false });
+      refreshUnreadCount();
 
+      // feedback al usuario
+      setMessageText('');
+      setShowEmojis(false);
+      setMessageSent(true); // persistente hasta recarga
+    } catch (e) {
+      // opcional: puedes mostrar un error aquí
+    } finally {
+      setSendingMessage(false);
+    }
+  };
 
   useEffect(() => {
     fetchProjectById(projectId).then((data) => {
@@ -289,40 +312,79 @@ export default function ProjectDetail({ projectId }) {
               {/* Mensaje al creador tipo Facebook mejorado y responsivo, alineado y compacto */}
               {!isOwner && roleName !== ROLES.ADMIN && roleName !== ROLES.MODERATOR && (
                 <div className="mt-1 w-full">
-                  <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-row items-center gap-2 shadow-sm" style={{boxShadow: '0 2px 8px 0 rgba(0,0,0,0.03)'}}>
-                    <div className="flex-1 w-full flex flex-col">
-                      <label htmlFor="mensajeCreador" className="flex items-center gap-1 font-semibold text-conexia-green mb-1 text-[11px] md:text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 md:w-5 md:h-5 text-conexia-green">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-.659 1.591l-7.5 7.5a2.25 2.25 0 01-3.182 0l-7.5-7.5A2.25 2.25 0 012.25 6.993V6.75" />
-                        </svg>
-                        <span className="truncate">Envía un mensaje al creador del proyecto</span>
-                      </label>
-                      <div className="flex flex-row items-center gap-2 w-full">
-                        <input
-                          id="mensajeCreador"
-                          type="text"
-                          placeholder="Escribe tu consulta..."
-                          className="w-full rounded-lg px-3 py-2 bg-white border border-gray-300 focus:outline-none focus:border-gray-500 text-[11px] md:text-sm text-gray-800 transition-all duration-150"
-                          value={messageText}
-                          onChange={e => setMessageText(e.target.value)}
-                          maxLength={300}
-                          style={{minHeight: '34px'}}
-                        />
-                        <Button
-                          type="button"
-                          variant="neutral"
-                          className="text-[11px] md:text-sm px-4 md:px-5 py-2 rounded-lg [&:disabled]:opacity-100"
-                          onClick={handleSendMessage}
-                          disabled={!messageText.trim() || sendingMessage}
-                          style={{minWidth: '70px', height: '34px'}}
-                        >
-                          Enviar
-                        </Button>
+                  {/* Usar el mismo contenedor con altura mínima en ambos estados */}
+                  {messageSent ? (
+                    <div className="bg-[#f3f9f8] border border-conexia-green/30 rounded-lg p-4 shadow-sm min-h-[96px] flex items-center justify-center gap-3">
+                      <IoCheckmarkCircleSharp size={22} className="text-green-500 flex-shrink-0" />
+                      <span className="text-conexia-green font-semibold">
+                        Mensaje enviado al creador del proyecto
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-row items-center gap-2 shadow-sm min-h-[96px]" style={{boxShadow: '0 2px 8px 0 rgba(0,0,0,0.03)'}}>
+                      <div className="flex-1 w-full flex flex-col">
+                        <label htmlFor="mensajeCreador" className="flex items-center gap-1 font-semibold text-conexia-green mb-1 text-[11px] md:text-sm">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 md:w-5 md:h-5 text-conexia-green">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-.659 1.591l-7.5 7.5a2.25 2.25 0 01-3.182 0l-7.5-7.5A2.25 2.25 0 012.25 6.993V6.75" />
+                          </svg>
+                          <span className="truncate">Envía un mensaje al creador del proyecto</span>
+                        </label>
+                        <div className="flex flex-row items-center gap-2 w-full">
+                          {/* Input con icono de emoji adentro (derecha) */}
+                          <div className="relative flex-1">
+                            <input
+                              id="mensajeCreador"
+                              type="text"
+                              placeholder="Escribe tu consulta..."
+                              className="w-full rounded-lg px-3 pr-8 py-2 bg-white border border-gray-300 focus:outline-none focus:border-gray-500 text-[11px] md:text-sm text-gray-800 transition-all duration-150"
+                              value={messageText}
+                              onChange={e => setMessageText(e.target.value)}
+                              maxLength={300}
+                              style={{minHeight: '34px'}}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleSendMessage();
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green/70 hover:text-conexia-green"
+                              title="Emoji"
+                              onClick={() => setShowEmojis(v => !v)}
+                            >
+                              <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#1e6e5c" strokeWidth="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="10" r="1" fill="#1e6e5c"/><circle cx="15" cy="10" r="1" fill="#1e6e5c"/></svg>
+                            </button>
+                            {showEmojis && (
+                              <div className="absolute right-0 bottom-full mb-2 z-50">
+                                <EmojiPicker
+                                  onEmojiClick={(emojiData) => {
+                                    const e = emojiData?.emoji || '';
+                                    if (e) setMessageText(prev => prev + e);
+                                    setShowEmojis(false);
+                                  }}
+                                  searchDisabled
+                                  skinTonesDisabled
+                                  height={320}
+                                  width={280}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="neutral"
+                            className="text-[11px] md:text-sm px-4 md:px-5 py-2 rounded-lg [&:disabled]:opacity-100"
+                            onClick={handleSendMessage}
+                            disabled={!messageText.trim() || sendingMessage}
+                            style={{minWidth: '70px', height: '34px'}}
+                          >
+                            Enviar
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {messageSent && (
-                    <div className="mt-2 text-green-600 text-sm font-medium">¡Mensaje enviado al creador!</div>
                   )}
                 </div>
               )}

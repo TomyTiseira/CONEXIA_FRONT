@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
 import { config } from '@/config';
-import { MoreVertical, AlertCircle, Trash2, Pencil, Check } from 'lucide-react';
+import { MoreVertical, AlertCircle, Trash2, Pencil, Check, Flag } from 'lucide-react';
 import { HiOutlinePlus } from 'react-icons/hi';
 import { BsEmojiSmile } from 'react-icons/bs';
 import { useSendConnectionRequest } from '@/hooks/connections/useSendConnectionRequest';
@@ -23,6 +23,10 @@ import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 import ReportPublicationModal from './report/ReportPublicationModal';
 
 const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
+
+// Helpers para validar Node y usar contains de forma segura
+const isDomNode = (v) => v && typeof v === 'object' && 'nodeType' in v;
+const safeContains = (parent, child) => !!parent && isDomNode(child) && parent.contains(child);
 
 const getMediaUrl = (mediaUrl) => {
   if (!mediaUrl) return null;
@@ -1273,19 +1277,18 @@ function PublicationCard({ publication, isGridItem = false }) {
                }}
                onMouseLeave={(e) => {
                  try {
-                   // Verificar si el ratón se movió dentro del menú de reacciones
                    const relatedTarget = e.relatedTarget;
                    const menu = e.currentTarget.querySelector('#reaction-options');
-                   
-                   // Verificar si el cursor salió completamente del grupo (no fue al menú)
-                   // o si el cursor se movió a un elemento fuera del grupo
-                   if (menu && (!relatedTarget || !e.currentTarget.contains(relatedTarget))) {
-                     // Programar el cierre del menú con un pequeño retraso
+
+                   // Usar safeContains para evitar TypeError
+                   const leftGroup = e.currentTarget;
+                   const isInside = safeContains(leftGroup, relatedTarget);
+
+                   if (menu && !isInside) {
                      setTimeout(() => {
                        handleSafeElementInteraction(menu, (element) => {
                          const isHovering = element.getAttribute('data-hover') === 'true';
                          const isActive = element.getAttribute('data-active') === 'true';
-                         
                          if (!isHovering && !isActive) {
                            element.classList.add('hidden');
                          }
@@ -1316,7 +1319,7 @@ function PublicationCard({ publication, isGridItem = false }) {
                 const relatedTarget = e.relatedTarget;
                 const group = e.currentTarget.closest('.group');
                 
-                if (!group.contains(relatedTarget)) {
+                if (!safeContains(group, relatedTarget)) {
                   const menu = group.querySelector('#reaction-options');
                   handleSafeElementInteraction(menu, el => {
                     el.setAttribute('data-active', 'false');
@@ -1364,33 +1367,28 @@ function PublicationCard({ publication, isGridItem = false }) {
                  }}
                  onMouseLeave={(e) => {
                    try {
-                     // Marcar que ya no tiene hover
                      const menuId = e.currentTarget.id;
                      const menuElement = e.currentTarget;
                      const parentContainer = e.currentTarget.closest('.group');
                      const relatedTarget = e.relatedTarget;
-                     
-                     // Marcar estados
+
                      handleSafeElementInteraction(menuElement, menu => {
                        menu.setAttribute('data-hover', 'false');
                        menu.setAttribute('data-active', 'false');
                      });
-                     
-                     // Verificar si el cursor se movió fuera del contenedor completo
-                     // o a un elemento que no es parte del grupo de reacciones
-                     const movedOutsideGroup = !parentContainer?.contains(relatedTarget) || 
-                                              relatedTarget === parentContainer;
-                     
+
+                     // Usar safeContains para evitar TypeError
+                     const movedOutsideGroup = !safeContains(parentContainer, relatedTarget) ||
+                                               relatedTarget === parentContainer;
+
                      if (movedOutsideGroup) {
-                       // Si el cursor salió completamente, ocultar el menú inmediatamente
                        handleSafeElementInteraction(menuElement, menu => {
                          menu.classList.add('hidden');
                        });
                      } else {
-                       // Si el cursor se movió dentro del grupo, verificar después de un retraso
                        setTimeout(() => {
                          handleSafeElementInteraction(menuId, menu => {
-                           if (menu && menu.getAttribute('data-hover') === 'false' && 
+                           if (menu && menu.getAttribute('data-hover') === 'false' &&
                                menu.getAttribute('data-active') === 'false') {
                              menu.classList.add('hidden');
                            }
@@ -1415,42 +1413,35 @@ function PublicationCard({ publication, isGridItem = false }) {
                   type="button"
                   onClick={() => handleReaction('like')}
                   onMouseEnter={e => {
-                    try {
-                      // Mostrar tooltip
-                      handleSafeElementInteraction(
-                        e.currentTarget.parentElement.querySelector('.tooltip'),
-                        elem => elem.classList.remove('hidden')
-                      );
-                      
-                      // Mantener el menú visible
-                      handleSafeElementInteraction(
-                        e.currentTarget.closest('.group')?.querySelector('#reaction-options'),
-                        menu => {
-                          menu.classList.remove('hidden');
-                          menu.setAttribute('data-hover', 'true');
-                        }
-                      )
-                    } catch (error) {
+                    // Mostrar tooltip
+                    handleSafeElementInteraction(
+                      e.currentTarget.parentElement.querySelector('.tooltip'),
+                      elem => elem.classList.remove('hidden')
+                    );
+                    
+                    // Mantener el menú visible
+                    handleSafeElementInteraction(
+                      e.currentTarget.closest('.group')?.querySelector('#reaction-options'),
+                      menu => {
+                        menu.classList.remove('hidden');
+                        menu.setAttribute('data-hover', 'true');
                       }
+                    )
                   }}
                   onMouseLeave={e => {
-                    try {
-                      // Ocultar tooltip
-                      handleSafeElementInteraction(
-                        e.currentTarget.parentElement.querySelector('.tooltip'),
-                        elem => elem.classList.add('hidden')
-                      );
-                      
-                      // Actualizar estado del menú después de un breve retraso
-                      const menuId = 'reaction-options';
-                      setTimeout(() => {
-                        handleSafeElementInteraction(menuId, menu => {
-                          menu.setAttribute('data-hover', 'false');
-                        });
-                      }, 100);
-                    } catch (error) {
-                      console.error('Error en evento mouseLeave:', error);
-                    }
+                    // Ocultar tooltip
+                    handleSafeElementInteraction(
+                      e.currentTarget.parentElement.querySelector('.tooltip'),
+                      elem => elem.classList.add('hidden')
+                    );
+                    
+                    // Actualizar estado del menú después de un breve retraso
+                    const menuId = 'reaction-options';
+                    setTimeout(() => {
+                      handleSafeElementInteraction(menuId, menu => {
+                        menu.setAttribute('data-hover', 'false');
+                      });
+                    }, 100);
                   }}
                 >
                     <span className="text-[26px]">👍</span>

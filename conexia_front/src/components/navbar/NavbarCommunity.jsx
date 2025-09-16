@@ -19,6 +19,8 @@ import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
+import { useMessaging } from '@/hooks/messaging/useMessaging'; // <- NUEVO
+import { getMessagingSocket } from '@/lib/socket/messagingSocket'; // <- NUEVO
 
 export default function NavbarCommunity() {
   const { count: connectionRequestsCount } = useConnectionRequests();
@@ -28,6 +30,36 @@ export default function NavbarCommunity() {
   const router = useRouter();
   const { logout, user } = useAuth();
   const defaultAvatar = '/images/default-avatar.png';
+  const { unreadCount, refreshUnreadCount } = useMessaging(); // <- NUEVO
+
+  useEffect(() => {
+    // Cargar contador al montar
+    refreshUnreadCount();
+    // Suscribirse a sockets y refrescar
+    const socket = getMessagingSocket();
+    const onAny = () => refreshUnreadCount();
+    socket?.on?.('connect', onAny);
+    socket?.on?.('reconnect', onAny);
+    socket?.on?.('newMessage', onAny);
+    socket?.on?.('messageNotification', onAny);
+    socket?.on?.('messagesRead', onAny);
+    return () => {
+      socket?.off?.('connect', onAny);
+      socket?.off?.('reconnect', onAny);
+      socket?.off?.('newMessage', onAny);
+      socket?.off?.('messageNotification', onAny);
+      socket?.off?.('messagesRead', onAny);
+    };
+  }, [refreshUnreadCount]);
+
+  useEffect(() => {
+    // Refrescar al volver a la pestaña (fallback)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshUnreadCount();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refreshUnreadCount]);
 
   const handleLogout = async () => {
     try {
@@ -95,7 +127,18 @@ export default function NavbarCommunity() {
 
         {/* Actions */}
         <div className="flex items-center gap-4 text-conexia-green">
-          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" onClick={() => router.push('/messaging')} />
+          <div className="relative">
+            <MessageCircle
+              size={20}
+              className="cursor-pointer hover:text-conexia-green/80"
+              onClick={() => router.push('/messaging')}
+            />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#e6424b] text-white text-[11px] leading-[18px] text-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </div>
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
@@ -125,7 +168,18 @@ export default function NavbarCommunity() {
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
         </Link>
         <div className="flex items-center gap-4 text-conexia-green">
-          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <div className="relative">
+            <MessageCircle
+              size={20}
+              className="cursor-pointer hover:text-conexia-green/80"
+              onClick={() => router.push('/messaging')}
+            />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-[#ff4953] text-white text-[10px] leading-[16px] text-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </div>
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
