@@ -8,6 +8,8 @@ import Image from 'next/image';
 const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 const MAX_DESCRIPTION = 500;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
+const MAX_FILES = 5;
+const FILES_LEGEND = 'Hasta 5 archivos. Formatos permitidos: JPG, PNG, GIF, MP4. Máx. 1 video por publicación.';
 
 // Modal de éxito tipo toast (idéntico al de crear publicación)
 function SuccessModal({ open }) {
@@ -97,7 +99,7 @@ function VisibilityModal({ open, onClose, value, onChange }) {
 
 export default function EditPublicationModal({ open, onClose, onEdit, loading, initialDescription, initialMediaUrl, initialMediaType, initialPrivacy = 'public', user }) {
   const [description, setDescription] = useState(initialDescription || '');
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]); // array de archivos
   const [fileError, setFileError] = useState('');
   const [visibility, setVisibility] = useState(initialPrivacy === 'onlyFriends' ? 'contacts' : 'all');
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
@@ -139,30 +141,56 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
       if (type === 'video') accept = 'video/mp4';
       if (type === 'gif') accept = 'image/gif';
       fileInputRef.current.accept = accept;
+      fileInputRef.current.multiple = true;
       fileInputRef.current.click();
     }
   };
 
   const handleFileChange = (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    if (!ALLOWED_TYPES.includes(f.type)) {
-      setFileError('Solo se permiten imágenes JPG, PNG, GIF o videos MP4.');
-      setFile(null);
+    const selected = Array.from(e.target.files);
+    if (selected.length + files.length > MAX_FILES) {
+      setFileError(`Máximo ${MAX_FILES} archivos por publicación.`);
+      return;
+    }
+    // Validar tipos y JFIF
+    let error = '';
+    let videoCount = files.filter(f => f.type === 'video/mp4').length;
+    const newFiles = [];
+    for (const f of selected) {
+      if (!ALLOWED_TYPES.includes(f.type)) {
+        error = 'Solo se permiten imágenes JPG, PNG, GIF o videos MP4.';
+        break;
+      }
+      // Bloquear JFIF
+      if (f.type === 'image/jpeg') {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const arr = new Uint8Array(ev.target.result);
+          if (arr[6] === 0x4A && arr[7] === 0x46 && arr[8] === 0x49 && arr[9] === 0x46 && arr[10] === 0x00) {
+            setFileError('No se permite formato JFIF. Usa JPG estándar.');
+          }
+        };
+        reader.readAsArrayBuffer(f.slice(0, 12));
+      }
+      if (f.type === 'video/mp4') videoCount++;
+      newFiles.push(f);
+    }
+    if (videoCount > 1) {
+      setFileError('Solo se permite 1 video por publicación.');
+      return;
+    }
+    if (error) {
+      setFileError(error);
       return;
     }
     setFileError('');
-    setFile(f);
+    setFiles([...files, ...newFiles]);
   };
 
-  const handleRemoveFile = () => {
-    if (file) {
-      setFile(null);
-      setFileError('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    } else if (initialMediaUrl) {
-      setRemoveOriginalMedia(true);
-    }
+  const handleRemoveFile = (idx) => {
+    setFiles(files.filter((_, i) => i !== idx));
+    setFileError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleEmojiClick = (emojiData) => {
@@ -185,16 +213,11 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
     if (visibility === 'contacts') privacy = 'onlyFriends';
     const send = {
       description: description,
-      privacy: privacy
+      privacy: privacy,
+      files: files
     };
-    if (file) {
-      send.file = file;
-      // Si se añade un nuevo archivo, no se debe enviar removeMedia
-      send.removeMedia = false;
-    } else if (removeOriginalMedia) {
-      // Si se elimina el archivo sin añadir uno nuevo, enviar removeMedia: true
+    if (removeOriginalMedia) {
       send.removeMedia = true;
-      send.file = null;
     }
     // Si onEdit es async, esperar a que termine
     const result = onEdit(send);
@@ -372,8 +395,29 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
                   </button>
                   <span className="text-xs text-conexia-green/50 ml-auto">{description.length}/{MAX_DESCRIPTION}</span>
                 </div>
-                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} multiple />
+                {/* Leyenda de archivos */}
+                <div className="text-xs text-conexia-green/60 mt-1 mb-1">{FILES_LEGEND}</div>
                 {fileError && <div className="text-red-500 text-xs">{fileError}</div>}
+                {/* Previews de archivos */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="relative flex flex-col items-center">
+                      {f.type.startsWith('image/') && f.type !== 'image/gif' && (
+                        <img src={URL.createObjectURL(f)} alt="preview" className="max-h-24 w-auto object-contain rounded" />
+                      )}
+                      {f.type === 'video/mp4' && (
+                        <video src={URL.createObjectURL(f)} controls className="max-h-20 w-auto object-contain rounded" />
+                      )}
+                      {f.type === 'image/gif' && (
+                        <img src={URL.createObjectURL(f)} alt="preview" className="max-h-20 w-auto object-contain rounded" />
+                      )}
+                      <button type="button" onClick={() => handleRemoveFile(idx)} className="absolute -top-2 -right-2 bg-white/80 hover:bg-white text-red-500 rounded-full p-1 shadow">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
                 {showEmoji && (
                   <div className="absolute bottom-20 left-6 z-50">
                     {/* Overlay para cerrar el picker al hacer click fuera */}

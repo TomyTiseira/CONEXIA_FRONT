@@ -24,6 +24,8 @@ import { BsEmojiSmile } from 'react-icons/bs';
 const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 const MAX_DESCRIPTION = 500;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
+const MAX_FILES = 5;
+const FILES_LEGEND = 'Hasta 5 archivos. Formatos permitidos: JPG, PNG, GIF, MP4. Máx. 1 video por publicación.';
 
 function VisibilityModal({ open, onClose, value, onChange }) {
   if (!open) return null;
@@ -107,7 +109,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
     ? `${config.IMAGE_URL}/${user.profilePicture}`
     : '/images/default-avatar.png';
   const [description, setDescription] = useState('');
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]); // array de archivos
   const [fileError, setFileError] = useState('');
   const [visibility, setVisibility] = useState('all'); // 'all' o 'friends'
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
@@ -129,7 +131,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
 
   const handleClose = () => {
     setDescription('');
-    setFile(null);
+    setFiles([]);
     setFileError('');
     setVisibility('all');
     setShowVisibilityModal(false);
@@ -145,24 +147,55 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
       if (type === 'video') accept = 'video/mp4';
       if (type === 'gif') accept = 'image/gif';
       fileInputRef.current.accept = accept;
+      fileInputRef.current.multiple = true;
       fileInputRef.current.click();
     }
   };
 
   const handleFileChange = (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    if (!ALLOWED_TYPES.includes(f.type)) {
-      setFileError('Solo se permiten imágenes JPG, PNG, GIF o videos MP4.');
-      setFile(null);
+    const selected = Array.from(e.target.files);
+    if (selected.length + files.length > MAX_FILES) {
+      setFileError(`Máximo ${MAX_FILES} archivos por publicación.`);
+      return;
+    }
+    // Validar tipos y JFIF
+    let error = '';
+    let videoCount = files.filter(f => f.type === 'video/mp4').length;
+    const newFiles = [];
+    for (const f of selected) {
+      if (!ALLOWED_TYPES.includes(f.type)) {
+        error = 'Solo se permiten imágenes JPG, PNG, GIF o videos MP4.';
+        break;
+      }
+      // Bloquear JFIF
+      if (f.type === 'image/jpeg') {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const arr = new Uint8Array(ev.target.result);
+          // JFIF: bytes 6-10 = 'JFIF\0'
+          if (arr[6] === 0x4A && arr[7] === 0x46 && arr[8] === 0x49 && arr[9] === 0x46 && arr[10] === 0x00) {
+            setFileError('No se permite formato JFIF. Usa JPG estándar.');
+          }
+        };
+        reader.readAsArrayBuffer(f.slice(0, 12));
+      }
+      if (f.type === 'video/mp4') videoCount++;
+      newFiles.push(f);
+    }
+    if (videoCount > 1) {
+      setFileError('Solo se permite 1 video por publicación.');
+      return;
+    }
+    if (error) {
+      setFileError(error);
       return;
     }
     setFileError('');
-    setFile(f);
+    setFiles([...files, ...newFiles]);
   };
 
-  const handleRemoveFile = () => {
-    setFile(null);
+  const handleRemoveFile = (idx) => {
+    setFiles(files.filter((_, i) => i !== idx));
     setFileError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -174,8 +207,9 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
     let privacy = 'public';
     if (visibility === 'contacts') privacy = 'onlyFriends';
     try {
-      await createPublication({ description, file, privacy });
-      if (onPublish) onPublish({ description, file, privacy });
+      // Enviar todos los archivos
+      await createPublication({ description, files, privacy });
+      if (onPublish) onPublish({ description, files, privacy });
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -217,7 +251,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
 
   return (
     <>
-      <div className={open ? "fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" : "hidden"}>
+  <div className={open ? "fixed inset-0 z-50 flex justify-center items-center min-h-screen bg-black/30 backdrop-blur-sm" : "hidden"}>
         <VisibilityModal
           open={showVisibilityModal}
           onClose={() => setShowVisibilityModal(false)}
@@ -228,7 +262,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
           }}
         />
 
-        <div className="relative w-full max-w-2xl mx-2 bg-white rounded-2xl shadow-2xl border border-[#c6e3e4] animate-fadeIn flex flex-col" style={{ minHeight: 420, maxHeight: 600, height: 480 }}>
+  <div className="relative w-full max-w-2xl mx-2 bg-white rounded-2xl shadow-2xl border border-[#c6e3e4] animate-fadeIn flex flex-col" style={{ minHeight: 420, maxHeight: 600 }}>
           {/* Header */}
           <div className="p-4 border-b border-[#e0f0f0] bg-[#eef6f6] rounded-t-2xl">
             <div className="flex items-center gap-3 relative">
@@ -260,7 +294,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
           {/* Body (scrollable, LinkedIn style) */}
           <div className="flex-1 flex flex-col items-center justify-center px-2 py-4">
             <div className="w-full max-w-xl flex flex-col items-center justify-center">
-              {/* Bloque scrolleable: textarea + imagen/video/gif juntos, con controles pegados */}
+              {/* Bloque scrolleable: textarea + previews de archivos */}
               <div className="flex flex-col w-full" style={{ alignItems: 'center' }}>
                 <div
                   className="bg-[#f8fcfc] border border-[#c6e3e4] rounded-t-2xl flex flex-col p-0 relative overflow-y-scroll w-full"
@@ -292,46 +326,25 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
                       }}
                       rows={1}
                     />
-                    {/* Preview archivos SIEMPRE debajo del textarea, dentro del mismo bloque scrolleable */}
-                    {file && file.type.startsWith('image/') && file.type !== 'image/gif' && (
-                      <div className="relative w-full flex justify-center items-center mt-2 mb-2">
-                        <div className="relative w-full flex justify-center" style={{ maxWidth: '480px' }}>
-                          <img src={URL.createObjectURL(file)} alt="preview" className="max-h-56 w-full object-contain mx-auto" />
-                          <button
-                            type="button"
-                            onClick={handleRemoveFile}
-                            className="absolute top-1 right-1 bg-white/80 hover:bg-white text-red-500 rounded-full p-1 shadow"
-                            style={{ lineHeight: 1, pointerEvents: 'auto' }}
-                          >
-                            <svg width="18" height="18" fill="none" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                    {/* Previews de archivos seleccionados */}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {files.map((f, idx) => (
+                        <div key={idx} className="relative flex flex-col items-center">
+                          {f.type.startsWith('image/') && f.type !== 'image/gif' && (
+                            <img src={URL.createObjectURL(f)} alt="preview" className="max-h-24 w-auto object-contain rounded" />
+                          )}
+                          {f.type === 'video/mp4' && (
+                            <video src={URL.createObjectURL(f)} controls className="max-h-20 w-auto object-contain rounded" />
+                          )}
+                          {f.type === 'image/gif' && (
+                            <img src={URL.createObjectURL(f)} alt="preview" className="max-h-20 w-auto object-contain rounded" />
+                          )}
+                          <button type="button" onClick={() => handleRemoveFile(idx)} className="absolute -top-2 -right-2 bg-white/80 hover:bg-white text-red-500 rounded-full p-1 shadow">
+                            <svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
                           </button>
                         </div>
-                      </div>
-                    )}
-                    {file && file.type === 'video/mp4' && (
-                      <div className="relative w-full flex justify-center items-center mt-2 mb-2">
-                        <video src={URL.createObjectURL(file)} controls className="max-h-40 w-full max-w-[260px] object-contain mx-auto" style={{ border: 'none', borderRadius: 0, background: 'none', boxShadow: 'none', margin: 0, padding: 0, display: 'block' }} />
-                        <button
-                          type="button"
-                          onClick={handleRemoveFile}
-                          className="absolute top-2 right-2 bg-white/80 hover:bg-white text-red-500 rounded-full p-1 shadow"
-                          style={{ lineHeight: 1, pointerEvents: 'auto' }}>
-                          <svg width="18" height="18" fill="none" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-                        </button>
-                      </div>
-                    )}
-                    {file && file.type === 'image/gif' && (
-                      <div className="relative w-full flex justify-center items-center mt-2 mb-2">
-                        <img src={URL.createObjectURL(file)} alt="preview" className="max-h-40 w-full max-w-[260px] object-contain mx-auto" />
-                        <button
-                          type="button"
-                          onClick={handleRemoveFile}
-                          className="absolute top-2 right-2 bg-white/80 hover:bg-white text-red-500 rounded-full p-1 shadow"
-                          style={{ lineHeight: 1, pointerEvents: 'auto' }}>
-                          <svg width="18" height="18" fill="none" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-                        </button>
-                      </div>
-                    )}
+                      ))}
+                    </div>
                   </div>
                 </div>
                 {/* Controles de adjuntos pegados abajo del input, sin separación */}
@@ -355,8 +368,27 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
                   </button>
                   <span className="text-xs text-conexia-green/50 ml-auto">{description.length}/{MAX_DESCRIPTION}</span>
                 </div>
-                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
-                {fileError && <div className="text-red-500 text-xs">{fileError}</div>}
+                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} multiple />
+                {fileError && <div className="text-red-500 text-xs mb-1">{fileError}</div>}
+                {/* Previews de archivos */}
+                <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="relative flex flex-col items-center">
+                      {f.type.startsWith('image/') && f.type !== 'image/gif' && (
+                        <img src={URL.createObjectURL(f)} alt="preview" className="max-h-24 w-auto object-contain rounded" />
+                      )}
+                      {f.type === 'video/mp4' && (
+                        <video src={URL.createObjectURL(f)} controls className="max-h-20 w-auto object-contain rounded" />
+                      )}
+                      {f.type === 'image/gif' && (
+                        <img src={URL.createObjectURL(f)} alt="preview" className="max-h-20 w-auto object-contain rounded" />
+                      )}
+                      <button type="button" onClick={() => handleRemoveFile(idx)} className="absolute -top-2 -right-2 bg-white/80 hover:bg-white text-red-500 rounded-full p-1 shadow">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
                 {showEmoji && (
                   <div className="absolute bottom-20 left-6 z-50">
                     {/* Overlay para cerrar el picker al hacer click fuera */}
@@ -388,17 +420,20 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-2 p-4 border-t border-[#e0f0f0] bg-[#eef6f6] rounded-b-2xl">
-            <Button type="button" variant="cancel" onClick={handleClose} className="!px-4 !py-2 !rounded-lg">
-              Cancelar
-            </Button>
-            <Button
-              onClick={handlePublish}
-              disabled={!description.trim() || description.length > MAX_DESCRIPTION || !!fileError || loading}
-              className="!px-6 !py-2 !rounded-lg"
-            >
-              {loading ? 'Publicando...' : 'Publicar'}
-            </Button>
+          <div className="flex flex-col items-end gap-2 p-4 border-t border-[#e0f0f0] bg-[#eef6f6] rounded-b-2xl">
+            <div className="w-full text-xs text-conexia-green/60 mb-2 text-left">{FILES_LEGEND}</div>
+            <div className="flex items-center justify-end gap-2 w-full">
+              <Button type="button" variant="cancel" onClick={handleClose} className="!px-4 !py-2 !rounded-lg">
+                Cancelar
+              </Button>
+              <Button
+                onClick={handlePublish}
+                disabled={!description.trim() || description.length > MAX_DESCRIPTION || !!fileError || loading}
+                className="!px-6 !py-2 !rounded-lg"
+              >
+                {loading ? 'Publicando...' : 'Publicar'}
+              </Button>
+            </div>
           </div>
 
           {submitError && <div className="text-red-500 text-xs text-center pb-2">{submitError}</div>}

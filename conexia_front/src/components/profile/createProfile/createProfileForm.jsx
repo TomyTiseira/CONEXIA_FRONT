@@ -838,7 +838,9 @@ export default function CreateProfileForm() {
           <div className="flex items-center gap-6">
             <div className="flex-shrink-0">
               <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil (Opcional)</label>
-
+              <p className="text-xs text-gray-500 mb-1">
+                Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
+              </p>
               {/* Nueva imagen seleccionada */}
               {form.profilePicture && (
                 <div className="mb-3">
@@ -881,7 +883,9 @@ export default function CreateProfileForm() {
           <div className="flex items-center gap-6">
             <div className="flex-shrink-0">
               <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada (Opcional)</label>
-
+              <p className="text-xs text-gray-500 mb-1">
+                Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
+              </p>
               {/* Nueva imagen seleccionada */}
               {form.coverPicture && (
                 <div className="mb-3">
