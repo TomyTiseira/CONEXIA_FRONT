@@ -91,7 +91,7 @@ export default function ReportsList() {
       {/* Tabla con márgenes y fondo celeste en mobile, paginado reutilizable */}
       <div className="relative">
         <div className="bg-white rounded-xl shadow-sm border p-0 overflow-x-auto mx-4 md:mx-0" style={{ zIndex: 1, position: 'relative' }}>
-          <table className="min-w-full table-auto text-sm mb-0">
+          <table className="w-full table-fixed text-sm mb-0">
             <colgroup>
               <col style={{ width: '28%' }} />
               <col style={{ width: '18%' }} />
@@ -119,9 +119,9 @@ export default function ReportsList() {
                 ) : (
                   projects.map(p => (
                     <tr key={p.projectId} className="border-b hover:bg-gray-50 h-auto align-top">
-                      <td className="p-4 align-top">
+                      <td className="p-4 align-top max-w-[300px]">
                         <Link href={`/project/${p.projectId}?from=reports`} className="text-conexia-green font-semibold hover:underline block">
-                          <div className="line-clamp-2" title={p.projectTitle}>
+                          <div className="line-clamp-2 break-words overflow-hidden text-ellipsis" title={p.projectTitle}>
                             {p.projectTitle}
                           </div>
                         </Link>
@@ -157,9 +157,9 @@ export default function ReportsList() {
                 ) : (
                   publications.map(pub => (
                     <tr key={pub.publicationId} className="border-b hover:bg-gray-50 h-auto align-top">
-                      <td className="p-4 align-top">
+                      <td className="p-4 align-top max-w-[300px]">
                         <Link href={`/publication/${pub.publicationId}?from=reports`} className="text-conexia-green font-semibold hover:underline block">
-                          <div className="line-clamp-2" title={pub.publicationTitle}>
+                          <div className="line-clamp-2 break-words overflow-hidden text-ellipsis" title={pub.publicationTitle}>
                             {pub.publicationTitle}
                           </div>
                         </Link>
