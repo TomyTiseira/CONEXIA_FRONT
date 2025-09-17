@@ -6,8 +6,22 @@ import { HiUserGroup } from 'react-icons/hi';
 import ConnectionFriendCard from '@/components/connections/ConnectionFriendCard';
 import { useUserFriends } from '@/hooks/connections/useUserFriends';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
+import { useAuth } from '@/context/AuthContext';
+import { ROLES } from '@/constants/roles';
 
 export default function UserConnections({ userId, profile, isOwner }) {
+  // Get current user to check role
+  const { user: currentUser } = useAuth();
+  
+  // Check if user is admin or moderator using constants
+  const isAdmin = currentUser?.role === ROLES.ADMIN;
+  const isModerator = currentUser?.role === ROLES.MODERATOR;
+  
+  // No mostrar conexiones para admins y moderadores
+  if (isAdmin || isModerator) {
+    return null;
+  }
+  
   // Traemos los primeros 8 amigos, pero solo mostramos los que entran en una fila (como actividad)
   const { friends, loading, error } = useUserFriends(userId, 1, 8);
   // Determinar cuántos mostrar según el tamaño de pantalla

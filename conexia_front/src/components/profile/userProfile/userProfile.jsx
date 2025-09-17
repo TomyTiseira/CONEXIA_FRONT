@@ -13,7 +13,9 @@ import { config } from "@/config";
 import { NotFound } from "@/components/ui";
 import NavbarHome from "@/components/navbar/NavbarHome";
 import NavbarAdmin from "@/components/navbar/NavbarAdmin";
+import NavbarModerator from "@/components/navbar/NavbarModerator";
 import NavbarCommunity from "@/components/navbar/NavbarCommunity";
+import { ROLES } from "@/constants/roles";
 
 import EditProfileForm from "./EditProfileForm";
 import { updateUserProfile } from "@/service/profiles/updateProfile";
@@ -32,7 +34,7 @@ export default function UserProfile() {
   const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
   const { refreshRequests } = useConnectionRequests();
   const { user: authUser, updateUser } = useAuth();
-  const { user: storeUser } = useUserStore();
+  const { user: storeUser, setProfile: setProfileStore } = useUserStore();
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,6 +44,10 @@ export default function UserProfile() {
   const [isOwner, setIsOwner] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showMyProjects, setShowMyProjects] = useState(false);
+
+  // Check if current user is admin or moderator
+  const isAdmin = authUser?.role === ROLES.ADMIN;
+  const isModerator = authUser?.role === ROLES.MODERATOR;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -287,6 +293,11 @@ export default function UserProfile() {
       // Refrescar perfil desde backend para mostrar los cambios
       const data = await getProfileById(id);
       setProfile(data.data);
+      
+      // Si es el perfil del usuario logueado, también actualizar el store para el navbar
+      if (authUser && authUser.id === parseInt(id)) {
+        setProfileStore(data.data.profile);
+      }
     } catch (err) {
       alert(err.message || 'Error al actualizar el perfil');
     } finally {
@@ -295,7 +306,8 @@ export default function UserProfile() {
   };
 
   let Navbar = NavbarHome;
-  if (authUser?.role === 'admin') Navbar = NavbarAdmin;
+  if (authUser?.role === ROLES.ADMIN) Navbar = NavbarAdmin;
+  else if (authUser?.role === ROLES.MODERATOR) Navbar = NavbarModerator;
   else if (authUser) Navbar = NavbarCommunity;
   if (editing && isOwner) {
     return (
@@ -394,7 +406,7 @@ export default function UserProfile() {
             </div>
           </div>
           {/* Banner horizontal refinado para solicitud de conexión */}
-          {!isOwner && profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id && !accepting && (
+          {!isOwner && !isAdmin && !isModerator && profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id && !accepting && (
             <div className="w-full py-2 px-4 mb-4 rounded-lg shadow-sm border border-[#d0ecec] bg-[#e6f7f7] flex flex-col sm:flex-row sm:items-center sm:justify-between">
               {/* Texto e ícono */}
               <div className="flex items-center gap-2 mb-2 sm:mb-0 justify-center sm:justify-start text-center sm:text-left">

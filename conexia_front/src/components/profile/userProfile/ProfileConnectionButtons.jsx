@@ -10,9 +10,24 @@ import { Check, X, ChevronDown } from 'lucide-react';
 import { FaRegClock } from 'react-icons/fa';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useAuth } from '@/context/AuthContext';
+import { ROLES } from '@/constants/roles';
 
 export default function ProfileConnectionButtons({ profile, id, isOwner, receiverId}) {
-  if (isOwner) return null
+  if (isOwner) return null;
+  
+  // Get current user to check role
+  const { user: currentUser } = useAuth();
+  
+  // Check if user is admin or moderator using constants
+  const isAdmin = currentUser?.role === ROLES.ADMIN;
+  const isModerator = currentUser?.role === ROLES.MODERATOR;
+  
+  // Hide connection button for admins and moderators
+  if (isAdmin || isModerator) {
+    return null;
+  }
+  
   const { sendRequest, loading: sendLoading } = useSendConnectionRequest();
   const { acceptRequest, loading: acceptLoading } = useAcceptConnectionRequest();
   const { cancelRequest, loading: cancelLoading } = useCancelConnectionRequest();

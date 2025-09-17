@@ -120,8 +120,10 @@ export default function ReportsList() {
                   projects.map(p => (
                     <tr key={p.projectId} className="border-b hover:bg-gray-50 h-auto align-top">
                       <td className="p-4 align-top">
-                        <Link href={`/project/${p.projectId}?from=reports`} className="text-conexia-green font-semibold hover:underline break-all whitespace-normal">
-                          {p.projectTitle}
+                        <Link href={`/project/${p.projectId}?from=reports`} className="text-conexia-green font-semibold hover:underline block">
+                          <div className="line-clamp-2" title={p.projectTitle}>
+                            {p.projectTitle}
+                          </div>
                         </Link>
                       </td>
                       <td className="p-4 text-center align-middle">{p.reportCount}</td>
@@ -156,8 +158,10 @@ export default function ReportsList() {
                   publications.map(pub => (
                     <tr key={pub.publicationId} className="border-b hover:bg-gray-50 h-auto align-top">
                       <td className="p-4 align-top">
-                        <Link href={`/publication/${pub.publicationId}?from=reports`} className="text-conexia-green font-semibold hover:underline break-all whitespace-normal">
-                          {pub.publicationTitle}
+                        <Link href={`/publication/${pub.publicationId}?from=reports`} className="text-conexia-green font-semibold hover:underline block">
+                          <div className="line-clamp-2" title={pub.publicationTitle}>
+                            {pub.publicationTitle}
+                          </div>
                         </Link>
                       </td>
                       <td className="p-4 text-center align-middle">{pub.reportCount}</td>

@@ -48,7 +48,7 @@ export default function MyConnectionsSection() {
         <div className="text-conexia-green/70 text-center py-8">No tiene contactos aún.</div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 items-start">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-start justify-items-center">
             {localFriends.map(friend => (
               <ConnectionFriendCard key={friend.id} friend={friend} />
             ))}
