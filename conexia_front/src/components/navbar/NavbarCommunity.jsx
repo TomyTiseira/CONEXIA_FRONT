@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -19,7 +19,7 @@ import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
-import { useMessaging } from '@/hooks/messaging/useMessaging'; // <- NUEVO
+import { useMessaging } from '@/hooks/messaging/useMessaging'; // ya importado
 import { getMessagingSocket } from '@/lib/socket/messagingSocket'; // <- NUEVO
 
 export default function NavbarCommunity() {
@@ -30,27 +30,49 @@ export default function NavbarCommunity() {
   const router = useRouter();
   const { logout, user } = useAuth();
   const defaultAvatar = '/images/default-avatar.png';
-  const { unreadCount, refreshUnreadCount } = useMessaging(); // <- NUEVO
+  const { unreadCount, refreshUnreadCount, chats, loadConversations } = useMessaging();
+  // Total de mensajes sin leer (suma por conversación)
+  const totalUnread = useMemo(() => {
+    try {
+      return (Array.isArray(chats) ? chats : []).reduce((acc, c) => acc + Number(c?.unreadCount || 0), 0);
+    } catch { return 0; }
+  }, [chats]);
+  // Ajuste visual para hasta 3 dígitos (usar totalUnread para el badge)
+  const displayUnread = Math.min(Number(totalUnread || 0), 999);
+  const unreadLen = String(displayUnread).length;
+  const desktopBadgeText = unreadLen >= 3 ? 'text-[9px]' : 'text-[10px]';
+  const mobileBadgeText = unreadLen >= 3 ? 'text-[8px]' : 'text-[9px]';
 
   useEffect(() => {
-    // Cargar contador al montar
+    // Cargar al montar: contador y conversaciones para tener suma completa
     refreshUnreadCount();
-    // Suscribirse a sockets y refrescar
+    loadConversations({ page: 1, limit: 50, append: false });
+
+    // Suscribirse a sockets: refrescar lista (para actualizar unread por conv) y contador API como respaldo
     const socket = getMessagingSocket();
-    const onAny = () => refreshUnreadCount();
-    socket?.on?.('connect', onAny);
-    socket?.on?.('reconnect', onAny);
-    socket?.on?.('newMessage', onAny);
-    socket?.on?.('messageNotification', onAny);
-    socket?.on?.('messagesRead', onAny);
-    return () => {
-      socket?.off?.('connect', onAny);
-      socket?.off?.('reconnect', onAny);
-      socket?.off?.('newMessage', onAny);
-      socket?.off?.('messageNotification', onAny);
-      socket?.off?.('messagesRead', onAny);
+    let ticking = false;
+    const doRefresh = () => {
+      if (ticking) return; ticking = true;
+      Promise.resolve()
+        .then(() => {
+          loadConversations({ page: 1, limit: 50, append: false });
+          refreshUnreadCount();
+        })
+        .finally(() => setTimeout(() => { ticking = false; }, 300));
     };
-  }, [refreshUnreadCount]);
+    socket?.on?.('connect', doRefresh);
+    socket?.on?.('reconnect', doRefresh);
+    socket?.on?.('newMessage', doRefresh);
+    socket?.on?.('messageNotification', doRefresh);
+    socket?.on?.('messagesRead', doRefresh);
+    return () => {
+      socket?.off?.('connect', doRefresh);
+      socket?.off?.('reconnect', doRefresh);
+      socket?.off?.('newMessage', doRefresh);
+      socket?.off?.('messageNotification', doRefresh);
+      socket?.off?.('messagesRead', doRefresh);
+    };
+  }, [refreshUnreadCount, loadConversations]);
 
   useEffect(() => {
     // Refrescar al volver a la pestaña (fallback)
@@ -133,9 +155,9 @@ export default function NavbarCommunity() {
               className="cursor-pointer hover:text-conexia-green/80"
               onClick={() => router.push('/messaging')}
             />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#e6424b] text-white text-[11px] leading-[18px] text-center">
-                {unreadCount > 99 ? '99+' : unreadCount}
+            {displayUnread > 0 && (
+              <span className={`absolute -top-1 -right-2 min-w-[20px] h-[18px] px-1 rounded-full bg-[#e6424b] text-white leading-[18px] text-center ${desktopBadgeText}`}>
+                {displayUnread}
               </span>
             )}
           </div>
@@ -174,9 +196,9 @@ export default function NavbarCommunity() {
               className="cursor-pointer hover:text-conexia-green/80"
               onClick={() => router.push('/messaging')}
             />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-[#ff4953] text-white text-[10px] leading-[16px] text-center">
-                {unreadCount > 99 ? '99+' : unreadCount}
+            {displayUnread > 0 && (
+              <span className={`absolute -top-1 -right-2 min-w-[20px] h-[16px] px-1 rounded-full bg-[#e6424b] text-white leading-[16px] text-center ${mobileBadgeText}`}>
+                {displayUnread}
               </span>
             )}
           </div>

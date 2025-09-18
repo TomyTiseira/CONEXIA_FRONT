@@ -15,6 +15,37 @@ const typingTimers = {};
 // NUEVO: timers para auto-enviar "stop typing" desde el emisor tras inactividad
 const typingOutTimers = {};
 
+// NUEVO: dedupe de mensajes entrantes fuera del chat actual (evita contar 2 veces si llegan 2 eventos del mismo mensaje)
+// Mapa en memoria de firmas de mensajes recientes: key -> timestamp ms
+const recentIncomingKeys = new Map();
+const RECENT_TTL_MS = 90_000; // 90s de retención (limpieza oportunista)
+function gcRecentIncoming(now = Date.now()) {
+  // limpiar 1/iteración aprox: si el mapa está grande, recorrer parcialmente
+  for (const [k, ts] of recentIncomingKeys) {
+    if (now - ts > RECENT_TTL_MS) recentIncomingKeys.delete(k);
+  }
+}
+function kindOf(t) {
+  const v = String(t || '').toLowerCase();
+  if (v.includes('text')) return 'text';
+  if (v.includes('image') || v.includes('png') || v.includes('jpg') || v.includes('jpeg') || v.includes('webp') || v.includes('gif')) return 'image';
+  if (v.includes('pdf')) return 'pdf';
+  if (v.includes('file') || v.includes('attach')) return 'file';
+  return v || 'unknown';
+}
+function baseUrl(u) { return (String(u || '').split('?')[0] || '').toLowerCase(); }
+function normText(t) { return (String(t || '')).trim().replace(/\s+/g, ' '); }
+function buildIncomingSig(m) {
+  const k = kindOf(m?.type);
+  const text = k === 'text' ? normText(m?.content) : '';
+  const name = String(m?.fileName || '').toLowerCase();
+  const size = String(m?.fileSize || '');
+  const url = baseUrl(m?.fileUrl);
+  const ts = new Date(m?.createdAt || Date.now()).getTime();
+  const bucket5s = Math.floor(ts / 5000); // agrupar por ventanas de 5s
+  return `${m?.senderId}|${m?.receiverId}|${k}|${text}|${name}|${size}|${url}|${bucket5s}`;
+}
+
 export const useMessagingStore = create((set, get) => ({
   // State
   chats: [], // conversations
@@ -129,11 +160,108 @@ export const useMessagingStore = create((set, get) => ({
       const data = await getConversations({ page, limit, search });
       // Ignorar si hay una solicitud más nueva en curso
       if (get().lastConversationsReq !== reqId) return;
-      set((state) => ({
-        chats: append ? [...state.chats, ...(data.conversations || [])] : (data.conversations || []),
-        chatsPagination: data.pagination || { currentPage: page, itemsPerPage: limit },
-        loading: false,
-      }));
+      set((state) => {
+        const incoming = Array.isArray(data.conversations) ? data.conversations : [];
+
+        // Si es append, comportamiento original (agregar al final)
+        if (append) {
+          return {
+            chats: [...(state.chats || []), ...incoming],
+            chatsPagination: data.pagination || { currentPage: page, itemsPerPage: limit },
+            loading: false,
+          };
+        }
+
+        // Merge profundo entre "incoming" y "state.chats" para no perder upserts locales (WS) ni unread locales
+        const oldList = Array.isArray(state.chats) ? state.chats : [];
+        const keyOf = (c) => {
+          if (c && c.id != null) return `id:${c.id}`;
+          const oid = c?.otherUserId ?? c?.otherUser?.id;
+          return oid != null ? `peer:${oid}` : null;
+        };
+        const byKey = new Map();
+        for (const c of oldList) {
+          const k = keyOf(c) || `tmp:${Math.random()}`;
+          if (!byKey.has(k)) byKey.set(k, c);
+        }
+
+        const mergeConv = (prev, inc) => {
+          if (!prev) {
+            // asegurar forma mínima
+            const lm = inc?.lastMessage || null;
+            const updatedAt = inc?.updatedAt || lm?.createdAt || null;
+            return { ...inc, updatedAt };
+          }
+          const pickNewerMsg = (a, b) => {
+            if (!a) return b || null; if (!b) return a || null;
+            const ta = new Date(a?.createdAt || a?.updatedAt || 0).getTime();
+            const tb = new Date(b?.createdAt || b?.updatedAt || 0).getTime();
+            return tb > ta ? b : a;
+          };
+          const merged = { ...prev, ...inc };
+          // otherUser / ids
+          const otherUserId = inc?.otherUserId ?? prev?.otherUserId ?? prev?.otherUser?.id ?? inc?.otherUser?.id ?? null;
+          merged.otherUserId = otherUserId;
+          merged.otherUser = (inc?.otherUser && (inc.otherUser.id || inc.otherUser.userName)) ? { ...prev?.otherUser, ...inc.otherUser } : (prev?.otherUser || null);
+          // unreadCount: conservar el mayor (local puede tener incrementos no reflejados aún en backend)
+          merged.unreadCount = Math.max(Number(prev?.unreadCount || 0), Number(inc?.unreadCount || 0));
+          // lastMessage: elegir el más reciente
+          const bestLast = pickNewerMsg(prev?.lastMessage, inc?.lastMessage);
+          merged.lastMessage = bestLast || prev?.lastMessage || inc?.lastMessage || null;
+          // updatedAt: máximo entre ambas y lastMessage.createdAt
+          const t1 = new Date(prev?.updatedAt || 0).getTime();
+          const t2 = new Date(inc?.updatedAt || 0).getTime();
+          const t3 = new Date(merged?.lastMessage?.createdAt || 0).getTime();
+          const bestTs = Math.max(t1, t2, t3 || 0);
+          merged.updatedAt = bestTs ? new Date(bestTs).toISOString() : (inc?.updatedAt || prev?.updatedAt || null);
+          return merged;
+        };
+
+        const result = [];
+        const seen = new Set();
+        for (const inc of incoming) {
+          const kId = inc && inc.id != null ? `id:${inc.id}` : null;
+          const kPeer = (() => {
+            const oid = inc?.otherUserId ?? inc?.otherUser?.id;
+            return oid != null ? `peer:${oid}` : null;
+          })();
+          const prev = (kId && byKey.get(kId)) || (kPeer && byKey.get(kPeer)) || null;
+          const merged = mergeConv(prev, inc);
+          const usedKey = kId || kPeer || keyOf(merged) || `tmp:${Math.random()}`;
+          seen.add(usedKey);
+          result.push(merged);
+        }
+
+        // Si NO es búsqueda, conservar también conversaciones locales que no vinieron del backend (p.ej. upserts RT aún no reflejados)
+        if (!search) {
+          for (const [k, conv] of byKey.entries()) {
+            if (!seen.has(k)) result.push(conv);
+          }
+        } else {
+          // En modo búsqueda, igual mantener unreadCount local si existe para las conversaciones presentes
+          // (ya contemplado en mergeConv)
+        }
+
+        // Si la conversación actual está abierta, forzar unreadCount=0 localmente
+        const openId = state.selectedChatId ? String(state.selectedChatId) : null;
+        if (openId) {
+          for (let i = 0; i < result.length; i++) {
+            if (String(result[i]?.id) === openId) {
+              result[i] = { ...result[i], unreadCount: 0 };
+            }
+          }
+        }
+
+        // Ordenar por updatedAt/lastMessage más reciente
+        const getTs = (c) => new Date(c?.lastMessage?.createdAt || c?.updatedAt || 0).getTime();
+        result.sort((a, b) => getTs(b) - getTs(a));
+
+        return {
+          chats: result,
+          chatsPagination: data.pagination || { currentPage: page, itemsPerPage: limit },
+          loading: false,
+        };
+      });
     } catch (e) {
       if (get().lastConversationsReq !== reqId) return;
       set({ loading: false, error: e?.message || 'Error al cargar conversaciones' });
@@ -144,6 +272,8 @@ export const useMessagingStore = create((set, get) => ({
   selectConversation: async ({ conversationId, otherUserId, otherUser } = {}) => {
     // intentar resolver conversationId por otherUserId si no viene
     const state = get();
+    const prevChatId = state.selectedChatId || null;
+    const prevOtherId = state.selectedOtherUserId || null;
     let resolvedConversationId = conversationId || null;
     if (!resolvedConversationId && otherUserId) {
       const found = (state.chats || []).find(c =>
@@ -159,6 +289,17 @@ export const useMessagingStore = create((set, get) => ({
       selectedOtherUserId: otherUserId || null,
       selectedOtherUserMeta: otherUser || null,
     });
+
+    // Si cambió la conversación o el usuario, limpiar los mensajes para evitar que queden los de la conversación anterior
+    const changed = String(prevChatId || '') !== String(resolvedConversationId || '')
+      || String(prevOtherId || '') !== String(otherUserId || '');
+    if (changed) {
+      set({
+        messages: [],
+        messagesPagination: { currentPage: 1, itemsPerPage: 50, totalPages: 0, hasNextPage: false },
+        loadingMessages: false,
+      });
+    }
 
     // enriquecer chats.otherUser si falta
     if (otherUser) {
@@ -587,7 +728,19 @@ export const useMessagingStore = create((set, get) => ({
       // emit socket and update local state
       const socket = getMessagingSocket();
       socket?.emit('markAsRead', { conversationId: selectedChatId, otherUserId: selectedOtherUserId, messageIds: unreadIds });
-      set((state) => ({ messages: state.messages.map(m => unreadIds.includes(m.id) ? { ...m, isRead: true } : m) }));
+      set((state) => {
+        // Marcar mensajes como leídos en el hilo actual
+        const updatedMsgs = state.messages.map(m => unreadIds.includes(m.id) ? { ...m, isRead: true } : m);
+        // Poner en 0 el contador no leído de esta conversación en el listado
+        const chats = Array.isArray(state.chats) ? state.chats.slice() : [];
+        const idx = chats.findIndex(c => String(c.id) === String(selectedChatId));
+        if (idx !== -1) {
+          chats[idx] = { ...chats[idx], unreadCount: 0 };
+        }
+        // Ajustar contador global restando lo leído (sin bajar de 0)
+        const newGlobal = Math.max(0, Number(state.unreadCount || 0) - unreadIds.length);
+        return { messages: updatedMsgs, chats, unreadCount: newGlobal };
+      });
     } catch (e) {
       // silent fail
     }
@@ -670,7 +823,18 @@ export const useMessagingStore = create((set, get) => ({
 
       const incomingId = normalizeId(msg);
 
-      set((state) => {
+      // Al llegar un mensaje del usuario X, cancelar su estado de typing inmediatamente
+      try {
+        const meId = useUserStore.getState().user?.id;
+        const fromOtherId = String(msg?.senderId || '') !== String(meId || '') ? msg?.senderId : null;
+        if (fromOtherId) {
+          // limpiar timeout anterior y marcar isTyping=false
+          if (typingTimers[fromOtherId]) { clearTimeout(typingTimers[fromOtherId]); delete typingTimers[fromOtherId]; }
+          set((state) => ({ typingStates: { ...state.typingStates, [fromOtherId]: false } }));
+        }
+      } catch {}
+
+  set((state) => {
         const existsById = incomingId != null && state.messages.some((m) => normalizeId(m) === incomingId);
 
         // NUEVO: reglas utilitarias
@@ -775,13 +939,80 @@ export const useMessagingStore = create((set, get) => ({
           return { messages: dedupSoft };
         }
 
-        // fuera del chat abierto → contar como no leído
-        return existsById ? {} : { unreadCount: (state.unreadCount || 0) + 1 };
+        // fuera del chat abierto → contar como no leído (global)
+        // Evitar duplicados si el mismo mensaje llega dos veces (pre y post persistencia)
+        if (existsById) return {};
+        try {
+          const now = Date.now();
+          const sig = buildIncomingSig(msg);
+          gcRecentIncoming(now);
+          if (recentIncomingKeys.has(sig)) {
+            // duplicado reciente detectado → no incrementar
+            return {};
+          }
+          recentIncomingKeys.set(sig, now);
+        } catch {}
+        return { unreadCount: (state.unreadCount || 0) + 1 };
       });
+
+      // Actualizar/insertar preview en el listado de conversaciones y mover arriba
+      try {
+        get().upsertConversationPreview(msg, { allowInsert: true, moveTop: true });
+      } catch {}
+
+      // Incrementar contador no leído por conversación si es mensaje entrante y no estamos en esa conversación
+      try {
+        const meId = useUserStore.getState().user?.id;
+        const { selectedChatId } = get();
+        const convId = msg?.conversationId ?? null;
+        const otherId = String(msg?.senderId || '') === String(meId || '') ? msg?.receiverId : msg?.senderId;
+        const incomingFromOther = String(msg?.senderId || '') !== String(meId || '');
+        const inCurrentByConv = selectedChatId && convId != null && String(convId) === String(selectedChatId);
+        const inCurrentByPair = false; // ya tratado arriba; aquí sólo queremos las externas
+        if (incomingFromOther && !(inCurrentByConv || inCurrentByPair)) {
+          // Guardar firma y evitar doble incremento por conversación
+          let allowInc = true;
+          try {
+            const now = Date.now();
+            const sig = buildIncomingSig(msg);
+            gcRecentIncoming(now);
+            if (recentIncomingKeys.has(sig)) {
+              allowInc = false;
+            } else {
+              recentIncomingKeys.set(sig, now);
+            }
+          } catch {}
+          if (!allowInc) return;
+          set((state) => {
+            const chats = state.chats.slice();
+            const idx = chats.findIndex(c =>
+              (convId != null && String(c.id) === String(convId)) ||
+              String(c.otherUserId) === String(otherId) ||
+              String(c.otherUser?.id || '') === String(otherId)
+            );
+            if (idx !== -1) {
+              const conv = { ...chats[idx] };
+              conv.unreadCount = (conv.unreadCount || 0) + 1;
+              chats[idx] = conv;
+              return { chats };
+            }
+            return {};
+          });
+        }
+      } catch {}
     });
-    // Escucha global de "userTyping" => actualiza typingStates[userId]
+    // Escucha global de "userTyping" => actualiza typingStates[userId] y auto-clear tras 3s
     socket.on('userTyping', ({ userId, isTyping /*, conversationId*/ }) => {
       set((state) => ({ typingStates: { ...state.typingStates, [userId]: !!isTyping } }));
+      try {
+        if (typingTimers[userId]) { clearTimeout(typingTimers[userId]); delete typingTimers[userId]; }
+        if (isTyping) {
+          typingTimers[userId] = setTimeout(() => {
+            set((prev) => ({ typingStates: { ...prev.typingStates, [userId]: false } }));
+            delete typingTimers[userId];
+          }, 3000);
+        }
+      } catch {}
     });
   },
 

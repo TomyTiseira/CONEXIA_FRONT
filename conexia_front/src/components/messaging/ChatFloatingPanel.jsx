@@ -166,6 +166,11 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
   const [noMoreOlder, setNoMoreOlder] = useState(false);
   const fillAttemptsRef = useRef(0);
   const localPageRef = useRef(1);
+  // NUEVO: estado para auto-scroll y botón "ir al último" con contador
+  const [atBottom, setAtBottom] = useState(true);
+  const [showJump, setShowJump] = useState(false);
+  const [unreadBelow, setUnreadBelow] = useState(0);
+  const prevLenRef = useRef(0);
 
   // Helper: forzar scroll al último mensaje
   const scrollToBottom = (delay = 0) => {
@@ -180,6 +185,10 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
 
   // Cargar mensajes cuando cambia la conversación seleccionada o se expande
   useEffect(() => {
+    if (!selectedChatId) {
+      // Conversación nueva (sin id): mantener vista vacía
+      return;
+    }
     if (selectedChatId && !collapsed) {
       localPageRef.current = 1;
       fillAttemptsRef.current = 0;
@@ -211,23 +220,58 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
     }
   }, [collapsed]);
 
-  // Auto scroll to bottom cuando cambian mensajes (salvo prepend)
+  // Helper: ¿estamos cerca del fondo?
+  const isNearBottom = (el, px = 60) => {
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight <= px;
+  };
+
+  // Auto-scroll o contar no leídos según posición
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
+    const newLen = messages?.length || 0;
+    const prevLen = prevLenRef.current || 0;
+    // Reset de prepend: no alterar posición ni contadores
     if (isPrependingRef.current) {
       isPrependingRef.current = false;
+      prevLenRef.current = newLen;
       return;
     }
-    scrollToBottom();
-  }, [messages?.length]);
+    if (newLen > prevLen) {
+      const added = newLen - prevLen;
+      if (isNearBottom(el)) {
+        // si estamos abajo, mantener pegado
+        scrollToBottom();
+        setUnreadBelow(0);
+        setShowJump(false);
+        setAtBottom(true);
+      } else {
+        // contar no leídos de otros
+        let inc = 0;
+        for (let i = newLen - added; i < newLen; i++) {
+          const m = messages[i];
+          // Contar solo mensajes del otro usuario (más robusto que "no soy yo" para evitar optimistas sin senderId)
+          if (String(m?.senderId) === String(otherIdForTyping)) inc++;
+        }
+        if (inc > 0) {
+          setUnreadBelow((v) => v + inc);
+          setShowJump(true);
+          setAtBottom(false);
+        }
+      }
+    }
+    prevLenRef.current = newLen;
+  }, [messages?.length, me?.id]);
 
-  // When other user starts typing, keep the view pinned to bottom so the typing bubble is visible
+  // When other user starts typing, keep pinned only if already at bottom (parity with page ChatView)
   useEffect(() => {
     if (!isOtherTyping) return;
     const el = scrollerRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
+    if (isNearBottom(el)) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [isOtherTyping, selectedChatId]);
 
     // Close image modal with Escape key
@@ -251,6 +295,11 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
       // refrescar historial + no leídos
       loadConversations({ page: 1, limit: 10, append: false });
       refreshUnreadCount();
+      // Ir siempre al fondo al enviar (no mostrar badge por mis mensajes)
+      scrollToBottom();
+      setUnreadBelow(0);
+      setShowJump(false);
+      setAtBottom(true);
     }
   };
 
@@ -265,6 +314,11 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
       // refrescar historial + no leídos
       loadConversations({ page: 1, limit: 10, append: false });
       refreshUnreadCount();
+      // Ir al fondo tras enviar adjunto
+      scrollToBottom();
+      setUnreadBelow(0);
+      setShowJump(false);
+      setAtBottom(true);
     } catch (err) {
       setAttachmentError(err?.message || 'Error al enviar archivo');
     }
@@ -517,6 +571,23 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  // Al cambiar de conversación o de usuario, limpiar el compositor (evita que queden borradores al abrir otro chat)
+  useEffect(() => {
+    setMessage('');
+    setPendingAttachment(null);
+    setAttachmentError(null);
+    setShowEmojis(false);
+    try { emitTyping(false); } catch {}
+    if (fileInputRef.current) {
+      try { fileInputRef.current.value = ''; } catch {}
+    }
+    // Resetear altura del textarea auto-grow si existe
+    try {
+      const ta = panelRef.current?.querySelector('textarea');
+      if (ta) ta.style.height = 'auto';
+    } catch {}
+  }, [selectedChatId, user?.id]);
+
   return (
     <div ref={panelRef} className={`${containerBase} ${containerHeight}`} style={{ background: '#fff' }}>
       {/* Header */}
@@ -537,6 +608,13 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
         className="flex-1 overflow-y-scroll overflow-x-hidden px-3 py-2 bg-white min-h-0 scrollbar-soft"
         onScroll={async (e) => {
           const el = e.currentTarget;
+          // actualizar estado de posición respecto del fondo
+          const bottom = isNearBottom(el);
+          setAtBottom(bottom);
+          if (bottom) {
+            setUnreadBelow(0);
+            setShowJump(false);
+          }
           const hasNext = messagesPagination
             ? (messagesPagination?.hasNextPage ?? (messagesPagination?.currentPage < (messagesPagination?.totalPages || 1)))
             : true; // fallback: allow loading when pagination unknown
@@ -755,6 +833,25 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
         </div>
       </div>
       )}
+      {/* Botón flotante: ir al último con contador de no leídos (estilo WhatsApp) */}
+      {!collapsed && showJump && (
+        <button
+          type="button"
+          onClick={() => { scrollToBottom(); setUnreadBelow(0); setShowJump(false); setAtBottom(true); }}
+          className="absolute right-2"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 84px)' }}
+          title="Ir al último"
+        >
+          <div className="flex items-center gap-2 bg-white border border-[#c6e3e4] text-conexia-green shadow px-3 py-1.5 rounded-full">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            {unreadBelow > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-conexia-green text-white text-[11px]">
+                {unreadBelow}
+              </span>
+            )}
+          </div>
+        </button>
+      )}
       {/* Image preview modal */}
       {imageModal && (
         <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4" onClick={() => setImageModal(null)}>
@@ -829,7 +926,7 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
             />
             <button
               type="button"
-              className="absolute right-2 inset-y-0 my-auto text-conexia-green/70 hover:text-conexia-green leading-none flex items-center justify-center h-5"
+              className="absolute right-2 top-1/2 -translate-y-1/2 transform text-conexia-green/70 hover:text-conexia-green leading-none flex items-center justify-center h-5 w-5"
               title="Emoji"
               onClick={() => setShowEmojis(v => !v)}
             >

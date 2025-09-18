@@ -16,6 +16,84 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
   const [showContacts, setShowContacts] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
   const [convSearch, setConvSearch] = useState(''); // <- NUEVO: texto del buscador
+  // NUEVO: persistencia UI simple en localStorage
+  const PERSIST_KEY = 'conexia:messaging:ui:v1';
+  const restoredRef = useRef(false);
+
+  const { user } = useUserStore();
+  const userId = user?.id;
+  const { friends, loading, error, pagination, loadMore } = useUserFriends(userId, 1, 12);
+
+  // Store chats
+  const { chats: convs, loading: chatsLoading, loadConversations, selectConversation, refreshUnreadCount } = useMessaging();
+  const { messages, typingStates } = useChatMessages(); // <- incluir typingStates
+
+  // Restaurar estado al montar (si existe)
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    try {
+      if (typeof window === 'undefined') return;
+      const raw = window.localStorage.getItem(PERSIST_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data && typeof data === 'object') {
+        if (data.open === true) {
+          setOpen(true);
+          setShowContacts(false);
+        }
+        const ac = data.activeChat;
+        if (ac && ac.id) {
+          const name = ac.name || ac.userName || '';
+          const pp = ac.userProfilePicture || ac.profilePicture || ac.avatar || null;
+          const convId = ac.conversationId || null;
+          const normalized = {
+            id: ac.id,
+            name,
+            avatar: getProfilePictureUrl(pp),
+            conversationId: convId
+          };
+          setActiveChat(normalized);
+          // seleccionar conversación de forma silenciosa
+          selectConversation({
+            conversationId: convId,
+            otherUserId: ac.id,
+            otherUser: { id: ac.id, userName: name, userProfilePicture: pp || null }
+          });
+          // refrescar liviano
+          loadConversations({ page: 1, limit: 10, append: false });
+          refreshUnreadCount();
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [selectConversation, loadConversations, refreshUnreadCount]);
+
+  // Guardar estado cuando cambie open/activeChat
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const payload = {
+        open: !!open,
+        activeChat: activeChat
+          ? {
+              id: activeChat.id,
+              name: activeChat.name,
+              // guardar both por compatibilidad
+              avatar: activeChat.avatar || null,
+              profilePicture: activeChat.avatar || null,
+              userProfilePicture: activeChat.avatar || null,
+              conversationId: activeChat.conversationId || null
+            }
+          : null
+      };
+      window.localStorage.setItem(PERSIST_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore
+    }
+  }, [open, activeChat?.id, activeChat?.name, activeChat?.avatar, activeChat?.conversationId]);
+
   // Helper para normalizar la URL de la imagen de perfil
   const getProfilePictureUrl = (img) => {
     const defaultAvatar = '/images/default-avatar.png';
@@ -28,18 +106,56 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
     return joinUrl(config.IMAGE_URL, img);
   };
 
-  const { user } = useUserStore();
-  const userId = user?.id;
-  const { friends, loading, error, pagination, loadMore } = useUserFriends(userId, 1, 12);
-
-  // Store chats
-  const { chats: convs, loading: chatsLoading, loadConversations, selectConversation, refreshUnreadCount } = useMessaging();
-  const { messages } = useChatMessages(); // <- NUEVO
-
+  // Cargar conversaciones iniciales
   useEffect(() => {
-    // cargar conversaciones iniciales
     loadConversations({ page: 1, limit: 10 });
   }, [loadConversations]);
+
+  // NUEVO: abrir chat desde fuera (perfil) sin romper comportamiento actual
+  useEffect(() => {
+    const handler = (e) => {
+      try {
+        const detail = e?.detail || {};
+        const target = detail.user || {};
+        if (!target?.id) return;
+
+        // Abrir el modal principal SOLO si así se solicita
+        if (detail.openMain === true) {
+          setOpen(true);
+          setShowContacts(false);
+        }
+
+        const displayName = target.userName || target.name || '';
+        const avatarUrl = target.userProfilePicture || target.profilePicture || target.avatar || '/images/default-avatar.png';
+        const conversationId = target.conversationId || null;
+
+        // Setear panel flotante al costado del modal principal
+        setActiveChat({
+          id: target.id,
+          avatar: getProfilePictureUrl(avatarUrl),
+          name: displayName,
+          conversationId
+        });
+
+        // Seleccionar conversación en el store (resuelve id si no viene)
+        selectConversation({
+          conversationId,
+          otherUserId: target.id,
+          otherUser: {
+            id: target.id,
+            userName: displayName,
+            userProfilePicture: target.userProfilePicture || target.profilePicture || null
+          }
+        });
+
+        // Refrescar historial y no leídos de forma suave
+        loadConversations({ page: 1, limit: 10, append: false, search: (convSearch || '').trim() || undefined });
+        refreshUnreadCount();
+      } catch {}
+    };
+    window.addEventListener('open-chat-with', handler);
+    return () => window.removeEventListener('open-chat-with', handler);
+  }, [selectConversation, loadConversations, refreshUnreadCount, convSearch]);
 
   // Escuchar eventos socket y refrescar historial + no leídos (con throttle)
   useEffect(() => {
@@ -304,7 +420,9 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
                       const lastMsg = chat.lastMessage || {};
                       const rawLastContent = lastMsg.type === 'text' ? (lastMsg.content || '') : (lastMsg.type === 'image' ? 'Imagen' : 'Documento');
                       const isMine = String(lastMsg.senderId) === String(user?.id);
-                      const lastContent = isMine ? `Yo: ${rawLastContent}` : rawLastContent;
+                      // NUEVO: estado "Escribiendo" en historial flotante
+                      const isTyping = !!typingStates?.[other.id];
+                      const lastContent = isTyping ? 'Escribiendo' : (isMine ? `Yo: ${rawLastContent}` : rawLastContent);
                       const { day: dateLabel, time } = formatListDateTimeParts(lastMsg.createdAt);
                       return (
                         <ChatCard
@@ -315,7 +433,8 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
                           dateLabel={dateLabel}
                           time={time}
                           online={false}
-                          unreadCount={chat.unreadCount || 0}  
+                          unreadCount={chat.unreadCount || 0}
+                          isTyping={isTyping}
                           onClick={() => {
                             setActiveChat({ id: other.id, avatar: avatarUrl, name: displayName, conversationId: chat.id });
                             // pasar también metadatos del otro usuario

@@ -10,12 +10,19 @@ import { getProfileById } from '@/service/profiles/profilesFetch';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { NotFound } from '@/components/ui';
 import { ROLES } from '@/constants/roles';
+import { useUserStore } from '@/store/userStore';
+import { config } from '@/config';
+import MessagingWidget from '@/components/messaging/MessagingWidget';
 
 export default function UserConnectionsPage() {
   const { id } = useParams();
   const { friends, loading, error, pagination, loadMore, page } = useUserFriends(id, 1, 12);
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const { profile: storeProfile } = useUserStore();
+  const avatar = storeProfile?.profilePicture
+    ? `${config.IMAGE_URL}/${storeProfile.profilePicture}`
+    : '/images/default-avatar.png';
 
   useEffect(() => {
     setProfile(null);
@@ -101,6 +108,9 @@ export default function UserConnectionsPage() {
               </div>
             </div>
           </div>
+
+          {/* Widget de mensajería como en la comunidad */}
+          <MessagingWidget avatar={avatar} />
         </main>
       </ProtectedRoute>
     </Suspense>

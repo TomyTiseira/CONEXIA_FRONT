@@ -28,7 +28,7 @@ export default function AttachmentPreview({ attachment, onCancel, error, isWide 
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-medium text-gray-700 truncate" title={name}>{name}</div>
+        <div className="truncate text-[13px] font-medium text-gray-700" title={name}>{name}</div>
         <div className="text-[11px] text-gray-500">{(size / (1024 * 1024)).toFixed(2)} MB</div>
       </div>
       {/* Right side dismiss X, sending happens with main send button in composer */}

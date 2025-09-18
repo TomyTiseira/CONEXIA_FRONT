@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSendConnectionRequest } from '@/hooks/connections/useSendConnectionRequest';
 import { useAcceptConnectionRequest } from '@/hooks/connections/useAcceptConnectionRequest';
 import { useCancelConnectionRequest } from '@/hooks/connections/useCancelConnectionRequest';
@@ -10,9 +11,6 @@ import { Check, X, ChevronDown, Send } from 'lucide-react';
 import { FaRegClock } from 'react-icons/fa';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-// NUEVO: abrir chat
-import ChatFloatingPanel from '@/components/messaging/ChatFloatingPanel';
-import { useMessaging } from '@/hooks/messaging/useMessaging';
 
 export default function ProfileConnectionButtons({ profile, id, isOwner, receiverId}) {
   if (isOwner) return null
@@ -38,28 +36,36 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   const dropdownRef = useRef(null);
   const deletingRef = useRef(false); // Referencia adicional para prevenir llamadas duplicadas
 
-  // NUEVO: estado para mostrar el chat
-  const [chatOpen, setChatOpen] = useState(false);
-  const { selectConversation } = useMessaging();
-
-  // NUEVO: datos del usuario para el chat y acción de abrir
+  // NUEVO: datos del usuario para el chat y acción de abrir (via evento o navegación)
+  const router = useRouter();
   const chatUser = {
     id: receiverId,
-    avatar: profile?.profile?.profilePicture || null,
-    name: `${profile?.profile?.name || ''} ${profile?.profile?.lastName || ''}`.trim(),
+    profilePicture: profile?.profile?.profilePicture || null,
+    userName: `${profile?.profile?.name || ''} ${profile?.profile?.lastName || ''}`.trim(),
     conversationId: profile?.profile?.conversationId || null,
   };
   const openChat = () => {
-    selectConversation({
-      conversationId: profile?.profile?.conversationId || null,
-      otherUserId: receiverId,
-      otherUser: {
-        id: receiverId,
-        userName: chatUser.name,
-        userProfilePicture: profile?.profile?.profilePicture || null,
-      },
-    });
-    setChatOpen(true);
+    // Cerrar el dropdown si está abierto
+    setDropdownOpen(false);
+    // Mobile: redirigir a la página de conversación usando conversationId (fallback a /u/[userId])
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        const convId = chatUser.conversationId;
+        if (convId) {
+          router.push(`/messaging/${convId}`);
+        } else {
+          router.push(`/messaging/u/${chatUser.id}`);
+        }
+        return;
+      }
+    } catch {}
+
+    // Desktop: pedirle al widget que abra el chat al costado (no abre el modal principal)
+    try {
+      window.dispatchEvent(new CustomEvent('open-chat-with', {
+        detail: { user: chatUser } // no enviamos openMain para no abrir el modal
+      }));
+    } catch {}
   };
 
   // Si tenemos datos de conexión del perfil, los usamos primero, sino usamos los del hook
@@ -201,19 +207,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           isLoading={deleteLoading || isDeleting}
         />
 
-        {/* NUEVO: panel de chat flotante */}
-        {chatOpen && (
-          <>
-            {/* Mobile: centrado abajo */}
-            <div className="fixed inset-x-0 bottom-0 z-50 flex sm:hidden justify-center">
-              <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
-            </div>
-            {/* Desktop: esquina inferior derecha */}
-            <div className="fixed right-6 bottom-0 z-50 hidden sm:flex">
-              <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
-            </div>
-          </>
-        )}
       </>
     );
   }
@@ -368,17 +361,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           isLoading={cancelLoading}
         />
 
-        {/* NUEVO: panel de chat flotante */}
-        {chatOpen && (
-          <>
-            <div className="fixed inset-x-0 bottom-0 z-50 flex sm:hidden justify-center">
-              <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
-            </div>
-            <div className="fixed right-6 bottom-0 z-50 hidden sm:flex">
-              <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
-            </div>
-          </>
-        )}
       </>
     );
   }
@@ -490,17 +472,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           isLoading={cancelLoading}
         />
 
-        {/* NUEVO: panel de chat flotante */}
-        {chatOpen && (
-          <>
-            <div className="fixed inset-x-0 bottom-0 z-50 flex sm:hidden justify-center">
-              <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
-            </div>
-            <div className="fixed right-6 bottom-0 z-50 hidden sm:flex">
-              <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
-            </div>
-          </>
-        )}
       </>
     );
   }
@@ -622,20 +593,10 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           isLoading={rejectLoading}
         />
 
-        {/* NUEVO: panel de chat flotante */}
-        {chatOpen && (
-          <>
-            <div className="fixed inset-x-0 bottom-0 z-50 flex sm:hidden justify-center">
-              <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
-            </div>
-            <div className="fixed right-6 bottom-0 z-50 hidden sm:flex">
-              <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
-            </div>
-          </>
-        )}
       </>
     );
   }
+
 
   // Si no hay ninguna condición que se cumpla, no mostramos nada
   return (

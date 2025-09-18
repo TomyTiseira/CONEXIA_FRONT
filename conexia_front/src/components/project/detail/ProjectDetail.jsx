@@ -19,6 +19,7 @@ import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import EmojiPicker from 'emoji-picker-react';
 import { IoCheckmarkCircleSharp } from 'react-icons/io5'; // <- NUEVO icono
+import MessagingWidget from '@/components/messaging/MessagingWidget';
 
 export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
@@ -33,7 +34,7 @@ export default function ProjectDetail({ projectId }) {
   const [alreadyReported, setAlreadyReported] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
   const { user } = useAuth();
-  const { roleName } = useUserStore();
+  const { roleName, profile } = useUserStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { selectConversation, loadConversations, refreshUnreadCount } = useMessaging(); // NUEVO
@@ -119,6 +120,9 @@ export default function ProjectDetail({ projectId }) {
     if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) return img;
     return `${config.IMAGE_URL}/${img}`;
   };
+
+  // Avatar del usuario logueado (para el widget), reutilizando getImageUrl
+  const avatar = profile?.profilePicture ? getImageUrl(profile.profilePicture) : '/images/default-avatar.png';
 
   return (
     <>
@@ -506,6 +510,27 @@ export default function ProjectDetail({ projectId }) {
           />
         )}
       </div>
+
+      {/* Widget de mensajería reutilizable (igual que en ClientCommunity/ProjectSearch) */}
+      <MessagingWidget
+        avatar={avatar}
+        chats={[
+          {
+            id: 1,
+            avatar: '/images/default-avatar.png',
+            name: 'Javier Carrizo',
+            lastMessage: 'Hola Alex, el entorno laboral exige crecer...',
+            date: '30 ago',
+          },
+          {
+            id: 2,
+            avatar: '/images/default-avatar.png',
+            name: 'Rocío Brageda',
+            lastMessage: 'Tú: Hola linda, soy papá soltero de una beba',
+            date: '22 may',
+          },
+        ]}
+      />
     </>
   );
 }
