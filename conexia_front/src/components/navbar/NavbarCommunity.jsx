@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,6 +20,8 @@ import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
 import GlobalSearchBar from '@/components/common/GlobalSearchBar';
+import { useMessaging } from '@/hooks/messaging/useMessaging'; // ya importado
+import { getMessagingSocket } from '@/lib/socket/messagingSocket'; // <- NUEVO
 
 export default function NavbarCommunity() {
   const { count: connectionRequestsCount } = useConnectionRequests();
@@ -29,6 +31,58 @@ export default function NavbarCommunity() {
   const router = useRouter();
   const { logout, user } = useAuth();
   const defaultAvatar = '/images/default-avatar.png';
+  const { unreadCount, refreshUnreadCount, chats, loadConversations } = useMessaging();
+  // Total de mensajes sin leer (suma por conversación)
+  const totalUnread = useMemo(() => {
+    try {
+      return (Array.isArray(chats) ? chats : []).reduce((acc, c) => acc + Number(c?.unreadCount || 0), 0);
+    } catch { return 0; }
+  }, [chats]);
+  // Ajuste visual para hasta 3 dígitos (usar totalUnread para el badge)
+  const displayUnread = Math.min(Number(totalUnread || 0), 999);
+  const unreadLen = String(displayUnread).length;
+  const desktopBadgeText = unreadLen >= 3 ? 'text-[9px]' : 'text-[10px]';
+  const mobileBadgeText = unreadLen >= 3 ? 'text-[8px]' : 'text-[9px]';
+
+  useEffect(() => {
+    // Cargar al montar: contador y conversaciones para tener suma completa
+    refreshUnreadCount();
+    loadConversations({ page: 1, limit: 50, append: false });
+
+    // Suscribirse a sockets: refrescar lista (para actualizar unread por conv) y contador API como respaldo
+    const socket = getMessagingSocket();
+    let ticking = false;
+    const doRefresh = () => {
+      if (ticking) return; ticking = true;
+      Promise.resolve()
+        .then(() => {
+          loadConversations({ page: 1, limit: 50, append: false });
+          refreshUnreadCount();
+        })
+        .finally(() => setTimeout(() => { ticking = false; }, 300));
+    };
+    socket?.on?.('connect', doRefresh);
+    socket?.on?.('reconnect', doRefresh);
+    socket?.on?.('newMessage', doRefresh);
+    socket?.on?.('messageNotification', doRefresh);
+    socket?.on?.('messagesRead', doRefresh);
+    return () => {
+      socket?.off?.('connect', doRefresh);
+      socket?.off?.('reconnect', doRefresh);
+      socket?.off?.('newMessage', doRefresh);
+      socket?.off?.('messageNotification', doRefresh);
+      socket?.off?.('messagesRead', doRefresh);
+    };
+  }, [refreshUnreadCount, loadConversations]);
+
+  useEffect(() => {
+    // Refrescar al volver a la pestaña (fallback)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshUnreadCount();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refreshUnreadCount]);
 
   const handleLogout = async () => {
     try {
@@ -136,7 +190,18 @@ export default function NavbarCommunity() {
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
         </Link>
         <div className="flex items-center gap-4 text-conexia-green">
-          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <div className="relative">
+            <MessageCircle
+              size={20}
+              className="cursor-pointer hover:text-conexia-green/80"
+              onClick={() => router.push('/messaging')}
+            />
+            {displayUnread > 0 && (
+              <span className={`absolute -top-1 -right-2 min-w-[20px] h-[16px] px-1 rounded-full bg-[#e6424b] text-white leading-[16px] text-center ${mobileBadgeText}`}>
+                {displayUnread}
+              </span>
+            )}
+          </div>
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">

@@ -10,12 +10,19 @@ import { getProfileById } from '@/service/profiles/profilesFetch';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { NotFound } from '@/components/ui';
 import { ROLES } from '@/constants/roles';
+import { useUserStore } from '@/store/userStore';
+import { config } from '@/config';
+import MessagingWidget from '@/components/messaging/MessagingWidget';
 
 export default function UserConnectionsPage() {
   const { id } = useParams();
   const { friends, loading, error, pagination, loadMore, page } = useUserFriends(id, 1, 12);
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const { profile: storeProfile } = useUserStore();
+  const avatar = storeProfile?.profilePicture
+    ? `${config.IMAGE_URL}/${storeProfile.profilePicture}`
+    : '/images/default-avatar.png';
 
   useEffect(() => {
     setProfile(null);
@@ -78,15 +85,7 @@ export default function UserConnectionsPage() {
                 ) : friends.length === 0 ? (
                   <div className="text-conexia-green/70 text-center py-8">No tiene contactos aún.</div>
                 ) : (
-                  <div
-                    className="grid w-full"
-                    style={{
-                      gridTemplateColumns: 'repeat(auto-fill, 170px)',
-                      gap: '12px',
-                      justifyContent: 'start',
-                      padding: '0 12px',
-                    }}
-                  >
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-start justify-items-center w-full">
                     {friends.map(friend => (
                       <ConnectionFriendCard key={friend.id} friend={friend} />
                     ))}
@@ -101,6 +100,9 @@ export default function UserConnectionsPage() {
               </div>
             </div>
           </div>
+
+          {/* Widget de mensajería como en la comunidad */}
+          <MessagingWidget avatar={avatar} />
         </main>
       </ProtectedRoute>
     </Suspense>

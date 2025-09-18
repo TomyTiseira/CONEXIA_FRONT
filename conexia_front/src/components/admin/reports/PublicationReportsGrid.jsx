@@ -76,7 +76,11 @@ export default function PublicationReportsGrid({ publicationId }) {
                   <td className="p-4 align-top break-words max-w-[60px] text-left">{r.id}</td>
                   <td className="p-4 align-top break-words max-w-[180px] text-left">{r.reporter?.email || r.reporterId}</td>
                   <td className="p-4 align-top break-words max-w-[160px] text-left">{r.reason}{r.reason === "Otro" && r.otherReason ? ` (${r.otherReason})` : ""}</td>
-                  <td className="p-4 align-top break-words whitespace-pre-line max-w-[320px] text-left">{r.description}</td>
+                  <td className="p-4 align-top break-words max-w-[320px] text-left">
+                    <div className="line-clamp-4 overflow-hidden" title={r.description}>
+                      {r.description}
+                    </div>
+                  </td>
                   <td className="p-4 align-top break-words max-w-[160px] whitespace-nowrap text-center">{new Date(r.createdAt).toLocaleString()}</td>
                 </tr>
               ))
