@@ -108,6 +108,7 @@ export default function EditPublicationModal({ open, onClose, onEdit, loading, i
   const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef();
   const textareaRef = useRef();
+  const [file, setFile] = useState(null); // Added useState for file and setFile
 
   // Para textarea dinámico
   const MIN_TEXTAREA_HEIGHT = 38;
