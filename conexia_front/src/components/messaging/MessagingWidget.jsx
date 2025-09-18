@@ -5,6 +5,7 @@ import ContactCard from './ContactCard';
 import ChatFloatingPanel from './ChatFloatingPanel';
 import { PenSquare } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import { useUserFriends } from '@/hooks/connections/useUserFriends';
 import { config } from '@/config';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
@@ -20,7 +21,7 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
   const PERSIST_KEY = 'conexia:messaging:ui:v1';
   const restoredRef = useRef(false);
 
-  const { user } = useUserStore();
+  const { user, roleName } = useUserStore();
   const userId = user?.id;
   const { friends, loading, error, pagination, loadMore } = useUserFriends(userId, 1, 12);
 
@@ -264,6 +265,10 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
     const time = formatTime(iso);
     return { day, time };
   };
+
+  // Mostrar SOLO para rol USER
+  const isUserRole = (roleName === ROLES.USER) || (user?.role === ROLES.USER) || (user?.roleName === ROLES.USER);
+  if (!isUserRole) return null;
 
   return (
     <div className="hidden md:flex flex-row-reverse items-end fixed right-6 bottom-0 z-50 gap-6">
