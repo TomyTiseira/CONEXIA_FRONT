@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSendConnectionRequest } from '@/hooks/connections/useSendConnectionRequest';
 import { useAcceptConnectionRequest } from '@/hooks/connections/useAcceptConnectionRequest';
 import { useCancelConnectionRequest } from '@/hooks/connections/useCancelConnectionRequest';
@@ -6,7 +7,7 @@ import { useRejectConnectionRequest } from '@/hooks/connections/useRejectConnect
 import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
 import { useFindConnection } from '@/hooks/connections/useFindConnection';
 import { HiOutlinePlus } from 'react-icons/hi';
-import { Check, X, ChevronDown } from 'lucide-react';
+import { Check, X, ChevronDown, Send } from 'lucide-react';
 import { FaRegClock } from 'react-icons/fa';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -51,7 +52,39 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   const mobileDropdownRef = useRef(null); // Ref separado para mobile
   const desktopDropdownRef = useRef(null); // Ref separado para desktop
   const deletingRef = useRef(false); // Referencia adicional para prevenir llamadas duplicadas
-  
+
+  // NUEVO: datos del usuario para el chat y acción de abrir (via evento o navegación)
+  const router = useRouter();
+  const chatUser = {
+    id: receiverId,
+    profilePicture: profile?.profile?.profilePicture || null,
+    userName: `${profile?.profile?.name || ''} ${profile?.profile?.lastName || ''}`.trim(),
+    conversationId: profile?.profile?.conversationId || null,
+  };
+  const openChat = () => {
+    // Cerrar el dropdown si está abierto
+    setDropdownOpen(false);
+    // Mobile: redirigir a la página de conversación usando conversationId (fallback a /u/[userId])
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        const convId = chatUser.conversationId;
+        if (convId) {
+          router.push(`/messaging/${convId}`);
+        } else {
+          router.push(`/messaging/u/${chatUser.id}`);
+        }
+        return;
+      }
+    } catch {}
+
+    // Desktop: pedirle al widget que abra el chat al costado (no abre el modal principal)
+    try {
+      window.dispatchEvent(new CustomEvent('open-chat-with', {
+        detail: { user: chatUser } // no enviamos openMain para no abrir el modal
+      }));
+    } catch {}
+  };
+
   // Si tenemos datos de conexión del perfil, los usamos primero, sino usamos los del hook
   const [localConnection, setLocalConnection] = useState(null);
   
@@ -103,8 +136,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   if (connection?.state === 'accepted') {
     return (
       <>
-        {/* Mobile: centrado debajo del nombre */}
-        <div className="flex justify-center w-full mt-2 sm:hidden">
+        {/* Mobile: centrado debajo del nombre (pila: Conectado + Enviar mensaje) */}
+        <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
           <div className="relative" ref={dropdownRef}>
             <Button
               variant="informative"
@@ -131,10 +164,19 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               </div>
             )}
           </div>
+          {/* NUEVO: botón Enviar mensaje */}
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            onClick={openChat}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
+          </Button>
         </div>
         
-        {/* Desktop: extremo derecho y centrado verticalmente */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6">
+        {/* Desktop: extremo derecho, apilados verticalmente */}
+        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
           <div className="relative" ref={dropdownRef}>
             <Button
               variant="informative"
@@ -161,6 +203,15 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               </div>
             )}
           </div>
+          {/* NUEVO: botón Enviar mensaje */}
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            onClick={openChat}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
+          </Button>
         </div>
 
         {/* Modal único para eliminar contacto */}
@@ -174,6 +225,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={deleteLoading || isDeleting}
         />
+
       </>
     );
   }
@@ -215,8 +267,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
     
     return (
       <>
-        {/* Mobile: centrado debajo del nombre */}
-        <div className="flex justify-center w-full mt-2 sm:hidden">
+        {/* Mobile: centrado debajo del nombre, apilados */}
+        <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
           {!sent ? (
             <Button
               variant="neutral"
@@ -255,10 +307,19 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               )}
             </div>
           )}
+          {/* NUEVO: botón Enviar mensaje */}
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            onClick={openChat}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
+          </Button>
         </div>
         
-        {/* Desktop: extremo derecho y centrado verticalmente */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6">
+        {/* Desktop: extremo derecho y centrado verticalmente, apilados */}
+        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
           {!sent ? (
             <Button
               variant="neutral"
@@ -297,6 +358,15 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               )}
             </div>
           )}
+          {/* NUEVO: botón Enviar mensaje */}
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            onClick={openChat}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
+          </Button>
         </div>
         
         <ConfirmModal
@@ -309,6 +379,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={cancelLoading}
         />
+
       </>
     );
   }
@@ -336,7 +407,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
       <>
         {/* Mobile: centrado debajo del nombre */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden">
-          <div className="relative" ref={mobileDropdownRef}>
+          <div className="relative" ref={dropdownRef}>
             <Button
               variant="informative"
               className="flex items-center justify-center px-4 py-2 text-sm min-w-[160px]"
@@ -361,10 +432,19 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               </div>
             )}
           </div>
+          {/* NUEVO: botón Enviar mensaje */}
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            onClick={openChat}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
+          </Button>
         </div>
         {/* Desktop: extremo derecho y centrado verticalmente */}
         <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6">
-          <div className="relative" ref={desktopDropdownRef}>
+          <div className="relative" ref={dropdownRef}>
             <Button
               variant="informative"
               className="flex items-center justify-center px-4 py-2 text-sm min-w-[160px]"
@@ -389,6 +469,15 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               </div>
             )}
           </div>
+          {/* NUEVO: botón Enviar mensaje */}
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            onClick={openChat}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
+          </Button>
         </div>
 
         <ConfirmModal
@@ -401,6 +490,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={cancelLoading}
         />
+
       </>
     );
   }
@@ -435,8 +525,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
     return (
       <>
-        {/* Mobile: centrado debajo del nombre */}
-        <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden">
+        {/* Mobile: centrar acciones y debajo el botón Enviar mensaje */}
+        <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
           <div className="flex gap-2">
             <Button
               variant="neutral"
@@ -457,26 +547,46 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               Rechazar
             </Button>
           </div>
-        </div>
-        {/* Desktop: extremo derecho y centrado verticalmente */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 gap-2">
+          {/* NUEVO: botón Enviar mensaje */}
           <Button
-            variant="neutral"
-            className="flex items-center justify-center px-4 py-2 text-sm"
-            onClick={() => setShowAcceptModal(true)}
-            disabled={acceptLoading}
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            onClick={openChat}
           >
-            <Check className="w-4 h-4 mr-2" />
-            Aceptar solicitud
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
           </Button>
+        </div>
+        {/* Desktop: extremo derecho, acciones arriba y Enviar mensaje abajo */}
+        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
+          <div className="flex gap-2">
+            <Button
+              variant="neutral"
+              className="flex items-center justify-center px-4 py-2 text-sm"
+              onClick={() => setShowAcceptModal(true)}
+              disabled={acceptLoading}
+            >
+              <Check className="w-4 h-4 mr-2" />
+              Aceptar solicitud
+            </Button>
+            <Button
+              variant="cancel"
+              className="flex items-center justify-center px-4 py-2 text-sm"
+              onClick={() => setShowRejectModal(true)}
+              disabled={rejectLoading}
+            >
+              <X className="w-4 h-4 mr-2" />
+              Rechazar
+            </Button>
+          </div>
+          {/* NUEVO: botón Enviar mensaje */}
           <Button
-            variant="cancel"
-            className="flex items-center justify-center px-4 py-2 text-sm"
-            onClick={() => setShowRejectModal(true)}
-            disabled={rejectLoading}
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            onClick={openChat}
           >
-            <X className="w-4 h-4 mr-2" />
-            Rechazar
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
           </Button>
         </div>
 
@@ -501,9 +611,11 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={rejectLoading}
         />
+
       </>
     );
   }
+
 
   // Si no hay ninguna condición que se cumpla, no mostramos nada
   return (
@@ -519,6 +631,18 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         cancelButtonText="Cancelar"
         isLoading={isDeleting}
       />
+
+      {/* NUEVO: panel de chat flotante (fallback) */}
+      {chatOpen && (
+        <>
+          <div className="fixed inset-x-0 bottom-0 z-50 flex sm:hidden justify-center">
+            <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
+          </div>
+          <div className="fixed right-6 bottom-0 z-50 hidden sm:flex">
+            <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
+          </div>
+        </>
+      )}
     </>
   );
 }

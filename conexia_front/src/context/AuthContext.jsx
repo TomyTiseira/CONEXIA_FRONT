@@ -1,5 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useMessagingStore } from '@/store/messagingStore';
 import { getProfile, logoutUser } from '@/service/auth/authService';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { useUserStore } from '@/store/userStore';
@@ -78,6 +79,15 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setError(err.message);
       clearUserStore(); // Limpiar Zustand si falla
+      // Limpieza adicional: UI de mensajería persistida y estado del store
+      try {
+        if (typeof window !== 'undefined') {
+          Object.keys(window.localStorage || {}).forEach((k) => {
+            if (k.startsWith('conexia:messaging:')) window.localStorage.removeItem(k);
+          });
+        }
+      } catch {}
+      try { useMessagingStore.getState().disconnect(); } catch {}
     } finally {
       setIsLoading(false);
     }
@@ -89,11 +99,29 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setError(null);
       clearUserStore(); // Limpiar Zustand al cerrar sesión
+      // Limpieza adicional: UI de mensajería persistida y estado del store
+      try {
+        if (typeof window !== 'undefined') {
+          Object.keys(window.localStorage || {}).forEach((k) => {
+            if (k.startsWith('conexia:messaging:')) window.localStorage.removeItem(k);
+          });
+        }
+      } catch {}
+      try { useMessagingStore.getState().disconnect(); } catch {}
     } catch (err) {
       console.error('Error al cerrar sesión:', err);
       setUser(null);
       setError(null);
       clearUserStore();
+      // También limpiar persistencia/estado en paths de error
+      try {
+        if (typeof window !== 'undefined') {
+          Object.keys(window.localStorage || {}).forEach((k) => {
+            if (k.startsWith('conexia:messaging:')) window.localStorage.removeItem(k);
+          });
+        }
+      } catch {}
+      try { useMessagingStore.getState().disconnect(); } catch {}
     }
   }, [clearUserStore]);
 

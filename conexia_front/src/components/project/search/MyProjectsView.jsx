@@ -10,6 +10,9 @@ import ProjectList from './ProjectList';
 import { useAuth } from '@/context/AuthContext';
 import { ROLES } from '@/constants/roles';
 import BackButton from '@/components/ui/BackButton';
+import MessagingWidget from '@/components/messaging/MessagingWidget';
+import { useUserStore } from '@/store/userStore';
+import { config } from '@/config';
 
 export default function MyProjectsView({ userId }) {
   const { user: authUser } = useAuth();
@@ -28,7 +31,7 @@ export default function MyProjectsView({ userId }) {
     if (!userId && !authUser) return;
     async function load() {
       setLoading(true);
-  const res = await fetchMyProjects({ ownerId: userId, active: !showInactive, page, limit: pageSize });
+      const res = await fetchMyProjects({ ownerId: userId, active: !showInactive, page, limit: pageSize });
       setProjects(res.projects);
       setPagination(res.pagination);
       setLoading(false);
@@ -51,6 +54,12 @@ export default function MyProjectsView({ userId }) {
       return <NavbarCommunity />;
     }
   };
+
+  // Avatar del usuario (como en ClientCommunity)
+  const { profile } = useUserStore();
+  const avatar = profile?.profilePicture
+    ? `${config.IMAGE_URL}/${profile.profilePicture}`
+    : '/images/default-avatar.png';
 
   return (
     <>
@@ -166,6 +175,9 @@ export default function MyProjectsView({ userId }) {
           </section>
         </div>
       </div>
+
+      {/* Widget de mensajería (igual que en ClientCommunity) */}
+      <MessagingWidget avatar={avatar} />
     </>
   );
 }
