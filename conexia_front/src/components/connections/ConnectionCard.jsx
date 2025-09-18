@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { config } from '@/config';
 
@@ -31,6 +31,7 @@ export function ConnectionCard({ user, onConnect, onViewProfile, mini = false })
 
   // Renderizado compacto para sidebar
   if (mini) {
+    const [pending, setPending] = useState(false);
     return (
       <div 
         className="flex items-center gap-2 py-2 px-1 hover:bg-gray-50 rounded transition cursor-pointer"
@@ -52,11 +53,15 @@ export function ConnectionCard({ user, onConnect, onViewProfile, mini = false })
         <button 
           onClick={(e) => {
             e.stopPropagation();
-            onConnect();
+            if (!pending) {
+              setPending(true);
+              onConnect();
+            }
           }}
-          className="ml-2 border border-conexia-green text-conexia-green px-3 py-1 rounded-full font-semibold text-xs hover:bg-conexia-green hover:text-white transition-colors"
+          className={`ml-2 border px-3 py-1 rounded-full font-semibold text-xs transition-colors ${pending ? 'border-gray-400 text-gray-400 bg-gray-100 cursor-not-allowed' : 'border-conexia-green text-conexia-green hover:bg-conexia-green hover:text-white'}`}
+          disabled={pending}
         >
-          + Seguir
+          {pending ? 'Pendiente' : 'Conectar'}
         </button>
       </div>
     );

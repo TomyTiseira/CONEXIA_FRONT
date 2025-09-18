@@ -10,6 +10,7 @@ import Image from 'next/image';
 import PublicationModal from './publications/PublicationModal';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 import { getCommunityPublications } from '@/service/publications/publicationsFetch';
 import { MiniRecommendations } from '@/components/connections/MiniRecommendations';
@@ -20,7 +21,7 @@ export default function ClientCommunity() {
   useSessionTimeout();
   const [modalOpen, setModalOpen] = useState(false);
   const { user, isLoading } = useAuth();
-  const { profile } = useUserStore();
+  const { profile, roleName } = useUserStore();
   const [publications, setPublications] = useState([]);
   const [loadingPublications, setLoadingPublications] = useState(false);
   const [errorPublications, setErrorPublications] = useState(null);
@@ -101,10 +102,11 @@ export default function ClientCommunity() {
 
     };
 
-    const avatar = profile?.profilePicture
+    const isInternal = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
+    const avatar = !isInternal && profile?.profilePicture
       ? `${config.IMAGE_URL}/${profile.profilePicture}`
       : '/images/default-avatar.png';
-    const displayName = profile?.name && profile?.lastName ? `${profile.name} ${profile.lastName}` : 'Usuario';
+    const displayName = !isInternal && profile?.name && profile?.lastName ? `${profile.name} ${profile.lastName}` : (isInternal ? (roleName === ROLES.ADMIN ? 'Administrador' : 'Moderador') : 'Usuario');
 
     // Helper para asegurar URLs absolutas (igual que en ProjectDetail)
     const getMediaUrl = (mediaUrl) => {
@@ -119,13 +121,13 @@ export default function ClientCommunity() {
   <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8">
   <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
           {/* Sidebar perfil mobile (arriba de la caja de inicio) */}
-          {userStore?.id && (
+          {userStore?.id && !isInternal && (
             <div className="block md:hidden w-full mb-1">
               <ProfileSidebar profile={profile} userId={userStore.id} />
             </div>
           )}
           {/* Sidebar perfil desktop/tablet */}
-          {userStore?.id && (
+          {userStore?.id && !isInternal && (
             <div className="hidden md:block w-full md:w-1/4 lg:w-1/5">
               <ProfileSidebar profile={profile} userId={userStore.id} />
             </div>

@@ -1,6 +1,7 @@
 // src/components/profile/UserProfile.jsx
 "use client";
 import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getProfileById } from "@/service/profiles/profilesFetch";
@@ -32,7 +33,7 @@ export default function UserProfile() {
   const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
   const { refreshRequests } = useConnectionRequests();
   const { user: authUser, updateUser } = useAuth();
-  const { user: storeUser } = useUserStore();
+  const { user: storeUser, roleName } = useUserStore();
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,6 +45,13 @@ export default function UserProfile() {
   const [showMyProjects, setShowMyProjects] = useState(false);
 
   useEffect(() => {
+    // Si es admin o moderador, no buscar perfil
+    if (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
+      setLoading(false);
+      setProfile(null);
+      setIsOwner(false);
+      return;
+    }
     const fetchProfile = async () => {
       try {
         const data = await getProfileById(id);
@@ -66,7 +74,7 @@ export default function UserProfile() {
     };
     fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, searchParams, authUser]);
+  }, [id, searchParams, authUser, roleName]);
 
   if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
 

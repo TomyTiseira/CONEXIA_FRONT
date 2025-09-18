@@ -7,11 +7,14 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getProfileById } from '@/service/profiles/profilesFetch';
+import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 
 const defaultAvatar = '/images/default-avatar.png';
 
 export default function DropdownUserMenu({ onLogout, onClose }) {
+  const { roleName } = useUserStore();
   const dropdownRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -22,12 +25,17 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
   const userId = user?.id;
 
   useEffect(() => {
+    // Si es admin o moderador, no buscar perfil
+    if (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
+      setLoading(false);
+      setProfile(null);
+      return;
+    }
     const fetchProfile = async () => {
       if (!userId) {
         setLoading(false);
         return;
       }
-
       try {
         setLoading(true);
         const data = await getProfileById(userId);
@@ -39,9 +47,8 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
         setLoading(false);
       }
     };
-
     fetchProfile();
-  }, [userId]);
+  }, [userId, roleName]);
 
   // Detectar clics fuera del menú para cerrarlo
     useEffect(() => {
