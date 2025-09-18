@@ -50,15 +50,20 @@ export default function NavbarCommunity() {
     <header className="bg-white shadow sticky top-0 z-50">
       {/* Desktop Navbar */}
       <nav className="hidden md:flex items-center px-4 py-3 max-w-7xl mx-auto h-[64px] relative">
-        {/* Logo y buscador */}
+
+        {/* Logo a la izquierda */}
         <div className="flex items-center flex-shrink-0 gap-2 z-10">
           <Link href="/" className="flex items-center select-none">
             <Image src="/logo.png" alt="Conexia" width={30} height={30} />
           </Link>
-          <GlobalSearchBar />
         </div>
 
-        {/* Navigation absolutamente centrado */}
+        {/* Buscador estirado entre logo y botones */}
+        <div className="absolute left-[60px] right-[55%] flex items-center h-full px-4">
+          <GlobalSearchBar className="w-full min-w-[320px] max-w-[600px]" />
+        </div>
+
+        {/* Botones navbar centrados */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <ul className="flex items-end gap-8 font-medium text-xs">
             {navItems.map(({ label, href, icon: Icon, showDot }) => {
