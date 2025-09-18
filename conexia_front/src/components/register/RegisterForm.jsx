@@ -5,12 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { registerUser } from "@/service/user/userFetch";
 import InputField from "@/components/form/InputField";
 import { validateEmail, validatePassword, validateRepeatPwd } from "@/utils/validation";
 import ConexiaLogo from "@/components/ui/ConexiaLogo";
 
+
 export default function RegisterForm() {
+  // Cambia esto por tu clave de sitio reCAPTCHA
+  const RECAPTCHA_SITE_KEY = "TU_SITE_KEY_AQUI";
   const router = useRouter();
   const [form, setForm] = useState({
     email: "",
@@ -21,6 +25,7 @@ export default function RegisterForm() {
   const [touched, setTouched] = useState({});
   const [focused, setFocused] = useState({});
   const [msg, setMsg] = useState(null);
+  const [captchaValue, setCaptchaValue] = useState(null);
   const [showPwd, setShowPwd] = useState(false);
   const [showRepeatPwd, setShowRepeatPwd] = useState(false);
 
@@ -60,6 +65,11 @@ export default function RegisterForm() {
 
     if (emailError || passwordError || repeatPwdError)
       return setMsg({ ok: false, text: "" });
+
+    if (!captchaValue) {
+      setMsg({ ok: false, text: "Por favor, completa el captcha para continuar." });
+      return;
+    }
 
     try {
       await registerUser(form);
@@ -152,12 +162,19 @@ export default function RegisterForm() {
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"
-          >
-            Registrarme
-          </button>
+          <div className="flex flex-col items-center gap-2">
+            <ReCAPTCHA
+              sitekey={RECAPTCHA_SITE_KEY}
+              onChange={setCaptchaValue}
+              className="mb-2"
+            />
+            <button
+              type="submit"
+              className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"
+            >
+              Registrarme
+            </button>
+          </div>
         </form>
 
         <div className="mt-6 text-center text-sm">
@@ -176,5 +193,7 @@ export default function RegisterForm() {
         </div>
       </div>
     </div>
+
   );
 }
+

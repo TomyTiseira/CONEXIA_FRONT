@@ -19,6 +19,7 @@ import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
+import GlobalSearchBar from '@/components/common/GlobalSearchBar';
 
 export default function NavbarCommunity() {
   const { count: connectionRequestsCount } = useConnectionRequests();
@@ -48,53 +49,58 @@ export default function NavbarCommunity() {
   return (
     <header className="bg-white shadow sticky top-0 z-50">
       {/* Desktop Navbar */}
-      <nav className="hidden md:flex justify-between items-center px-4 py-3 max-w-7xl mx-auto h-[64px]">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 select-none">
-          <Image src="/logo.png" alt="Conexia" width={30} height={30} />
-        </Link>
+      <nav className="hidden md:flex items-center px-4 py-3 max-w-7xl mx-auto h-[64px] relative">
+        {/* Logo y buscador */}
+        <div className="flex items-center flex-shrink-0 gap-2 z-10">
+          <Link href="/" className="flex items-center select-none">
+            <Image src="/logo.png" alt="Conexia" width={30} height={30} />
+          </Link>
+          <GlobalSearchBar />
+        </div>
 
-        {/* Navigation */}
-        <ul className="flex items-end gap-8 font-medium text-xs">
-          {navItems.map(({ label, href, icon: Icon, showDot }) => {
-            const isActive = pathname === href;
-            return (
-              <li key={label} className="relative">
-                <Link
-                  href={href}
-                  className="flex flex-col items-center relative group cursor-pointer"
-                >
-                  <span className="relative">
-                    <Icon
-                      size={18}
-                      className={`mb-1 transition-colors ${
-                        isActive ? 'text-conexia-green' : 'text-conexia-green/70'
-                      } group-hover:text-conexia-green`}
-                    />
-                    {showDot && (
-                      <span className="absolute -top-1 -right-2 w-3 h-3 rounded-full bg-[#ff4953] border-2 border-white flex items-center justify-center">
-                        {/* punto coral */}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={`transition-colors ${
-                      isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
-                    } group-hover:text-conexia-green`}
+        {/* Navigation absolutamente centrado */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <ul className="flex items-end gap-8 font-medium text-xs">
+            {navItems.map(({ label, href, icon: Icon, showDot }) => {
+              const isActive = pathname === href;
+              return (
+                <li key={label} className="relative">
+                  <Link
+                    href={href}
+                    className="flex flex-col items-center relative group cursor-pointer"
                   >
-                    {label}
-                  </span>
-                  {isActive && (
-                    <span className="absolute -bottom-[6px] h-[2px] w-full bg-conexia-green rounded"></span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                    <span className="relative">
+                      <Icon
+                        size={18}
+                        className={`mb-1 transition-colors ${
+                          isActive ? 'text-conexia-green' : 'text-conexia-green/70'
+                        } group-hover:text-conexia-green`}
+                      />
+                      {showDot && (
+                        <span className="absolute -top-1 -right-2 w-3 h-3 rounded-full bg-[#ff4953] border-2 border-white flex items-center justify-center">
+                          {/* punto coral */}
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className={`transition-colors ${
+                        isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
+                      } group-hover:text-conexia-green`}
+                    >
+                      {label}
+                    </span>
+                    {isActive && (
+                      <span className="absolute -bottom-[6px] h-[2px] w-full bg-conexia-green rounded"></span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-4 text-conexia-green">
+        <div className="flex items-center gap-4 text-conexia-green z-10 ml-auto">
           <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
