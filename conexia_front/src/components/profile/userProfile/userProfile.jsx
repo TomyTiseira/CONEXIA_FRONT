@@ -16,7 +16,6 @@ import NavbarHome from "@/components/navbar/NavbarHome";
 import NavbarAdmin from "@/components/navbar/NavbarAdmin";
 import NavbarModerator from "@/components/navbar/NavbarModerator";
 import NavbarCommunity from "@/components/navbar/NavbarCommunity";
-import { ROLES } from "@/constants/roles";
 
 import EditProfileForm from "./EditProfileForm";
 import { updateUserProfile } from "@/service/profiles/updateProfile";

@@ -8,6 +8,8 @@ export default function MyConnectionsSection() {
   const { user } = useUserStore();
   const userId = user?.id;
   const { friends, loading, error, pagination, loadMore, page } = useUserFriends(userId);
+  React.useEffect(() => {
+  }, [friends]);
   const [localFriends, setLocalFriends] = React.useState([]);
 
   React.useEffect(() => {

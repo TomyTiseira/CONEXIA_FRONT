@@ -2,7 +2,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getConnectionRequests } from '@/service/connections/getConnectionRequests';
 import { useAuth } from '@/context/AuthContext';
-import { ROLES } from '@/constants/roles';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 
@@ -20,7 +19,7 @@ export function ConnectionRequestsProvider({ children }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { roleName } = useUserStore();
+  const { user, roleName } = useUserStore();
 
   // Función para cargar las solicitudes
   const fetchRequests = async () => {
@@ -49,11 +48,22 @@ export function ConnectionRequestsProvider({ children }) {
 
   // Cargar solicitudes al montar el componente, pero solo si el usuario puede tener conexiones
   useEffect(() => {
-    // Solo ejecutar cuando user esté definido Y tenga la propiedad role cargada
-    if (user !== null && user.role !== undefined) {
+    // Esperar a que roleName esté definido
+    if (roleName === undefined || roleName === null) return;
+    if (
+      user !== null &&
+      user?.roleId !== undefined &&
+      roleName !== ROLES.ADMIN &&
+      roleName !== ROLES.MODERATOR
+    ) {
       fetchRequests();
+    } else {
+      // Si es admin o moderador, limpiar solicitudes y estado
+      setRequests([]);
+      setLoading(false);
+      setError(null);
     }
-  }, [user]);
+  }, [user, roleName]);
 
   // Valor del contexto
   const value = {
