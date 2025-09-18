@@ -7,9 +7,18 @@ import { NotFound } from '@/components/ui';
 import { ROLES } from '@/constants/roles';
 import UserActivitiesFeed from '@/components/activity/UserActivitiesFeed';
 import Navbar from '@/components/navbar/Navbar';
+import { useUserStore } from '@/store/userStore';
+import { config } from '@/config';
+import MessagingWidget from '@/components/messaging/MessagingWidget';
 
 export default function UserActivitiesPage() {
   const { id } = useParams();
+  // Avatar como en ClientCommunity
+  const { profile } = useUserStore();
+  const avatar = profile?.profilePicture
+    ? `${config.IMAGE_URL}/${profile.profilePicture}`
+    : '/images/default-avatar.png';
+
   return (
     <ProtectedRoute
       allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR]}
@@ -18,6 +27,8 @@ export default function UserActivitiesPage() {
       <>
         <Navbar />
         <UserActivitiesFeed userId={id} />
+        {/* Widget de mensajería (igual que en ClientCommunity) */}
+        <MessagingWidget avatar={avatar} />
       </>
     </ProtectedRoute>
   );

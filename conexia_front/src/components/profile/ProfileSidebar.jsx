@@ -17,9 +17,19 @@ export default function ProfileSidebar({ profile, userId}) {
   const lastName = profile.lastName || '';
   const displayName = `${firstName} ${lastName}`.trim();
   const location = [profile.state, profile.country].filter(Boolean).join(', ');
-  // Educación y experiencia actuales
+  // Educación y experiencia actuales - solo mostrar la más reciente
   const currentEducations = (profile.education || []).filter(e => e.isCurrent);
   const currentExperiences = (profile.experience || []).filter(e => e.isCurrent);
+  
+  // Obtener solo la experiencia más reciente (basada en startDate)
+  const latestExperience = currentExperiences.length > 0 
+    ? currentExperiences.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0))[0]
+    : null;
+    
+  // Obtener solo la educación más reciente (basada en startDate)
+  const latestEducation = currentEducations.length > 0 
+    ? currentEducations.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0))[0]
+    : null;
   // Usar siempre el id del usuario para la redirección
   const profileUrl = `/profile/userProfile/${userId}`;
 
@@ -109,30 +119,30 @@ export default function ProfileSidebar({ profile, userId}) {
         {location && (
           <div className="flex items-center text-xs text-gray-500 mb-2 mt-1 justify-start"><FaMapMarkerAlt className="mr-1" />{location}</div>
         )}
-        {/* Experiencia actual */}
-        {currentExperiences.map((exp, idx) => (
-          <div key={"exp-"+idx} className="flex items-center w-full mt-2 mb-1">
-            <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#e0f0f0] mr-3 border border-[#c6e3e4]">
+        {/* Experiencia actual más reciente */}
+        {latestExperience && (
+          <div className="flex items-start w-full mt-2 mb-1">
+            <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#e0f0f0] mr-3 border border-[#c6e3e4] flex-shrink-0">
               <FaBriefcase className="text-conexia-green text-xl" />
             </span>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-conexia-green leading-tight">{exp.project || ''}</span>
-              <span className="text-xs text-gray-600 leading-tight">{exp.title}</span>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm font-semibold text-conexia-green leading-tight break-words">{latestExperience.project || ''}</span>
+              <span className="text-xs text-gray-600 leading-tight break-words">{latestExperience.title}</span>
             </div>
           </div>
-        ))}
-        {/* Educación actual */}
-        {currentEducations.map((edu, idx) => (
-          <div key={"edu-"+idx} className="flex items-center w-full mt-2 mb-1">
-            <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#e0f0f0] mr-3 border border-[#c6e3e4]">
+        )}
+        {/* Educación actual más reciente */}
+        {latestEducation && (
+          <div className="flex items-start w-full mt-2 mb-1">
+            <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#e0f0f0] mr-3 border border-[#c6e3e4] flex-shrink-0">
               <FaUniversity className="text-conexia-green text-xl" />
             </span>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-conexia-green leading-tight">{edu.institution}</span>
-              <span className="text-xs text-gray-600 leading-tight">{edu.title}</span>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm font-semibold text-conexia-green leading-tight break-words">{latestEducation.institution}</span>
+              <span className="text-xs text-gray-600 leading-tight break-words">{latestEducation.title}</span>
             </div>
           </div>
-        ))}
+        )}
       </a>
     </aside>
   );

@@ -119,9 +119,9 @@ export default function ConnectionsPage() {
       >
     <div className="w-full bg-gray-50 min-h-screen" style={{overflowY: 'scroll', minHeight: '1px'}}>
           <NavbarCommunity />
-          <main className="max-w-7xl mx-auto flex flex-col md:flex-row gap-0 md:gap-8 px-2 md:px-6 mt-2 md:mt-4 pb-16 items-start justify-center">
+          <main className="max-w-7xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6 px-2 md:px-6 mt-2 md:mt-4 pb-16 items-start justify-start">
             {/* Mobile: Panel de conexiones arriba del contenido, Desktop: sidebar a la izquierda */}
-            <div className="w-full max-w-[400px] mx-auto md:w-[270px] md:max-w-none md:mx-0 lg:w-[300px] flex-shrink-0 flex flex-col items-stretch md:items-start md:mr-2 md:mt-4">
+            <div className="w-full max-w-[400px] mx-auto md:w-[270px] md:max-w-none md:mx-0 lg:w-[300px] flex-shrink-0 flex flex-col items-stretch md:items-start md:mt-4">
               <div className="block md:hidden mt-2 mb-2">
                 <ConnectionsSidebar selected={selected} onSelect={setSelected} />
               </div>
@@ -130,7 +130,7 @@ export default function ConnectionsPage() {
               </div>
             </div>
             {/* Contenido principal en rectángulo */}
-              <div className="flex justify-center md:mt-4 w-full">
+              <div className="flex justify-center md:mt-4 w-full md:flex-1">
                 <div className="w-full max-w-[400px] mx-auto md:max-w-none md:mx-0 bg-white rounded-2xl shadow-xl border-2 border-conexia-green/20 px-4 sm:px-8 py-6 md:py-8 mt-2 md:mt-0 mb-2 transition-all">
                   <div className="w-full h-full">
                     <SectionComponent />

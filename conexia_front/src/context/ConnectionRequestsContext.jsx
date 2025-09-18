@@ -1,6 +1,8 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getConnectionRequests } from '@/service/connections/getConnectionRequests';
+import { useAuth } from '@/context/AuthContext';
+import { ROLES } from '@/constants/roles';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 
@@ -36,6 +38,7 @@ export function ConnectionRequestsProvider({ children }) {
       setError(null);
       return { requests: res?.data || [] };
     } catch (err) {
+      console.error('Error al obtener solicitudes de conexión:', err);
       setError(err.message || 'Error al obtener solicitudes');
       setRequests([]);
       return { requests: [] };
@@ -44,11 +47,13 @@ export function ConnectionRequestsProvider({ children }) {
     }
   };
 
-  // Cargar solicitudes al montar el componente
+  // Cargar solicitudes al montar el componente, pero solo si el usuario puede tener conexiones
   useEffect(() => {
-    if (!roleName) return; // Esperar a que roleName esté definido
-    fetchRequests();
-  }, [roleName]);
+    // Solo ejecutar cuando user esté definido Y tenga la propiedad role cargada
+    if (user !== null && user.role !== undefined) {
+      fetchRequests();
+    }
+  }, [user]);
 
   // Valor del contexto
   const value = {

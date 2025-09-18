@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,6 +14,7 @@ import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 import { getCommunityPublications } from '@/service/publications/publicationsFetch';
+import MessagingWidget from '@/components/messaging/MessagingWidget';
 import { MiniRecommendations } from '@/components/connections/MiniRecommendations';
 import { useRecommendations } from '@/hooks/connections/useRecommendations';
 import { sendConnectionRequest } from '@/service/connections/sendConnectionRequest';
@@ -28,7 +30,6 @@ export default function ClientCommunity() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
-
   const { user: userStore } = useUserStore();
 
   // Hook para recomendaciones
@@ -118,8 +119,8 @@ export default function ClientCommunity() {
     };
 
     return (
-  <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8">
-  <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
+      <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8 relative">
+        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
           {/* Sidebar perfil mobile (arriba de la caja de inicio) */}
           {userStore?.id && !isInternal && (
             <div className="block md:hidden w-full mb-1">
@@ -234,6 +235,23 @@ export default function ClientCommunity() {
             />
           </div>
         </div>
+        {/* Widget de mensajería reutilizable */}
+        <MessagingWidget
+          avatar={avatar}
+          chats={[{
+            id: 1,
+            avatar: '/images/default-avatar.png',
+            name: 'Javier Carrizo',
+            lastMessage: 'Hola Alex, el entorno laboral exige crecer...',
+            date: '30 ago',
+          }, {
+            id: 2,
+            avatar: '/images/default-avatar.png',
+            name: 'Rocío Brageda',
+            lastMessage: 'Tú: Hola linda, soy papá soltero de una beba',
+            date: '22 may',
+          }]}
+        />
       </main>
     );
   }

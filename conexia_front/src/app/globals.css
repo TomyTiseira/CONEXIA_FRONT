@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Soft white/gray scrollbar styling */
+.scrollbar-soft::-webkit-scrollbar {
+  width: 10px;
+}
+.scrollbar-soft::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+.scrollbar-soft::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb; /* gray-200 */
+  border-radius: 6px;
+  border: 2px solid #ffffff;
+}
+.scrollbar-soft::-webkit-scrollbar-thumb:hover {
+  background-color: #d1d5db; /* gray-300 */
+}
+/* Firefox */
+.scrollbar-soft {
+  scrollbar-color: #e5e7eb #ffffff; /* thumb track */
+  scrollbar-width: thin;
+}
+
 /* Estilos para tarjetas de publicación en cuadrícula */
 .grid-publication-card {
   height: 100%;

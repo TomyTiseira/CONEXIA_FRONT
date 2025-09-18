@@ -3,8 +3,8 @@ Principal normal: #48a6a7
 Principal hover: #419596
 Principal :active: #3a8586
 Principal light: #edf6f6
-Principal light hover: #e4f2f2
-Principal light active: #c6e3e4
+Principal light hover: #d6ececff
+Principal light active: #d3e0e0ff
 Principal dark: #367d7d
 Principal dark hover: #2b6a6a
 Principal dark active: #204b4b
