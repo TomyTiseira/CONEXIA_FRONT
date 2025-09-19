@@ -1,6 +1,7 @@
 // src/components/profile/UserProfile.jsx
 "use client";
 import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getProfileById } from "@/service/profiles/profilesFetch";
@@ -15,7 +16,6 @@ import NavbarHome from "@/components/navbar/NavbarHome";
 import NavbarAdmin from "@/components/navbar/NavbarAdmin";
 import NavbarModerator from "@/components/navbar/NavbarModerator";
 import NavbarCommunity from "@/components/navbar/NavbarCommunity";
-import { ROLES } from "@/constants/roles";
 
 import EditProfileForm from "./EditProfileForm";
 import { updateUserProfile } from "@/service/profiles/updateProfile";
@@ -35,7 +35,7 @@ export default function UserProfile() {
   const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
   const { refreshRequests } = useConnectionRequests();
   const { user: authUser, updateUser } = useAuth();
-  const { user: storeUser, profile: storeProfile } = useUserStore();
+  const { user: storeUser, profile: storeProfile, roleName } = useUserStore();
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -51,6 +51,13 @@ export default function UserProfile() {
   const isModerator = authUser?.role === ROLES.MODERATOR;
 
   useEffect(() => {
+    // Si es admin o moderador, no buscar perfil
+    if (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
+      setLoading(false);
+      setProfile(null);
+      setIsOwner(false);
+      return;
+    }
     const fetchProfile = async () => {
       try {
         const data = await getProfileById(id);
@@ -73,7 +80,7 @@ export default function UserProfile() {
     };
     fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, searchParams, authUser]);
+  }, [id, searchParams, authUser, roleName]);
 
   if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
 

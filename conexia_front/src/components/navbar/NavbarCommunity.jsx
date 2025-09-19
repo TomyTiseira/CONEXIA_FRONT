@@ -126,7 +126,7 @@ export default function NavbarCommunity() {
                 <li key={label} className="relative">
                   <Link
                     href={href}
-                    className="flex flex-col items-center relative group cursor-pointer"
+                    className="flex flex-col items-center relative group cursor-pointer min-w-[70px] max-w-[70px] justify-center"
                   >
                     <span className="relative">
                       <Icon

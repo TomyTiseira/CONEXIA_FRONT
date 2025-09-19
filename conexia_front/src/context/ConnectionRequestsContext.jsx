@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getConnectionRequests } from '@/service/connections/getConnectionRequests';
 import { useAuth } from '@/context/AuthContext';
+import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 
 // Crear el contexto
@@ -18,18 +19,17 @@ export function ConnectionRequestsProvider({ children }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuth();
+  const { user, roleName } = useUserStore();
 
   // Función para cargar las solicitudes
   const fetchRequests = async () => {
-    // No cargar solicitudes si no hay usuario o si es admin o moderador
-    if (!user || user.role === ROLES.ADMIN || user.role === ROLES.MODERATOR) {
+    // No buscar solicitudes si es admin o moderador
+    if (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
       setRequests([]);
-      setError(null);
       setLoading(false);
+      setError(null);
       return { requests: [] };
     }
-
     setLoading(true);
     try {
       const res = await getConnectionRequests();
@@ -48,11 +48,22 @@ export function ConnectionRequestsProvider({ children }) {
 
   // Cargar solicitudes al montar el componente, pero solo si el usuario puede tener conexiones
   useEffect(() => {
-    // Solo ejecutar cuando user esté definido Y tenga la propiedad role cargada
-    if (user !== null && user.role !== undefined) {
+    // Esperar a que roleName esté definido
+    if (roleName === undefined || roleName === null) return;
+    if (
+      user !== null &&
+      user?.roleId !== undefined &&
+      roleName !== ROLES.ADMIN &&
+      roleName !== ROLES.MODERATOR
+    ) {
       fetchRequests();
+    } else {
+      // Si es admin o moderador, limpiar solicitudes y estado
+      setRequests([]);
+      setLoading(false);
+      setError(null);
     }
-  }, [user]);
+  }, [user, roleName]);
 
   // Valor del contexto
   const value = {
