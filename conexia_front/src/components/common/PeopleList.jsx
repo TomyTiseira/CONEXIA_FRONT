@@ -1,15 +1,24 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { config } from '@/config';
 
 export default function PeopleList({ people = [] }) {
+  const router = useRouter();
   if (!people.length) {
     return <div className="text-center text-conexia-green mt-12 text-lg opacity-70">No se encontraron personas.</div>;
   }
   return (
     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5 items-stretch mt-0 w-full px-6 sm:px-0">
       {people.map((person) => (
-        <div key={person.id} className="rounded-2xl shadow border border-[#c6e3e4] flex flex-col items-center bg-white hover:shadow-xl transition-shadow no-underline" style={{ width: 170, minWidth: 170, maxWidth: 170, height: 200, paddingBottom: 0, justifyContent: 'flex-start' }}>
+        <button
+          key={person.id}
+          className="rounded-2xl shadow border border-[#c6e3e4] flex flex-col items-center bg-white hover:shadow-xl transition-shadow no-underline focus:outline-none"
+          style={{ width: 170, minWidth: 170, maxWidth: 170, height: 200, paddingBottom: 0, justifyContent: 'flex-start', cursor: 'pointer' }}
+          tabIndex={0}
+          onClick={() => router.push(`/profile/${person.id}`)}
+          aria-label={`Ver perfil de ${person.name} ${person.lastName}`}
+        >
           {/* Imagen de portada o fondo decorativo */}
           {person.coverPicture ? (
             <div className="w-full h-16 bg-center bg-cover relative rounded-t-2xl overflow-hidden">
@@ -44,7 +53,7 @@ export default function PeopleList({ people = [] }) {
               {person.profession || person.email}
             </div>
           </div>
-        </div>
+        </button>
       ))}
     </div>
   );

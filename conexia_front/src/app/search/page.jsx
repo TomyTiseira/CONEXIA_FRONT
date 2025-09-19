@@ -1,5 +1,6 @@
 
-'use client';
+"use client";
+import React from 'react';
 import { useSearchParams } from 'next/navigation';
 
 
@@ -24,7 +25,7 @@ export default function SearchResultsPage() {
 
   // Sidebar sections dinámico
   const sections = [];
-  if (projects && projects.length > 0) {
+  if (projects.length > 0) {
     sections.push({
       key: 'projects',
       label: 'Proyectos',
@@ -32,7 +33,7 @@ export default function SearchResultsPage() {
       description: 'Explora proyectos publicados',
     });
   }
-  if (people && people.length > 0) {
+  if (people.length > 0) {
     sections.push({
       key: 'people',
       label: 'Personas',
@@ -60,7 +61,7 @@ export default function SearchResultsPage() {
         {/* Contenido principal */}
         <section className="flex-1 flex flex-col gap-12">
           {/* Proyectos */}
-          {sections.find(s => s.key === 'projects') && (
+          {projects.length > 0 && (
             <ProjectsSection
               projects={projects}
               showAll={showAllProjects}
@@ -77,7 +78,7 @@ export default function SearchResultsPage() {
             />
           )}
           {/* Personas */}
-          {sections.find(s => s.key === 'people') && (
+          {people.length > 0 && (
             <PeopleSection
               people={people}
               showAll={showAllPeople}
