@@ -160,7 +160,18 @@ export default function NavbarCommunity() {
 
         {/* Actions */}
         <div className="flex items-center gap-4 text-conexia-green z-10 ml-auto">
-          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <div className="relative">
+            <MessageCircle
+              size={20}
+              className="cursor-pointer hover:text-conexia-green/80"
+              onClick={() => router.push('/messaging')}
+            />
+            {displayUnread > 0 && (
+              <span className={`absolute -top-1 -right-2 min-w-[20px] h-[16px] px-1 rounded-full bg-[#e6424b] text-white leading-[16px] text-center ${desktopBadgeText}`}>
+                {displayUnread}
+              </span>
+            )}
+          </div>
           <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
