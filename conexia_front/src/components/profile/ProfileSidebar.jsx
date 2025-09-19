@@ -8,6 +8,10 @@ import { config } from '@/config';
 export default function ProfileSidebar({ profile, userId}) {
   if (!profile) return null;
   const avatar = profile.profilePicture ? `${config.IMAGE_URL}/${profile.profilePicture}` : '/images/default-avatar.png';
+  // Portada personalizada
+  const coverImage = profile.coverPicture
+    ? `${config.IMAGE_URL}/${profile.coverPicture}`
+    : '/bg-smoke.png';
   // Solo primer nombre y apellido
   const firstName = (profile.name || '').split(' ')[0];
   const lastName = profile.lastName || '';
@@ -38,7 +42,7 @@ export default function ProfileSidebar({ profile, userId}) {
       <a
         href={profileUrl}
         className="w-full h-20 bg-center bg-cover relative md:hidden block"
-        style={{ backgroundImage: 'url(/bg-smoke.png)' }}
+        style={{ backgroundImage: `url(${coverImage})` }}
         tabIndex={0}
       >
         <div
@@ -51,7 +55,7 @@ export default function ProfileSidebar({ profile, userId}) {
       <a
         href={profileUrl}
         className="w-full h-20 bg-center bg-cover relative hidden md:block"
-        style={{ backgroundImage: 'url(/bg-smoke.png)' }}
+        style={{ backgroundImage: `url(${coverImage})` }}
         tabIndex={0}
       >
         <div

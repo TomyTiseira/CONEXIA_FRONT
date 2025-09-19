@@ -11,15 +11,19 @@ import Image from 'next/image';
 import PublicationModal from './publications/PublicationModal';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 import { getCommunityPublications } from '@/service/publications/publicationsFetch';
 import MessagingWidget from '@/components/messaging/MessagingWidget';
+import { MiniRecommendations } from '@/components/connections/MiniRecommendations';
+import { useRecommendations } from '@/hooks/connections/useRecommendations';
+import { sendConnectionRequest } from '@/service/connections/sendConnectionRequest';
 
 export default function ClientCommunity() {
   useSessionTimeout();
   const [modalOpen, setModalOpen] = useState(false);
   const { user, isLoading } = useAuth();
-  const { profile } = useUserStore();
+  const { profile, roleName } = useUserStore();
   const [publications, setPublications] = useState([]);
   const [loadingPublications, setLoadingPublications] = useState(false);
   const [errorPublications, setErrorPublications] = useState(null);
@@ -27,6 +31,25 @@ export default function ClientCommunity() {
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
   const { user: userStore } = useUserStore();
+
+  // Hook para recomendaciones
+  const { 
+    recommendations, 
+    loading: loadingRecommendations, 
+    error: errorRecommendations, 
+    refetch: refetchRecommendations 
+  } = useRecommendations();
+
+  // Función para conectar con un usuario
+  const handleConnect = async (userId) => {
+    try {
+      await sendConnectionRequest(userId);
+      // Actualizar las recomendaciones para remover el usuario conectado
+      refetchRecommendations();
+    } catch (err) {
+      console.error('Error al enviar solicitud de conexión:', err);
+    }
+  };
 
 
 
@@ -80,10 +103,11 @@ export default function ClientCommunity() {
 
     };
 
-    const avatar = profile?.profilePicture
+    const isInternal = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
+    const avatar = !isInternal && profile?.profilePicture
       ? `${config.IMAGE_URL}/${profile.profilePicture}`
       : '/images/default-avatar.png';
-    const displayName = profile?.name && profile?.lastName ? `${profile.name} ${profile.lastName}` : 'Usuario';
+    const displayName = !isInternal && profile?.name && profile?.lastName ? `${profile.name} ${profile.lastName}` : (isInternal ? (roleName === ROLES.ADMIN ? 'Administrador' : 'Moderador') : 'Usuario');
 
     // Helper para asegurar URLs absolutas (igual que en ProjectDetail)
     const getMediaUrl = (mediaUrl) => {
@@ -98,22 +122,20 @@ export default function ClientCommunity() {
       <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8 relative">
         <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6">
           {/* Sidebar perfil mobile (arriba de la caja de inicio) */}
-          {userStore?.id && (
+          {userStore?.id && !isInternal && (
             <div className="block md:hidden w-full mb-1">
               <ProfileSidebar profile={profile} userId={userStore.id} />
             </div>
           )}
           {/* Sidebar perfil desktop/tablet */}
-          {userStore?.id && (
+          {userStore?.id && !isInternal && (
             <div className="hidden md:block w-full md:w-1/4 lg:w-1/5">
               <ProfileSidebar profile={profile} userId={userStore.id} />
             </div>
           )}
           {/* Feed principal */}
-          <div className="w-full md:w-3/4 lg:w-3/5 flex flex-col items-center">
-            {/* ...existing code for publication feed... */}
-            {/* Caja de inicio de publicación, publicaciones, etc. */}
-            {/* ...no se modifica el sidebar... */}
+          <div className="col-span-1 md:col-span-1 flex flex-col items-center">
+            {/* Caja de inicio de publicación */}
             <div className="bg-white rounded-2xl shadow border border-[#c6e3e4] px-2 sm:px-4 md:px-6 pt-4 pb-2 mb-3 flex flex-col gap-2 w-full max-w-full md:max-w-2xl">
               <div className="flex items-center gap-3">
                 <Image src={avatar} alt="avatar" width={40} height={40} className="rounded-full aspect-square object-cover" />
@@ -126,7 +148,7 @@ export default function ClientCommunity() {
                 </button>
               </div>
               {/* Botones de adjunto alineados con el input, menos espacio vertical */}
-                <div className="flex items-center gap-2 md:gap-3 mt-0 pb-2 pl-[56px] md:pl-[56px]">
+              <div className="flex items-center gap-2 md:gap-3 mt-0 pb-2 pl-[56px] md:pl-[56px]">
                 <button
                   type="button"
                   onClick={() => setModalOpen(true)}
@@ -160,7 +182,7 @@ export default function ClientCommunity() {
                 <div className="flex-1" />
                 <Button onClick={() => setModalOpen(true)} className="!px-4 md:!px-5 !py-2 !rounded-lg ml-0 md:ml-4 mt-2 md:mt-0" disabled={isLoading || !user}>Publicar</Button>
               </div>
-              </div>
+            </div>
             {/* Modal de publicación */}
             <PublicationModal open={modalOpen} onClose={() => setModalOpen(false)} onPublish={handlePublish} user={{
               profilePicture: profile?.profilePicture,
@@ -202,6 +224,15 @@ export default function ClientCommunity() {
                 <div className="text-conexia-green/60 py-4 text-center">No hay más publicaciones.</div>
               )}
             </div>
+          </div>
+          {/* MiniRecommendations sidebar derecho */}
+          <div className="hidden md:block col-span-1 md:col-span-1 flex flex-col items-start" style={{minWidth:'200px',maxWidth:'240px'}}>
+            <MiniRecommendations
+              recommendations={recommendations}
+              onConnect={handleConnect}
+              loading={loadingRecommendations}
+              error={errorRecommendations}
+            />
           </div>
         </div>
         {/* Widget de mensajería reutilizable */}

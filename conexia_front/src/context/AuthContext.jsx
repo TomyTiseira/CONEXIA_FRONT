@@ -37,39 +37,40 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const { setUser: setUserStore, setProfile: setProfileStore, clearUser: clearUserStore, setRoleName } = useUserStore();
   const roleId = user?.roleId || null;
-  const { role: roleName } = useRole(roleId);
+  const { role: roleName, loading: roleLoading } = useRole(roleId);
 
   const validateSession = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       const userData = await getProfile();
-      
-      // Agregar el roleName al objeto userData usando roleId como fallback
-      const roleFromId = getRoleNameByRoleId(userData?.roleId);
-      const userWithRole = {
-        ...userData,
-        role: roleName || roleFromId
-      };
-      
-      setUser(userWithRole);
-      setUserStore(userWithRole, roleName || roleFromId); // Guardar en Zustand con roleName
-      
-      // Obtener perfil extendido solo si hay id y no es admin/moderator
-      if (userWithRole?.id) {
-        // Verificar si es admin o moderator
-        const userRole = userWithRole?.role?.toLowerCase() || '';
-        const isAdminOrModerator = [ROLES.ADMIN, ROLES.MODERATOR].includes(userRole);
-        
-        if (!isAdminOrModerator) {
-          try {
-            const profileRes = await getProfileById(userWithRole.id);
-            setProfileStore(profileRes.data.profile);
-          } catch (e) {
-            setProfileStore(null);
-          }
-        } else {
-          // Para admin/moderator, no buscar perfil extendido
+      setUser(userData);
+      setUserStore(userData, roleName); // Guardar en Zustand con roleName
+
+      // Esperar a que el rol esté definido antes de buscar perfil extendido
+      if (roleLoading || !roleName) {
+        // Si el rol aún está cargando o no está definido, no hacer nada
+        return;
+      }
+
+      // Obtener perfil extendido solo si hay id y no es admin/moderador
+      if (userData?.id) {
+        // Verificar si es admin o moderador usando tanto userData.role como roleName (y variantes en español)
+        const userRole = userData?.role?.toLowerCase() || '';
+        const currentRoleName = roleName?.toLowerCase() || '';
+        const adminVariants = ['admin', 'administrador'];
+        const moderatorVariants = ['moderator', 'moderador'];
+        const isAdminOrModerator = adminVariants.includes(userRole) || moderatorVariants.includes(userRole) ||
+                                  adminVariants.includes(currentRoleName) || moderatorVariants.includes(currentRoleName);
+        if (isAdminOrModerator) {
+          // Para admin/moderador, no buscar perfil extendido
+          setProfileStore(null);
+          return;
+        }
+        try {
+          const profileRes = await getProfileById(userData.id);
+          setProfileStore(profileRes.data.profile);
+        } catch (e) {
           setProfileStore(null);
         }
       } else {
@@ -91,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [setUserStore, setProfileStore, clearUserStore, roleName]);
+  }, [setUserStore, setProfileStore, clearUserStore, roleName, roleLoading]);
 
   const logout = useCallback(async () => {
     try {
@@ -126,8 +127,10 @@ export const AuthProvider = ({ children }) => {
   }, [clearUserStore]);
 
   useEffect(() => {
+    // Solo validar sesión cuando el rol esté definido
+    if (roleLoading) return;
     validateSession();
-  }, [validateSession]);
+  }, [validateSession, roleLoading]);
 
   useEffect(() => {
     if (roleName) setRoleName(roleName);

@@ -15,6 +15,11 @@ export default function ConnectionFriendCard({ friend }) {
     return `${config.IMAGE_URL}/${img}`;
   };
   const profileImage = getProfileImageUrl(friend.profilePicture);
+
+  // Portada personalizada
+  const coverImage = friend.coverPicture
+    ? `${config.IMAGE_URL}/${friend.coverPicture}`
+    : '/bg-smoke.png';
   const router = useRouter();
 
   // Solo primer nombre y último apellido
@@ -34,10 +39,10 @@ export default function ConnectionFriendCard({ friend }) {
       }}
       tabIndex={0}
     >
-      {/* Fondo decorativo verde, más alto */}
+      {/* Fondo de portada personalizado */}
       <div
         className="w-full h-16 bg-center bg-cover relative rounded-t-2xl"
-        style={{ backgroundImage: 'url(/bg-smoke.png)' }}
+        style={{ backgroundImage: `url(${coverImage})` }}
       />
       {/* Foto de perfil centrada, NO superpuesta con el nombre */}
       <div className="flex flex-col items-center justify-center w-full" style={{ marginTop: -40 }}>

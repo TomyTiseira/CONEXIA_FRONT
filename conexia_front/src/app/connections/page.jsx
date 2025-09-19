@@ -1,6 +1,6 @@
 
 "use client";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import React, { useState } from "react";
 import NavbarCommunity from "@/components/navbar/NavbarCommunity";
 import ConnectionsSidebar from "@/components/connections/ConnectionsSidebar";
@@ -8,16 +8,79 @@ import ConnectionRequestsSection from "@/components/connections/ConnectionReques
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { NotFound } from "@/components/ui";
 import { ROLES } from "@/constants/roles";
+import { useRecommendations } from "@/hooks/connections/useRecommendations";
+import { sendConnectionRequest } from "@/service/connections/sendConnectionRequest";
+import { useRouter } from "next/navigation";
 
 function RecommendedSection() {
+  const { recommendations, loading, error, refetch } = useRecommendations();
+  const router = useRouter();
+
+  const handleConnect = async (userId) => {
+    try {
+      await sendConnectionRequest(userId);
+      // Actualizar las recomendaciones para remover el usuario conectado
+      refetch();
+    } catch (err) {
+      console.error('Error al enviar solicitud de conexión:', err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full">
+        <div className="text-conexia-green text-2xl font-bold mb-1">Personas recomendadas</div>
+        <div className="text-conexia-green/80 mb-6">Conecta con personas sugeridas según tus intereses y actividad en Conexia.</div>
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green"></div>
+          <span className="ml-3 text-conexia-green">Cargando recomendaciones...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full">
+        <div className="text-conexia-green text-2xl font-bold mb-1">Personas recomendadas</div>
+        <div className="text-conexia-green/80 mb-6">Conecta con personas sugeridas según tus intereses y actividad en Conexia.</div>
+        <div className="text-center py-8">
+          <div className="text-red-500 mb-4">{error}</div>
+          <button 
+            onClick={refetch}
+            className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!recommendations.length) {
+    return (
+      <div className="w-full">
+        <div className="text-conexia-green text-2xl font-bold mb-1">Personas recomendadas</div>
+        <div className="text-conexia-green/80 mb-6">Conecta con personas sugeridas según tus intereses y actividad en Conexia.</div>
+        <div className="text-conexia-green/70 text-center py-8">No hay recomendaciones disponibles en este momento.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <div className="text-conexia-green text-2xl font-bold mb-1">Personas recomendadas</div>
       <div className="text-conexia-green/80 mb-6">Conecta con personas sugeridas según tus intereses y actividad en Conexia.</div>
-      <div className="text-conexia-green/70 text-center py-8">No hay recomendaciones por ahora. ¡Vuelve pronto!</div>
+      <RecommendationsList
+        recommendations={recommendations}
+        onConnect={handleConnect}
+        onViewProfile={(userId) => router.push(`/profile/userProfile/${userId}`)}
+        max={12}
+      />
     </div>
   );
 }
+import { RecommendationsList } from "@/components/connections/RecommendationsList";
 import MyConnectionsSection from '@/components/connections/MyConnectionsSection';
 import SentRequestsSection from '@/components/connections/SentRequestsSection';
 
@@ -31,6 +94,15 @@ const sectionComponents = {
 export default function ConnectionsPage() {
   const [selected, setSelected] = useState("recommended");
   const SectionComponent = sectionComponents[selected] || (() => null);
+
+  // Manejar parámetros de URL para seleccionar sección específica
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get('section');
+    if (section && sectionComponents[section]) {
+      setSelected(section);
+    }
+  }, []);
 
   return (
     <Suspense fallback={

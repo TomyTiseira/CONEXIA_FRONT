@@ -4,3 +4,4 @@ export * from './sendConnectionRequest';
 export * from './acceptConnectionRequest';
 export * from './cancelConnectionRequest';
 export * from './findConnectionByUserId';
+export * from './getRecommendations';
