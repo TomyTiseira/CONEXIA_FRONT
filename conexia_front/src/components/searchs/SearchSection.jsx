@@ -13,14 +13,15 @@ export default function SearchSection({
   icon: Icon,
   headerActions,
 }) {
+  // Ajustar margen inferior dinámicamente según si hay contenido visible
   return (
-    <div className="mb-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white rounded-2xl shadow-xl border-2 border-conexia-green/20 px-6 py-3 mb-6 gap-2 md:gap-0" style={{ minHeight: 56 }}>
+    <div>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white rounded-2xl shadow-xl border-2 border-conexia-green/20 px-6 py-3 mb-0 gap-2 md:gap-0" style={{ minHeight: 48, marginBottom: showContent ? 8 : 0 }}>
         <div className="flex items-center gap-2">
-          {Icon && <Icon size={28} className="text-conexia-green/80" />}
+          {Icon && <Icon size={24} className="text-conexia-green/80" />}
           <div>
-            <span className="text-conexia-green text-2xl font-bold block">{title}</span>
-            <span className="text-conexia-green/90 font-medium block text-base mt-1">{description}</span>
+            <span className="text-conexia-green text-xl font-bold block" style={{lineHeight:'1.1'}}>{title}</span>
+            <span className="text-conexia-green/90 font-medium block text-sm mt-1">{description}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 md:ml-4">
