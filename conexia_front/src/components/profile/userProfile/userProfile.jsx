@@ -12,10 +12,7 @@ import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests
 import { HiUserAdd } from 'react-icons/hi';
 import { config } from "@/config";
 import { NotFound } from "@/components/ui";
-import NavbarHome from "@/components/navbar/NavbarHome";
-import NavbarAdmin from "@/components/navbar/NavbarAdmin";
-import NavbarModerator from "@/components/navbar/NavbarModerator";
-import NavbarCommunity from "@/components/navbar/NavbarCommunity";
+import Navbar from "@/components/navbar/Navbar";
 
 import EditProfileForm from "./EditProfileForm";
 import { updateUserProfile } from "@/service/profiles/updateProfile";
@@ -35,7 +32,7 @@ export default function UserProfile() {
   const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
   const { refreshRequests } = useConnectionRequests();
   const { user: authUser, updateUser } = useAuth();
-  const { user: storeUser, profile: storeProfile, roleName } = useUserStore();
+  const { user: storeUser, profile: storeProfile, roleName, setProfile: setProfileStore } = useUserStore();
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,18 +43,25 @@ export default function UserProfile() {
   const [editing, setEditing] = useState(false);
   const [showMyProjects, setShowMyProjects] = useState(false);
 
-  // Check if current user is admin or moderator
-  const isAdmin = authUser?.role === ROLES.ADMIN;
-  const isModerator = authUser?.role === ROLES.MODERATOR;
+  // Detección robusta de roles (igual que en Navbar)
+  // Se toma de useUserStore y se chequea tanto roleName como user?.role
+  let isAdmin = false;
+  let isModerator = false;
+  if (storeUser) {
+    isAdmin = storeUser.roleName === ROLES.ADMIN || storeUser.role === ROLES.ADMIN;
+    isModerator = storeUser.roleName === ROLES.MODERATOR || storeUser.role === ROLES.MODERATOR;
+  }
+  // Fallback: si no está en storeUser, intentar con authUser
+  if (!isAdmin && !isModerator && authUser) {
+    isAdmin = authUser.role === ROLES.ADMIN;
+    isModerator = authUser.role === ROLES.MODERATOR;
+  }
+  // LOG para depuración de navbar y roles
+  useEffect(() => {
+    console.log('[UserProfile] storeUser:', storeUser, 'roleName:', roleName, 'authUser:', authUser, 'isAdmin:', isAdmin, 'isModerator:', isModerator);
+  }, [storeUser, roleName, authUser, isAdmin, isModerator]);
 
   useEffect(() => {
-    // Si es admin o moderador, no buscar perfil
-    if (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
-      setLoading(false);
-      setProfile(null);
-      setIsOwner(false);
-      return;
-    }
     const fetchProfile = async () => {
       try {
         const data = await getProfileById(id);
@@ -318,14 +322,11 @@ export default function UserProfile() {
     }
   };
 
-  let Navbar = NavbarHome;
-  if (authUser?.role === ROLES.ADMIN) Navbar = NavbarAdmin;
-  else if (authUser?.role === ROLES.MODERATOR) Navbar = NavbarModerator;
-  else if (authUser) Navbar = NavbarCommunity;
+  // Navbar único, detecta el rol internamente
   if (editing && isOwner) {
     return (
       <div className="bg-conexia-soft min-h-screen">
-        <Navbar />
+  <Navbar />
         <div className="w-full max-w-2xl mx-auto mt-4">
           <EditProfileForm 
             user={user} 
@@ -342,7 +343,7 @@ export default function UserProfile() {
     const MyProjects = require('@/components/project/search/MyProjectsView').default;
     return (
       <div className="bg-conexia-soft min-h-screen">
-        <Navbar />
+  <Navbar />
         <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-6 mt-4 mx-6 md:mx-auto">
           <MyProjects />
           <div className="mt-6 flex justify-end">
@@ -355,7 +356,7 @@ export default function UserProfile() {
 
   return (
     <div className="bg-conexia-soft min-h-screen">
-      <Navbar />
+  <Navbar />
       <div className="max-w-5xl mx-auto flex flex-col gap-0 mt-4 px-2 md:px-0">
         {/* Rectángulo de datos personales */}
         <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
@@ -397,10 +398,13 @@ export default function UserProfile() {
                 {(user.state || user.country) && (
                   <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
                 )}
-                {/* Solo mostrar el botón de conexión si no hay solicitud pendiente */}
-                {!(profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id) && (
-                  <ProfileConnectionButtons profile={profile} id={storeUser?.id} isOwner={isOwner} receiverId={Number(id)}/>
-                )}
+                {/* Botones de conexión y mensaje (la lógica de visibilidad está dentro del componente) */}
+                <ProfileConnectionButtons 
+                  profile={profile} 
+                  id={storeUser?.id} 
+                  isOwner={isOwner} 
+                  receiverId={Number(id)}
+                />
               </div>
             </div>
             {/* Botón de editar (solo dueño) y botón para ver proyectos (todos) */}
@@ -593,10 +597,12 @@ export default function UserProfile() {
       </div>
       {/* Margen inferior verde */}
       <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
-      {/* NUEVO: Widget de Mensajes flotante en perfil */}
-      <MessagingWidget
-        avatar={avatar}
-      />
+      {/* NUEVO: Widget de Mensajes flotante en perfil (solo para usuarios normales) */}
+      {!(isAdmin || isModerator) && (
+        <MessagingWidget
+          avatar={avatar}
+        />
+      )}
     </div>
   );
 }

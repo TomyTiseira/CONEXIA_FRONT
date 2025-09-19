@@ -13,18 +13,23 @@ import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useAuth } from '@/context/AuthContext';
 import { ROLES } from '@/constants/roles';
+import { useUserStore } from '@/store/userStore';
+import { useRole } from '@/hooks/useRole';
 
 export default function ProfileConnectionButtons({ profile, id, isOwner, receiverId}) {
   if (isOwner) return null;
-  
-  // Get current user to check role
+
+  // Obtener roleName y roleId del store global (igual que Navbar)
+  const { roleName, roleId } = useUserStore();
+  // Fallback: obtener user de AuthContext (por si acaso)
   const { user: currentUser } = useAuth();
-  
-  // Check if user is admin or moderator using constants
-  const isAdmin = currentUser?.role === ROLES.ADMIN;
-  const isModerator = currentUser?.role === ROLES.MODERATOR;
-  
-  // Hide connection button for admins and moderators
+  // Si no hay roleName, usar hook useRole
+  const { role } = useRole(roleId || currentUser?.roleId);
+  const effectiveRole = roleName || role;
+  const isAdmin = effectiveRole === ROLES.ADMIN;
+  const isModerator = effectiveRole === ROLES.MODERATOR;
+
+  // Ocultar botones para admin/moderador
   if (isAdmin || isModerator) {
     return null;
   }
@@ -134,6 +139,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
   // Amigo
   if (connection?.state === 'accepted') {
+    // No mostrar nada para admin o moderador
+    if (isAdmin || isModerator) return null;
     return (
       <>
         {/* Mobile: centrado debajo del nombre (pila: Conectado + Enviar mensaje) */}
@@ -164,7 +171,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               </div>
             )}
           </div>
-          {/* NUEVO: botón Enviar mensaje */}
           <Button
             variant="primary"
             className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
@@ -174,7 +180,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
             Enviar mensaje
           </Button>
         </div>
-        
         {/* Desktop: extremo derecho, apilados verticalmente */}
         <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
           <div className="relative" ref={dropdownRef}>
@@ -203,7 +208,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               </div>
             )}
           </div>
-          {/* NUEVO: botón Enviar mensaje */}
           <Button
             variant="primary"
             className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
@@ -213,7 +217,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
             Enviar mensaje
           </Button>
         </div>
-
         {/* Modal único para eliminar contacto */}
         <ConfirmModal
           isOpen={showDeleteModal}
@@ -225,13 +228,13 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={deleteLoading || isDeleting}
         />
-
       </>
     );
   }
 
     // No amigo y sin solicitud
     if (!connection) {
+      if (isAdmin || isModerator) return null;
     const handleSend = async () => {
       setSent(true);
       try {
@@ -252,7 +255,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         const pendingRequest = result?.requests?.find(
           req => req.receiverId === receiverId && req.senderId === id
         );
-        
         if (pendingRequest) {
           await cancelRequest(pendingRequest.id);
           setSent(false);
@@ -387,6 +389,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
   // Pendiente de que me acepte (yo envié la solicitud)
   if (connection.state === 'pending' && connection.senderId === id) {
+    if (isAdmin || isModerator) return null;
     // Utilizamos el dropdown global que ya está declarado arriba
     // No declaramos otra referencia aquí
 
@@ -400,6 +403,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         setShowCancelModal(false); // Cerrar el modal después de cancelar
       } catch (error) {
         console.error('Error al cancelar solicitud:', error);
+        // No cerrar el modal si hay error
       }
     };
 
@@ -497,6 +501,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
   // Pendiente de que yo acepte (otro usuario me envió la solicitud)
   if (connection.state === 'pending' && connection.senderId !== id) {
+    if (isAdmin || isModerator) return null;
     const handleAccept = async () => {
       try {
         await acceptRequest(connection.id);
