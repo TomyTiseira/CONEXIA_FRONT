@@ -13,8 +13,8 @@ import ConexiaLogo from "@/components/ui/ConexiaLogo";
 
 
 export default function RegisterForm() {
-  // Cambia esto por tu clave de sitio reCAPTCHA
-  const RECAPTCHA_SITE_KEY = "TU_SITE_KEY_AQUI";
+  // Usa la variable de entorno para la clave de sitio reCAPTCHA
+  const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   const router = useRouter();
   const [form, setForm] = useState({
     email: "",

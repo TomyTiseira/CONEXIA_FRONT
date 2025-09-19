@@ -834,28 +834,14 @@ export default function CreateProfileForm() {
           />
         </div>
         {/* Imágenes */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="flex items-center gap-6">
-            <div className="flex-shrink-0">
+        <div className="flex flex-col gap-6">
+          {/* Foto de perfil */}
+          <div className="flex flex-row items-start gap-4">
+            <div className="flex-1">
               <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil (Opcional)</label>
               <p className="text-xs text-gray-500 mb-1">
                 Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
               </p>
-              {/* Nueva imagen seleccionada */}
-              {form.profilePicture && (
-                <div className="mb-3">
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md">
-                    <img
-                      src={URL.createObjectURL(form.profilePicture)}
-                      alt="Vista previa perfil"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1 flex flex-col items-start">
               <input
                 type="file"
                 accept="image/jpeg,image/png"
@@ -865,42 +851,38 @@ export default function CreateProfileForm() {
                 style={{ color: 'transparent' }}
               />
               {form.profilePicture && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage('profilePicture')}
-                  className="text-red-500 text-xs hover:underline mb-1"
-                >
-                  Eliminar
-                </button>
-              )}
-              {form.profilePicture && (
-                <span className="text-xs text-gray-700 mb-1 block">{form.profilePicture.name}</span>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage('profilePicture')}
+                    className="text-red-500 text-xs hover:underline mb-1"
+                  >
+                    Eliminar
+                  </button>
+                  <span className="text-xs text-gray-700 mb-1 block">{form.profilePicture.name}</span>
+                </>
               )}
               {imgErrors.profilePicture && <p className="text-xs text-red-600 mt-1 text-left">{imgErrors.profilePicture}</p>}
             </div>
+            {/* Previsualización a la derecha */}
+            {form.profilePicture && (
+              <div className="relative w-20 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md mt-6">
+                <img
+                  src={URL.createObjectURL(form.profilePicture)}
+                  alt="Vista previa perfil"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex-shrink-0">
+          {/* Foto de portada */}
+          <div className="flex flex-row items-start gap-4">
+            <div className="flex-1">
               <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada (Opcional)</label>
               <p className="text-xs text-gray-500 mb-1">
                 Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
               </p>
-              {/* Nueva imagen seleccionada */}
-              {form.coverPicture && (
-                <div className="mb-3">
-                  <div className="relative w-32 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md">
-                    <img
-                      src={URL.createObjectURL(form.coverPicture)}
-                      alt="Vista previa portada"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1 flex flex-col items-start">
               <input
                 type="file"
                 accept="image/jpeg,image/png"
@@ -910,19 +892,29 @@ export default function CreateProfileForm() {
                 style={{ color: 'transparent' }}
               />
               {form.coverPicture && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage('coverPicture')}
-                  className="text-red-500 text-xs hover:underline mb-1"
-                >
-                  Eliminar
-                </button>
-              )}
-              {form.coverPicture && (
-                <span className="text-xs text-gray-700 mb-1 block">{form.coverPicture.name}</span>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage('coverPicture')}
+                    className="text-red-500 text-xs hover:underline mb-1"
+                  >
+                    Eliminar
+                  </button>
+                  <span className="text-xs text-gray-700 mb-1 block">{form.coverPicture.name}</span>
+                </>
               )}
               {imgErrors.coverPicture && <p className="text-xs text-red-600 mt-1 text-left">{imgErrors.coverPicture}</p>}
             </div>
+            {/* Previsualización a la derecha */}
+            {form.coverPicture && (
+              <div className="relative w-32 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md mt-6">
+                <img
+                  src={URL.createObjectURL(form.coverPicture)}
+                  alt="Vista previa portada"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
         </div>
         <div>
