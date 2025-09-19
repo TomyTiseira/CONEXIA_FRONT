@@ -2,6 +2,7 @@
 "use client";
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 
 import { useRef } from 'react';
@@ -12,6 +13,14 @@ import PeopleSection from '@/components/searchs/PeopleSection';
 import { useSearchSections } from '@/components/searchs/useSearchSections';
 
 export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={<div>Cargando resultados...</div>}>
+      <SearchResultsPageContent />
+    </Suspense>
+  );
+}
+
+function SearchResultsPageContent() {
   const params = useSearchParams();
   const query = params.get('q') || '';
   const [selectedSection, setSelectedSection] = React.useState('projects');
