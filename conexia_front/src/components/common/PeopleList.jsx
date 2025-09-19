@@ -7,11 +7,25 @@ export default function PeopleList({ people = [] }) {
     return <div className="text-center text-conexia-green mt-12 text-lg opacity-70">No se encontraron personas.</div>;
   }
   return (
-  <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5 items-stretch mt-0 w-full px-6 sm:px-0">
+    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5 items-stretch mt-0 w-full px-6 sm:px-0">
       {people.map((person) => (
         <div key={person.id} className="rounded-2xl shadow border border-[#c6e3e4] flex flex-col items-center bg-white hover:shadow-xl transition-shadow no-underline" style={{ width: 170, minWidth: 170, maxWidth: 170, height: 200, paddingBottom: 0, justifyContent: 'flex-start' }}>
-          {/* Fondo decorativo */}
-          <div className="w-full h-16 bg-center bg-cover relative rounded-t-2xl" style={{ backgroundImage: 'url(/bg-smoke.png)' }} />
+          {/* Imagen de portada o fondo decorativo */}
+          {person.coverPicture ? (
+            <div className="w-full h-16 bg-center bg-cover relative rounded-t-2xl overflow-hidden">
+              <Image
+                src={`${config.IMAGE_URL}/${person.coverPicture}`}
+                alt="Portada"
+                fill
+                style={{ objectFit: 'cover' }}
+                className="rounded-t-2xl"
+                sizes="170px"
+                priority={false}
+              />
+            </div>
+          ) : (
+            <div className="w-full h-16 bg-center bg-cover relative rounded-t-2xl" style={{ backgroundImage: 'url(/bg-smoke.png)' }} />
+          )}
           {/* Foto de perfil centrada */}
           <div className="flex flex-col items-center justify-center w-full" style={{ marginTop: -40 }}>
             <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center" style={{ zIndex: 2 }}>
