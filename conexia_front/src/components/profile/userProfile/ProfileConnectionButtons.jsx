@@ -13,18 +13,23 @@ import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useAuth } from '@/context/AuthContext';
 import { ROLES } from '@/constants/roles';
+import { useUserStore } from '@/store/userStore';
+import { useRole } from '@/hooks/useRole';
 
 export default function ProfileConnectionButtons({ profile, id, isOwner, receiverId}) {
   if (isOwner) return null;
-  
-  // Get current user to check role
+
+  // Obtener roleName y roleId del store global (igual que Navbar)
+  const { roleName, roleId } = useUserStore();
+  // Fallback: obtener user de AuthContext (por si acaso)
   const { user: currentUser } = useAuth();
-  
-  // Check if user is admin or moderator using constants
-  const isAdmin = currentUser?.role === ROLES.ADMIN;
-  const isModerator = currentUser?.role === ROLES.MODERATOR;
-  
-  // Hide connection button for admins and moderators
+  // Si no hay roleName, usar hook useRole
+  const { role } = useRole(roleId || currentUser?.roleId);
+  const effectiveRole = roleName || role;
+  const isAdmin = effectiveRole === ROLES.ADMIN;
+  const isModerator = effectiveRole === ROLES.MODERATOR;
+
+  // Ocultar botones para admin/moderador
   if (isAdmin || isModerator) {
     return null;
   }
@@ -134,47 +139,29 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
   // Amigo
   if (connection?.state === 'accepted') {
+    // No mostrar nada para admin o moderador
+    if (isAdmin || isModerator) return null;
     return (
       <>
         {/* Mobile: centrado debajo del nombre (pila: Conectado + Enviar mensaje) */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
-          <div className="relative" ref={dropdownRef}>
-            <Button
-              variant="informative"
-              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-full max-w-[160px] mx-auto"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              <Check className="w-5 h-5 mr-2 text-conexia-green" />
-              Conectado
-              <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
-            </Button>
-            {dropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                <button 
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap"
-                  onClick={() => {
-                    if (isDeleting || showDeleteModal) return; // No abrir si ya está procesando o modal abierto
-                    setDropdownOpen(false);
-                    setShowDeleteModal(true);
-                  }}
-                >
-                  <X className="w-4 h-4 mr-2 flex-shrink-0" />
-                  Eliminar contacto
-                </button>
-              </div>
-            )}
-          </div>
-          {/* NUEVO: botón Enviar mensaje */}
+          <Button
+            variant="informative"
+            className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-56 whitespace-nowrap"
+            onClick={() => setShowDeleteModal(true)}
+          >
+            <Check className="w-5 h-5 mr-2 text-conexia-green" />
+            Conectado
+          </Button>
           <Button
             variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-56 whitespace-nowrap"
             onClick={openChat}
-          >
+            style={{lineHeight: '1.2'}}>
             <Send className="w-4 h-4 mr-2" />
-            Enviar mensaje
+            <span className="truncate">Enviar mensaje</span>
           </Button>
         </div>
-        
         {/* Desktop: extremo derecho, apilados verticalmente */}
         <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
           <div className="relative" ref={dropdownRef}>
@@ -203,7 +190,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               </div>
             )}
           </div>
-          {/* NUEVO: botón Enviar mensaje */}
           <Button
             variant="primary"
             className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
@@ -213,7 +199,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
             Enviar mensaje
           </Button>
         </div>
-
         {/* Modal único para eliminar contacto */}
         <ConfirmModal
           isOpen={showDeleteModal}
@@ -225,17 +210,21 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={deleteLoading || isDeleting}
         />
-
       </>
     );
   }
 
     // No amigo y sin solicitud
     if (!connection) {
+      if (isAdmin || isModerator) return null;
     const handleSend = async () => {
       setSent(true);
       try {
         const response = await sendRequest(receiverId);
+        // Si el backend devuelve la solicitud en response.data, guardar el objeto completo
+        if (response && response.data && response.data.id) {
+          setLocalConnection(response.data);
+        }
         // Actualizar el contexto después de enviar la solicitud
         await refreshRequests();
         // Actualizar la conexión local después de enviar la solicitud
@@ -252,7 +241,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         const pendingRequest = result?.requests?.find(
           req => req.receiverId === receiverId && req.senderId === id
         );
-        
         if (pendingRequest) {
           await cancelRequest(pendingRequest.id);
           setSent(false);
@@ -267,75 +255,33 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
     
     return (
       <>
-        {/* Mobile: centrado debajo del nombre, apilados */}
+        {/* Mobile: primero Enviar mensaje, luego Conectar/Pendiente, ambos más chicos y alineados */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
-          {!sent ? (
-            <Button
-              variant="neutral"
-              className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px] mx-auto"
-              onClick={handleSend}
-            >
-              <span className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white mr-2 bg-transparent">
-                <HiOutlinePlus className="w-4 h-4 text-white stroke-[2]" />
-              </span>
-              Conectar
-            </Button>
-          ) : (
-            <div className="relative" ref={dropdownRef}>
-              <Button
-                variant="informative"
-                className="flex items-center justify-center px-4 py-2 text-sm min-w-[160px]"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
-                <span>Conectando</span>
-                <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
-              </Button>
-              {dropdownOpen && (
-                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                  <button 
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
-                    onClick={() => {
-                      setDropdownOpen(false);
-                      setShowCancelModal(true);
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Cancelar solicitud
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          {/* NUEVO: botón Enviar mensaje */}
           <Button
             variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-56 whitespace-nowrap"
             onClick={openChat}
+            style={{lineHeight: '1.2'}}
           >
             <Send className="w-4 h-4 mr-2" />
-            Enviar mensaje
+            <span className="truncate">Enviar mensaje</span>
           </Button>
-        </div>
-        
-        {/* Desktop: extremo derecho y centrado verticalmente, apilados */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
           {!sent ? (
             <Button
-              variant="neutral"
-              className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+              variant="informative"
+              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-56 whitespace-nowrap"
               onClick={handleSend}
             >
               <span className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white mr-2 bg-transparent">
-                <HiOutlinePlus className="w-4 h-4 text-white stroke-[2]" />
+                <HiOutlinePlus className="w-4 h-4 text-conexia-green stroke-[2]" />
               </span>
               Conectar
             </Button>
           ) : (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative flex justify-center" ref={mobileDropdownRef}>
               <Button
                 variant="informative"
-                className="flex items-center justify-center px-4 py-2 text-sm min-w-[160px]"
+                className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-56 whitespace-nowrap"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
                 <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
@@ -343,7 +289,50 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
                 <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
               </Button>
               {dropdownOpen && (
-                <div className="absolute right-0 z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                <div className="absolute z-10 mt-2 left-0 w-56 bg-white border border-gray-200 rounded-md shadow-lg flex justify-center">
+                  <button 
+                    className="flex items-center px-2 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap rounded-md w-auto min-w-0"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      setShowCancelModal(true);
+                    }}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    <span className="truncate">Cancelar solicitud</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Desktop: extremo derecho y centrado verticalmente, botones alineados horizontalmente */}
+        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-row items-center gap-4">
+          {/* Botón Conectar/Pendiente y Enviar mensaje, siempre con gap-4 y misma estructura */}
+          {!sent ? (
+            <Button
+              variant="informative"
+              className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
+              onClick={handleSend}
+            >
+              <span className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white mr-2 bg-transparent">
+                <HiOutlinePlus className="w-4 h-4 text-conexia-green stroke-[2]" />
+              </span>
+              Conectar
+            </Button>
+          ) : (
+            <div className="relative flex items-center h-[52px]" ref={desktopDropdownRef}>
+              <Button
+                variant="informative"
+                className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
+                <span>Pendiente</span>
+                <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
+              </Button>
+              {dropdownOpen && (
+                <div className="absolute right-0 z-10 mt-3 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                   <button 
                     className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap"
                     onClick={() => {
@@ -358,10 +347,9 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               )}
             </div>
           )}
-          {/* NUEVO: botón Enviar mensaje */}
           <Button
             variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
             onClick={openChat}
           >
             <Send className="w-4 h-4 mr-2" />
@@ -379,7 +367,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={cancelLoading}
         />
-
       </>
     );
   }
@@ -387,8 +374,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
   // Pendiente de que me acepte (yo envié la solicitud)
   if (connection.state === 'pending' && connection.senderId === id) {
-    // Utilizamos el dropdown global que ya está declarado arriba
-    // No declaramos otra referencia aquí
+    if (isAdmin || isModerator) return null;
 
     const handleCancel = async () => {
       try {
@@ -400,17 +386,26 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         setShowCancelModal(false); // Cerrar el modal después de cancelar
       } catch (error) {
         console.error('Error al cancelar solicitud:', error);
+        // No cerrar el modal si hay error
       }
     };
 
     return (
       <>
-        {/* Mobile: centrado debajo del nombre */}
-        <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden">
-          <div className="relative" ref={dropdownRef}>
+        {/* Mobile: primero Enviar mensaje, luego Pendiente, ambos con mismo estilo */}
+        <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-56 whitespace-nowrap"
+            onClick={openChat}
+            style={{lineHeight: '1.2'}}>
+            <Send className="w-4 h-4 mr-2" />
+            <span className="truncate">Enviar mensaje</span>
+          </Button>
+          <div className="relative flex justify-center" ref={mobileDropdownRef}>
             <Button
               variant="informative"
-              className="flex items-center justify-center px-4 py-2 text-sm min-w-[160px]"
+              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-56 whitespace-nowrap"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
@@ -418,8 +413,36 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
             </Button>
             {dropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                <button 
+              <div className="absolute z-50 top-full mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg flex justify-center">
+                <button
+                  className="flex items-center px-2 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap rounded-md w-auto min-w-0"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setShowCancelModal(true);
+                  }}
+                >
+                  <X className="w-4 h-4 mr-2 flex-shrink-0" />
+                  Cancelar solicitud
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Desktop: extremo derecho y centrado verticalmente, botones alineados horizontalmente */}
+        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-row items-center gap-4">
+          <div className="relative flex items-center h-[52px]">
+            <Button
+              variant="informative"
+              className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
+              <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
+              <span>Pendiente</span>
+              <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
+            </Button>
+            {dropdownOpen && (
+              <div ref={desktopDropdownRef} className="absolute right-0 z-50 top-full mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                <button
                   className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap"
                   onClick={() => {
                     setDropdownOpen(false);
@@ -432,54 +455,15 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               </div>
             )}
           </div>
-          {/* NUEVO: botón Enviar mensaje */}
           <Button
             variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
             onClick={openChat}
           >
             <Send className="w-4 h-4 mr-2" />
             Enviar mensaje
           </Button>
         </div>
-        {/* Desktop: extremo derecho y centrado verticalmente */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6">
-          <div className="relative" ref={dropdownRef}>
-            <Button
-              variant="informative"
-              className="flex items-center justify-center px-4 py-2 text-sm min-w-[160px]"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
-              <span>Pendiente</span>
-              <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
-            </Button>
-            {dropdownOpen && (
-              <div className="absolute right-0 z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                <button 
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    setShowCancelModal(true);
-                  }}
-                >
-                  <X className="w-4 h-4 mr-2 flex-shrink-0" />
-                  Cancelar solicitud
-                </button>
-              </div>
-            )}
-          </div>
-          {/* NUEVO: botón Enviar mensaje */}
-          <Button
-            variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
-            onClick={openChat}
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Enviar mensaje
-          </Button>
-        </div>
-
         <ConfirmModal
           isOpen={showCancelModal}
           onClose={() => setShowCancelModal(false)}
@@ -490,13 +474,13 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={cancelLoading}
         />
-
       </>
     );
   }
 
   // Pendiente de que yo acepte (otro usuario me envió la solicitud)
   if (connection.state === 'pending' && connection.senderId !== id) {
+    if (isAdmin || isModerator) return null;
     const handleAccept = async () => {
       try {
         await acceptRequest(connection.id);
@@ -525,21 +509,30 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
     return (
       <>
-        {/* Mobile: centrar acciones y debajo el botón Enviar mensaje */}
+        {/* Mobile: primero Enviar mensaje, luego Aceptar y Rechazar, todos más chicos y alineados */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
-          <div className="flex gap-2">
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-56 whitespace-nowrap"
+            onClick={openChat}
+            style={{lineHeight: '1.2'}}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            <span className="truncate">Enviar mensaje</span>
+          </Button>
+          <div className="flex gap-2 w-56 justify-center">
             <Button
               variant="neutral"
-              className="flex items-center justify-center px-4 py-2 text-sm"
+              className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-1/2 whitespace-nowrap"
               onClick={() => setShowAcceptModal(true)}
               disabled={acceptLoading}
             >
               <Check className="w-4 h-4 mr-2" />
-              Aceptar solicitud
+              Aceptar
             </Button>
             <Button
               variant="cancel"
-              className="flex items-center justify-center px-4 py-2 text-sm"
+              className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-1/2 whitespace-nowrap"
               onClick={() => setShowRejectModal(true)}
               disabled={rejectLoading}
             >
@@ -547,47 +540,6 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               Rechazar
             </Button>
           </div>
-          {/* NUEVO: botón Enviar mensaje */}
-          <Button
-            variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
-            onClick={openChat}
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Enviar mensaje
-          </Button>
-        </div>
-        {/* Desktop: extremo derecho, acciones arriba y Enviar mensaje abajo */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
-          <div className="flex gap-2">
-            <Button
-              variant="neutral"
-              className="flex items-center justify-center px-4 py-2 text-sm"
-              onClick={() => setShowAcceptModal(true)}
-              disabled={acceptLoading}
-            >
-              <Check className="w-4 h-4 mr-2" />
-              Aceptar solicitud
-            </Button>
-            <Button
-              variant="cancel"
-              className="flex items-center justify-center px-4 py-2 text-sm"
-              onClick={() => setShowRejectModal(true)}
-              disabled={rejectLoading}
-            >
-              <X className="w-4 h-4 mr-2" />
-              Rechazar
-            </Button>
-          </div>
-          {/* NUEVO: botón Enviar mensaje */}
-          <Button
-            variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
-            onClick={openChat}
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Enviar mensaje
-          </Button>
         </div>
 
         <ConfirmModal

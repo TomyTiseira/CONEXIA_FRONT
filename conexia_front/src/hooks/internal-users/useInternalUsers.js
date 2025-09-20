@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
 import { fetchInternalUsers } from '@/service/internalUser/internalUserFetch';
 
 export default function useInternalUsers() {
@@ -17,16 +18,16 @@ export default function useInternalUsers() {
 
   const [reloadTrigger, setReloadTrigger] = useState(0); // ✅ nuevo
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const result = await fetchInternalUsers(filters);
     setData(result);
     setLoading(false);
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchData();
-  }, [filters, reloadTrigger]); // ✅ dependemos también de reloadTrigger
+  }, [fetchData, reloadTrigger]);
 
   const refetch = () => setReloadTrigger((prev) => prev + 1); // ✅ función para forzar refetch
 

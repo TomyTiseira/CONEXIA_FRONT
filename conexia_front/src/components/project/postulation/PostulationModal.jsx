@@ -115,7 +115,9 @@ export default function PostulationModal({
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Currículum Vitae (PDF) *
             </label>
-            
+            <p className="text-xs text-gray-500 mb-2">
+              Solo se permite adjuntar <span className="font-semibold text-conexia-green">1 archivo PDF</span> de hasta <span className="font-semibold text-conexia-green">10MB</span>.
+            </p>
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 dragActive 

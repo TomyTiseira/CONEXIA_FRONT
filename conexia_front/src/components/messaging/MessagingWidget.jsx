@@ -98,13 +98,12 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
   // Helper para normalizar la URL de la imagen de perfil
   const getProfilePictureUrl = (img) => {
     const defaultAvatar = '/images/default-avatar.png';
-    const joinUrl = (base, path) => `${String(base).replace(/\/+$/,'')}/${String(path).replace(/^\/+/, '')}`;
     if (!img) return defaultAvatar;
+    if (img === defaultAvatar) return defaultAvatar;
     if (img.startsWith('http://') || img.startsWith('https://')) return img;
-    if (img.startsWith('/uploads')) return joinUrl(config.DOCUMENT_URL, img);
-    if (img.startsWith('/')) return joinUrl(config.DOCUMENT_URL, img);
-    // bare filename → served under /uploads base
-    return joinUrl(config.IMAGE_URL, img);
+    if (img.startsWith('/uploads')) return `${config.DOCUMENT_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
+    if (img.startsWith('/')) return `${config.DOCUMENT_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
+    return `${config.IMAGE_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
   };
 
   // Cargar conversaciones iniciales
@@ -294,7 +293,7 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
           <div className="flex items-center">
             {/* Foto de perfil y punto verde */}
             <div className="relative flex items-center">
-              <Image src={avatar} alt="avatar" width={28} height={28} className="w-7 h-7 rounded-full object-cover" />
+              <Image src={getProfilePictureUrl(avatar)} alt="avatar" width={28} height={28} className="w-7 h-7 rounded-full object-cover" />
               <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white shadow"></span>
             </div>
             {/* Título */}
