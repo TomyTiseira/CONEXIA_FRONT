@@ -7,7 +7,7 @@ import { useRejectConnectionRequest } from '@/hooks/connections/useRejectConnect
 import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
 import { useFindConnection } from '@/hooks/connections/useFindConnection';
 import { HiOutlinePlus } from 'react-icons/hi';
-import { Check, X, ChevronDown, Send } from 'lucide-react';
+import { Check, X, ChevronDown, ChevronUp, Send } from 'lucide-react';
 import { FaRegClock } from 'react-icons/fa';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -17,7 +17,6 @@ import { useUserStore } from '@/store/userStore';
 import { useRole } from '@/hooks/useRole';
 
 export default function ProfileConnectionButtons({ profile, id, isOwner, receiverId}) {
-  if (isOwner) return null;
 
   // Obtener roleName y roleId del store global (igual que Navbar)
   const { roleName, roleId } = useUserStore();
@@ -29,21 +28,17 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   const isAdmin = effectiveRole === ROLES.ADMIN;
   const isModerator = effectiveRole === ROLES.MODERATOR;
 
-  // Ocultar botones para admin/moderador
-  if (isAdmin || isModerator) {
-    return null;
-  }
-  
+  // Importante: no retornar aún. Mantener el orden de hooks estable entre renders.
+
   const { sendRequest, loading: sendLoading } = useSendConnectionRequest();
   const { acceptRequest, loading: acceptLoading } = useAcceptConnectionRequest();
   const { cancelRequest, loading: cancelLoading } = useCancelConnectionRequest();
   const { cancelRequest: deleteContact, loading: deleteLoading } = useCancelConnectionRequest(); // Hook separado para eliminar
   const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
   const { refreshRequests } = useConnectionRequests();
-  const { connection: connectionFromHook, refreshConnection } = useFindConnection(
-    // Solo buscar conexión si no la tenemos en el perfil
-    profile.profile?.connectionData ? null : receiverId
-  );
+  // Solo buscar conexión si corresponde (evitar fetch para owner/admin/moderador o si ya viene del perfil)
+  const shouldQueryConnection = (!isOwner && !isAdmin && !isModerator && !profile.profile?.connectionData) ? receiverId : null;
+  const { connection: connectionFromHook, refreshConnection } = useFindConnection(shouldQueryConnection);
   
   // Estados compartidos
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -137,6 +132,9 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
     }
   }, [connection, isDeleting, cancelRequest]);
 
+  // Ocultar completamente para owner/admin/moderador, pero después de declarar TODOS los hooks anteriores
+  if (isOwner || isAdmin || isModerator) return null;
+
   // Amigo
   if (connection?.state === 'accepted') {
     // No mostrar nada para admin o moderador
@@ -145,46 +143,63 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
       <>
         {/* Mobile: centrado debajo del nombre (pila: Conectado + Enviar mensaje) */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
-          <Button
-            variant="informative"
-            className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-56 whitespace-nowrap"
-            onClick={() => setShowDeleteModal(true)}
-          >
-            <Check className="w-5 h-5 mr-2 text-conexia-green" />
-            Conectado
-          </Button>
+          <div className="relative flex justify-center" ref={mobileDropdownRef}>
+            <Button
+              variant="informative"
+              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-full border border-[#e0f0f0] px-4 h-10 text-sm w-56 whitespace-nowrap"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
+              <Check className="w-5 h-5 mr-2 text-conexia-green" />
+              Conectado
+              <ChevronUp className={`w-4 h-4 ml-2 text-conexia-green transition-transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
+            </Button>
+            {dropdownOpen && (
+              <div className="absolute z-50 top-full mt-2 left-0 w-56 bg-transparent border-0 shadow-none flex justify-center">
+                <button 
+                  className="w-full h-10 flex items-center justify-center px-4 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-colors whitespace-nowrap"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setShowDeleteModal(true);
+                  }}
+                >
+                  <X className="w-4 h-4 mr-2 text-red-600" />
+                  <span className="truncate">Eliminar contacto</span>
+                </button>
+              </div>
+            )}
+          </div>
           <Button
             variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-56 whitespace-nowrap"
+            className="flex items-center justify-center px-4 h-10 text-sm font-semibold w-56 whitespace-nowrap rounded-full"
             onClick={openChat}
             style={{lineHeight: '1.2'}}>
             <Send className="w-4 h-4 mr-2" />
             <span className="truncate">Enviar mensaje</span>
           </Button>
         </div>
-        {/* Desktop: extremo derecho, apilados verticalmente */}
+        {/* Desktop: extremo derecho, apilados verticalmente (Conectado arriba, Enviar abajo) */}
         <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
           <div className="relative" ref={dropdownRef}>
             <Button
               variant="informative"
-              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-full max-w-[160px]"
+              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-full border border-[#e0f0f0] px-4 text-sm min-w-[190px] max-w-[190px] h-10"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               <Check className="w-5 h-5 mr-2 text-conexia-green" />
               Conectado
-              <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
+              <ChevronUp className={`w-4 h-4 ml-2 text-conexia-green transition-transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
             </Button>
             {dropdownOpen && (
-              <div className="absolute right-0 z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+              <div className="absolute right-0 z-50 top-full mt-2 w-full bg-transparent border-0 shadow-none">
                 <button 
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap"
+                  className="w-full h-10 flex items-center justify-center px-4 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-colors whitespace-nowrap"
                   onClick={() => {
                     if (isDeleting || showDeleteModal) return; // No abrir si ya está procesando o modal abierto
                     setDropdownOpen(false);
                     setShowDeleteModal(true);
                   }}
                 >
-                  <X className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <X className="w-4 h-4 mr-2 flex-shrink-0 text-red-600" />
                   Eliminar contacto
                 </button>
               </div>
@@ -192,7 +207,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           </div>
           <Button
             variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm w-full max-w-[160px]"
+            className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full shadow-none border-none"
             onClick={openChat}
           >
             <Send className="w-4 h-4 mr-2" />
@@ -255,92 +270,91 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
     
     return (
       <>
-        {/* Mobile: primero Enviar mensaje, luego Conectar/Pendiente, ambos más chicos y alineados */}
+        {/* Mobile: primero Conectar/Pendiente arriba y luego Enviar mensaje (mismo tamaño) */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
-          <Button
-            variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-56 whitespace-nowrap"
-            onClick={openChat}
-            style={{lineHeight: '1.2'}}
-          >
-            <Send className="w-4 h-4 mr-2" />
-            <span className="truncate">Enviar mensaje</span>
-          </Button>
           {!sent ? (
             <Button
               variant="informative"
-              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-56 whitespace-nowrap"
+              className="flex items-center justify-center bg-[#388181ff] text-white font-semibold rounded-full border border-[#e0f0f0] hover:bg-[#1f6363ff] transition-colors focus:outline-none shadow-sm px-4 h-10 text-sm w-56 whitespace-nowrap gap-2"
               onClick={handleSend}
             >
-              <span className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white mr-2 bg-transparent">
-                <HiOutlinePlus className="w-4 h-4 text-conexia-green stroke-[2]" />
+              <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white bg-transparent">
+                <HiOutlinePlus className="w-3.5 h-3.5 text-white stroke-[3]" />
               </span>
-              Conectar
+              <span>Conectar</span>
             </Button>
           ) : (
             <div className="relative flex justify-center" ref={mobileDropdownRef}>
               <Button
                 variant="informative"
-                className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-56 whitespace-nowrap"
+                className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-full border border-[#e0f0f0] px-4 h-10 text-sm w-56 whitespace-nowrap"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
                 <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
                 <span>Pendiente</span>
-                <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
+                <ChevronUp className={`w-4 h-4 ml-2 text-conexia-green transition-transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
               </Button>
               {dropdownOpen && (
-                <div className="absolute z-10 mt-2 left-0 w-56 bg-white border border-gray-200 rounded-md shadow-lg flex justify-center">
+                <div className="absolute z-20 mt-2 left-0 w-56 bg-transparent border-0 shadow-none flex justify-center">
                   <button 
-                    className="flex items-center px-2 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap rounded-md w-auto min-w-0"
+                    className="w-full h-10 flex items-center justify-center px-4 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-colors whitespace-nowrap"
                     onClick={() => {
                       setDropdownOpen(false);
                       setShowCancelModal(true);
                     }}
                   >
-                    <X className="w-4 h-4 mr-2" />
+                    <X className="w-4 h-4 mr-2 text-red-600" />
                     <span className="truncate">Cancelar solicitud</span>
                   </button>
                 </div>
               )}
             </div>
           )}
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 h-10 text-sm font-semibold w-56 whitespace-nowrap rounded-full"
+            onClick={openChat}
+            style={{lineHeight: '1.2'}}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            <span className="truncate">Enviar mensaje</span>
+          </Button>
         </div>
         
-        {/* Desktop: extremo derecho y centrado verticalmente, botones alineados horizontalmente */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-row items-center gap-4">
-          {/* Botón Conectar/Pendiente y Enviar mensaje, siempre con gap-4 y misma estructura */}
+        {/* Desktop: extremo derecho, apilados verticalmente (Conectar/Pendiente arriba, Enviar abajo) */}
+        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
           {!sent ? (
             <Button
               variant="informative"
-              className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
+              className="flex items-center justify-center bg-[#388181ff] text-white rounded-full border border-[#e0f0f0] hover:bg-[#1f6363ff] transition-colors focus:outline-none shadow-sm px-4 text-sm min-w-[190px] max-w-[190px] h-10 gap-2"
               onClick={handleSend}
             >
-              <span className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white mr-2 bg-transparent">
-                <HiOutlinePlus className="w-4 h-4 text-conexia-green stroke-[2]" />
+              <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white bg-transparent">
+                <HiOutlinePlus className="w-3.5 h-3.5 text-white stroke-[3]" />
               </span>
-              Conectar
+              <span>Conectar</span>
             </Button>
           ) : (
-            <div className="relative flex items-center h-[52px]" ref={desktopDropdownRef}>
+            <div className="relative flex items-center h-10" ref={desktopDropdownRef}>
               <Button
                 variant="informative"
-                className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
+                className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
                 <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
                 <span>Pendiente</span>
-                <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
+                <ChevronUp className={`w-4 h-4 ml-2 text-conexia-green transition-transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
               </Button>
               {dropdownOpen && (
-                <div className="absolute right-0 z-10 mt-3 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                <div className="absolute right-0 z-20 mt-3 w-full bg-transparent border-0 shadow-none">
                   <button 
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap"
+                    className="w-full h-10 flex items-center justify-center px-4 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-colors whitespace-nowrap"
                     onClick={() => {
                       setDropdownOpen(false);
                       setShowCancelModal(true);
                     }}
                   >
-                    <X className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <X className="w-4 h-4 mr-2 flex-shrink-0 text-red-600" />
                     Cancelar solicitud
                   </button>
                 </div>
@@ -349,7 +363,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           )}
           <Button
             variant="primary"
-            className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
+            className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
             onClick={openChat}
           >
             <Send className="w-4 h-4 mr-2" />
@@ -392,64 +406,64 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
     return (
       <>
-        {/* Mobile: primero Enviar mensaje, luego Pendiente, ambos con mismo estilo */}
+        {/* Mobile: primero Pendiente arriba y luego Enviar mensaje */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
+          <div className="relative flex justify-center" ref={mobileDropdownRef}>
+            <Button
+              variant="informative"
+              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-full border border-[#e0f0f0] px-4 h-10 text-sm w-56 whitespace-nowrap"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
+                <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
+                <span>Pendiente</span>
+                <ChevronUp className={`w-4 h-4 ml-2 text-conexia-green transition-transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
+            </Button>
+            {dropdownOpen && (
+              <div className="absolute z-50 top-full mt-2 w-56 bg-transparent border-0 shadow-none flex justify-center">
+                <button
+                  className="w-full h-10 flex items-center justify-center px-4 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-colors whitespace-nowrap"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setShowCancelModal(true);
+                  }}
+                >
+                  <X className="w-4 h-4 mr-2 flex-shrink-0 text-red-600" />
+                  Cancelar solicitud
+                </button>
+              </div>
+            )}
+          </div>
           <Button
             variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-56 whitespace-nowrap"
+            className="flex items-center justify-center px-4 h-10 text-sm font-semibold w-56 whitespace-nowrap rounded-full"
             onClick={openChat}
             style={{lineHeight: '1.2'}}>
             <Send className="w-4 h-4 mr-2" />
             <span className="truncate">Enviar mensaje</span>
           </Button>
-          <div className="relative flex justify-center" ref={mobileDropdownRef}>
-            <Button
-              variant="informative"
-              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] px-4 py-2 text-sm w-56 whitespace-nowrap"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
-              <span>Pendiente</span>
-              <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
-            </Button>
-            {dropdownOpen && (
-              <div className="absolute z-50 top-full mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg flex justify-center">
-                <button
-                  className="flex items-center px-2 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap rounded-md w-auto min-w-0"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    setShowCancelModal(true);
-                  }}
-                >
-                  <X className="w-4 h-4 mr-2 flex-shrink-0" />
-                  Cancelar solicitud
-                </button>
-              </div>
-            )}
-          </div>
         </div>
-        {/* Desktop: extremo derecho y centrado verticalmente, botones alineados horizontalmente */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-row items-center gap-4">
-          <div className="relative flex items-center h-[52px]">
+        {/* Desktop: extremo derecho, apilados verticalmente (Pendiente arriba, Enviar abajo) */}
+        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
+          <div className="relative flex items-center h-10">
             <Button
               variant="informative"
-              className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
+              className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
-              <span>Pendiente</span>
-              <ChevronDown className="w-4 h-4 ml-2 text-conexia-green" />
+                <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
+                <span>Pendiente</span>
+                <ChevronUp className={`w-4 h-4 ml-2 text-conexia-green transition-transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
             </Button>
             {dropdownOpen && (
-              <div ref={desktopDropdownRef} className="absolute right-0 z-50 top-full mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+              <div ref={desktopDropdownRef} className="absolute right-0 z-50 top-full mt-2 w-full bg-transparent border-0 shadow-none">
                 <button
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 whitespace-nowrap"
+                  className="w-full h-10 flex items-center justify-center px-4 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-colors whitespace-nowrap"
                   onClick={() => {
                     setDropdownOpen(false);
                     setShowCancelModal(true);
                   }}
                 >
-                  <X className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <X className="w-4 h-4 mr-2 flex-shrink-0 text-red-600" />
                   Cancelar solicitud
                 </button>
               </div>
@@ -457,7 +471,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           </div>
           <Button
             variant="primary"
-            className="flex items-center justify-center px-6 py-2 text-base min-w-[190px] max-w-[190px] h-[52px] rounded-xl shadow-none border-none"
+            className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
             onClick={openChat}
           >
             <Send className="w-4 h-4 mr-2" />
