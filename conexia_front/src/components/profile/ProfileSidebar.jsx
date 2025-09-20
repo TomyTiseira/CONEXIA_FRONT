@@ -12,10 +12,10 @@ export default function ProfileSidebar({ profile, userId}) {
   const coverImage = profile.coverPicture
     ? `${config.IMAGE_URL}/${profile.coverPicture}`
     : '/bg-smoke.png';
-  // Solo primer nombre y apellido
-  const firstName = (profile.name || '').split(' ')[0];
-  const lastName = profile.lastName || '';
-  const displayName = `${firstName} ${lastName}`.trim();
+  // Solo primer nombre y primer apellido
+  const firstName = (profile.name || '').trim().split(' ')[0];
+  const firstLastName = (profile.lastName || '').trim().split(' ')[0] || '';
+  const displayName = `${firstName} ${firstLastName}`.trim();
   const location = [profile.state, profile.country].filter(Boolean).join(', ');
   // Educación y experiencia actuales - solo mostrar la más reciente
   const currentEducations = (profile.education || []).filter(e => e.isCurrent);
