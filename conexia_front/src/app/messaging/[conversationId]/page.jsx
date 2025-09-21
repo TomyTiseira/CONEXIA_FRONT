@@ -23,9 +23,13 @@ export default function MessagingConversationPage() {
     if (img.startsWith('/')) return j(config.DOCUMENT_URL, img);
     return j(config.IMAGE_URL, img);
   };
-  const getDisplayName = (userName, id) => {
-    if (!userName || !userName.trim()) return `Usuario ${id ?? ''}`.trim();
-    const p = userName.trim().split(/\s+/);
+  const getDisplayName = (userName, userLastName, id) => {
+    const first = (userName || '').trim().split(/\s+/)[0] || '';
+    const firstLast = (userLastName || '').trim().split(/\s+/)[0] || '';
+    if (first) return `${first} ${firstLast}`.trim();
+    const full = (userName || '').trim();
+    if (!full) return `Usuario ${id ?? ''}`.trim();
+    const p = full.split(/\s+/);
     return p.length === 1 ? p[0] : `${p[0]} ${p[p.length - 1]}`;
   };
 
@@ -40,7 +44,7 @@ export default function MessagingConversationPage() {
     const other = match.otherUser || {};
     const panel = {
       id: other.id,
-      name: getDisplayName(other.userName, other.id),
+      name: getDisplayName(other.userName, other.userLastName, other.id),
       avatar: getProfilePictureUrl(other.userProfilePicture),
       conversationId: match.id
     };
@@ -48,7 +52,7 @@ export default function MessagingConversationPage() {
     selectConversation({
       conversationId: match.id,
       otherUserId: other.id,
-      otherUser: { id: other.id, userName: other.userName, userProfilePicture: other.userProfilePicture }
+      otherUser: { id: other.id, userName: other.userName, userLastName: other.userLastName, userProfilePicture: other.userProfilePicture }
     });
     appliedConvRef.current = currentId;
   }, [match?.id, selectConversation]); // only when id changes

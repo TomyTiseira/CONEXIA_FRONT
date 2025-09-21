@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { LogOut, Settings } from 'lucide-react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -57,18 +58,17 @@ export default function DropdownInternalUserMenu({ onLogout, onClose }) {
 
       {/* Acciones */}
       <div className="pt-1">
-        <button
-          onClick={() => {
-            router.push('/settings');
-            onClose?.();
-          }}
+        <Link
+          href="/settings"
+          onClick={() => onClose?.()}
           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
         >
           <Settings size={16} />
           Configuraciones y privacidad
-        </button>
+        </Link>
 
-        <button
+        <Link
+          href="#"
           onClick={() => {
             onLogout?.();
             onClose?.();
@@ -77,7 +77,7 @@ export default function DropdownInternalUserMenu({ onLogout, onClose }) {
         >
           <LogOut size={16} />
           Cerrar sesión
-        </button>
+        </Link>
       </div>
     </div>
   );

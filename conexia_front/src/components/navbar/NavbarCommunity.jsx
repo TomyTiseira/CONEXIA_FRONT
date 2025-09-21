@@ -103,30 +103,29 @@ export default function NavbarCommunity() {
   return (
     <header className="bg-white shadow sticky top-0 z-50">
       {/* Desktop Navbar */}
-      <nav className="hidden md:flex items-center px-4 py-3 max-w-7xl mx-auto h-[64px] relative">
+  <nav className="hidden md:flex items-center px-4 py-3 max-w-7xl mx-auto h-[64px] relative">
 
         {/* Logo a la izquierda */}
-        <div className="flex items-center flex-shrink-0 gap-2 z-10">
+  <div className="flex items-center min-w-0 flex-1 gap-2 z-10 order-1">
           <Link href="/" className="flex items-center select-none">
             <Image src="/logo.png" alt="Conexia" width={30} height={30} />
           </Link>
+          {/* Search: allow shrink so center area keeps room */}
+          <div className="flex items-center h-full min-w-0 flex-1">
+            <GlobalSearchBar className="w-full min-w-[120px] sm:min-w-[200px] lg:min-w-[280px] max-w-[520px]" />
+          </div>
         </div>
 
-        {/* Buscador estirado entre logo y botones */}
-        <div className="absolute left-[60px] right-[55%] flex items-center h-full px-4">
-          <GlobalSearchBar className="w-full min-w-[320px] max-w-[600px]" />
-        </div>
-
-        {/* Botones navbar centrados */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <ul className="flex items-end gap-8 font-medium text-xs">
+        {/* Center menu: centered on xl, shifts left on md/lg */}
+        <div className="order-2 mx-2 w-max xl:absolute xl:left-1/2 xl:-translate-x-1/2 xl:top-1/2 xl:-translate-y-1/2">
+          <ul className="flex items-end gap-0 font-medium text-xs">
             {navItems.map(({ label, href, icon: Icon, showDot }) => {
               const isActive = pathname === href;
               return (
-                <li key={label} className="relative">
+                <li key={label} className="relative px-3">
                   <Link
                     href={href}
-                    className="flex flex-col items-center relative group cursor-pointer min-w-[70px] max-w-[70px] justify-center"
+                      className="flex flex-col items-center relative group cursor-pointer min-w-[36px] lg:min-w-[64px] justify-center"
                   >
                     <span className="relative">
                       <Icon
@@ -136,20 +135,18 @@ export default function NavbarCommunity() {
                         } group-hover:text-conexia-green`}
                       />
                       {showDot && (
-                        <span className="absolute -top-1 -right-2 w-3 h-3 rounded-full bg-[#ff4953] border-2 border-white flex items-center justify-center">
-                          {/* punto coral */}
-                        </span>
+                        <span className="absolute -top-1 -right-2 w-3 h-3 rounded-full bg-[#ff4953] border-2 border-white" />
                       )}
                     </span>
-                    <span
+                      <span
                       className={`transition-colors ${
-                        isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
-                      } group-hover:text-conexia-green`}
+                          isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
+                        } group-hover:text-conexia-green`}
                     >
                       {label}
                     </span>
                     {isActive && (
-                      <span className="absolute -bottom-[6px] h-[2px] w-full bg-conexia-green rounded"></span>
+                        <span className="absolute -bottom-[6px] h-[2px] w-4 xl:w-full bg-conexia-green rounded" />
                     )}
                   </Link>
                 </li>
@@ -158,36 +155,38 @@ export default function NavbarCommunity() {
           </ul>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-4 text-conexia-green z-10 ml-auto">
+        {/* Right cluster: actions (message, bell, avatar) */}
+  <div className="flex items-center gap-4 text-conexia-green min-w-0 flex-1 justify-end order-3">
           <div className="relative">
-            <MessageCircle
-              size={20}
-              className="cursor-pointer hover:text-conexia-green/80"
-              onClick={() => router.push('/messaging')}
-            />
+            <Link href="/messaging" prefetch={false} className="block">
+              <MessageCircle size={20} className="hover:text-conexia-green/80" />
+            </Link>
             {displayUnread > 0 && (
               <span className={`absolute -top-1 -right-2 min-w-[20px] h-[16px] px-1 rounded-full bg-[#e6424b] text-white leading-[16px] text-center ${desktopBadgeText}`}>
                 {displayUnread}
               </span>
             )}
           </div>
-          <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <div className="relative">
+            <Link href="/notifications" prefetch={false} className="block">
+              <Bell size={20} className="hover:text-conexia-green/80" />
+            </Link>
+          </div>
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
-                <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                  <Image
-                    src={
-                      profile && profile.profilePicture
-                        ? `${config.IMAGE_URL}/${profile.profilePicture}`
-                        : defaultAvatar
-                    }
-                    alt="Foto de perfil"
-                    fill
-                    sizes="32px"
-                    className="object-cover"
-                  />
-                </div>
+              <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                <Image
+                  src={
+                    profile && profile.profilePicture
+                      ? `${config.IMAGE_URL}/${profile.profilePicture}`
+                      : defaultAvatar
+                  }
+                  alt="Foto de perfil"
+                  fill
+                  sizes="32px"
+                  className="object-cover"
+                />
+              </div>
               <ChevronDown size={16} />
             </button>
             {menuOpen && <DropdownUserMenu onLogout={handleLogout} onClose={() => setMenuOpen(false)} />}
@@ -196,24 +195,27 @@ export default function NavbarCommunity() {
       </nav>
 
       {/* Mobile Top Bar */}
-      <nav className="md:hidden flex justify-between items-center px-4 py-2 bg-white shadow h-[56px]">
+  <nav className="md:hidden flex justify-between items-center px-4 py-2 bg-white shadow h-[56px]">
         <Link href="/" className="flex items-center gap-2 select-none">
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
         </Link>
         <div className="flex items-center gap-4 text-conexia-green">
           <div className="relative">
-            <MessageCircle
-              size={20}
-              className="cursor-pointer hover:text-conexia-green/80"
-              onClick={() => router.push('/messaging')}
-            />
+            <Link href="/messaging" prefetch={false} className="block">
+              <MessageCircle
+                size={20}
+                className="cursor-pointer hover:text-conexia-green/80"
+              />
+            </Link>
             {displayUnread > 0 && (
               <span className={`absolute -top-1 -right-2 min-w-[20px] h-[16px] px-1 rounded-full bg-[#e6424b] text-white leading-[16px] text-center ${mobileBadgeText}`}>
                 {displayUnread}
               </span>
             )}
           </div>
-          <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <Link href="/notifications" prefetch={false} className="block">
+            <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          </Link>
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
                 <div className="w-8 h-8 rounded-full overflow-hidden relative">

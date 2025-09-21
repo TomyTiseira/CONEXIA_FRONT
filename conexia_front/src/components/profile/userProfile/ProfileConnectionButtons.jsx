@@ -58,7 +58,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   const chatUser = {
     id: receiverId,
     profilePicture: profile?.profile?.profilePicture || null,
-    userName: `${profile?.profile?.name || ''} ${profile?.profile?.lastName || ''}`.trim(),
+    userName: `${(profile?.profile?.name || '').trim().split(/\s+/)[0] || ''} ${(profile?.profile?.lastName || '').trim().split(/\s+/)[0] || ''}`.trim(),
     conversationId: profile?.profile?.conversationId || null,
   };
   const openChat = () => {
