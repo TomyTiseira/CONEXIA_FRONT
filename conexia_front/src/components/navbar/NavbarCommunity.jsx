@@ -117,7 +117,7 @@ export default function NavbarCommunity() {
         </div>
 
         {/* Center menu: centered on xl, shifts left on md/lg */}
-        <div className="order-2 mx-2 w-max xl:absolute xl:left-1/2 xl:-translate-x-1/2 xl:top-1/2 xl:-translate-y-1/2">
+        <div className="order-2 mx-2 w-max xl:absolute xl:left-1/2 xl:-translate-x-1/2 xl:top-1/2 xl:-translate-y-1/2 relative z-20">
           <ul className="flex items-end gap-0 font-medium text-xs">
             {navItems.map(({ label, href, icon: Icon, showDot }) => {
               const isActive = pathname === href;
