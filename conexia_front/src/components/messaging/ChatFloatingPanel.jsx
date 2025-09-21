@@ -166,6 +166,8 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
   const [noMoreOlder, setNoMoreOlder] = useState(false);
   const fillAttemptsRef = useRef(0);
   const localPageRef = useRef(1);
+  // Evita cargas encadenadas: requiere alejarse del tope antes de re-disparar
+  const canTriggerTopLoadRef = useRef(true);
   // NUEVO: estado para auto-scroll y botón "ir al último" con contador
   const [atBottom, setAtBottom] = useState(true);
   const [showJump, setShowJump] = useState(false);
@@ -191,6 +193,8 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
     }
     if (selectedChatId && !collapsed) {
       localPageRef.current = 1;
+      setNoMoreOlder(false);
+      canTriggerTopLoadRef.current = true;
       fillAttemptsRef.current = 0;
       (async () => {
         try {
@@ -615,10 +619,14 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
             setUnreadBelow(0);
             setShowJump(false);
           }
+          // Re-armar el disparador cuando el usuario se aleja del tope
+          if (el.scrollTop > 120 && !isLoadingMoreRef.current) {
+            canTriggerTopLoadRef.current = true;
+          }
           const hasNext = messagesPagination
             ? (messagesPagination?.hasNextPage ?? (messagesPagination?.currentPage < (messagesPagination?.totalPages || 1)))
             : true; // fallback: allow loading when pagination unknown
-          if (el.scrollTop <= 40 && !isLoadingMoreRef.current && hasNext) {
+          if (el.scrollTop <= 40 && canTriggerTopLoadRef.current && !isLoadingMoreRef.current && hasNext) {
             const prevHeight = el.scrollHeight;
             const prevTop = el.scrollTop;
             const currentPage = messagesPagination?.currentPage || localPageRef.current || 1;
@@ -627,14 +635,22 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
               isPrependingRef.current = true;
               isLoadingMoreRef.current = true;
               setIsLoadingMore(true);
+              canTriggerTopLoadRef.current = false; // desarmar hasta que el usuario se aleje del tope
               // Only prepend older messages at the top
-              await loadMessages({ conversationId: selectedChatId, page: nextPage, limit: messagesPagination?.itemsPerPage || 50, append: true, prepend: true });
+              const pageSize = messagesPagination?.itemsPerPage || 50;
+              const data = await loadMessages({ conversationId: selectedChatId, page: nextPage, limit: pageSize, append: true, prepend: true });
               // keep scroll anchored to the same content after prepend
               requestAnimationFrame(() => {
                 const newHeight = el.scrollHeight;
                 el.scrollTop = (newHeight - prevHeight) + prevTop;
               });
               localPageRef.current = nextPage;
+              // Fin de historial: usar hasNextPage si viene; si no, inferir por tamaño de página
+              const pageLen = Array.isArray(data?.messages) ? data.messages.length : 0;
+              const more = (data?.pagination && typeof data.pagination.hasNextPage === 'boolean')
+                ? !!data.pagination.hasNextPage
+                : (pageLen >= pageSize);
+              if (!more) setNoMoreOlder(true);
             } catch {}
             finally {
               isLoadingMoreRef.current = false;

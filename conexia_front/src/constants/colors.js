@@ -9,6 +9,7 @@ Principal dark: #367d7d
 Principal dark hover: #2b6a6a
 Principal dark active: #204b4b
 principal darker: #193a3a
+#1f6363ff
 
 Secundario: #ff4953
 Secundario hover: #e6424b

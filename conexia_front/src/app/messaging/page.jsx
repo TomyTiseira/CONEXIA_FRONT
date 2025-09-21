@@ -35,9 +35,15 @@ export default function MessagingHomePage() {
     if (img.startsWith('/')) return j(config.DOCUMENT_URL, img);
     return j(config.IMAGE_URL, img);
   };
-  const getDisplayName = (userName, id) => {
-    if (!userName || !userName.trim()) return `Usuario ${id ?? ''}`.trim();
-    const p = userName.trim().split(/\s+/);
+  const getDisplayName = (userName, userLastName, id) => {
+    // Preferir primer nombre + primer apellido cuando vienen separados
+    const first = (userName || '').trim().split(/\s+/)[0] || '';
+    const firstLast = (userLastName || '').trim().split(/\s+/)[0] || '';
+    if (first) return `${first} ${firstLast}`.trim();
+    // Fallback: derivar desde cadena completa
+    const full = (userName || '').trim();
+    if (!full) return `Usuario ${id ?? ''}`.trim();
+    const p = full.split(/\s+/);
     return p.length === 1 ? p[0] : `${p[0]} ${p[p.length - 1]}`;
   };
   const formatDateLabel = (iso) => {
@@ -195,10 +201,29 @@ export default function MessagingHomePage() {
                     <div className="p-4 text-conexia-green/60 text-center text-sm">No hay mensajes</div>
                   ) : filteredConvs.map(chat => {
                     const other = chat.otherUser || {};
-                    const displayName = getDisplayName(other.userName, other.id);
+                    const displayName = getDisplayName(other.userName, other.userLastName, other.id);
                     const avatarUrl = getProfilePictureUrl(other.userProfilePicture);
                     const lastMsg = chat.lastMessage || {};
-                    const raw = lastMsg.type === 'text' ? (lastMsg.content || '') : (lastMsg.type === 'image' ? 'Imagen' : 'Documento');
+                    // Evitar mostrar rutas/URLs en el preview
+                    const looksUrlOrPath = (s) => {
+                      if (!s || typeof s !== 'string') return false;
+                      const v = s.trim();
+                      if (!v) return false;
+                      if (/^(https?:|blob:|data:)/i.test(v)) return true;
+                      if (v.startsWith('/uploads') || v.startsWith('/')) return true;
+                      if (/^[\w\-.%/]+\.(png|jpe?g|gif|webp|pdf)(\?.*)?$/i.test(v)) return true;
+                      return false;
+                    };
+                    const contentText = (lastMsg?.content ?? '').toString().trim();
+                    const typeL = String(lastMsg?.type || '').toLowerCase();
+                    const nameL = String(lastMsg?.fileName || '').toLowerCase();
+                    const urlL  = String(lastMsg?.fileUrl || '').toLowerCase();
+                    const looksImage = typeL === 'image' || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(nameL) || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(urlL);
+                    const looksPdf   = typeL === 'pdf'   || /\.pdf(\?|$)/i.test(nameL)   || /\.pdf(\?|$)/i.test(urlL);
+                    const isContentAPath = looksUrlOrPath(contentText);
+                    const raw = contentText && !isContentAPath
+                      ? contentText
+                      : (looksImage ? 'Imagen' : (looksPdf ? 'Documento' : (contentText ? contentText : '')));
                     const isMine = String(lastMsg.senderId) === String(user?.id);
                     // NUEVO: estado "escribiendo…" en historial
                     const isTyping = !!typingStates?.[other.id];
@@ -220,7 +245,7 @@ export default function MessagingHomePage() {
                           selectConversation({
                             conversationId: chat.id,
                             otherUserId: other.id,
-                            otherUser: { id: other.id, userName: other.userName, userProfilePicture: other.userProfilePicture }
+                            otherUser: { id: other.id, userName: other.userName, userLastName: other.userLastName, userProfilePicture: other.userProfilePicture }
                           });
                           if (window.innerWidth < 768) {
                             router.push(`/messaging/${chat.id}`);

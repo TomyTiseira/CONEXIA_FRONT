@@ -235,9 +235,15 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
   }, [convSearch, loadConversations, refreshUnreadCount]);
 
   // Helpers: display name (first and last token) and date label (Hoy/Ayer/fecha + hora)
-  const getDisplayName = (userName, fallbackId) => {
-    if (!userName || !userName.trim()) return `Usuario ${fallbackId ?? ''}`.trim();
-    const parts = userName.trim().split(/\s+/);
+  const getDisplayName = (userName, userLastName, fallbackId) => {
+    // Preferir primer nombre + primer apellido si vienen separados
+    const first = (userName || '').trim().split(/\s+/)[0] || '';
+    const firstLast = (userLastName || '').trim().split(/\s+/)[0] || '';
+    if (first) return `${first} ${firstLast}`.trim();
+    // Fallback: derivar desde una cadena completa (primer token + último token)
+    const full = (userName || '').trim();
+    if (!full) return `Usuario ${fallbackId ?? ''}`.trim();
+    const parts = full.split(/\s+/);
     if (parts.length === 1) return parts[0];
     return `${parts[0]} ${parts[parts.length - 1]}`;
   };
@@ -419,10 +425,28 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
                   ) : (
                     convs.map(chat => {
                       const other = chat.otherUser || {};
-                      const displayName = getDisplayName(other.userName, other.id);
+                      const displayName = getDisplayName(other.userName, other.userLastName, other.id);
                       const avatarUrl = getProfilePictureUrl(other.userProfilePicture);
                       const lastMsg = chat.lastMessage || {};
-                      const rawLastContent = lastMsg.type === 'text' ? (lastMsg.content || '') : (lastMsg.type === 'image' ? 'Imagen' : 'Documento');
+                      // Normalizar preview para evitar mostrar URLs/rutas crudas
+                      const looksUrlOrPath = (s) => {
+                        if (!s || typeof s !== 'string') return false;
+                        const v = s.trim();
+                        if (!v) return false;
+                        if (/^(https?:|blob:|data:)/i.test(v)) return true;
+                        if (v.startsWith('/uploads') || v.startsWith('/')) return true;
+                        if (/^[\w\-.%/]+\.(png|jpe?g|gif|webp|pdf)(\?.*)?$/i.test(v)) return true;
+                        return false;
+                      };
+                      const nameL = String(lastMsg?.fileName || '').toLowerCase();
+                      const urlL = String(lastMsg?.fileUrl || '').toLowerCase();
+                      const looksImage = /\.(png|jpe?g|gif|webp)(\?|$)/i.test(nameL) || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(urlL);
+                      const looksPdf   = /\.pdf(\?|$)/i.test(nameL) || /\.pdf(\?|$)/i.test(urlL);
+                      const contentText = (lastMsg.type === 'text') ? (lastMsg.content || '') : '';
+                      const isContentAPath = looksUrlOrPath(contentText);
+                      const rawLastContent = contentText && !isContentAPath
+                        ? contentText
+                        : (looksImage ? 'Imagen' : (looksPdf ? 'Documento' : (lastMsg.type === 'image' ? 'Imagen' : lastMsg.type === 'pdf' ? 'Documento' : (contentText ? contentText : ''))));
                       const isMine = String(lastMsg.senderId) === String(user?.id);
                       // NUEVO: estado "Escribiendo" en historial flotante
                       const isTyping = !!typingStates?.[other.id];
@@ -445,7 +469,7 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
                             selectConversation({
                               conversationId: chat.id,
                               otherUserId: other.id,
-                              otherUser: { id: other.id, userName: other.userName, userProfilePicture: other.userProfilePicture }
+                              otherUser: { id: other.id, userName: other.userName, userLastName: other.userLastName, userProfilePicture: other.userProfilePicture }
                             });
                           }}
                         />

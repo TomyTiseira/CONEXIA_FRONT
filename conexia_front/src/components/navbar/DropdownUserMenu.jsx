@@ -74,24 +74,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
     }, [onClose]);
 
 
-  const handleViewProfile = () => {
-    onClose?.();
-
-    const isInProfilePage = pathname?.includes('/profile/userProfile/');
-    const hasEditForm =
-      typeof window !== 'undefined' &&
-      document.querySelector('form[novalidate]') !== null;
-
-    const isEditingProfile = isInProfilePage && hasEditForm;
-
-    setTimeout(() => {
-      if (isEditingProfile) {
-        window.location.href = `/profile/userProfile/${userId}`;
-      } else {
-        router.push(`/profile/userProfile/${userId}`);
-      }
-    }, 100);
-  };
+  const handleClose = () => onClose?.();
 
   if (loading || error || !profile) return null;
 
@@ -126,24 +109,26 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
           </div>
         </div>
         <div className="flex justify-center items-center">
-          <button
-            onClick={handleViewProfile}
+          <Link
+            href={`/profile/userProfile/${userId}`}
+            onClick={handleClose}
             className="bg-conexia-green text-white text-xs px-3 py-1 rounded-md hover:bg-conexia-green/90 transition-colors"
           >
             Ver perfil
-          </button>
+          </Link>
         </div>
       </div>
 
       {/* Acciones */}
       <div className="pt-1">
-        <button
-          onClick={() => router.push('/settings')}
+        <Link
+          href="/settings"
+          onClick={handleClose}
           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
         >
           <Settings size={16} />
           Configuraciones y privacidad
-        </button>
+        </Link>
         <button
           onClick={onLogout}
           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"

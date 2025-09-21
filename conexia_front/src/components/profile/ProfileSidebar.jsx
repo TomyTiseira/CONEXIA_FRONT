@@ -9,9 +9,7 @@ export default function ProfileSidebar({ profile, userId}) {
   if (!profile) return null;
   const avatar = profile.profilePicture ? `${config.IMAGE_URL}/${profile.profilePicture}` : '/images/default-avatar.png';
   // Portada personalizada
-  const coverImage = profile.coverPicture
-    ? `${config.IMAGE_URL}/${profile.coverPicture}`
-    : '/bg-smoke.png';
+  const coverImage ='/bg-smoke.png';
   // Solo primer nombre y primer apellido
   const firstName = (profile.name || '').trim().split(' ')[0];
   const firstLastName = (profile.lastName || '').trim().split(' ')[0] || '';

@@ -37,22 +37,16 @@ export default function ProjectDetail({ projectId }) {
   const { roleName, profile } = useUserStore();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { selectConversation, loadConversations, refreshUnreadCount } = useMessaging(); // NUEVO
-  const { sendTextMessage } = useChatMessages(); // NUEVO
+  const { loadConversations, refreshUnreadCount } = useMessaging(); // NUEVO
+  const { sendTextMessageTo } = useChatMessages(); // NUEVO
 
-  // Envío real de mensaje (texto + emojis, sin archivos)
+  // Envío real de mensaje (texto + emojis, sin archivos) independiente del chat abierto
   const handleSendMessage = async () => {
     if (!messageText.trim() || !project?.ownerId) return;
     setSendingMessage(true);
     try {
-      // preparar selección silenciosa (no abre UI) con meta del receptor
-      await selectConversation({
-        conversationId: null,
-        otherUserId: project.ownerId,
-        otherUser: { id: project.ownerId, userName: project.owner, userProfilePicture: project.ownerImage || null }
-      });
-      // enviar texto (incluye emojis)
-      await sendTextMessage({ content: messageText.trim() });
+      // enviar texto directo al dueño sin cambiar la selección global
+      await sendTextMessageTo({ receiverId: project.ownerId, content: messageText.trim() });
       // refrescos ligeros
       loadConversations({ page: 1, limit: 10, append: false });
       refreshUnreadCount();

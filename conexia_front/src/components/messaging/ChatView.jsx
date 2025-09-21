@@ -18,6 +18,7 @@ export default function ChatView({ user, onBack }) {
   } = useMessaging();
   const {
     messages,
+    messagesPagination,
     loadMessages,
     sendTextMessage,
     sendFileMessage,
@@ -43,6 +44,14 @@ export default function ChatView({ user, onBack }) {
   const [showJump, setShowJump] = useState(false);
   const [unreadBelow, setUnreadBelow] = useState(0);
   const prevLenRef = useRef(0);
+  // Paginación hacia arriba (igual que en el chat flotante)
+  const isPrependingRef = useRef(false);
+  const isLoadingMoreRef = useRef(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const localPageRef = useRef(1);
+  const [noMoreOlder, setNoMoreOlder] = useState(false);
+  // Arma/disarma el disparo de carga: evita encadenar páginas sin que el usuario vuelva a desplazarse
+  const canTriggerTopLoadRef = useRef(true);
 
   const otherTyping = !!(user?.id && typingStates?.[user.id]);
 
@@ -234,7 +243,11 @@ export default function ChatView({ user, onBack }) {
   useEffect(() => {
     if (!selectedChatId) return;
     (async () => {
-      await loadMessages({ conversationId: selectedChatId, page: 1, limit: 60 });
+      // Reiniciar contador local de paginación al cambiar de conversación
+      localPageRef.current = 1;
+      setNoMoreOlder(false);
+      canTriggerTopLoadRef.current = true;
+  await loadMessages({ conversationId: selectedChatId, page: 1, limit: 50 });
       scrollBottom();
       setTimeout(scrollBottom, 40);
       try { await markCurrentAsRead(); } finally {
@@ -262,6 +275,12 @@ export default function ChatView({ user, onBack }) {
     const el = scrollerRef.current;
     const newLen = messages?.length || 0;
     const prevLen = prevLenRef.current;
+    // Si estamos prependeando, no alterar la posición ni contadores
+    if (isPrependingRef.current) {
+      isPrependingRef.current = false;
+      prevLenRef.current = newLen;
+      return;
+    }
     if (newLen > prevLen) {
       const added = newLen - prevLen;
       if (isNearBottom(el)) {
@@ -424,8 +443,68 @@ export default function ChatView({ user, onBack }) {
             setUnreadBelow(0);
             setShowJump(false);
           }
+
+          // Re-armar el disparador cuando el usuario se aleja del tope
+          if (el.scrollTop > 120 && !isLoadingMoreRef.current) {
+            canTriggerTopLoadRef.current = true;
+          }
+
+          // Cargar página anterior cuando se acerca al tope (como chat flotante)
+          const hasNext = messagesPagination
+            ? (messagesPagination?.hasNextPage ?? (messagesPagination?.currentPage < (messagesPagination?.totalPages || 1)))
+            : true; // fallback: permitir cargar si no conocemos paginación
+          if (el.scrollTop <= 40 && canTriggerTopLoadRef.current && !isLoadingMoreRef.current && hasNext && selectedChatId) {
+            const prevHeight = el.scrollHeight;
+            const prevTop = el.scrollTop;
+            const currentPage = messagesPagination?.currentPage || localPageRef.current || 1;
+            const nextPage = currentPage + 1;
+            (async () => {
+              try {
+                isPrependingRef.current = true;
+                isLoadingMoreRef.current = true;
+                setIsLoadingMore(true);
+                canTriggerTopLoadRef.current = false; // desarmar hasta que el usuario vuelva a alejarse del tope
+                const pageSize = messagesPagination?.itemsPerPage || 50;
+                const data = await loadMessages({ conversationId: selectedChatId, page: nextPage, limit: pageSize, append: true, prepend: true });
+                // Mantener anclaje al contenido previo
+                requestAnimationFrame(() => {
+                  const newHeight = el.scrollHeight;
+                  el.scrollTop = (newHeight - prevHeight) + prevTop;
+                });
+                localPageRef.current = nextPage;
+                // Actualizar bandera de fin de historial basándonos en la respuesta
+                const pageLen = Array.isArray(data?.messages) ? data.messages.length : 0;
+                const more = (data?.pagination && typeof data.pagination.hasNextPage === 'boolean')
+                  ? !!data.pagination.hasNextPage
+                  : (pageLen >= pageSize);
+                if (!more) setNoMoreOlder(true);
+              } catch {
+                // noop
+              } finally {
+                isLoadingMoreRef.current = false;
+                setIsLoadingMore(false);
+              }
+            })();
+          }
         }}
       >
+        {/* Indicador de carga de páginas antiguas */}
+        {isLoadingMore && (
+          <div className="flex justify-center mt-1">
+            <div className="self-center text-xs text-gray-500 flex items-center gap-2">
+              <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-conexia-green rounded-full animate-spin" />
+              Cargando mensajes…
+            </div>
+          </div>
+        )}
+        {/* Banner de fin de historial */}
+        {noMoreOlder && !isLoadingMore && (
+          <div className="flex justify-center mt-1">
+            <div className="self-center text-[11px] px-3 py-1 bg-gray-100 text-gray-500 rounded-full">
+              No hay más mensajes
+            </div>
+          </div>
+        )}
         {(() => {
           const items = [];
           let lastDate = '';

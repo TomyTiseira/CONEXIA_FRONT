@@ -27,9 +27,13 @@ export default function MessagingByUserPage() {
     if (img.startsWith('/')) return j(config.DOCUMENT_URL, img);
     return j(config.IMAGE_URL, img);
   };
-  const getDisplayName = (userName, id) => {
-    if (!userName || !userName.trim()) return `Usuario ${id ?? ''}`.trim();
-    const p = userName.trim().split(/\s+/);
+  const getDisplayName = (userName, userLastName, id) => {
+    const first = (userName || '').trim().split(/\s+/)[0] || '';
+    const firstLast = (userLastName || '').trim().split(/\s+/)[0] || '';
+    if (first) return `${first} ${firstLast}`.trim();
+    const full = (userName || '').trim();
+    if (!full) return `Usuario ${id ?? ''}`.trim();
+    const p = full.split(/\s+/);
     return p.length === 1 ? p[0] : `${p[0]} ${p[p.length - 1]}`;
   };
 
@@ -49,9 +53,9 @@ export default function MessagingByUserPage() {
 
   useEffect(() => {
     if (!meta?.id) return;
-    const panel = { id: meta.id, name: getDisplayName(meta.userName, meta.id), avatar: getProfilePictureUrl(meta.userProfilePicture), conversationId: null };
+  const panel = { id: meta.id, name: getDisplayName(meta.userName, meta.userLastName, meta.id), avatar: getProfilePictureUrl(meta.userProfilePicture), conversationId: null };
     setPanelUser(panel);
-    selectConversation({ conversationId: null, otherUserId: meta.id, otherUser: { id: meta.id, userName: meta.userName, userProfilePicture: meta.userProfilePicture } });
+  selectConversation({ conversationId: null, otherUserId: meta.id, otherUser: { id: meta.id, userName: meta.userName, userLastName: meta.userLastName, userProfilePicture: meta.userProfilePicture } });
   }, [meta, selectConversation]);
 
   return (

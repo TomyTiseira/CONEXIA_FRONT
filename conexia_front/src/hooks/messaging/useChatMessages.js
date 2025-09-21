@@ -9,9 +9,10 @@ export function useChatMessages() {
 
   const loadMessages = useMessagingStore((s) => s.loadMessages);
   const sendTextMessage = useMessagingStore((s) => s.sendTextMessage);
+  const sendTextMessageTo = useMessagingStore((s) => s.sendTextMessageTo);
   const sendFileMessage = useMessagingStore((s) => s.sendFileMessage);
   const emitTyping = useMessagingStore((s) => s.emitTyping);
   const markCurrentAsRead = useMessagingStore((s) => s.markCurrentAsRead);
 
-  return { messages, messagesPagination, loading, typingStates, loadMessages, sendTextMessage, sendFileMessage, emitTyping, markCurrentAsRead };
+  return { messages, messagesPagination, loading, typingStates, loadMessages, sendTextMessage, sendTextMessageTo, sendFileMessage, emitTyping, markCurrentAsRead };
 }

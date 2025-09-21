@@ -192,12 +192,6 @@ export const useMessagingStore = create((set, get) => ({
             const updatedAt = inc?.updatedAt || lm?.createdAt || null;
             return { ...inc, updatedAt };
           }
-          const pickNewerMsg = (a, b) => {
-            if (!a) return b || null; if (!b) return a || null;
-            const ta = new Date(a?.createdAt || a?.updatedAt || 0).getTime();
-            const tb = new Date(b?.createdAt || b?.updatedAt || 0).getTime();
-            return tb > ta ? b : a;
-          };
           const merged = { ...prev, ...inc };
           // otherUser / ids
           const otherUserId = inc?.otherUserId ?? prev?.otherUserId ?? prev?.otherUser?.id ?? inc?.otherUser?.id ?? null;
@@ -205,14 +199,13 @@ export const useMessagingStore = create((set, get) => ({
           merged.otherUser = (inc?.otherUser && (inc.otherUser.id || inc.otherUser.userName)) ? { ...prev?.otherUser, ...inc.otherUser } : (prev?.otherUser || null);
           // unreadCount: conservar el mayor (local puede tener incrementos no reflejados aún en backend)
           merged.unreadCount = Math.max(Number(prev?.unreadCount || 0), Number(inc?.unreadCount || 0));
-          // lastMessage: elegir el más reciente
-          const bestLast = pickNewerMsg(prev?.lastMessage, inc?.lastMessage);
-          merged.lastMessage = bestLast || prev?.lastMessage || inc?.lastMessage || null;
-          // updatedAt: máximo entre ambas y lastMessage.createdAt
-          const t1 = new Date(prev?.updatedAt || 0).getTime();
-          const t2 = new Date(inc?.updatedAt || 0).getTime();
-          const t3 = new Date(merged?.lastMessage?.createdAt || 0).getTime();
-          const bestTs = Math.max(t1, t2, t3 || 0);
+          // lastMessage: confiar en el backend cuando viene en "inc"
+          merged.lastMessage = inc?.lastMessage ?? prev?.lastMessage ?? null;
+          // updatedAt: preferir inc.updatedAt o lastMessage.createdAt si es mayor
+          const tPrev = new Date(prev?.updatedAt || 0).getTime();
+          const tInc = new Date(inc?.updatedAt || 0).getTime();
+          const tLM = new Date((merged?.lastMessage?.createdAt) || 0).getTime();
+          const bestTs = Math.max(tInc, tLM, tPrev || 0);
           merged.updatedAt = bestTs ? new Date(bestTs).toISOString() : (inc?.updatedAt || prev?.updatedAt || null);
           return merged;
         };
@@ -538,6 +531,119 @@ export const useMessagingStore = create((set, get) => ({
     } catch (e) {
   // rollback optimistic message on failure
       set((state) => ({ messages: state.messages.filter(m => m.id !== tempId) }));
+      throw e;
+    }
+  },
+
+  // Send text message to a specific user, independent of current selection
+  // Does not change selected chat unless the targeted user is the one currently selected
+  sendTextMessageTo: async ({ receiverId, content, conversationId = null }) => {
+    const { selectedOtherUserId } = get();
+    const me = useUserStore.getState().user;
+    if (!me?.id || !receiverId) throw new Error('Contexto inválido');
+    if (String(me.id) === String(receiverId)) throw new Error('No puedes enviarte mensajes a ti mismo');
+    const trimmed = (content || '').trim();
+    if (!trimmed) throw new Error('El contenido no puede estar vacío');
+
+    // optimistic add ONLY if the open chat is with the same receiver
+    const now = new Date().toISOString();
+    const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const optimisticMsg = {
+      id: tempId,
+      tempId,
+      type: 'text',
+      content: trimmed,
+      fileUrl: null,
+      fileName: null,
+      fileSize: null,
+      senderId: me.id,
+      senderName: me?.userName || me?.name || 'Yo',
+      senderAvatar: me?.profilePicture || null,
+      receiverId,
+      isRead: false,
+      createdAt: now,
+      conversationId: conversationId || null,
+    };
+
+    set((state) => {
+      if (String(state.selectedOtherUserId || '') === String(receiverId)) {
+        return { messages: [...state.messages, optimisticMsg] };
+      }
+      return {};
+    });
+
+    // Always update/insert preview for that receiver and move to top
+    get().upsertConversationPreview(optimisticMsg, { allowInsert: true, moveTop: true });
+
+    try {
+      const data = await sendTextMessageApi({ receiverId, conversationId, content: trimmed });
+
+      set((state) => {
+        // If the currently open chat is the same receiver, reconcile optimistic
+        if (String(state.selectedOtherUserId || '') === String(receiverId)) {
+          const msgs = state.messages.slice();
+          const idx = msgs.findIndex(m => m.id === tempId);
+          if (idx !== -1) {
+            msgs[idx] = {
+              ...msgs[idx],
+              id: data?.messageId || msgs[idx].id,
+              conversationId: data?.conversationId || msgs[idx].conversationId,
+            };
+          }
+          // De-dup by id (keep last)
+          const seen = new Set();
+          const dedup = [];
+          for (let i = msgs.length - 1; i >= 0; i--) {
+            const mid = msgs[i]?.id ?? msgs[i]?.messageId;
+            const key = mid != null ? String(mid) : `idx-${i}`;
+            if (!seen.has(key)) { seen.add(key); dedup.unshift(msgs[i]); }
+          }
+          return {
+            messages: dedup,
+            selectedChatId: data?.conversationId || state.selectedChatId,
+          };
+        }
+        return {};
+      });
+
+      // Update preview with real ids and move to top
+      get().upsertConversationPreview({
+        id: data?.messageId || optimisticMsg.id,
+        conversationId: data?.conversationId || conversationId || null,
+        type: 'text',
+        content: trimmed,
+        fileName: null,
+        senderId: me.id,
+        receiverId,
+        createdAt: new Date().toISOString(),
+      }, { allowInsert: true, moveTop: true });
+
+      // Try to emit via socket without changing current selection
+      try {
+        const socket = getMessagingSocket();
+        const convId = data?.conversationId || null;
+        if (socket) {
+          socket.emit('sendMessage', {
+            conversationId: convId,
+            receiverId,
+            type: 'text',
+            content: trimmed,
+          });
+          if (convId) {
+            socket.emit('joinConversation', { conversationId: convId, otherUserId: receiverId });
+          }
+        }
+      } catch {}
+
+      return data;
+    } catch (e) {
+      // rollback optimistic only if we appended it to current chat
+      set((state) => {
+        if (String(state.selectedOtherUserId || '') === String(receiverId)) {
+          return { messages: state.messages.filter(m => m.id !== tempId) };
+        }
+        return {};
+      });
       throw e;
     }
   },
