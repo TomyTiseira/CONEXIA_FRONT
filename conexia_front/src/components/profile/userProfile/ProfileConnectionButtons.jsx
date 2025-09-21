@@ -36,8 +36,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   const { cancelRequest: deleteContact, loading: deleteLoading } = useCancelConnectionRequest(); // Hook separado para eliminar
   const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
   const { refreshRequests } = useConnectionRequests();
-  // Solo buscar conexión si corresponde (evitar fetch para owner/admin/moderador o si ya viene del perfil)
-  const shouldQueryConnection = (!isOwner && !isAdmin && !isModerator && !profile.profile?.connectionData) ? receiverId : null;
+  // Buscar conexión siempre para usuarios normales (preferimos estado del servidor sobre el del perfil)
+  const shouldQueryConnection = (!isOwner && !isAdmin && !isModerator) ? receiverId : null;
   const { connection: connectionFromHook, refreshConnection } = useFindConnection(shouldQueryConnection);
   
   // Estados compartidos
@@ -89,8 +89,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   const [localConnection, setLocalConnection] = useState(null);
   
   useEffect(() => {
-    // Prioridad: 1) conexión del perfil, 2) conexión del hook dedicado
-    const connectionData = profile.profile?.connectionData || connectionFromHook;
+    // Prioridad: 1) conexión del hook (estado más fresco), 2) conexión del perfil como fallback
+    const connectionData = connectionFromHook || profile.profile?.connectionData || null;
     setLocalConnection(connectionData);
   }, [profile.profile?.connectionData, connectionFromHook]);
   
@@ -119,9 +119,12 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
     try {
       // Usar el hook de cancelar normal ya que es el mismo endpoint
       await cancelRequest(connection.id);
-      
-      // Solo actualizar el estado local
+      // Refrescar estado global/local desde el servidor y limpiar estados locales
+      await refreshRequests();
+      await refreshConnection();
       setLocalConnection(null);
+      setSent(false);
+      setDropdownOpen(false);
       
     } catch (error) {
       console.error('Error al eliminar contacto:', error);
@@ -130,7 +133,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
       setIsDeleting(false);
       deletingRef.current = false;
     }
-  }, [connection, isDeleting, cancelRequest]);
+  }, [connection, isDeleting, cancelRequest, refreshRequests, refreshConnection]);
 
   // Ocultar completamente para owner/admin/moderador, pero después de declarar TODOS los hooks anteriores
   if (isOwner || isAdmin || isModerator) return null;
@@ -274,8 +277,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
           {!sent ? (
             <Button
-              variant="informative"
-              className="flex items-center justify-center bg-[#388181ff] text-white font-semibold rounded-full border border-[#e0f0f0] hover:bg-[#1f6363ff] transition-colors focus:outline-none shadow-sm px-4 h-10 text-sm w-56 whitespace-nowrap gap-2"
+              variant="connect"
+              className="flex items-center justify-center font-semibold rounded-full border border-[#e0f0f0] transition-colors focus:outline-none shadow-sm px-4 h-10 text-sm w-56 whitespace-nowrap gap-2"
               onClick={handleSend}
             >
               <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white bg-transparent">
@@ -325,8 +328,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
           {!sent ? (
             <Button
-              variant="informative"
-              className="flex items-center justify-center bg-[#388181ff] text-white rounded-full border border-[#e0f0f0] hover:bg-[#1f6363ff] transition-colors focus:outline-none shadow-sm px-4 text-sm min-w-[190px] max-w-[190px] h-10 gap-2"
+              variant="connect"
+              className="flex items-center justify-center rounded-full border border-[#e0f0f0] transition-colors focus:outline-none shadow-sm px-4 text-sm min-w-[190px] max-w-[190px] h-10 gap-2"
               onClick={handleSend}
             >
               <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white bg-transparent">
