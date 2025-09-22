@@ -24,8 +24,8 @@ function SearchResultsPageContent() {
   const params = useSearchParams();
   const query = params.get('q') || '';
   const [selectedSection, setSelectedSection] = React.useState('projects');
-  const projectsSectionRef = useRef(null);
-  const peopleSectionRef = useRef(null);
+  const projectsSectionRef = React.useRef(null);
+  const peopleSectionRef = React.useRef(null);
   // Custom hook para lógica de búsqueda y paginación
   const {
     projects, projectsPage, setProjectsPage, projectsHasMore, showAllProjects, setShowAllProjects, showProjects, setShowProjects,
@@ -51,6 +51,17 @@ function SearchResultsPageContent() {
     });
   }
 
+  // Función para hacer scroll a la sección correspondiente
+  const handleSidebarSelect = (key) => {
+    setSelectedSection(key);
+    setTimeout(() => {
+      if (key === 'projects' && projectsSectionRef.current) {
+        projectsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (key === 'people' && peopleSectionRef.current) {
+        peopleSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  };
   return (
     <div className="relative min-h-screen w-full bg-gray-50 flex flex-col">
       {/* Navbar fijo arriba */}
@@ -61,47 +72,51 @@ function SearchResultsPageContent() {
         {/* Sidebar */}
         <div className="w-full max-w-[400px] mx-auto md:w-[270px] md:max-w-none md:mx-0 lg:w-[300px] flex-shrink-0 flex flex-col items-stretch md:items-start">
           <div className="block md:hidden mt-2 mb-2">
-            <SearchSidebar sections={sections} selected={selectedSection} onSelect={setSelectedSection} />
+            <SearchSidebar sections={sections} selected={selectedSection} onSelect={handleSidebarSelect} />
           </div>
           <div className="hidden md:block">
-            <SearchSidebar sections={sections} selected={selectedSection} onSelect={setSelectedSection} />
+            <SearchSidebar sections={sections} selected={selectedSection} onSelect={handleSidebarSelect} />
           </div>
         </div>
         {/* Contenido principal */}
         <section className="flex-1 flex flex-col gap-12">
           {/* Proyectos */}
           {projects.length > 0 && (
-            <ProjectsSection
-              projects={projects}
-              showAll={showAllProjects}
-              onToggleShowAll={() => setShowAllProjects(v => !v)}
-              showContent={showProjects}
-              onToggleContent={() => setShowProjects(v => !v)}
-              hasMore={projectsHasMore}
-              onScroll={e => {
-                const el = e.target;
-                if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10 && projectsHasMore) {
-                  setProjectsPage(p => p + 1);
-                }
-              }}
-            />
+            <div ref={projectsSectionRef}>
+              <ProjectsSection
+                projects={projects}
+                showAll={showAllProjects}
+                onToggleShowAll={() => setShowAllProjects(v => !v)}
+                showContent={showProjects}
+                onToggleContent={() => setShowProjects(v => !v)}
+                hasMore={projectsHasMore}
+                onScroll={e => {
+                  const el = e.target;
+                  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10 && projectsHasMore) {
+                    setProjectsPage(p => p + 1);
+                  }
+                }}
+              />
+            </div>
           )}
           {/* Personas */}
           {people.length > 0 && (
-            <PeopleSection
-              people={people}
-              showAll={showAllPeople}
-              onToggleShowAll={() => setShowAllPeople(v => !v)}
-              showContent={showPeople}
-              onToggleContent={() => setShowPeople(v => !v)}
-              hasMore={peopleHasMore}
-              onScroll={e => {
-                const el = e.target;
-                if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10 && peopleHasMore) {
-                  setPeoplePage(p => p + 1);
-                }
-              }}
-            />
+            <div ref={peopleSectionRef}>
+              <PeopleSection
+                people={people}
+                showAll={showAllPeople}
+                onToggleShowAll={() => setShowAllPeople(v => !v)}
+                showContent={showPeople}
+                onToggleContent={() => setShowPeople(v => !v)}
+                hasMore={peopleHasMore}
+                onScroll={e => {
+                  const el = e.target;
+                  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10 && peopleHasMore) {
+                    setPeoplePage(p => p + 1);
+                  }
+                }}
+              />
+            </div>
           )}
         </section>
       </main>
