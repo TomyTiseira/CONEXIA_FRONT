@@ -392,6 +392,9 @@ export default function CreateProjectForm() {
                     file:bg-[#367d7d] file:text-white
                     hover:file:bg-[#2b6a6a]"
         />
+        <span className="text-xs text-gray-500 mt-1 block">
+          Formato permitido: JPG, PNG. Máx. 1 archivo y hasta 5MB.
+        </span>
         <p className="text-xs text-red-600 mt-1 min-h-[20px]">
           {imgError || '\u00A0'}
         </p>

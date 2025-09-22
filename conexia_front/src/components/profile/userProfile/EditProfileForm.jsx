@@ -789,6 +789,9 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
               </div>
 
               <div className="flex-1 flex flex-col items-start">
+                <p className="text-xs text-gray-500 mb-1">
+                  Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
+                </p>
                 <input
                   type="file"
                   accept="image/jpeg,image/png"
@@ -846,6 +849,9 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
               </div>
 
               <div className="flex-1 flex flex-col items-start">
+                <p className="text-xs text-gray-500 mb-1">
+                  Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
+                </p>
                 <input
                   type="file"
                   accept="image/jpeg,image/png"

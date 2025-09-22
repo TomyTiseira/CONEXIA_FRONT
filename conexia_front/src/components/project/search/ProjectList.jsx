@@ -74,42 +74,42 @@ export default function ProjectList({ projects, showFinished = false, showInacti
             )}
           </div>
         </div>
-        {/* Título */}
-        <div className="h-10 mb-2 flex items-start justify-center">
-          <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2">
+
+        {/* Título y dueño del proyecto en layout vertical, sin superposición */}
+        <div className="mb-2 flex flex-col items-center w-full">
+          <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2 w-full">
             {project.title}
           </h3>
+          {/* Dueño del proyecto */}
+          <div 
+            className="flex items-center gap-2 mt-1 min-w-0 px-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+            onClick={() => router.push(`/profile/userProfile/${project.ownerId}`)}
+            style={{ maxWidth: '100%' }}
+          >
+            <div className="relative w-7 h-7">
+              {project.ownerImage ? (
+                <Image
+                  src={`${config.IMAGE_URL}/${project.ownerImage}`}
+                  alt={project.owner || 'Usuario'}
+                  fill
+                  className="object-cover rounded-full border bg-[#f3f9f8]"
+                  sizes="28px"
+                />
+              ) : (
+                <Image
+                  src="/logo.png"
+                  alt="Sin imagen"
+                  fill
+                  className="object-contain rounded-full border bg-[#f3f9f8]"
+                  sizes="28px"
+                />
+              )}
+            </div>
+            <span className="text-conexia-green font-semibold text-sm whitespace-pre-line break-words truncate hover:underline max-w-[120px] md:max-w-[180px] lg:max-w-[220px]">
+              {getShortName(project.owner)}
+            </span>
+          </div>
         </div>
-
-
-      {/* Dueño del proyecto */}
-      <div 
-        className="flex items-center gap-2 mb-3 min-w-0 px-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
-        onClick={() => router.push(`/profile/userProfile/${project.ownerId}`)}
-      >
-        <div className="relative w-7 h-7">
-          {project.ownerImage ? (
-            <Image
-              src={`${config.IMAGE_URL}/${project.ownerImage}`}
-              alt={project.owner || 'Usuario'}
-              fill
-              className="object-cover rounded-full border bg-[#f3f9f8]"
-              sizes="28px"
-            />
-          ) : (
-            <Image
-              src="/logo.png"
-              alt="Sin imagen"
-              fill
-              className="object-contain rounded-full border bg-[#f3f9f8]"
-              sizes="28px"
-            />
-          )}
-        </div>
-        <span className="text-conexia-green font-semibold text-sm whitespace-pre-line break-words truncate hover:underline">
-          {getShortName(project.owner)}
-        </span>
-      </div>
 
       {/* Tipos/Badges - Layout consistente */}
       <div className="flex flex-col gap-1 mb-4 w-full px-2 min-h-[56px]">
