@@ -8,13 +8,17 @@ import { ROLES } from '@/constants/roles';
 export default function PublicationDetailPage({ params, searchParams }) {
   const { id } = React.use(params);
   const resolvedSearchParams = React.use(searchParams);
-  
-  // Si viene desde reportes, solo permitir admin y moderador
-  const fromReports = resolvedSearchParams?.from === 'reports-publication';
-  const allowedRoles = fromReports 
-    ? [ROLES.ADMIN, ROLES.MODERATOR] 
+  // Detectar si viene de reportes
+  const from = resolvedSearchParams?.from || '';
+  const isFromReports =
+    from === 'reports' ||
+    from === 'reports-project' ||
+    from === 'reportsv' ||
+    from === 'reports-publication' ||
+    resolvedSearchParams?.fromReportsProjectId;
+  const allowedRoles = isFromReports
+    ? [ROLES.ADMIN, ROLES.MODERATOR]
     : [ROLES.ADMIN, ROLES.MODERATOR, ROLES.USER];
-  
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando publicación...</div>}>
       <ProtectedRoute allowedRoles={allowedRoles}>
