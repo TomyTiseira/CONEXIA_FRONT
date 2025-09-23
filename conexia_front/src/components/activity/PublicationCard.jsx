@@ -11,8 +11,9 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import DeletePublicationModal from './DeletePublicationModal';
-import EditPublicationModal from './EditPublicationModal';
+import EditPublicationModalMultiple from './EditPublicationModalMultiple';
 import CommentSection from './CommentSection';
+import MediaCarousel from '@/components/ui/MediaCarousel';
 import { deletePublication } from '@/service/publications/deletePublication';
 import { editPublication } from '@/service/publications/editPublication';
 import { createComment, getPublicationComments, updateComment, deleteComment } from '@/service/publications/comments';
@@ -516,31 +517,10 @@ function PublicationCard({ publication, isGridItem = false }) {
     return userReaction && userReaction.type === type;
   };
 
-  const handleEdit = async ({ description, file, privacy, removeMedia }) => {
-    setEditLoading(true);
+  const handleEdit = async (updatedPublication) => {
     try {
-      if (!publicationId) {
-        throw new Error('No se puede editar: ID de publicación no válido');
-      }
-      
-      const formData = new FormData();
-      formData.append('description', description);
-      if (file) {
-        formData.append('media', file);
-        // Si se sube un nuevo archivo, no se debe incluir removeMedia o debe ser false
-        formData.append('removeMedia', 'false');
-      } else if (removeMedia) {
-        // Si se elimina un archivo sin reemplazarlo, incluir removeMedia: true
-        formData.append('removeMedia', 'true');
-      }
-      
-      // Asegurar que siempre se envíe el campo privacy con un valor válido
-      formData.append('privacy', privacy || 'public');
-
-      // Iniciar proceso de edición
-      await editPublication(publicationId, formData);
-      
-      // Mostrar mensaje de éxito y esperar antes de recargar
+      // El nuevo modal maneja toda la lógica internamente
+      // Solo necesitamos cerrar el modal y recargar
       setShowEditModal(false);
       
       // Esperar un momento para que el usuario vea el mensaje de éxito
@@ -548,10 +528,7 @@ function PublicationCard({ publication, isGridItem = false }) {
         window.location.reload();
       }, 1500);
     } catch (err) {
-      // Error silencioso - no mostramos alertas
       console.error('Error al editar publicación:', err);
-    } finally {
-      setEditLoading(false);
     }
   };
 
@@ -1130,15 +1107,11 @@ function PublicationCard({ publication, isGridItem = false }) {
         </div>
       </div>
       {/* Modal edición */}
-      <EditPublicationModal
+      <EditPublicationModalMultiple
         open={showEditModal}
         onClose={() => setShowEditModal(false)}
         onEdit={handleEdit}
-        loading={editLoading}
-        initialDescription={publication.description}
-        initialMediaUrl={publication.mediaUrl ? getMediaUrl(publication.mediaUrl) : ''}
-        initialMediaType={publication.mediaType}
-        initialPrivacy={publication.privacy}
+        publication={publication}
         user={{
           profilePicture: publication.owner?.profilePicture || '/images/default-avatar.png',
           displayName: publication.owner?.name && publication.owner?.lastName ? `${publication.owner.name} ${publication.owner.lastName}` : publication.owner?.name || 'Usuario',
@@ -1157,31 +1130,40 @@ function PublicationCard({ publication, isGridItem = false }) {
       {/* Contenido publicación con truncado y ver más */}
       <div className="px-0 pt-4 pb-1 w-full">
         <DescriptionWithReadMore description={publication.description} />
-        {publication.mediaUrl && publication.mediaType === 'image' && (
-          <img 
-            src={getMediaUrl(publication.mediaUrl)} 
-            alt="media" 
-            className="w-full h-auto my-2 object-contain" 
-            style={{display:'block'}} 
-          />
-        )}
-        {publication.mediaUrl && publication.mediaType === 'video' && (
-          <video 
-            controls 
-            className="w-full h-auto my-2 object-contain" 
-            style={{display:'block'}}
-          >
-            <source src={getMediaUrl(publication.mediaUrl)} />
-            Tu navegador no soporta video.
-          </video>
-        )}
-        {publication.mediaUrl && publication.mediaType === 'gif' && (
-          <img 
-            src={getMediaUrl(publication.mediaUrl)} 
-            alt="media gif" 
-            className="w-full h-auto my-2 object-contain" 
-            style={{display:'block'}} 
-          />
+        
+        {/* Mostrar medios usando el carousel */}
+        {publication.media && publication.media.length > 0 ? (
+          <MediaCarousel media={publication.media} />
+        ) : (
+          <>
+            {/* Compatibilidad con formato anterior */}
+            {publication.mediaUrl && publication.mediaType === 'image' && (
+              <img 
+                src={getMediaUrl(publication.mediaUrl)} 
+                alt="media" 
+                className="w-full h-auto my-2 object-contain" 
+                style={{display:'block'}} 
+              />
+            )}
+            {publication.mediaUrl && publication.mediaType === 'video' && (
+              <video 
+                controls 
+                className="w-full h-auto my-2 object-contain" 
+                style={{display:'block'}}
+              >
+                <source src={getMediaUrl(publication.mediaUrl)} />
+                Tu navegador no soporta video.
+              </video>
+            )}
+            {publication.mediaUrl && publication.mediaType === 'gif' && (
+              <img 
+                src={getMediaUrl(publication.mediaUrl)} 
+                alt="media gif" 
+                className="w-full h-auto my-2 object-contain" 
+                style={{display:'block'}} 
+              />
+            )}
+          </>
         )}
       </div>
       {/* Espacio para recuento de reacciones y comentarios */}

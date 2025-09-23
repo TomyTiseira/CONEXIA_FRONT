@@ -40,16 +40,22 @@ export async function getPublicationById(publicationId) {
   return response;
 }
 
-// Crear publicación
-export async function createPublication({ description, file, privacy }) {
+// Crear publicación - soporta múltiples archivos
+export async function createPublication({ description, files = [], privacy }) {
   const formData = new FormData();
   formData.append('description', description);
-  if (file) {
-    formData.append('media', file);
+  
+  // Agregar múltiples archivos con el mismo nombre de campo 'media'
+  if (files && files.length > 0) {
+    files.forEach(file => {
+      formData.append('media', file);
+    });
   }
+  
   if (privacy) {
     formData.append('privacy', privacy);
   }
+  
   const res = await fetchWithRefresh(`${config.API_URL}/publications/create`, {
     method: 'POST',
     body: formData,
@@ -57,4 +63,13 @@ export async function createPublication({ description, file, privacy }) {
   const response = await res.json();
   if (!res.ok) throw new Error(response.message || 'Error al crear publicación');
   return response;
+}
+
+// Mantener compatibilidad con el método anterior (file único)
+export async function createPublicationSingle({ description, file, privacy }) {
+  return createPublication({ 
+    description, 
+    files: file ? [file] : [], 
+    privacy 
+  });
 }

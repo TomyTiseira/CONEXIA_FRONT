@@ -138,9 +138,16 @@ export default function MessagingHomePage() {
     const term = search.trim().toLowerCase();
     if (!term) return convs;
     return convs.filter(c => {
-      const name = (c.otherUser?.userName || '').toLowerCase();
+      // Incluir tanto userName como userLastName en la búsqueda
+      const userName = (c.otherUser?.userName || '').toLowerCase();
+      const userLastName = (c.otherUser?.userLastName || '').toLowerCase();
+      const fullName = `${userName} ${userLastName}`.trim().toLowerCase();
       const last = (c.lastMessage?.content || '').toLowerCase();
-      return name.includes(term) || last.includes(term);
+      
+      return userName.includes(term) || 
+             userLastName.includes(term) || 
+             fullName.includes(term) || 
+             last.includes(term);
     });
   }, [convs, search]);
 

@@ -20,12 +20,41 @@ import dynamic from 'next/dynamic';
 import { createPublication } from '@/service/publications/publicationsFetch';
 import { FaGlobeAmericas, FaUsers } from 'react-icons/fa';
 import { BsEmojiSmile } from 'react-icons/bs';
+import MediaPreview from '@/components/ui/MediaPreview';
 
 const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 const MAX_DESCRIPTION = 500;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
 const MAX_FILES = 5;
+const MAX_VIDEOS = 1;
 const FILES_LEGEND = 'Hasta 5 archivos, solo 1 video por publicación. Formatos permitidos: JPG, PNG, GIF, MP4.';
+
+// Función para validar archivos
+const validateFiles = (currentFiles, newFiles) => {
+  const totalFiles = [...currentFiles, ...newFiles];
+  
+  if (totalFiles.length > MAX_FILES) {
+    throw new Error(`Máximo ${MAX_FILES} archivos permitidos`);
+  }
+  
+  const videoCount = totalFiles.filter(f => f.type.startsWith('video/')).length;
+  if (videoCount > MAX_VIDEOS) {
+    throw new Error(`Máximo ${MAX_VIDEOS} video permitido`);
+  }
+  
+  newFiles.forEach(file => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      throw new Error(`Tipo de archivo no permitido: ${file.type}`);
+    }
+    
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      throw new Error(`El archivo ${file.name} excede los 50MB`);
+    }
+  });
+  
+  return true;
+};
 
 function VisibilityModal({ open, onClose, value, onChange }) {
   if (!open) return null;
@@ -154,53 +183,29 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
 
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files);
-    // Evitar duplicados por nombre y tamaño
-    const currentFiles = files;
-    const allFiles = [...currentFiles, ...selected];
-    // Filtrar duplicados (por nombre y tamaño)
-    const uniqueFiles = [];
-    const fileMap = new Map();
-    for (const f of allFiles) {
-      const key = `${f.name}_${f.size}`;
-      if (!fileMap.has(key)) {
-        fileMap.set(key, true);
-        uniqueFiles.push(f);
+    
+    try {
+      // Validar archivos antes de agregar
+      validateFiles(files, selected);
+      
+      // Evitar duplicados por nombre y tamaño
+      const allFiles = [...files, ...selected];
+      const uniqueFiles = [];
+      const fileMap = new Map();
+      
+      for (const f of allFiles) {
+        const key = `${f.name}_${f.size}`;
+        if (!fileMap.has(key)) {
+          fileMap.set(key, true);
+          uniqueFiles.push(f);
+        }
       }
+      
+      setFileError('');
+      setFiles(uniqueFiles);
+    } catch (error) {
+      setFileError(error.message);
     }
-    if (uniqueFiles.length > MAX_FILES) {
-      setFileError(`Máximo ${MAX_FILES} archivos por publicación. Elimina archivos duplicados o selecciona otros.`);
-      return;
-    }
-    // Validar tipos y JFIF
-    let error = '';
-    let videoCount = uniqueFiles.filter(f => f.type === 'video/mp4').length;
-    for (const f of selected) {
-      if (!ALLOWED_TYPES.includes(f.type)) {
-        error = 'Solo se permiten imágenes JPG, PNG, GIF o videos MP4.';
-        break;
-      }
-      // Bloquear JFIF
-      if (f.type === 'image/jpeg') {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const arr = new Uint8Array(ev.target.result);
-          if (arr[6] === 0x4A && arr[7] === 0x46 && arr[8] === 0x49 && arr[9] === 0x46 && arr[10] === 0x00) {
-            setFileError('No se permite formato JFIF. Usa JPG estándar.');
-          }
-        };
-        reader.readAsArrayBuffer(f.slice(0, 12));
-      }
-    }
-    if (videoCount > 1) {
-      setFileError('Solo se permite 1 video por publicación.');
-      return;
-    }
-    if (error) {
-      setFileError(error);
-      return;
-    }
-    setFileError('');
-    setFiles(uniqueFiles);
   };
 
   const handleRemoveFile = (idx) => {
@@ -336,23 +341,12 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
                       rows={1}
                     />
                     {/* Previews de archivos seleccionados */}
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {files.map((f, idx) => (
-                        <div key={idx} className="relative flex flex-col items-center">
-                          {f.type.startsWith('image/') && f.type !== 'image/gif' && (
-                            <img src={URL.createObjectURL(f)} alt="preview" className="max-h-24 w-auto object-contain rounded" />
-                          )}
-                          {f.type === 'video/mp4' && (
-                            <video src={URL.createObjectURL(f)} controls className="max-h-20 w-auto object-contain rounded" />
-                          )}
-                          {f.type === 'image/gif' && (
-                            <img src={URL.createObjectURL(f)} alt="preview" className="max-h-20 w-auto object-contain rounded" />
-                          )}
-                          <button type="button" onClick={() => handleRemoveFile(idx)} className="absolute -top-2 -right-2 bg-white/80 hover:bg-white text-red-500 rounded-full p-1 shadow">
-                            <svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-                          </button>
-                        </div>
-                      ))}
+                    <div className="px-2">
+                      <MediaPreview 
+                        files={files} 
+                        onRemove={handleRemoveFile}
+                        maxFiles={MAX_FILES}
+                      />
                     </div>
                   </div>
                 </div>
