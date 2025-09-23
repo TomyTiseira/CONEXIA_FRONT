@@ -23,7 +23,7 @@ export function MiniRecommendations({ recommendations = [], onConnect, loading =
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 min-w-[260px]">
+      <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full max-w-[240px]">
         <h3 className="font-bold text-base mb-2">Añade a tu red</h3>
         <div className="flex justify-center items-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-conexia-green"></div>
@@ -35,7 +35,7 @@ export function MiniRecommendations({ recommendations = [], onConnect, loading =
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 min-w-[260px]">
+      <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full max-w-[240px]">
         <h3 className="font-bold text-base mb-2">Añade a tu red</h3>
         <div className="text-center py-4">
           <p className="text-sm text-red-500 mb-2">{error}</p>
@@ -46,7 +46,7 @@ export function MiniRecommendations({ recommendations = [], onConnect, loading =
 
   if (!recommendations.length) {
     return (
-      <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 min-w-[260px]">
+      <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full max-w-[240px]">
         <h3 className="font-bold text-base mb-2">Añade a tu red</h3>
         <div className="text-center py-4">
           <p className="text-sm text-conexia-green/70">No hay recomendaciones disponibles</p>
@@ -56,7 +56,7 @@ export function MiniRecommendations({ recommendations = [], onConnect, loading =
   }
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 min-w-[260px]">
+    <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 w-full max-w-[240px]">
       <h3 className="font-bold text-base mb-2">Añade a tu red</h3>
       <div className="flex flex-col gap-1">
         <RecommendationsList
