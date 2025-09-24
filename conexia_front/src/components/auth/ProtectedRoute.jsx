@@ -2,17 +2,31 @@
 import { useRoleValidation } from "@/hooks";
 import { LoadingSpinner, ErrorDisplay, NotFound } from "@/components/ui";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
 
-export const ProtectedRoute = ({ 
+function ProtectedRouteContent({ 
   children, 
   allowedRoles = [], 
   fallbackComponent = null,
   showPublicContent = true,
   publicContent = null,
-  roleBasedContent = null // Nuevo prop para contenido específico por rol
-}) => {
-  const searchParams = useSearchParams();
-  const isForceLogout = searchParams.get('logout') === 'true';
+  roleBasedContent = null 
+}) {
+  const [isForceLogout, setIsForceLogout] = useState(false);
+  
+  // Usar useSearchParams de forma segura
+  let searchParams;
+  try {
+    searchParams = useSearchParams();
+    useEffect(() => {
+      if (searchParams) {
+        setIsForceLogout(searchParams.get('logout') === 'true');
+      }
+    }, [searchParams]);
+  } catch (error) {
+    // Si hay error al acceder a searchParams, continuar sin logout forzado
+    // Silencioso durante el build para evitar warnings innecesarios
+  }
   
   const {
     isAuthenticated,
@@ -79,4 +93,12 @@ export const ProtectedRoute = ({
 
   // Usuario autenticado y con permisos (o sin restricciones de rol)
   return children;
+}
+
+export const ProtectedRoute = (props) => {
+  return (
+    <Suspense fallback={<LoadingSpinner message="Cargando..." />}>
+      <ProtectedRouteContent {...props} />
+    </Suspense>
+  );
 }; 

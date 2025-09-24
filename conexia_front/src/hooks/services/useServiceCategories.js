@@ -24,5 +24,10 @@ export function useServiceCategories() {
     loadCategories();
   }, []);
 
-  return { data, loading, error };
+  return { 
+    categories: data, 
+    data, // Mantener data por compatibilidad
+    loading, 
+    error 
+  };
 }

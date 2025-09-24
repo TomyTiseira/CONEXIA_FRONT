@@ -10,6 +10,7 @@ import Navbar from '@/components/navbar/Navbar';
 import SearchSidebar from '@/components/searchs/SearchSidebar';
 import ProjectsSection from '@/components/searchs/ProjectsSection';
 import PeopleSection from '@/components/searchs/PeopleSection';
+import ServicesSection from '@/components/searchs/ServicesSection';
 import { useSearchSections } from '@/components/searchs/useSearchSections';
 
 export default function SearchResultsPage() {
@@ -26,10 +27,12 @@ function SearchResultsPageContent() {
   const [selectedSection, setSelectedSection] = React.useState('projects');
   const projectsSectionRef = React.useRef(null);
   const peopleSectionRef = React.useRef(null);
+  const servicesSectionRef = React.useRef(null);
   // Custom hook para lógica de búsqueda y paginación
   const {
     projects, projectsPage, setProjectsPage, projectsHasMore, showAllProjects, setShowAllProjects, showProjects, setShowProjects,
-    people, peoplePage, setPeoplePage, peopleHasMore, showAllPeople, setShowAllPeople, showPeople, setShowPeople
+    people, peoplePage, setPeoplePage, peopleHasMore, showAllPeople, setShowAllPeople, showPeople, setShowPeople,
+    services, servicesPage, setServicesPage, servicesHasMore, showAllServices, setShowAllServices, showServices, setShowServices
   } = useSearchSections(query);
 
   // Sidebar sections dinámico
@@ -50,6 +53,14 @@ function SearchResultsPageContent() {
       description: 'Encuentra personas en la comunidad',
     });
   }
+  if (services.length > 0) {
+    sections.push({
+      key: 'services',
+      label: 'Servicios',
+      icon: require('react-icons/fa').FaTools,
+      description: 'Descubre servicios de la comunidad',
+    });
+  }
 
   // Función para hacer scroll a la sección correspondiente
   const handleSidebarSelect = (key) => {
@@ -59,6 +70,8 @@ function SearchResultsPageContent() {
         projectsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else if (key === 'people' && peopleSectionRef.current) {
         peopleSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (key === 'services' && servicesSectionRef.current) {
+        servicesSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 50);
   };
@@ -113,6 +126,25 @@ function SearchResultsPageContent() {
                   const el = e.target;
                   if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10 && peopleHasMore) {
                     setPeoplePage(p => p + 1);
+                  }
+                }}
+              />
+            </div>
+          )}
+          {/* Servicios */}
+          {services.length > 0 && (
+            <div ref={servicesSectionRef}>
+              <ServicesSection
+                services={services}
+                showAll={showAllServices}
+                onToggleShowAll={() => setShowAllServices(v => !v)}
+                showContent={showServices}
+                onToggleContent={() => setShowServices(v => !v)}
+                hasMore={servicesHasMore}
+                onScroll={e => {
+                  const el = e.target;
+                  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10 && servicesHasMore) {
+                    setServicesPage(p => p + 1);
                   }
                 }}
               />

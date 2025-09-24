@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { fetchProjects } from '@/service/projects/projectsFetch';
 import { fetchUsers } from '@/service/user/userFetch';
+import { fetchServices } from '@/service/services/servicesFetch';
 
 export function useSearchSections(query) {
   // --- Proyectos ---
@@ -15,6 +16,12 @@ export function useSearchSections(query) {
   const [peopleHasMore, setPeopleHasMore] = useState(true);
   const [showAllPeople, setShowAllPeople] = useState(false);
   const [showPeople, setShowPeople] = useState(true);
+  // --- Servicios ---
+  const [services, setServices] = useState([]);
+  const [servicesPage, setServicesPage] = useState(1);
+  const [servicesHasMore, setServicesHasMore] = useState(true);
+  const [showAllServices, setShowAllServices] = useState(false);
+  const [showServices, setShowServices] = useState(true);
 
   // --- Fetch inicial y paginado para proyectos ---
   useEffect(() => {
@@ -52,6 +59,24 @@ export function useSearchSections(query) {
     return () => { ignore = true; };
   }, [query, peoplePage]);
 
+  // --- Fetch inicial y paginado para servicios ---
+  useEffect(() => {
+    let ignore = false;
+    async function fetchMoreServices() {
+      try {
+        const { services: newServices, pagination } = await fetchServices({ title: query, page: servicesPage, limit: 6 });
+        if (!ignore) {
+          setServices(prev => servicesPage === 1 ? newServices : [...prev, ...newServices]);
+          setServicesHasMore(pagination?.currentPage < pagination?.totalPages);
+        }
+      } catch (e) {
+        if (!ignore) setServicesHasMore(false);
+      }
+    }
+    fetchMoreServices();
+    return () => { ignore = true; };
+  }, [query, servicesPage]);
+
   return {
     // Proyectos
     projects,
@@ -71,5 +96,14 @@ export function useSearchSections(query) {
     setShowAllPeople,
     showPeople,
     setShowPeople,
+    // Servicios
+    services,
+    servicesPage,
+    setServicesPage,
+    servicesHasMore,
+    showAllServices,
+    setShowAllServices,
+    showServices,
+    setShowServices,
   };
 }
