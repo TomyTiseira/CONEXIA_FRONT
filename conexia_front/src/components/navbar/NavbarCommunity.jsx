@@ -95,7 +95,7 @@ export default function NavbarCommunity() {
 
   const navItems = [
     { label: 'Inicio', href: '/', icon: Home },
-    { label: 'Servicios', href: '#servicios', icon: Briefcase },
+    { label: 'Servicios', href: '/services', icon: Briefcase },
     { label: 'Proyectos', href: "/project/search", icon: Layers },
     { label: 'Conexiones', href: '/connections', icon: HiUserGroup, showDot: connectionRequestsCount > 0 },
   ];
