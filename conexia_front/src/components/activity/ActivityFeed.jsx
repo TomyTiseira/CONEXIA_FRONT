@@ -23,9 +23,7 @@ export default function ActivityFeed({ publications, isOwner, userId }) {
     <section className="w-full mt-8">
       <div className="bg-white rounded-2xl shadow p-6 border border-[#c6e3e4]">
         <div className="flex items-center gap-2 mb-1">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-conexia-green/10">
-            <MdBarChart size={20} color="#1e6e5c" />
-          </span>
+          <MdBarChart className="w-6 h-6 text-conexia-green" />
           <h3 className="text-base md:text-lg font-bold text-conexia-green">
             {isOwner ? 'Mi Actividad' : 'Actividad'}
           </h3>

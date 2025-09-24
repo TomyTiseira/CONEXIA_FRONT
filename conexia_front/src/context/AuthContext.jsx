@@ -44,16 +44,12 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(true);
       setError(null);
       const userData = await getProfile();
-      console.log('[AuthProvider] getProfile() userData:', userData);
   setUser(userData);
   // Siempre setear usuario y rol en el store, aunque no haya perfil extendido
   setUserStore(userData, roleName);
   setRoleName(roleName);
-  console.log('[AuthProvider] setUserStore:', userData, roleName);
-
       // Esperar a que el rol esté definido antes de buscar perfil extendido
       if (roleLoading || !roleName) {
-        console.log('[AuthProvider] roleLoading o !roleName:', roleLoading, roleName);
         return;
       }
 
@@ -69,27 +65,22 @@ export const AuthProvider = ({ children }) => {
         if (isAdminOrModerator) {
           // Para admin/moderador, no buscar perfil extendido, pero NO limpiar el usuario/rol del store
           setProfileStore(null);
-          console.log('[AuthProvider] Es admin/moderador, no setea perfil extendido, pero mantiene user/rol en store');
           return;
         }
         try {
           const profileRes = await getProfileById(userData.id);
           setProfileStore(profileRes.data.profile);
-          console.log('[AuthProvider] setProfileStore:', profileRes.data.profile);
         } catch (e) {
           setProfileStore(null);
-          console.log('[AuthProvider] Error al obtener perfil extendido:', e);
         }
       } else {
         setProfileStore(null);
-        console.log('[AuthProvider] userData.id no existe, setProfileStore(null)');
       }
     } catch (err) {
   setUser(null);
   setError(err.message);
   clearUserStore(); // Limpiar Zustand solo si hay error real
   setProfileStore(null); // Limpiar solo perfil extendido
-  console.log('[AuthProvider] Error en validateSession:', err);
       // Limpieza adicional: UI de mensajería persistida y estado del store
       try {
         if (typeof window !== 'undefined') {
@@ -101,7 +92,6 @@ export const AuthProvider = ({ children }) => {
       try { useMessagingStore.getState().disconnect(); } catch {}
     } finally {
       setIsLoading(false);
-      console.log('[AuthProvider] validateSession FIN, user:', user, 'roleName:', roleName);
     }
   }, [setUserStore, setProfileStore, clearUserStore, roleName, roleLoading]);
 

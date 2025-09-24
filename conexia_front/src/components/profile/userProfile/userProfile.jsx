@@ -20,6 +20,7 @@ import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/ui/Button";
 import SkillsDisplay from "@/components/skills/SkillsDisplay";
 import UserCollaborativeProjects from "./UserCollaborativeProjects";
+import UserServices from "./UserServices";
 import UserActivity from "./UserActivity";
 import ProfileConnectionButtons from "./ProfileConnectionButtons";
 import UserConnections from "./UserConnections"
@@ -58,7 +59,6 @@ export default function UserProfile() {
   }
   // LOG para depuración de navbar y roles
   useEffect(() => {
-    console.log('[UserProfile] storeUser:', storeUser, 'roleName:', roleName, 'authUser:', authUser, 'isAdmin:', isAdmin, 'isModerator:', isModerator);
   }, [storeUser, roleName, authUser, isAdmin, isModerator]);
 
   useEffect(() => {
@@ -592,6 +592,8 @@ export default function UserProfile() {
   <UserConnections userId={id} profile={profile} isOwner={isOwner} />
         {/* Rectángulo de proyectos colaborativos */}
         <UserCollaborativeProjects userId={id} />
+        {/* Rectángulo de servicios */}
+        <UserServices userId={id} />
         {/* Rectángulo de actividad */}
         <UserActivity userId={id} isOwner={isOwner} />
       </div>
