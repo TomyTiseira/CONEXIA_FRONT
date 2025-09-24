@@ -6,7 +6,6 @@ import { ROLES } from '@/constants/roles';
 import ServiceSearch from '@/components/services/ServiceSearch';
 
 export default function ServicesPage() {
-  
   return (
     <ProtectedRoute
       allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR]}
