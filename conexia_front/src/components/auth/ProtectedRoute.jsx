@@ -25,7 +25,7 @@ function ProtectedRouteContent({
     }, [searchParams]);
   } catch (error) {
     // Si hay error al acceder a searchParams, continuar sin logout forzado
-    console.warn('Could not access search params:', error);
+    // Silencioso durante el build para evitar warnings innecesarios
   }
   
   const {
