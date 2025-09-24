@@ -37,7 +37,7 @@ export default function NavbarAdmin() {
 
   const navItems = [
   { label: 'Inicio', href: '/', icon: Home },
-  { label: 'Servicios', href: '#servicios', icon: Briefcase },
+  { label: 'Servicios', href: '/services', icon: Briefcase },
   { label: 'Proyectos', href: '/project/search', icon: Layers },
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },
   { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
