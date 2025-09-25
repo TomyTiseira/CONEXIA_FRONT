@@ -156,8 +156,6 @@ export function useServices() {
         setPagination(paginationData);
       }
       
-      console.log('✅ Servicios cargados:', servicesData.length);
-      console.log('📄 Modo paginación:', clientMode ? 'cliente' : 'backend');
     } catch (err) {
       console.error('❌ Error cargando servicios:', err.message);
       setError(err.message);
@@ -210,7 +208,6 @@ export function useServices() {
     // Nota: El backend no maneja priceMin, priceMax, ni sortBy según el DTO
     // Estos filtros se aplicarán en el frontend si es necesario
 
-    console.log('🔧 Parámetros enviados al backend:', backendParams);
     await loadServices(backendParams, updatedFilters);
   }, [filters, loadServices]);
 

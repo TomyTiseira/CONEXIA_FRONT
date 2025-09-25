@@ -15,7 +15,7 @@ export function useCreateService() {
       // Campos requeridos
       formData.append('title', form.title);
       formData.append('description', form.description);
-      formData.append('price', form.price);
+      formData.append('price', String(form.price)); // Aseguramos que sea string
       formData.append('categoryId', form.categoryId);
 
       // Campos opcionales

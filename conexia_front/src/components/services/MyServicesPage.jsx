@@ -1,0 +1,438 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { fetchUserServices } from '@/service/services/servicesFetch';
+import { fetchMyServiceRequests } from '@/service/service-hirings/serviceHiringsFetch';
+import { useUserStore } from '@/store/userStore';
+import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, Eye } from 'lucide-react';
+import Navbar from '@/components/navbar/Navbar';
+import Pagination from '@/components/common/Pagination';
+import Toast from '@/components/ui/Toast';
+
+export default function MyServicesPage() {
+  const router = useRouter();
+  const { profile } = useUserStore();
+  const [services, setServices] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [requestsCounts, setRequestsCounts] = useState({});
+  const [filters, setFilters] = useState({
+    page: 1,
+    includeInactive: false
+  });
+
+  useEffect(() => {
+    loadMyServices();
+  }, [filters]);
+
+  const loadMyServices = async () => {
+    if (!profile?.id) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetchUserServices(profile.id, filters);
+      setServices(response.services || []);
+      setPagination(response.pagination || { page: 1, totalPages: 1, total: 0 });
+      
+      // Cargar conteos de solicitudes para cada servicio
+      await loadRequestsCounts(response.services || []);
+    } catch (err) {
+      setError(err.message);
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRequestsCounts = async (servicesList) => {
+    const counts = {};
+    
+    // Cargar conteos en paralelo para mejor rendimiento
+    await Promise.all(servicesList.map(async (service) => {
+      try {
+        const response = await fetchMyServiceRequests({
+          serviceId: service.id,
+          limit: 1,
+          page: 1
+        });
+        counts[service.id] = {
+          total: response.pagination?.total || 0,
+          pending: 0 // Podríamos hacer otra consulta para obtener solo pendientes
+        };
+        
+        // Consulta adicional para obtener solo pendientes
+        const pendingResponse = await fetchMyServiceRequests({
+          serviceId: service.id,
+          status: 'pending',
+          limit: 1,
+          page: 1
+        });
+        counts[service.id].pending = pendingResponse.pagination?.total || 0;
+      } catch (err) {
+        console.error(`Error loading requests count for service ${service.id}:`, err);
+        counts[service.id] = { total: 0, pending: 0 };
+      }
+    }));
+    
+    setRequestsCounts(counts);
+  };
+
+  const handlePageChange = (page) => {
+    setFilters(prev => ({ ...prev, page }));
+  };
+
+  const handleToggleInactive = () => {
+    setFilters(prev => ({ 
+      ...prev, 
+      includeInactive: !prev.includeInactive,
+      page: 1 
+    }));
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const getServiceStatusBadge = (status) => {
+    const statusMap = {
+      active: { label: 'Activo', className: 'bg-green-100 text-green-800' },
+      inactive: { label: 'Inactivo', className: 'bg-gray-100 text-gray-800' },
+      deleted: { label: 'Eliminado', className: 'bg-red-100 text-red-800' }
+    };
+    
+    const serviceStatus = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${serviceStatus.className}`}>
+        {serviceStatus.label}
+      </span>
+    );
+  };
+
+  const handleCloseToast = () => {
+    setToast(null);
+  };
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-white rounded-lg transition"
+            >
+              <ArrowLeft size={24} className="text-conexia-green" />
+            </button>
+            <h1 className="text-3xl font-bold text-conexia-green">Mis Servicios</h1>
+          </div>
+
+          {/* Estadísticas rápidas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-conexia-green/10 rounded-lg">
+                  <Briefcase className="text-conexia-green" size={24} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Servicios</p>
+                  <p className="text-2xl font-bold text-gray-900">{pagination.total}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Users className="text-blue-600" size={24} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Solicitudes Totales</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {Object.values(requestsCounts).reduce((sum, count) => sum + count.total, 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <TrendingUp className="text-orange-600" size={24} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Pendientes</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {Object.values(requestsCounts).reduce((sum, count) => sum + count.pending, 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Controles y filtros */}
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={filters.includeInactive}
+                    onChange={handleToggleInactive}
+                    className="rounded border-gray-300 text-conexia-green focus:ring-conexia-green"
+                  />
+                  <span className="text-sm text-gray-700">Incluir inactivos</span>
+                </label>
+              </div>
+              
+              <button
+                onClick={() => router.push('/services/create')}
+                className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
+              >
+                <Briefcase size={16} />
+                Crear Nuevo Servicio
+              </button>
+            </div>
+          </div>
+
+          {/* Lista de servicios */}
+          <div className="bg-white rounded-lg shadow-sm">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green"></div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-red-600 mb-4">{error}</p>
+                <button
+                  onClick={loadMyServices}
+                  className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : services.length === 0 ? (
+              <div className="text-center py-12">
+                <Briefcase size={48} className="text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No tienes servicios publicados
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Comienza creando tu primer servicio para recibir solicitudes de contratación.
+                </p>
+                <button
+                  onClick={() => router.push('/services/create')}
+                  className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
+                >
+                  Crear Mi Primer Servicio
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Tabla para desktop */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Servicio
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Precio
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Solicitudes
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Última Actualización
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {services.map((service) => {
+                        const counts = requestsCounts[service.id] || { total: 0, pending: 0 };
+                        
+                        return (
+                          <tr key={service.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
+                                  {service.title}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {service.category?.name}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              {getServiceStatusBadge(service.status)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              ${service.price?.toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium text-gray-900">
+                                  {counts.total} total
+                                </span>
+                                {counts.pending > 0 && (
+                                  <span className="text-sm text-orange-600 font-medium">
+                                    {counts.pending} pendientes
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500">
+                              {formatDate(service.updatedAt)}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => router.push(`/services/${service.id}`)}
+                                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                                  title="Ver detalle del servicio"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                                <button
+                                  onClick={() => router.push(`/services/my-services/${service.id}/requests`)}
+                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                                  title={`Ver solicitudes (${counts.total})`}
+                                >
+                                  <Users size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Cards para mobile */}
+                <div className="md:hidden space-y-4 p-4">
+                  {services.map((service) => {
+                    const counts = requestsCounts[service.id] || { total: 0, pending: 0 };
+                    
+                    return (
+                      <div key={service.id} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="flex-shrink-0">
+                              {service.images && service.images.length > 0 ? (
+                                <img
+                                  className="h-12 w-12 rounded-lg object-cover"
+                                  src={service.images[0]}
+                                  alt=""
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
+                                  <Briefcase size={20} className="text-gray-500" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-900 truncate">
+                                {service.title}
+                              </h3>
+                              <p className="text-sm text-gray-500">{service.category?.name}</p>
+                            </div>
+                          </div>
+                          {getServiceStatusBadge(service.status)}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <p className="text-sm text-gray-600">Precio</p>
+                            <p className="font-medium text-conexia-green">
+                              ${service.price?.toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Solicitudes</p>
+                            <p className="font-medium text-gray-900">
+                              {counts.total} 
+                              {counts.pending > 0 && (
+                                <span className="text-orange-600 ml-1">
+                                  ({counts.pending} pendientes)
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">
+                            {formatDate(service.updatedAt)}
+                          </span>
+                          
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => router.push(`/services/${service.id}`)}
+                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded"
+                              title="Ver detalle del servicio"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button
+                              onClick={() => router.push(`/services/my-services/${service.id}/requests`)}
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-white rounded"
+                              title={`Ver solicitudes (${counts.total})`}
+                            >
+                              <Users size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Paginación */}
+                {pagination.totalPages > 1 && (
+                  <div className="px-6 py-4 border-t border-gray-200 flex justify-center">
+                    <Pagination
+                      currentPage={pagination.page || 1}
+                      totalPages={pagination.totalPages || 1}
+                      hasNextPage={pagination.hasNext || false}
+                      hasPreviousPage={pagination.hasPrev || false}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={handleCloseToast}
+          position="top-center"
+        />
+      )}
+    </>
+  );
+}

@@ -1,0 +1,423 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
+import { ChevronDown, Eye, FileText, MoreVertical, ArrowLeft, Filter } from 'lucide-react';
+import Navbar from '@/components/navbar/Navbar';
+import Pagination from '@/components/common/Pagination';
+import QuotationModal from '@/components/services/QuotationModal';
+import ServiceHiringActionsModal from '@/components/services/ServiceHiringActionsModal';
+import Toast from '@/components/ui/Toast';
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'Todos los estados' },
+  { value: 'pending', label: 'Pendiente' },
+  { value: 'quoted', label: 'Cotizado' },
+  { value: 'accepted', label: 'Aceptado' },
+  { value: 'rejected', label: 'Rechazado' },
+  { value: 'cancelled', label: 'Cancelado' },
+  { value: 'negotiating', label: 'Negociando' },
+  { value: 'in_progress', label: 'En progreso' },
+  { value: 'completed', label: 'Completado' }
+];
+
+const getStatusBadge = (statusCode) => {
+  const statusMap = {
+    pending: { label: 'Pendiente', className: 'bg-yellow-100 text-yellow-800' },
+    quoted: { label: 'Cotizado', className: 'bg-blue-100 text-blue-800' },
+    accepted: { label: 'Aceptado', className: 'bg-green-100 text-green-800' },
+    rejected: { label: 'Rechazado', className: 'bg-red-100 text-red-800' },
+    cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
+    negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
+    in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
+    completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
+  };
+  
+  const status = statusMap[statusCode] || { label: statusCode, className: 'bg-gray-100 text-gray-800' };
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${status.className}`}>
+      {status.label}
+    </span>
+  );
+};
+
+export default function MyServiceHiringsPage() {
+  const router = useRouter();
+  const { 
+    hirings, 
+    pagination, 
+    loading, 
+    error, 
+    loadMyHirings
+  } = useServiceHirings();
+
+  const [filters, setFilters] = useState({
+    status: '',
+    page: 1
+  });
+  const [showQuotationModal, setShowQuotationModal] = useState(false);
+  const [showActionsModal, setShowActionsModal] = useState(false);
+  const [selectedHiring, setSelectedHiring] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    loadMyHirings(filters);
+  }, [filters, loadMyHirings]);
+
+  const handleStatusChange = (status) => {
+    setFilters(prev => ({ ...prev, status, page: 1 }));
+  };
+
+  const handlePageChange = (page) => {
+    setFilters(prev => ({ ...prev, page }));
+  };
+
+  const handleViewQuotation = (hiring) => {
+    setSelectedHiring(hiring);
+    setShowQuotationModal(true);
+  };
+
+  const handleOpenActions = (hiring) => {
+    setSelectedHiring(hiring);
+    setShowActionsModal(true);
+  };
+
+  const handleActionSuccess = (message) => {
+    setToast({
+      type: 'success',
+      message: message,
+      isVisible: true
+    });
+    // Recargar datos
+    loadMyHirings(filters);
+  };
+
+  const handleActionError = (message) => {
+    setToast({
+      type: 'error',
+      message: message,
+      isVisible: true
+    });
+  };
+
+  const handleCloseToast = () => {
+    setToast(null);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const canViewQuotation = (hiring) => {
+    return ['quoted', 'accepted', 'rejected', 'negotiating'].includes(hiring.status?.code);
+  };
+
+  const hasActions = (hiring) => {
+    return hiring.availableActions && hiring.availableActions.length > 0;
+  };
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-white rounded-lg transition"
+            >
+              <ArrowLeft size={24} className="text-conexia-green" />
+            </button>
+            <h1 className="text-3xl font-bold text-conexia-green">Mis Solicitudes</h1>
+          </div>
+
+          {/* Filtros */}
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter size={20} className="text-gray-500" />
+                <span className="font-medium text-gray-700">Filtros:</span>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <select
+                  value={filters.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green"
+                >
+                  {STATUS_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Contenido principal */}
+          <div className="bg-white rounded-lg shadow-sm">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green"></div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-red-600 mb-4">{error}</p>
+                <button
+                  onClick={() => loadMyHirings(filters)}
+                  className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : hirings.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText size={48} className="text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No tienes solicitudes
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  {filters.status ? 'No hay solicitudes con el estado seleccionado.' : 'Aún no has realizado ninguna solicitud de contratación.'}
+                </p>
+                <button
+                  onClick={() => router.push('/services')}
+                  className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
+                >
+                  Explorar Servicios
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Tabla para desktop */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Servicio
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Mi Solicitud
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Fecha
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Cotización
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {hirings.map((hiring) => (
+                        <tr key={hiring.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-900 truncate max-w-xs">
+                                {hiring.service?.title}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                ${hiring.service?.price?.toLocaleString()}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-900 max-w-xs truncate" title={hiring.description}>
+                              {hiring.description}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4">
+                            {getStatusBadge(hiring.status?.code)}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {formatDate(hiring.createdAt)}
+                          </td>
+                          <td className="px-6 py-4">
+                            {hiring.quotedPrice ? (
+                              <div className="flex flex-col">
+                                <span className="font-medium text-conexia-green">
+                                  ${parseFloat(hiring.quotedPrice).toLocaleString()}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  {hiring.estimatedHours}h
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-500">Pendiente</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => router.push(`/services/${hiring.service.id}`)}
+                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                                title="Ver detalle del servicio"
+                              >
+                                <Eye size={16} />
+                              </button>
+                              
+                              {canViewQuotation(hiring) && (
+                                <button
+                                  onClick={() => handleViewQuotation(hiring)}
+                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                                  title="Ver cotización"
+                                >
+                                  <FileText size={16} />
+                                </button>
+                              )}
+                              
+                              {hasActions(hiring) && (
+                                <button
+                                  onClick={() => handleOpenActions(hiring)}
+                                  className="p-2 text-conexia-green hover:text-conexia-green/80 hover:bg-conexia-green/10 rounded"
+                                  title="Acciones disponibles"
+                                >
+                                  <MoreVertical size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Cards para mobile */}
+                <div className="md:hidden space-y-4 p-4">
+                  {hirings.map((hiring) => (
+                    <div key={hiring.id} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900 mb-1">
+                            {hiring.service?.title}
+                          </h3>
+                          <p className="text-sm text-conexia-green font-medium">
+                            ${hiring.service?.price?.toLocaleString()}
+                          </p>
+                        </div>
+                        {getStatusBadge(hiring.status?.code)}
+                      </div>
+                      
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-1">Mi solicitud:</p>
+                        <p className="text-sm text-gray-900">{hiring.description}</p>
+                      </div>
+                      
+                      {hiring.quotedPrice && (
+                        <div className="mb-3 p-2 bg-white rounded border">
+                          <p className="text-sm text-gray-600 mb-1">Cotización:</p>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-conexia-green">
+                              ${parseFloat(hiring.quotedPrice).toLocaleString()}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {hiring.estimatedHours}h
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">
+                          {formatDate(hiring.createdAt)}
+                        </span>
+                        
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => router.push(`/services/${hiring.service.id}`)}
+                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          
+                          {canViewQuotation(hiring) && (
+                            <button
+                              onClick={() => handleViewQuotation(hiring)}
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-white rounded"
+                            >
+                              <FileText size={16} />
+                            </button>
+                          )}
+                          
+                          {hasActions(hiring) && (
+                            <button
+                              onClick={() => handleOpenActions(hiring)}
+                              className="p-2 text-conexia-green hover:text-conexia-green/80 hover:bg-white rounded"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Paginación */}
+                {pagination.totalPages > 1 && (
+                  <div className="px-6 py-4 border-t border-gray-200 flex justify-center">
+                    <Pagination
+                      currentPage={pagination.page || 1}
+                      totalPages={pagination.totalPages || 1}
+                      hasNextPage={pagination.hasNext || false}
+                      hasPreviousPage={pagination.hasPrev || false}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Modales */}
+      <QuotationModal
+        hiring={selectedHiring}
+        isOpen={showQuotationModal}
+        onClose={() => {
+          setShowQuotationModal(false);
+          setSelectedHiring(null);
+        }}
+        onSuccess={handleActionSuccess}
+        onError={handleActionError}
+      />
+
+      <ServiceHiringActionsModal
+        hiring={selectedHiring}
+        isOpen={showActionsModal}
+        onClose={() => {
+          setShowActionsModal(false);
+          setSelectedHiring(null);
+        }}
+        onSuccess={handleActionSuccess}
+        onError={handleActionError}
+      />
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={handleCloseToast}
+          position="top-center"
+        />
+      )}
+    </>
+  );
+}

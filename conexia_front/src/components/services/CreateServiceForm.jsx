@@ -282,7 +282,9 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
             </label>
             <InputField
               name="price"
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               placeholder="Ej: 150"
               value={form.price}
               onChange={(e) => handleChange('price', e.target.value)}

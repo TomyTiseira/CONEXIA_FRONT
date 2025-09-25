@@ -3,7 +3,8 @@ import { useServices } from '@/hooks/services';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, FileText } from 'lucide-react';
 import { Briefcase } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Navbar from '@/components/navbar/Navbar';
@@ -12,6 +13,7 @@ import ServiceFilters from './ServiceFilters';
 import ServiceList from './ServiceList';
 
 export default function ServiceSearch() {
+  const router = useRouter();
   const { roleName } = useUserStore();
   const { 
     services, 
@@ -24,6 +26,7 @@ export default function ServiceSearch() {
   } = useServices();
 
   const canCreateService = roleName === ROLES.USER;
+  const canViewHirings = roleName === ROLES.USER;
   const [isMounted, setIsMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const timeoutRef = useRef(null);
@@ -37,7 +40,6 @@ export default function ServiceSearch() {
   const handleSearch = (newSearchTerm = searchTerm) => {
     if (!isMounted) return;
     
-    console.log('🔍 Búsqueda:', newSearchTerm);
     applyFilters({ title: newSearchTerm, page: 1 });
   };
 
@@ -68,14 +70,12 @@ export default function ServiceSearch() {
   const handleFiltersChange = (newFilters) => {
     if (!isMounted) return;
     
-    console.log('🔧 Filtros cambiados:', newFilters);
     applyFilters({ ...newFilters, page: 1 });
   };
 
   const handlePageChange = (page) => {
     if (!isMounted) return;
     
-    console.log('📄 Página cambiada:', page);
     applyFilters({ page });
   };
 
@@ -122,9 +122,19 @@ export default function ServiceSearch() {
                 </div>
               </div>
             </div>
-            {canCreateService && (
-              <div className="flex justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
-                <Link href="/services/create" className="w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
+              {canViewHirings && (
+                <button 
+                  onClick={() => router.push('/services/my-hirings')}
+                  className="bg-blue-600 text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-blue-700 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full sm:w-auto"
+                >
+                  <FileText size={16} />
+                  <span>Mis Solicitudes</span>
+                </button>
+              )}
+              
+              {canCreateService && (
+                <Link href="/services/create" className="w-full sm:w-auto">
                   <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
                     <span className="flex items-center justify-center gap-2 w-full">
                       <Briefcase size={16} className="text-base" />
@@ -132,8 +142,8 @@ export default function ServiceSearch() {
                     </span>
                   </button>
                 </Link>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-6">
