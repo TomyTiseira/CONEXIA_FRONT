@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, Briefcase, FileText, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
@@ -119,8 +119,35 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
         </div>
       </div>
 
+      {/* Servicios (solo para usuarios con rol USER) */}
+      {roleName === ROLES.USER && (
+        <>
+          <div className="border-t pt-1 mt-1">
+            <div className="px-4 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Servicios
+            </div>
+            <Link
+              href="/services/my-hirings"
+              onClick={handleClose}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+            >
+              <FileText size={16} />
+              Mis Solicitudes
+            </Link>
+            <Link
+              href="/services/my-services"
+              onClick={handleClose}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+            >
+              <Briefcase size={16} />
+              Mis Servicios
+            </Link>
+          </div>
+        </>
+      )}
+
       {/* Acciones */}
-      <div className="pt-1">
+      <div className="border-t pt-1 mt-1">
         <Link
           href="/settings"
           onClick={handleClose}

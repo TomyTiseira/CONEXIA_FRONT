@@ -1,13 +1,22 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
+import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import { formatPrice } from '@/utils/formatPrice';
 import { FaClock } from 'react-icons/fa';
 import { config } from '@/config';
 import ServiceImageCarousel from './ServiceImageCarousel';
+import ServiceHiringModal from './ServiceHiringModal';
+import Toast from '@/components/ui/Toast';
 
 const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = null }) => {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
+  const { roleName } = useUserStore();
+  const [showHiringModal, setShowHiringModal] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const getProfileImageSrc = () => {
     if (!service.owner?.profileImage) {
@@ -38,6 +47,21 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
   };
 
   const isInactive = service.status === 'inactive' || service.status === 'deleted';
+  
+  // Verificar si puede contratar el servicio
+  const canHire = isAuthenticated && roleName === ROLES.USER && service?.owner?.id !== user?.id && !isInactive;
+
+  const handleHiringSuccess = (message) => {
+    setToast({
+      type: 'success',
+      message: message,
+      isVisible: true
+    });
+  };
+
+  const handleCloseToast = () => {
+    setToast(null);
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col h-full items-stretch w-full hover:shadow-lg transition relative">
@@ -112,17 +136,43 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
         </div>
       </div>
 
-      {/* Botón de acción */}
-      <div className="w-full mt-auto px-2">
+      {/* Botones de acción */}
+      <div className="w-full mt-auto px-2 space-y-2">
+        {canHire && (
+          <button
+            className="bg-conexia-green text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-conexia-green/90 transition w-full"
+            onClick={() => setShowHiringModal(true)}
+          >
+            Contratar
+          </button>
+        )}
+        
         <button
-          className="bg-conexia-green/90 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-conexia-green transition w-full"
+          className={`${canHire ? 'bg-gray-500 hover:bg-gray-600' : 'bg-conexia-green hover:bg-conexia-green/90'} text-white px-4 py-2 rounded-md text-sm font-semibold transition w-full`}
           onClick={() => router.push(`/services/${service.id}`)}
         >
           Ver detalle
         </button>
       </div>
 
+      {/* Modal de contratación */}
+      <ServiceHiringModal
+        service={service}
+        isOpen={showHiringModal}
+        onClose={() => setShowHiringModal(false)}
+        onSuccess={handleHiringSuccess}
+      />
 
+      {/* Toast para notificaciones */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={handleCloseToast}
+          position="top-center"
+        />
+      )}
     </div>
   );
 };

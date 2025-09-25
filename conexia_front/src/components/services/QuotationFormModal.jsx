@@ -1,0 +1,270 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useQuotations } from '@/hooks/service-hirings/useQuotations';
+import { X, DollarSign, Clock, FileText } from 'lucide-react';
+import Button from '@/components/ui/Button';
+
+export default function QuotationFormModal({ hiring, isOpen, isEditing = false, onClose, onSuccess, onError }) {
+  const { createQuote, updateQuote, loading } = useQuotations();
+  
+  const [formData, setFormData] = useState({
+    quotedPrice: '',
+    estimatedHours: '',
+    quotationNotes: ''
+  });
+  const [errors, setErrors] = useState({});
+
+  // Inicializar formulario cuando cambie el hiring o modo de edición
+  useEffect(() => {
+    if (hiring) {
+      setFormData({
+        quotedPrice: isEditing && hiring.quotedPrice ? hiring.quotedPrice.toString() : '',
+        estimatedHours: isEditing && hiring.estimatedHours ? hiring.estimatedHours.toString() : '',
+        quotationNotes: isEditing && hiring.quotationNotes ? hiring.quotationNotes : ''
+      });
+      setErrors({});
+    }
+  }, [hiring, isEditing, isOpen]);
+
+  if (!isOpen || !hiring) return null;
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validar precio
+    const price = parseFloat(formData.quotedPrice);
+    if (!formData.quotedPrice || isNaN(price) || price <= 0) {
+      newErrors.quotedPrice = 'El precio es requerido y debe ser mayor a 0';
+    }
+
+    // Validar horas
+    const hours = parseInt(formData.estimatedHours);
+    if (!formData.estimatedHours || isNaN(hours) || hours < 1) {
+      newErrors.estimatedHours = 'Las horas estimadas son requeridas y deben ser al menos 1';
+    }
+
+    // Validar notas (opcional pero con límite)
+    if (formData.quotationNotes.length > 1000) {
+      newErrors.quotationNotes = 'Las notas no pueden exceder 1000 caracteres';
+    }
+
+    return newErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    try {
+      const quotationData = {
+        quotedPrice: parseFloat(formData.quotedPrice),
+        estimatedHours: parseInt(formData.estimatedHours),
+        quotationNotes: formData.quotationNotes.trim() || undefined
+      };
+
+      if (isEditing) {
+        await updateQuote(hiring.id, quotationData);
+        onSuccess?.('Cotización actualizada exitosamente');
+      } else {
+        await createQuote(hiring.id, quotationData);
+        onSuccess?.('Cotización creada exitosamente');
+      }
+
+      onClose();
+    } catch (error) {
+      onError?.(error.message || 'Error al procesar la cotización');
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Limpiar error del campo cuando el usuario empiece a escribir
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h3 className="text-xl font-semibold text-gray-900">
+            {isEditing ? 'Editar Cotización' : 'Crear Cotización'}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+            disabled={loading}
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="p-6 space-y-6">
+            {/* Información de la solicitud */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-3">Información de la Solicitud</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Cliente ID:</span>
+                  <span className="ml-2 font-medium">#{hiring.userId}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Fecha:</span>
+                  <span className="ml-2 font-medium">{formatDate(hiring.createdAt)}</span>
+                </div>
+                <div className="md:col-span-2">
+                  <span className="text-gray-600">Descripción:</span>
+                  <p className="mt-1 p-3 bg-white rounded border text-gray-900">
+                    {hiring.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Formulario de cotización */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-900">Detalles de la Cotización</h4>
+              
+              {/* Precio */}
+              <div>
+                <label htmlFor="quotedPrice" className="block text-sm font-medium text-gray-700 mb-2">
+                  <DollarSign size={16} className="inline mr-1" />
+                  Precio Final *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    id="quotedPrice"
+                    step="0.01"
+                    min="0"
+                    value={formData.quotedPrice}
+                    onChange={(e) => handleInputChange('quotedPrice', e.target.value)}
+                    className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                      errors.quotedPrice ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="0.00"
+                    disabled={loading}
+                  />
+                </div>
+                {errors.quotedPrice && (
+                  <p className="text-sm text-red-600 mt-1">{errors.quotedPrice}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Precio base del servicio: ${hiring.service?.price?.toLocaleString()}
+                </p>
+              </div>
+
+              {/* Horas estimadas */}
+              <div>
+                <label htmlFor="estimatedHours" className="block text-sm font-medium text-gray-700 mb-2">
+                  <Clock size={16} className="inline mr-1" />
+                  Tiempo Estimado (horas) *
+                </label>
+                <input
+                  type="number"
+                  id="estimatedHours"
+                  min="1"
+                  value={formData.estimatedHours}
+                  onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                    errors.estimatedHours ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="1"
+                  disabled={loading}
+                />
+                {errors.estimatedHours && (
+                  <p className="text-sm text-red-600 mt-1">{errors.estimatedHours}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Tiempo aproximado que te tomará completar el trabajo
+                </p>
+              </div>
+
+              {/* Notas adicionales */}
+              <div>
+                <label htmlFor="quotationNotes" className="block text-sm font-medium text-gray-700 mb-2">
+                  <FileText size={16} className="inline mr-1" />
+                  Notas Adicionales
+                </label>
+                <textarea
+                  id="quotationNotes"
+                  rows={4}
+                  value={formData.quotationNotes}
+                  onChange={(e) => handleInputChange('quotationNotes', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green resize-none ${
+                    errors.quotationNotes ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="Incluye detalles adicionales sobre el trabajo, materiales, condiciones, etc..."
+                  disabled={loading}
+                />
+                {errors.quotationNotes && (
+                  <p className="text-sm text-red-600 mt-1">{errors.quotationNotes}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Opcional - Máximo 1000 caracteres ({formData.quotationNotes.length}/1000)
+                </p>
+              </div>
+            </div>
+
+            {/* Información adicional */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h5 className="font-medium text-blue-900 mb-2">💡 Consejos para una buena cotización</h5>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• Sé específico sobre qué incluye el precio</li>
+                <li>• Menciona si hay costos adicionales no incluidos</li>
+                <li>• Establece un tiempo realista para completar el trabajo</li>
+                <li>• Incluye información sobre garantías o revisiones</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="border-t border-gray-200 px-6 py-4 flex gap-3">
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="outline"
+              className="flex-1"
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={loading}
+            >
+              {loading 
+                ? 'Procesando...' 
+                : isEditing 
+                  ? 'Actualizar Cotización' 
+                  : 'Enviar Cotización'
+              }
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

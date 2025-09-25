@@ -14,3 +14,7 @@ export * from './connections/useAcceptConnectionRequest';
 export * from './connections/useCancelConnectionRequest';
 export * from './connections/useRejectConnectionRequest';
 export * from './connections/useFindConnection';
+
+// Hooks de contratación de servicios
+export * from './service-hirings/useServiceHirings';
+export * from './service-hirings/useQuotations';

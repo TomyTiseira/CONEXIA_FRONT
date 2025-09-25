@@ -1,0 +1,174 @@
+import { useState, useCallback } from 'react';
+import { 
+  createServiceHiring,
+  fetchMyServiceHirings,
+  fetchMyServiceRequests,
+  acceptQuotation,
+  rejectQuotation,
+  cancelServiceHiring,
+  negotiateQuotation
+} from '@/service/service-hirings/serviceHiringsFetch';
+
+/**
+ * Hook para manejar las contrataciones de servicios
+ */
+export function useServiceHirings() {
+  const [hirings, setHirings] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Crear solicitud de contratación
+  const createHiring = async (serviceId, description) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await createServiceHiring({ serviceId, description });
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Obtener mis solicitudes de contratación
+  const loadMyHirings = useCallback(async (filters = {}) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetchMyServiceHirings(filters);
+      setHirings(response.data || []);
+      setPagination(response.pagination || { page: 1, totalPages: 1, total: 0 });
+    } catch (err) {
+      setError(err.message);
+      setHirings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Obtener solicitudes de mis servicios
+  const loadMyServiceRequests = useCallback(async (filters = {}) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetchMyServiceRequests(filters);
+      setHirings(response.data || []);
+      setPagination(response.pagination || { page: 1, totalPages: 1, total: 0 });
+    } catch (err) {
+      setError(err.message);
+      setHirings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Aceptar cotización
+  const acceptHiring = async (hiringId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await acceptQuotation(hiringId);
+      // Actualizar el hiring en el estado local
+      setHirings(prev => prev.map(h => 
+        h.id === hiringId 
+          ? { ...h, status: { ...h.status, code: 'accepted' }, availableActions: response.availableActions || [] }
+          : h
+      ));
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Rechazar cotización
+  const rejectHiring = async (hiringId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await rejectQuotation(hiringId);
+      // Actualizar el hiring en el estado local
+      setHirings(prev => prev.map(h => 
+        h.id === hiringId 
+          ? { ...h, status: { ...h.status, code: 'rejected' }, availableActions: response.availableActions || [] }
+          : h
+      ));
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cancelar solicitud
+  const cancelHiring = async (hiringId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await cancelServiceHiring(hiringId);
+      // Actualizar el hiring en el estado local
+      setHirings(prev => prev.map(hiring => 
+        hiring.id === hiringId 
+          ? { ...hiring, status: { ...hiring.status, code: 'cancelled' }, availableActions: response.availableActions || [] }
+          : hiring
+      ));
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Negociar cotización
+  const negotiateHiring = async (hiringId, negotiationData = {}) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await negotiateQuotation(hiringId, negotiationData);
+      // Actualizar el hiring en el estado local
+      setHirings(prev => prev.map(hiring => 
+        hiring.id === hiringId 
+          ? { ...hiring, status: { ...hiring.status, code: 'negotiating' }, availableActions: response.availableActions || [] }
+          : hiring
+      ));
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    hirings,
+    pagination,
+    loading,
+    error,
+    createHiring,
+    loadMyHirings,
+    loadMyServiceRequests,
+    acceptHiring,
+    rejectHiring,
+    cancelHiring,
+    negotiateHiring,
+    setHirings,
+    setError
+  };
+}
