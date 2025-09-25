@@ -1,18 +1,48 @@
 import { useState, useEffect } from 'react';
 import { useServiceCategories } from '@/hooks/services';
-import { FaFilter } from 'react-icons/fa';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { MdCleaningServices } from 'react-icons/md';
-import Button from '@/components/ui/Button';
 
 const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} }) => {
   const { categories, loading: categoriesLoading } = useServiceCategories();
-  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     category: currentFilters.category || [],
     priceMin: currentFilters.priceMin || '',
     priceMax: currentFilters.priceMax || '',
     sortBy: currentFilters.sortBy || ''
   });
+  // Estados locales de inputs de precio para permitir tipear varios dígitos
+  const [priceMinInput, setPriceMinInput] = useState(currentFilters.priceMin || '');
+  const [priceMaxInput, setPriceMaxInput] = useState(currentFilters.priceMax || '');
+
+  // Estados para colapsar secciones - detectar si es mobile
+  const [isMobile, setIsMobile] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
+  const [showPrice, setShowPrice] = useState(false);
+
+  // Detectar tamaño de pantalla y establecer estado inicial
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768; // md breakpoint
+      setIsMobile(mobile);
+      if (!mobile) {
+        // En desktop, mostrar todo desplegado por defecto
+        setShowSort(true);
+        setShowCategories(true);
+        setShowPrice(true);
+      } else {
+        // En mobile, mantener todo colapsado
+        setShowSort(false);
+        setShowCategories(false);
+        setShowPrice(false);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Sincronizar con filtros externos
   useEffect(() => {
@@ -22,6 +52,8 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
       priceMax: currentFilters.priceMax || '',
       sortBy: currentFilters.sortBy || ''
     });
+    setPriceMinInput(currentFilters.priceMin || '');
+    setPriceMaxInput(currentFilters.priceMax || '');
   }, [currentFilters]);
 
   const sortOptions = [
@@ -39,10 +71,13 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
   };
 
   const handleCategoryChange = (categoryId) => {
-    const currentCategories = filters.category;
+    const currentCategories = filters.category || [];
     let newCategories;
     
-    if (currentCategories.includes(categoryId)) {
+    if (categoryId === 'all') {
+      // Si selecciona "Todas", limpia todas las demás
+      newCategories = [];
+    } else if (currentCategories.includes(categoryId)) {
       newCategories = currentCategories.filter(id => id !== categoryId);
     } else {
       newCategories = [...currentCategories, categoryId];
@@ -51,15 +86,30 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
     handleFilterChange('category', newCategories);
   };
 
+  // Commit helpers para precio (blur o Enter)
+  const commitPriceMin = () => {
+    // Permitir vacío
+    const val = priceMinInput === '' ? '' : String(priceMinInput).replace(/[^0-9]/g, '');
+    setPriceMinInput(val);
+    handleFilterChange('priceMin', val);
+  };
+  const commitPriceMax = () => {
+    const val = priceMaxInput === '' ? '' : String(priceMaxInput).replace(/[^0-9]/g, '');
+    setPriceMaxInput(val);
+    handleFilterChange('priceMax', val);
+  };
+
   const clearFilters = () => {
-    const clearedFilters = {
+    const emptyFilters = {
       category: [],
       priceMin: '',
       priceMax: '',
       sortBy: ''
     };
-    setFilters(clearedFilters);
-    onFiltersChange(clearedFilters);
+    setFilters(emptyFilters);
+    setPriceMinInput('');
+    setPriceMaxInput('');
+    onFiltersChange(emptyFilters);
   };
 
   const hasActiveFilters = 
@@ -69,115 +119,145 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
     filters.sortBy;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-      {/* Header con ordenamiento y limpiar filtros */}
-      <div className="flex items-center justify-between mb-6">
-        {/* Botón de filtros para móvil */}
+    <div className="bg-white rounded-xl shadow p-5 mb-4">
+      {/* Header de Ordenar por */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-conexia-green">Ordenar por</h2>
         <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="lg:hidden flex items-center gap-2 text-conexia-green hover:text-conexia-green-dark"
+          className="ml-1 px-1.5 py-1 rounded border border-conexia-green text-conexia-green hover:bg-conexia-green hover:text-white transition-colors text-xs font-semibold flex items-center gap-1"
+          title="Limpiar filtros"
+          onClick={clearFilters}
         >
-          <FaFilter size={16} />
-          <span>Filtros</span>
-          {hasActiveFilters && (
-            <span className="bg-conexia-green text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-              {filters.category.length + (filters.priceMin ? 1 : 0) + (filters.priceMax ? 1 : 0) + (filters.sortBy ? 1 : 0)}
-            </span>
-          )}
+          <MdCleaningServices className="w-4 h-4" />
+          <span className="hidden sm:inline">Limpiar filtros</span>
         </button>
+      </div>
 
-        {/* Ordenamiento y limpiar filtros - Lado derecho */}
-        <div className="flex items-center gap-4">
-          {/* Ordenamiento */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Ordenar:</label>
-            <select
-              value={filters.sortBy}
-              onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green/50"
-              disabled={loading}
-            >
-              {sortOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+      {/* Ordenamiento - Sección que se puede colapsar */}
+      <div className="mb-6">
+        <button
+          className="flex items-center justify-between w-full mb-3 cursor-pointer md:hidden"
+          onClick={() => setShowSort(!showSort)}
+        >
+          <h3 className="text-base font-medium text-conexia-green">Ordenamiento</h3>
+          <div>
+            {showSort ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
+        </button>
+        
+        {/* En desktop siempre visible, en mobile colapsable */}
+        <div className={`space-y-2 ${showSort ? 'block' : 'hidden'} md:block`}>
+          {sortOptions.map(option => (
+            <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="sortBy"
+                value={option.value}
+                checked={filters.sortBy === option.value}
+                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                className="accent-conexia-green"
+              />
+              <span className="text-sm text-conexia-green">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
 
-          {/* Limpiar filtros */}
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="px-3 py-1 rounded border border-conexia-green text-conexia-green hover:bg-conexia-green hover:text-white transition-colors text-sm font-semibold flex items-center gap-2"
-              disabled={loading}
-              title="Limpiar filtros"
-            >
-              <MdCleaningServices className="w-4 h-4" />
-              <span className="hidden sm:inline">Limpiar filtros</span>
-            </button>
+      {/* Header de Filtrar por */}
+      <div className="mb-4">
+        <h2 className="text-lg font-bold text-conexia-green">Filtrar por</h2>
+      </div>
+
+      {/* Categorías */}
+      <div className="mb-6">
+        <button
+          className="flex items-center justify-between w-full mb-3 cursor-pointer"
+          onClick={() => setShowCategories(!showCategories)}
+        >
+          <h3 className="text-base font-medium text-conexia-green">Categorías</h3>
+          <div>
+            {showCategories ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
+        </button>
+        
+        <div className={`space-y-2 ${showCategories ? 'block' : 'hidden'}`}>
+          {/* Opción "Todas" */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.category.length === 0}
+              onChange={() => handleCategoryChange('all')}
+              className="accent-conexia-green"
+            />
+            <span className="text-sm text-conexia-green font-medium">Todas</span>
+          </label>
+          
+          {categoriesLoading ? (
+            <div className="text-sm text-gray-500">Cargando categorías...</div>
+          ) : categories?.length > 0 ? (
+            categories.map(category => (
+              <label key={category.id} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.category.includes(category.id)}
+                  onChange={() => handleCategoryChange(category.id)}
+                  className="accent-conexia-green"
+                />
+                <span className="text-sm text-conexia-green">{category.name}</span>
+              </label>
+            ))
+          ) : (
+            <div className="text-sm text-gray-500">No hay categorías disponibles</div>
           )}
         </div>
       </div>
 
-      {/* Filtros expandibles */}
-      <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Categorías */}
+      {/* Rango de Precio */}
+      <div className="mb-0">
+        <button
+          className="flex items-center justify-between w-full mb-3 cursor-pointer"
+          onClick={() => setShowPrice(!showPrice)}
+        >
+          <h3 className="text-base font-medium text-conexia-green">Precio</h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Categorías
-            </label>
-            <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
-              {categoriesLoading ? (
-                <div className="text-sm text-gray-500">Cargando categorías...</div>
-              ) : categories && categories.length > 0 ? (
-                categories.map(category => (
-                  <label key={category.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
-                    <input
-                      type="checkbox"
-                      checked={filters.category.includes(category.id)}
-                      onChange={() => handleCategoryChange(category.id)}
-                      className="rounded border-gray-300 text-conexia-green focus:ring-conexia-green"
-                      disabled={loading}
-                    />
-                    <span className="truncate">{category.name}</span>
-                  </label>
-                ))
-              ) : (
-                <div className="text-sm text-gray-500">No hay categorías disponibles</div>
-              )}
-            </div>
+            {showPrice ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
-
-          {/* Rango de precios mínimo */}
+        </button>
+        
+        <div className={`space-y-3 ${showPrice ? 'block' : 'hidden'}`}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Precio mínimo
-            </label>
+            <label className="block text-xs text-gray-500 mb-1">Precio mínimo</label>
             <input
-              type="number"
-              placeholder="Precio mínimo"
-              value={filters.priceMin}
-              onChange={(e) => handleFilterChange('priceMin', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green/50"
-              min="0"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Min"
+              value={priceMinInput}
+              onChange={(e) => {
+                const onlyDigits = e.target.value.replace(/[^0-9]/g, '');
+                setPriceMinInput(onlyDigits);
+              }}
+              onBlur={commitPriceMin}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green/50 focus:border-conexia-green"
               disabled={loading}
             />
           </div>
-
-          {/* Rango de precios máximo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Precio máximo
-            </label>
+            <label className="block text-xs text-gray-500 mb-1">Precio máximo</label>
             <input
-              type="number"
-              placeholder="Precio máximo"
-              value={filters.priceMax}
-              onChange={(e) => handleFilterChange('priceMax', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green/50"
-              min="0"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Max"
+              value={priceMaxInput}
+              onChange={(e) => {
+                const onlyDigits = e.target.value.replace(/[^0-9]/g, '');
+                setPriceMaxInput(onlyDigits);
+              }}
+              onBlur={commitPriceMax}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green/50 focus:border-conexia-green"
               disabled={loading}
             />
           </div>

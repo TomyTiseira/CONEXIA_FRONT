@@ -195,7 +195,7 @@ export default function ProjectSearch() {
           {/* Header: título, buscador y botón */}
           <div className="flex flex-col md:flex-row md:items-center md:gap-6 mb-2 w-full">
             <div className="flex flex-col md:flex-row md:items-center w-full">
-              <h1 className="text-2xl font-bold text-conexia-green bg-white rounded-lg px-6 py-3 shadow-sm w-full md:w-[320px] text-center md:text-left mb-4 md:mb-0">Buscar Proyecto</h1>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight leading-tight bg-white rounded-lg px-6 py-3 shadow-sm w-full md:w-[320px] text-center md:text-left mb-4 md:mb-0">Proyectos</h1>
               <div className="flex-1 flex justify-center md:justify-center w-full md:w-auto md:ml-6">
                 <div className="w-full max-w-xl">
                   <ProjectSearchBar filters={filters} onSearch={handleSearch} />
@@ -284,15 +284,19 @@ export default function ProjectSearch() {
                         {isLoadingAllProjects ? (
                           <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
                         ) : allProjectsList.length > 0 ? (
-                          <>
-                            <ProjectList projects={allProjectsList.slice((page-1)*pageSize, page*pageSize)} />
-                            <Pagination
-                              page={page}
-                              hasPreviousPage={page > 1}
-                              hasNextPage={allProjectsList.length > page * pageSize}
-                              onPageChange={setPage}
-                            />
-                          </>
+                          <div className="min-h-[900px] flex flex-col">
+                            <div className="flex-1">
+                              <ProjectList projects={allProjectsList.slice((page-1)*pageSize, page*pageSize)} reserveGridSpace={true} />
+                            </div>
+                            <div className="mt-8 flex justify-center">
+                              <Pagination
+                                page={page}
+                                hasPreviousPage={page > 1}
+                                hasNextPage={allProjectsList.length > page * pageSize}
+                                onPageChange={setPage}
+                              />
+                            </div>
+                          </div>
                         ) : (
                           <div className="text-center text-gray-500 py-8">
                             No hay proyectos disponibles en este momento.
@@ -310,17 +314,21 @@ export default function ProjectSearch() {
                   {isLoadingAllProjects ? (
                     <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
                   ) : allProjectsList.length > 0 ? (
-                    <div>
+                    <div className="min-h-[900px] flex flex-col">
                       <h2 className="text-xl font-semibold text-gray-800 mb-4">
                         Todos los proyectos
                       </h2>
-                      <ProjectList projects={allProjectsList.slice((page-1)*pageSize, page*pageSize)} />
-                      <Pagination
-                        page={page}
-                        hasPreviousPage={page > 1}
-                        hasNextPage={allProjectsList.length > page * pageSize}
-                        onPageChange={setPage}
-                      />
+                      <div className="flex-1">
+                        <ProjectList projects={allProjectsList.slice((page-1)*pageSize, page*pageSize)} reserveGridSpace={true} />
+                      </div>
+                      <div className="mt-8 flex justify-center">
+                        <Pagination
+                          page={page}
+                          hasPreviousPage={page > 1}
+                          hasNextPage={allProjectsList.length > page * pageSize}
+                          onPageChange={setPage}
+                        />
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center text-conexia-green mt-12 text-lg opacity-70">
@@ -348,14 +356,20 @@ export default function ProjectSearch() {
                     </button>
                   </div>
 
-                  <ProjectList projects={results} />
-                  <Pagination
-                    page={pagination.currentPage}
-                    hasPreviousPage={pagination.hasPreviousPage}
-                    hasNextPage={pagination.hasNextPage}
-                    onPageChange={setPage}
-                    totalPages={pagination.totalPages}
-                  />
+                  <div className="min-h-[900px] flex flex-col">
+                    <div className="flex-1">
+                      <ProjectList projects={results} reserveGridSpace={true} />
+                    </div>
+                    <div className="mt-8 flex justify-center">
+                      <Pagination
+                        page={pagination.currentPage}
+                        hasPreviousPage={pagination.hasPreviousPage}
+                        hasNextPage={pagination.hasNextPage}
+                        onPageChange={setPage}
+                        totalPages={pagination.totalPages}
+                      />
+                    </div>
+                  </div>
                 </>
               )}
 
