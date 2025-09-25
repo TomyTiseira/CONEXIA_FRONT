@@ -6,7 +6,7 @@ import { FaClock } from 'react-icons/fa';
 import { config } from '@/config';
 import ServiceImageCarousel from './ServiceImageCarousel';
 
-const ServiceCard = ({ service, showInactiveLabel = false }) => {
+const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = null }) => {
   const router = useRouter();
 
   const getProfileImageSrc = () => {
@@ -37,7 +37,7 @@ const ServiceCard = ({ service, showInactiveLabel = false }) => {
     return `${names[0]} ${names[1]}`;
   };
 
-  const isInactive = service.status === 'inactive';
+  const isInactive = service.status === 'inactive' || service.status === 'deleted';
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col h-full items-stretch w-full hover:shadow-lg transition relative">
@@ -112,17 +112,17 @@ const ServiceCard = ({ service, showInactiveLabel = false }) => {
         </div>
       </div>
 
-      {/* Botón Ver detalle */}
+      {/* Botón de acción */}
       <div className="w-full mt-auto px-2">
-        <div className="flex w-full">
-          <button
-            className="bg-conexia-green/90 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-conexia-green transition w-full"
-            onClick={() => router.push(`/services/${service.id}`)}
-          >
-            Ver detalle
-          </button>
-        </div>
+        <button
+          className="bg-conexia-green/90 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-conexia-green transition w-full"
+          onClick={() => router.push(`/services/${service.id}`)}
+        >
+          Ver detalle
+        </button>
       </div>
+
+
     </div>
   );
 };

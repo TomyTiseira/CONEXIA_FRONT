@@ -170,3 +170,49 @@ export async function fetchServiceDetail(serviceId) {
 
   return response.data;
 }
+
+/**
+ * Editar un servicio existente
+ * @param {number} serviceId - ID del servicio
+ * @param {Object} data - Datos a actualizar
+ * @returns {Promise<Object>} Servicio actualizado
+ */
+export async function updateService(serviceId, data) {
+  const res = await fetch(`${config.API_URL}/services/${serviceId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json?.message || 'Error al actualizar el servicio');
+  }
+
+  return json;
+}
+
+/**
+ * Eliminar un servicio
+ * @param {number} serviceId - ID del servicio
+ * @param {string} reason - Motivo de eliminación
+ * @returns {Promise<Object>} Resultado de la eliminación
+ */
+export async function deleteService(serviceId, reason) {
+  const res = await fetch(`${config.API_URL}/services/${serviceId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ reason }),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json?.message || 'Error al eliminar el servicio');
+  }
+
+  return json;
+}

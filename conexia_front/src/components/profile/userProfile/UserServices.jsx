@@ -8,10 +8,17 @@ import { FaTools } from 'react-icons/fa';
 export default function UserServices({ userId }) {
   const { user: authUser } = useAuth();
   const router = useRouter();
-  const { services, loading, error } = useUserServices(userId);
+  const { services, loading, error, loadUserServices } = useUserServices(userId);
 
   // Determinar si el usuario autenticado es el dueño
   const isOwner = authUser && userId && String(authUser.id) === String(userId);
+
+  // Función para recargar servicios cuando se actualicen
+  const handleServiceUpdated = () => {
+    if (loadUserServices) {
+      loadUserServices();
+    }
+  };
 
   if (loading) {
     return (
@@ -52,9 +59,11 @@ export default function UserServices({ userId }) {
             loading={false}
             error={null}
             showInactiveLabel={false}
+            isOwnerView={isOwner}
+            onServiceUpdated={handleServiceUpdated}
           />
         </div>
-        {services.length > 3 && (
+        {services.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
             <a
               href={`/services/profile/${userId}`}

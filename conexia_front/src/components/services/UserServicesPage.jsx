@@ -45,6 +45,15 @@ export default function UserServicesPage({ userId }) {
     setPage(1); // Reset to first page when filter changes
   };
 
+  // Función para recargar servicios cuando se actualicen
+  const handleServiceUpdated = () => {
+    loadUserServices({ 
+      page, 
+      limit: 12, 
+      includeInactive: isOwner ? includeInactive : false 
+    });
+  };
+
   return (
     <div className="relative min-h-screen w-full bg-[#f0f8f8] overflow-hidden flex flex-col">
       {/* Navbar fijo arriba */}
@@ -110,6 +119,8 @@ export default function UserServicesPage({ userId }) {
               ? "¡Publica tu primer servicio y conecta con potenciales clientes!" 
               : "Explora otros perfiles para encontrar servicios interesantes."
             }
+            isOwnerView={isOwner}
+            onServiceUpdated={handleServiceUpdated}
           />
 
           {/* Estado vacío con CTA para el propietario */}

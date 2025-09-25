@@ -48,11 +48,11 @@ export default function ServiceImageCarousel({
   if (!images || images.length === 0) {
     const containerClass = size === 'small' 
       ? 'relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0' 
-      : 'aspect-video bg-gray-100 rounded-lg overflow-hidden relative';
+      : 'aspect-video bg-gray-100 rounded-lg overflow-hidden relative w-full h-full';
     
     const imageClass = size === 'small'
       ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm'
-      : 'object-cover';
+      : 'object-cover w-full h-full';
       
     return (
       <div className={`${containerClass} ${className}`}>
@@ -71,11 +71,11 @@ export default function ServiceImageCarousel({
   if (images.length === 1) {
     const containerClass = size === 'small' 
       ? 'relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0' 
-      : 'aspect-video bg-gray-100 rounded-lg overflow-hidden relative';
+      : 'aspect-video bg-gray-100 rounded-lg overflow-hidden relative w-full h-full';
     
     const imageClass = size === 'small'
       ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm'
-      : 'object-cover';
+      : 'object-cover w-full h-full';
       
     return (
       <div className={`${containerClass} ${className}`}>
@@ -94,11 +94,11 @@ export default function ServiceImageCarousel({
   // Carrusel completo para múltiples imágenes
   const containerClass = size === 'small' 
     ? 'relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0 group' 
-    : 'aspect-video bg-gray-100 rounded-lg overflow-hidden relative group';
+    : 'relative group w-full h-full';
   
   const imageClass = size === 'small'
     ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm transition-opacity duration-300'
-    : 'object-cover transition-opacity duration-300';
+    : 'object-cover transition-opacity duration-300 w-full h-full';
     
   const buttonSize = size === 'small' ? 'w-5 h-5' : 'w-8 h-8';
   const iconSize = size === 'small' ? 8 : 12;
@@ -108,7 +108,7 @@ export default function ServiceImageCarousel({
     : 'absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded font-medium';
 
   return (
-    <div className={`${containerClass} ${className}`}>
+    <div className={`${containerClass} ${className} overflow-hidden rounded-lg`}>
       {/* Imagen principal */}
       <Image
         src={getImageSrc(images[currentImageIndex], currentImageIndex)}

@@ -9,6 +9,8 @@ const ServiceList = ({
   emptyMessage = "No se encontraron servicios",
   emptyDescription = "Intenta ajustar los filtros o buscar con otros términos.",
   reserveGridSpace = false,
+  isOwnerView = false,
+  onServiceUpdated = null
 }) => {
   
   if (loading) {
@@ -92,6 +94,7 @@ const ServiceList = ({
             key={service.id} 
             service={service} 
             showInactiveLabel={showInactiveLabel}
+          onServiceUpdated={onServiceUpdated}
           />
         ))}
         {/* Rellenar con espacios vacíos sólo si se reserva espacio */}

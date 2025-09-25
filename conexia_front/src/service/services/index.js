@@ -1,1 +1,1 @@
-export { createService, fetchServiceCategories } from './servicesFetch';
+export { createService, fetchServiceCategories, updateService, deleteService } from './servicesFetch';

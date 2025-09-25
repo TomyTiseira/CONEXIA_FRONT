@@ -56,6 +56,16 @@ const UserServicesView = ({ userId }) => {
     setShowAllServices(!showAllServices);
   };
 
+  // Función para recargar servicios cuando se actualicen
+  const handleServiceUpdated = () => {
+    const filters = {
+      page,
+      limit: 12,
+      includeInactive: showInactive
+    };
+    loadUserServices(filters);
+  };
+
   if (loading && services.length === 0) {
     return (
       <div className="relative min-h-screen w-full bg-[#f0f8f8] overflow-hidden flex flex-col">
@@ -179,6 +189,7 @@ const UserServicesView = ({ userId }) => {
                     key={service.id} 
                     service={service} 
                     showInactiveLabel={isOwnProfile}
+                    onServiceUpdated={handleServiceUpdated}
                   />
                 ))}
               </div>
@@ -248,6 +259,8 @@ const UserServicesView = ({ userId }) => {
                 showInactiveLabel={isOwnProfile}
                 emptyMessage={isOwnProfile ? "No has publicado servicios aún" : "Este usuario no ha publicado servicios"}
                 emptyDescription={isOwnProfile ? "Publica tu primer servicio para conectar con potenciales clientes." : ""}
+                isOwnerView={isOwnProfile}
+                onServiceUpdated={handleServiceUpdated}
               />
 
               {/* Paginación */}
