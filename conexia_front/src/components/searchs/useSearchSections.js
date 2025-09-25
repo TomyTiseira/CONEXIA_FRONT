@@ -23,6 +23,21 @@ export function useSearchSections(query) {
   const [showAllServices, setShowAllServices] = useState(false);
   const [showServices, setShowServices] = useState(true);
 
+  // Reiniciar resultados y paginación cuando cambia el query
+  useEffect(() => {
+    setProjects([]);
+    setProjectsPage(1);
+    setProjectsHasMore(true);
+
+    setPeople([]);
+    setPeoplePage(1);
+    setPeopleHasMore(true);
+
+    setServices([]);
+    setServicesPage(1);
+    setServicesHasMore(true);
+  }, [query]);
+
   // --- Fetch inicial y paginado para proyectos ---
   useEffect(() => {
     let ignore = false;
@@ -64,10 +79,15 @@ export function useSearchSections(query) {
     let ignore = false;
     async function fetchMoreServices() {
       try {
-        const { services: newServices, pagination } = await fetchServices({ title: query, page: servicesPage, limit: 6 });
+        // Buscar por nombre/título del servicio: el backend espera 'search'
+        const { services: newServices, pagination } = await fetchServices({ search: query, page: servicesPage, limit: 6 });
         if (!ignore) {
           setServices(prev => servicesPage === 1 ? newServices : [...prev, ...newServices]);
-          setServicesHasMore(pagination?.currentPage < pagination?.totalPages);
+          // Cálculo robusto de hasMore según diferentes formatos de paginación
+          const current = (pagination?.currentPage ?? pagination?.page ?? servicesPage);
+          const totalPages = (pagination?.totalPages ?? 1);
+          const hasNext = (typeof pagination?.hasNext === 'boolean') ? pagination.hasNext : (current < totalPages);
+          setServicesHasMore(Boolean(hasNext) || (Array.isArray(newServices) && newServices.length === 6));
         }
       } catch (e) {
         if (!ignore) setServicesHasMore(false);

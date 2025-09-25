@@ -54,15 +54,19 @@ export async function fetchServiceCategories() {
  * @returns {Promise<Object>} Lista de servicios con paginación
  */
 export async function fetchServices(filters = {}) {
-  const { title, category, priceMin, priceMax, sortBy, page = 1, limit = 12, includeInactive = false } = filters;
+  const { search, categoryIds, page = 1, limit = 12, includeInactive = false } = filters;
   
   const params = new URLSearchParams();
   
-  if (title) params.append('title', title);
-  if (category && category.length > 0) params.append('category', category.join(','));
-  if (priceMin !== undefined && priceMin !== '') params.append('priceMin', priceMin);
-  if (priceMax !== undefined && priceMax !== '') params.append('priceMax', priceMax);
-  if (sortBy) params.append('sortBy', sortBy);
+  // Usar los nombres de parámetros que espera el backend
+  if (search) params.append('search', search);
+  if (categoryIds && Array.isArray(categoryIds) && categoryIds.length > 0) {
+    // Repetimos la key 'categoryIds' para cada valor.
+    // Si sólo hay un valor, lo duplicamos para forzar array en parsers simples.
+    const ids = categoryIds.map((id) => id.toString());
+    const toSend = ids.length === 1 ? [ids[0], ids[0]] : ids;
+    toSend.forEach((id) => params.append('categoryIds', id));
+  }
   if (includeInactive) params.append('includeInactive', 'true');
   
   params.append('page', page.toString());
@@ -74,17 +78,39 @@ export async function fetchServices(filters = {}) {
     credentials: 'include',
   });
 
-  if (!res.ok) {
-    throw new Error('No se pudieron obtener los servicios');
+  // Manejo tolerante: si backend devuelve 204 (sin contenido) o 404 para combinaciones sin resultados,
+  // devolvemos una estructura vacía en lugar de lanzar error.
+  if (res.status === 204) {
+    return { services: [], pagination: { page, limit, total: 0, totalPages: 1, hasNext: false, hasPrev: false } };
   }
 
-  const response = await res.json();
+  // Intenta parsear JSON incluso si !ok para ver si hay payload utilizable
+  let responseJson = null;
+  try {
+    responseJson = await res.json();
+  } catch (_) {
+    // Si no hay body y no es ok salvo 204, retorna vacío controlado
+    if (!res.ok) {
+      return { services: [], pagination: { page, limit, total: 0, totalPages: 1, hasNext: false, hasPrev: false } };
+    }
+  }
+
+  if (!res.ok) {
+    // Si backend responde con success=false pero con data vacía, no lo tratamos como error fatal
+    if (responseJson && responseJson.success === false && (!responseJson.data || !responseJson.data.services)) {
+      return { services: [], pagination: { page, limit, total: 0, totalPages: 1, hasNext: false, hasPrev: false } };
+    }
+    throw new Error(responseJson?.message || 'No se pudieron obtener los servicios');
+  }
+
+  const response = responseJson ?? { success: true, data: null };
   
   if (!response.success) {
-    throw new Error('Error en la respuesta de servicios');
+    // Mismo criterio: si success=false pero sin datos, devolvemos vacío
+    return { services: [], pagination: { page, limit, total: 0, totalPages: 1, hasNext: false, hasPrev: false } };
   }
 
-  return response.data;
+  return response.data ?? { services: [], pagination: { page, limit, total: 0, totalPages: 1, hasNext: false, hasPrev: false } };
 }
 
 /**

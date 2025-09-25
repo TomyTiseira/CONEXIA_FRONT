@@ -1,11 +1,19 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { fetchServices } from '@/service/services/servicesFetch';
 
 /**
- * Hook para manejar la lista de servicios con filtros y paginación en frontend
+ * Hook para manejar la lista de servicios con filtros y paginación desde el backend
  */
 export function useServices() {
-  const [allServices, setAllServices] = useState([]); // Todos los servicios sin filtrar
+  const [services, setServices] = useState([]); // Servicios de la página actual
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
+  });
   const [filters, setFilters] = useState({
     title: '',
     category: [],
@@ -18,9 +26,71 @@ export function useServices() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const loadingRef = useRef(false); // Para prevenir llamadas múltiples
+  const CLIENT_MAX_LIMIT = 1000; // Límite alto para obtener dataset completo cuando se ordena/filtra por precio en el cliente
 
-  // Cargar todos los servicios desde el backend (solo una vez)
-  const loadAllServices = useCallback(async () => {
+  // Función para aplicar filtros del lado del cliente
+  const applyClientSideFilters = useCallback((services, currentFilters) => {
+    let filteredServices = [...services];
+
+    // Helpers para precio seguro
+    const getPrice = (value) => {
+      if (value === null || value === undefined) return null;
+      const n = typeof value === 'number' ? value : parseFloat(String(value).replace(/[^0-9.,-]/g, '').replace(',', '.'));
+      return Number.isNaN(n) ? null : n;
+    };
+
+    // Filtro por precio mínimo
+    if (currentFilters.priceMin !== undefined && currentFilters.priceMin !== '' && !Number.isNaN(Number(currentFilters.priceMin))) {
+      const minPrice = Number(currentFilters.priceMin);
+      filteredServices = filteredServices.filter(service => {
+        const p = getPrice(service.price);
+        return p !== null && p >= minPrice;
+      });
+    }
+
+    // Filtro por precio máximo
+    if (currentFilters.priceMax !== undefined && currentFilters.priceMax !== '' && !Number.isNaN(Number(currentFilters.priceMax))) {
+      const maxPrice = Number(currentFilters.priceMax);
+      filteredServices = filteredServices.filter(service => {
+        const p = getPrice(service.price);
+        return p !== null && p <= maxPrice;
+      });
+    }
+
+    // Ordenamiento
+    if (currentFilters.sortBy && currentFilters.sortBy.trim()) {
+      switch (currentFilters.sortBy) {
+        case 'price_asc':
+          filteredServices.sort((a, b) => {
+            const ap = getPrice(a.price);
+            const bp = getPrice(b.price);
+            return (ap === null ? Infinity : ap) - (bp === null ? Infinity : bp);
+          });
+          break;
+        case 'price_desc':
+          filteredServices.sort((a, b) => {
+            const ap = getPrice(a.price);
+            const bp = getPrice(b.price);
+            return (bp === null ? -Infinity : bp) - (ap === null ? -Infinity : ap);
+          });
+          break;
+        case 'newest':
+          filteredServices.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          break;
+        case 'oldest':
+          filteredServices.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+          break;
+        default:
+          // Sin ordenamiento específico
+          break;
+      }
+    }
+
+    return filteredServices;
+  }, []);
+
+  // Cargar servicios desde el backend con filtros
+  const loadServices = useCallback(async (searchFilters = {}, clientFiltersOverride = null) => {
     // Prevenir llamadas múltiples simultáneas
     if (loadingRef.current) {
       return;
@@ -31,120 +101,128 @@ export function useServices() {
     setError(null);
     
     try {
-      // Llamar sin filtros para obtener todos los servicios
-      const response = await fetchServices({});
-      setAllServices(response.services || []);
-      console.log('✅ Servicios cargados:', response.services?.length || 0);
+      const effectiveClientFilters = clientFiltersOverride || filters;
+      const clientMode = Boolean(
+        (effectiveClientFilters.priceMin && effectiveClientFilters.priceMin !== '') ||
+        (effectiveClientFilters.priceMax && effectiveClientFilters.priceMax !== '') ||
+        (effectiveClientFilters.sortBy && effectiveClientFilters.sortBy.trim())
+      );
+
+      // Si hay ordenamiento por precio o filtros de precio, traemos un dataset grande (página 1)
+      // para ordenar/filtrar en cliente y luego paginar manualmente
+      const backendParams = { ...searchFilters };
+      if (clientMode) {
+        backendParams.page = 1;
+        backendParams.limit = CLIENT_MAX_LIMIT;
+      }
+
+      const response = await fetchServices(backendParams);
+      
+      // Extraer servicios y paginación de la respuesta
+      let servicesData = response.data?.services || response.services || [];
+
+      if (clientMode) {
+        // Filtrar/ordenar y paginar en el cliente
+        const filteredSorted = applyClientSideFilters(servicesData, effectiveClientFilters);
+        const currentLimit = Number(effectiveClientFilters.limit) || 12;
+        const currentPage = Number(effectiveClientFilters.page) || 1;
+        const total = filteredSorted.length;
+        const totalPages = Math.max(1, Math.ceil(total / currentLimit));
+        const start = (currentPage - 1) * currentLimit;
+        const end = start + currentLimit;
+        const pageSlice = filteredSorted.slice(start, end);
+
+        setServices(pageSlice);
+        setPagination({
+          page: currentPage,
+          limit: currentLimit,
+          total,
+          totalPages,
+          hasNext: currentPage < totalPages,
+          hasPrev: currentPage > 1,
+        });
+      } else {
+        // Usar paginación del backend
+        const paginationData = response.data?.pagination || response.pagination || {
+          page: searchFilters.page || 1,
+          limit: searchFilters.limit || 12,
+          total: servicesData.length,
+          totalPages: Math.ceil(servicesData.length / (searchFilters.limit || 12)),
+          hasNext: false,
+          hasPrev: false
+        };
+
+        setServices(servicesData);
+        setPagination(paginationData);
+      }
+      
+      console.log('✅ Servicios cargados:', servicesData.length);
+      console.log('📄 Modo paginación:', clientMode ? 'cliente' : 'backend');
     } catch (err) {
       console.error('❌ Error cargando servicios:', err.message);
       setError(err.message);
-      setAllServices([]);
+      setServices([]);
+      setPagination({
+        page: 1,
+        limit: 12,
+        total: 0,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false
+      });
     } finally {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, []);
+  }, [filters, applyClientSideFilters]);
 
-  // Aplicar filtros localmente
-  const applyFilters = useCallback((newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
+  // Cargar todos los servicios (primera carga)
+  const loadAllServices = useCallback(async () => {
+    await loadServices({});
+  }, [loadServices]);
 
-  // Servicios filtrados y ordenados (calculado)
-  const filteredServices = useMemo(() => {
-    let result = [...allServices];
-
-    // Filtro por título
-    if (filters.title.trim()) {
-      const searchTerm = filters.title.toLowerCase().trim();
-      result = result.filter(service => 
-        service.title?.toLowerCase().includes(searchTerm) ||
-        service.description?.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    // Filtro por categorías
-    if (filters.category.length > 0) {
-      result = result.filter(service => {
-        // Probar diferentes campos posibles para la categoría
-        const categoryField = service.categoryId || service.category_id || service.category?.id || service.categoryName;
-        console.log('🔍 Debug categoría - service:', service.title, 'categoryField:', categoryField, 'filters:', filters.category);
-        return filters.category.includes(categoryField);
-      });
-    }
-
-    // Filtro por precio mínimo
-    if (filters.priceMin && !isNaN(filters.priceMin)) {
-      result = result.filter(service => 
-        service.price >= parseFloat(filters.priceMin)
-      );
-    }
-
-    // Filtro por precio máximo
-    if (filters.priceMax && !isNaN(filters.priceMax)) {
-      result = result.filter(service => 
-        service.price <= parseFloat(filters.priceMax)
-      );
-    }
-
-    // Ordenamiento
-    if (filters.sortBy) {
-      switch (filters.sortBy) {
-        case 'price_asc':
-          result.sort((a, b) => a.price - b.price);
-          break;
-        case 'price_desc':
-          result.sort((a, b) => b.price - a.price);
-          break;
-        case 'newest':
-          result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          break;
-        case 'oldest':
-          result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-          break;
-        default:
-          // Sin ordenamiento específico
-          break;
-      }
-    }
-
-    return result;
-  }, [allServices, filters]);
-
-  // Paginación calculada
-  const pagination = useMemo(() => {
-    const total = filteredServices.length;
-    const totalPages = Math.ceil(total / filters.limit);
-    const page = Math.min(filters.page, totalPages || 1);
+  // Aplicar filtros
+  const applyFilters = useCallback(async (newFilters) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
     
-    return {
-      page,
-      limit: filters.limit,
-      total,
-      totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1
+    // Preparar parámetros para el backend según el DTO esperado
+    const backendParams = {
+      page: updatedFilters.page || 1,
+      limit: updatedFilters.limit || 12
     };
-  }, [filteredServices.length, filters.page, filters.limit]);
 
-  // Servicios de la página actual
-  const services = useMemo(() => {
-    const startIndex = (pagination.page - 1) * filters.limit;
-    const endIndex = startIndex + filters.limit;
-    return filteredServices.slice(startIndex, endIndex);
-  }, [filteredServices, pagination.page, filters.limit]);
+    // Solo agregar parámetros si tienen valor
+    // El backend espera 'search' no 'title'
+    if (updatedFilters.title && updatedFilters.title.trim()) {
+      backendParams.search = updatedFilters.title.trim();
+    }
+
+    // El backend espera 'categoryIds' (array de números) no 'category'
+    if (updatedFilters.category && Array.isArray(updatedFilters.category) && updatedFilters.category.length > 0) {
+      // Convertir a números si son strings y eliminar NaN
+      const ids = updatedFilters.category
+        .map(id => (typeof id === 'string' ? parseInt(id, 10) : id))
+        .filter((n) => Number.isFinite(n));
+      if (ids.length > 0) backendParams.categoryIds = ids;
+    }
+
+    // Nota: El backend no maneja priceMin, priceMax, ni sortBy según el DTO
+    // Estos filtros se aplicarán en el frontend si es necesario
+
+    console.log('🔧 Parámetros enviados al backend:', backendParams);
+    await loadServices(backendParams, updatedFilters);
+  }, [filters, loadServices]);
 
   return {
-    services, // Servicios paginados y filtrados
-    pagination,
+    services, // Servicios de la página actual
+    pagination, // Paginación del backend
     loading,
     error,
-    filters,
-    allServices, // Todos los servicios (para debug)
-    filteredServices, // Servicios filtrados sin paginar (para debug)
-    loadAllServices, // Función para cargar todos los servicios
-    applyFilters, // Función para aplicar filtros localmente
-    setServices: setAllServices, // Para compatibilidad
-    setPagination: () => {}, // No hacer nada, la paginación es calculada
+    filters, // Filtros actuales
+    loadAllServices, // Función para cargar servicios iniciales
+    applyFilters, // Función para aplicar filtros
+    setServices, // Para compatibilidad
+    setPagination, // Para compatibilidad
   };
 }
