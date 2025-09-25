@@ -12,3 +12,5 @@ export { default as ServiceDetail } from './ServiceDetail';
 export { default as UserServicesView } from './UserServicesView';
 export { default as UserServicesPage } from './UserServicesPage';
 export { default as ServiceImageCarousel } from './ServiceImageCarousel';
+export { default as ServiceEditModal } from './ServiceEditModal';
+export { default as ServiceDeactivateModal } from './ServiceDeactivateModal';

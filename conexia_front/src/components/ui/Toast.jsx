@@ -60,6 +60,8 @@ export default function Toast({
         return 'top-4 right-4';
       case 'top-left':
         return 'top-4 left-4';
+      case 'top-center':
+        return 'top-20 left-1/2 transform -translate-x-1/2';
       case 'bottom-left':
         return 'bottom-4 sm:bottom-4 bottom-20 left-4';
       case 'bottom-right':
@@ -68,11 +70,18 @@ export default function Toast({
     }
   };
 
+  const getAnimationClasses = () => {
+    if (position === 'top-center') {
+      return show ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4';
+    }
+    return show ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full';
+  };
+
   return (
     <div
-      className={`fixed ${getPositionClasses()} ${getColors()} p-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 transition-all duration-300 max-w-sm sm:max-w-sm mx-4 sm:mx-0 ${
-        show ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
-      }`}
+      className={`fixed ${getPositionClasses()} ${getColors()} p-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 transition-all duration-300 max-w-sm sm:max-w-sm ${
+        position === 'top-center' ? '' : 'mx-2 sm:mx-0'
+      } ${getAnimationClasses()}`}
     >
       {getIcon()}
       <span className="flex-1 text-sm font-medium break-words">{message}</span>

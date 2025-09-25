@@ -7,7 +7,9 @@ const ServiceList = ({
   error, 
   showInactiveLabel = false,
   emptyMessage = "No se encontraron servicios",
-  emptyDescription = "Intenta ajustar los filtros o buscar con otros términos."
+  emptyDescription = "Intenta ajustar los filtros o buscar con otros términos.",
+  isOwnerView = false,
+  onServiceUpdated = null
 }) => {
   
   if (loading) {
@@ -90,6 +92,7 @@ const ServiceList = ({
           key={service.id} 
           service={service} 
           showInactiveLabel={showInactiveLabel}
+          onServiceUpdated={onServiceUpdated}
         />
       ))}
     </div>

@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useServiceDetail } from '@/hooks/services';
+import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { formatPrice } from '@/utils/formatPrice';
@@ -13,16 +14,26 @@ import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import Navbar from '@/components/navbar/Navbar';
 import ServiceImageCarousel from './ServiceImageCarousel';
+import ServiceDeactivateModal from './ServiceDeactivateModal';
+import ServiceEditModal from './ServiceEditModal';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
+import { useDeleteService } from '@/hooks/services/useDeleteService';
+import { useEditService } from '@/hooks/services/useEditService';
+import Toast from '@/components/ui/Toast';
 import EmojiPicker from 'emoji-picker-react';
 
 const ServiceDetail = ({ serviceId }) => {
   const router = useRouter();
-  const { userId, roleName } = useUserStore();
-  const { service, loading, error } = useServiceDetail(serviceId);
+  const { user } = useAuth();
+  const { roleName } = useUserStore();
+  const { service, loading, error, loadServiceDetail } = useServiceDetail(serviceId);
+  const { removeService, loading: isDeleting } = useDeleteService();
+  const { editService, loading: isEditing } = useEditService();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [toast, setToast] = useState(null);
   
   // Messaging state
   const [messageText, setMessageText] = useState("");
@@ -67,21 +78,57 @@ const ServiceDetail = ({ serviceId }) => {
   const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canViewOnly = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
 
+
+
   const handleEdit = () => {
-    router.push(`/services/${serviceId}/edit`);
+    setShowEditModal(true);
+  };
+
+  const handleEditService = async (updatedData) => {
+    try {
+      await editService(serviceId, updatedData);
+      setShowEditModal(false);
+      
+      // Recargar los datos del servicio
+      await loadServiceDetail();
+      
+      setToast({
+        type: 'success',
+        message: 'Servicio actualizado exitosamente'
+      });
+    } catch (error) {
+      console.error('Error al editar servicio:', error);
+      setToast({
+        type: 'error',
+        message: 'Error al actualizar el servicio. Inténtalo de nuevo.'
+      });
+    }
   };
 
   const handleDelete = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (reason) => {
     try {
-      // Aquí iría la lógica para eliminar el servicio
-      alert('Funcionalidad de eliminación en desarrollo');
+      await removeService(serviceId, reason);
       setShowDeleteModal(false);
+      setToast({
+        type: 'success',
+        message: 'Servicio eliminado exitosamente. Redirigiendo...'
+      });
+      
+      // Redirigir al perfil del usuario después de un breve delay
+      setTimeout(() => {
+        router.push(`/profile/${user?.id}`);
+      }, 1500);
     } catch (error) {
       console.error('Error al eliminar servicio:', error);
+      setShowDeleteModal(false);
+      setToast({
+        type: 'error',
+        message: 'Error al eliminar el servicio. Inténtalo de nuevo.'
+      });
     }
   };
 
@@ -260,22 +307,24 @@ ${messageText.trim()}`;
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Galería de imágenes */}
                 <div className="space-y-4">
-                  {service.images && service.images.length > 0 ? (
-                    <ServiceImageCarousel images={service.images} title={service.title} />
-                  ) : (
-                    <div className="aspect-video relative bg-gray-100 rounded-lg overflow-hidden">
-                      <Image
-                        src="/default_project.jpeg"
-                        alt={service.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
+                  <div className="aspect-video bg-gray-100 rounded-lg">
+                    {service.images && service.images.length > 0 ? (
+                      <ServiceImageCarousel images={service.images} title={service.title} />
+                    ) : (
+                      <div className="relative w-full h-full overflow-hidden rounded-lg">
+                        <Image
+                          src="/default_project.jpeg"
+                          alt={service.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Información del servicio */}
-                <div className="space-y-6">
+                <div className="space-y-4 flex flex-col h-full">
                   {/* Título y categoría */}
                   <div>
                     <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
@@ -296,12 +345,14 @@ ${messageText.trim()}`;
                     </span>
                     <div className="flex items-center gap-2 mt-1 text-gray-600">
                       <FaClock size={14} />
-                      <span className="text-sm">Estimado: {service.estimatedHours} horas</span>
+                      <span className="text-sm">
+                        Estimado: {service.estimatedHours ? `${service.estimatedHours} horas` : 'no indicado'}
+                      </span>
                     </div>
                   </div>
 
                   {/* Información del propietario */}
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 p-4 rounded-xl border">
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 p-3 rounded-xl border flex-1">
                     <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm">
                       <FaUser size={14} className="text-conexia-green" />
                       Publicado por
@@ -502,6 +553,33 @@ ${messageText.trim()}`;
           </div> 
         </div> 
       </main> 
+
+      {/* Modal de edición */}
+      <ServiceEditModal
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onConfirm={handleEditService}
+        service={service}
+        loading={isEditing}
+      />
+
+      {/* Modal de eliminación */}
+      <ServiceDeactivateModal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        serviceTitle={service.title}
+      />
+
+      {/* Toast de notificaciones */}
+      <Toast
+        type={toast?.type || 'info'}
+        message={toast?.message || ''}
+        isVisible={!!toast}
+        onClose={() => setToast(null)}
+        duration={toast?.type === 'success' ? 3000 : 5000}
+        position="top-center"
+      />
     </div> 
   );
 }
