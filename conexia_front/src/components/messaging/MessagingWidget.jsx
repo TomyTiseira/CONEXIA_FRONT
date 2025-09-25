@@ -276,12 +276,12 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
   if (!isUserRole) return null;
 
   return (
-    <div className="hidden md:flex flex-row-reverse items-end fixed right-6 bottom-0 z-50 gap-6">
+    <div className="hidden md:flex flex-row-reverse items-end fixed right-6 bottom-0 z-50 gap-6 pointer-events-none">
       {/* Contenedor vertical: flotante principal y modal de historial */}
-      <div className="flex flex-col items-end">
+      <div className="flex flex-col items-end pointer-events-none">
         {/* Flotante principal */}
         <div
-          className={`bg-white shadow-xl rounded-t-lg rounded-b-none w-[300px] h-[44px] flex items-center justify-between border border-conexia-green hover:ring-2 hover:ring-conexia-green/40 transition-all px-3 relative ${open ? 'mb-0' : ''}`}
+          className={`bg-white shadow-xl rounded-t-lg rounded-b-none w-[300px] h-[44px] flex items-center justify-between border border-conexia-green hover:ring-2 hover:ring-conexia-green/40 transition-all px-3 relative pointer-events-auto ${open ? 'mb-0' : ''}`}
           style={{ backgroundImage: 'url(/bg-smoke2.png)', backgroundSize: 'cover', backgroundPosition: 'center', borderBottom: open ? 'none' : '1.5px solid #1e6e5c' }}
           onClick={e => {
             // Si el click viene del botón de redactar, no cerrar/abrir modal
@@ -333,7 +333,10 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
         </div>
         {/* Modal principal debajo del flotante */}
         {open && (
-          <div className="w-[300px] h-[420px] bg-white rounded-b-none rounded-t-none shadow-2xl border-x border-conexia-green flex flex-col animate-fadeIn mt-0" style={{ backgroundImage: 'url(/bg-smoke.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+          <div 
+            className="w-[300px] h-[420px] bg-white rounded-b-none rounded-t-none shadow-2xl border-x border-conexia-green flex flex-col animate-fadeIn mt-0 pointer-events-auto" 
+            style={{ backgroundImage: 'url(/bg-smoke.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+          >
             {/* Header modal */}
             {showContacts ? (
               <div className="px-3 py-2 border-b bg-[#f3f9f8] flex items-center gap-2 w-full min-h-[44px]">
@@ -483,7 +486,7 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
         )}
       </div>
       {/* Contenedor horizontal: chats flotantes al costado izquierdo */}
-      <div className="flex flex-row-reverse items-end gap-8">
+      <div className="flex flex-row-reverse items-end gap-8 pointer-events-none">
         {activeChat && (
           <ChatFloatingPanel
             user={activeChat}

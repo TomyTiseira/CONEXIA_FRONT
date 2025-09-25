@@ -6,11 +6,16 @@ import { useServiceDetail } from '@/hooks/services';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { formatPrice } from '@/utils/formatPrice';
-import { FaClock, FaUser, FaEdit, FaTrash, FaHandshake, FaComments, FaArrowLeft, FaTag, FaCalendar } from 'react-icons/fa';
+import { FaClock, FaUser, FaEdit, FaTrash, FaHandshake, FaComments, FaArrowLeft, FaTag, FaCalendar, FaPaperPlane } from 'react-icons/fa';
+import { IoCheckmarkCircleSharp } from 'react-icons/io5';
 import { config } from '@/config';
 import Button from '@/components/ui/Button';
+import BackButton from '@/components/ui/BackButton';
 import Navbar from '@/components/navbar/Navbar';
 import ServiceImageCarousel from './ServiceImageCarousel';
+import { useMessaging } from '@/hooks/messaging/useMessaging';
+import { useChatMessages } from '@/hooks/messaging/useChatMessages';
+import EmojiPicker from 'emoji-picker-react';
 
 const ServiceDetail = ({ serviceId }) => {
   const router = useRouter();
@@ -18,6 +23,16 @@ const ServiceDetail = ({ serviceId }) => {
   const { service, loading, error } = useServiceDetail(serviceId);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+  
+  // Messaging state
+  const [messageText, setMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageSent, setMessageSent] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
+  
+  // Messaging hooks
+  const { loadConversations, refreshUnreadCount } = useMessaging();
+  const { sendTextMessageTo } = useChatMessages();
 
   const handleImageError = () => {
     setImageError(true);
@@ -49,6 +64,7 @@ const ServiceDetail = ({ serviceId }) => {
   const canEdit = isOwner && roleName === ROLES.USER;
   const canDelete = canEdit;
   const canContract = !isOwner && roleName === ROLES.USER && service?.status === 'active';
+  const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canViewOnly = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
 
   const handleEdit = () => {
@@ -72,6 +88,44 @@ const ServiceDetail = ({ serviceId }) => {
   const handleContract = () => {
     // Aquí iría la lógica para contratar el servicio
     alert('Funcionalidad de contratación en desarrollo');
+  };
+
+  // Envío de mensaje con contexto del servicio
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || sendingMessage) return;
+
+    try {
+      setSendingMessage(true);
+      
+      // Crear mensaje con contexto del servicio igual que proyecto
+      const serviceLink = `${window.location.origin}/services/${serviceId}`;
+      const contextMessage = `🛠️ Consulta sobre el servicio: "${service.title}"
+
+🔗 Ver servicio: ${serviceLink}
+
+💬 Mensaje:
+${messageText.trim()}`;
+      
+      await sendTextMessageTo({ 
+        receiverId: service.owner.id, 
+        content: contextMessage 
+      });
+      
+      setMessageSent(true);
+      setMessageText("");
+      setShowEmojis(false);
+      
+      // Actualizar conversaciones y contador
+      await loadConversations();
+      await refreshUnreadCount();
+      
+      // No resetear messageSent - permanece hasta recargar página como en proyectos
+      
+    } catch (error) {
+      console.error('Error al enviar mensaje:', error);
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const handleChat = () => {
@@ -167,26 +221,30 @@ const ServiceDetail = ({ serviceId }) => {
   }
 
   return (
-    <div className="relative min-h-screen w-full bg-[#f0f8f8] overflow-hidden flex flex-col">
+    <div className="relative min-h-screen w-full bg-[#f3f9f8] overflow-hidden flex flex-col">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 w-full h-full z-0"
+        style={{
+          backgroundImage: 'url(/project_funds.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.25
+        }}
+        aria-hidden="true"
+      ></div>
+      
       {/* Navbar fijo arriba */}
       <div className="fixed top-0 left-0 w-full z-30">
         <Navbar />
       </div>
 
       {/* Contenido principal */}
-      <main className="flex-1 pt-20 pb-8">
+      <main className="flex-1 pt-20 pb-8 relative z-10">
         <div className="container mx-auto px-4 py-4">
           {/* Breadcrumbs y navegación */}
           <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="outline"
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <FaArrowLeft size={14} />
-              Volver
-            </Button>
-            
             <nav className="text-sm text-gray-500">
               <Link href="/services" className="hover:text-conexia-green">
                 Servicios
@@ -248,7 +306,7 @@ const ServiceDetail = ({ serviceId }) => {
                       <FaUser size={14} className="text-conexia-green" />
                       Publicado por
                     </h3>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-4">
                       <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white shadow-sm">
                         <Image
                           src={getProfileImageSrc()}
@@ -266,70 +324,109 @@ const ServiceDetail = ({ serviceId }) => {
                         >
                           {service.owner?.firstName} {service.owner?.lastName}
                         </Link>
-                        <p className="text-sm text-gray-600 truncate">{service.owner?.email}</p>
                       </div>
                     </div>
+                    
+                    {/* Interfaz de mensajería */}
+                    {canSendMessage && (
+                      <div className="mt-1 w-full">
+                        {messageSent ? (
+                          <div className="bg-[#f3f9f8] border border-conexia-green/30 rounded-lg p-4 shadow-sm min-h-[96px] flex items-center justify-center gap-3">
+                            <IoCheckmarkCircleSharp size={22} className="text-green-500 flex-shrink-0" />
+                            <span className="text-conexia-green font-semibold">
+                              Mensaje enviado al creador del servicio
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 shadow-sm" style={{boxShadow: '0 2px 8px 0 rgba(0,0,0,0.03)'}}>
+                            <label htmlFor="mensajeCreador" className="flex items-center gap-1 font-semibold text-conexia-green mb-3 text-[11px] md:text-sm">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 md:w-5 md:h-5 text-conexia-green">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-.659 1.591l-7.5 7.5a2.25 2.25 0 01-3.182 0l-7.5-7.5A2.25 2.25 0 012.25 6.993V6.75" />
+                              </svg>
+                              <span className="truncate">¿Tienes una consulta sobre este servicio?</span>
+                            </label>
+                            <div className="flex flex-row items-center gap-2 w-full">
+                              {/* Textarea con icono de emoji adentro - centrado verticalmente */}
+                              <div className="relative flex-1">
+                                <textarea
+                                  id="mensajeCreador"
+                                  placeholder="Escribe tu consulta..."
+                                  className="w-full rounded-lg px-3 pr-12 py-2 bg-white border border-gray-300 focus:outline-none focus:border-gray-500 text-[11px] md:text-sm text-gray-800 transition-all duration-150 resize-none"
+                                  value={messageText}
+                                  onChange={(e) => setMessageText(e.target.value)}
+                                  rows={2}
+                                  maxLength={500}
+                                  style={{minHeight: '34px'}}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                      e.preventDefault();
+                                      if (messageText.trim()) handleSendMessage();
+                                    }
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  className="absolute right-6 top-1/2 -translate-y-1/2 text-conexia-green/70 hover:text-conexia-green"
+                                  title="Emoji"
+                                  onClick={() => setShowEmojis(v => !v)}
+                                >
+                                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke="#1e6e5c" strokeWidth="2"/>
+                                    <path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round"/>
+                                    <circle cx="9" cy="10" r="1" fill="#1e6e5c"/>
+                                    <circle cx="15" cy="10" r="1" fill="#1e6e5c"/>
+                                  </svg>
+                                </button>
+                                {showEmojis && (
+                                  <div className="absolute right-0 bottom-full mb-2 z-50">
+                                    <EmojiPicker
+                                      onEmojiClick={(emojiData) => {
+                                        const e = emojiData?.emoji || '';
+                                        if (e) setMessageText(prev => prev + e);
+                                        setShowEmojis(false);
+                                      }}
+                                      searchDisabled
+                                      skinTonesDisabled
+                                      height={320}
+                                      width={280}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                              {/* Botón enviar - en desktop muestra texto, en mobile solo icono */}
+                              <Button
+                                type="button"
+                                variant="neutral"
+                                className={`text-[11px] md:text-sm px-2 md:px-4 py-2 rounded-lg transition-all duration-200 relative flex items-center justify-center ${
+                                  !messageText.trim() || sendingMessage
+                                    ? 'after:absolute after:inset-0 after:bg-gray-400 after:opacity-40 after:rounded-lg after:pointer-events-none'
+                                    : ''
+                                }`}
+                                onClick={handleSendMessage}
+                                disabled={!messageText.trim() || sendingMessage}
+                                style={{minWidth: '70px', height: '34px'}}
+                              >
+                                {sendingMessage ? 'Enviando...' : 'Enviar'}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Fechas y Acciones en una fila */}
-                  <div className="flex items-center justify-between mb-4">
-                    {/* Fechas - Lado izquierdo */}
-                    <div className="text-sm text-gray-500 space-y-1">
+                  {/* Fechas de publicación */}
+                  <div className="text-sm text-gray-500 space-y-1 mb-4">
+                    <div className="flex items-center gap-2">
+                      <FaCalendar size={12} />
+                      <span>Publicado: {formatDate(service.createdAt)}</span>
+                    </div>
+                    {service.updatedAt !== service.createdAt && (
                       <div className="flex items-center gap-2">
                         <FaCalendar size={12} />
-                        <span>Publicado: {formatDate(service.createdAt)}</span>
+                        <span>Actualizado: {formatDate(service.updatedAt)}</span>
                       </div>
-                      {service.updatedAt !== service.createdAt && (
-                        <div className="flex items-center gap-2">
-                          <FaCalendar size={12} />
-                          <span>Actualizado: {formatDate(service.updatedAt)}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Acciones - Lado derecho */}
-                    <div className="flex gap-2">
-                      {canEdit && (
-                        <>
-                          <Button
-                            variant="primary"
-                            onClick={handleEdit}
-                            className="flex items-center gap-2 px-4 py-2 text-sm"
-                          >
-                            <FaEdit size={14} />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="danger"
-                            onClick={handleDelete}
-                            className="flex items-center gap-2 px-4 py-2 text-sm"
-                          >
-                            <FaTrash size={14} />
-                            Eliminar
-                          </Button>
-                        </>
-                      )}
-                      {canContract && (
-                        <>
-                          <Button
-                            variant="neutral"
-                            onClick={handleContract}
-                            className="flex items-center gap-2 px-4 py-2 text-sm"
-                          >
-                            <FaHandshake size={14} />
-                            Contratar
-                          </Button>
-                          <Button
-                            variant="informative"
-                            onClick={handleChat}
-                            className="flex items-center gap-2 px-4 py-2 text-sm"
-                          >
-                            <FaComments size={14} />
-                            Negociar
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    )}
                   </div>
 
                   {canViewOnly && (
@@ -351,6 +448,54 @@ const ServiceDetail = ({ serviceId }) => {
                   <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {service.description}
                   </p>
+                </div>
+              </div>
+
+              {/* Navegación y Acciones */}
+              <div className="mt-8 pt-8 border-t">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  {/* Breadcrumbs y botón volver */}
+                  <div className="flex items-center gap-4">
+                    <BackButton
+                      onClick={() => router.back()}
+                      text="Volver"
+                    />
+                    
+                  </div>
+
+                  {/* Botones de acción */}
+                  <div className="flex gap-2">
+                    {canEdit && (
+                      <>
+                        <Button
+                          variant="primary"
+                          onClick={handleEdit}
+                          className="flex items-center gap-2 px-4 py-2 text-sm"
+                        >
+                          <FaEdit size={14} />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={handleDelete}
+                          className="flex items-center gap-2 px-4 py-2 text-sm"
+                        >
+                          <FaTrash size={14} />
+                          Eliminar
+                        </Button>
+                      </>
+                    )}
+                    {canContract && (
+                      <Button
+                        variant="neutral"
+                        onClick={handleContract}
+                        className="flex items-center gap-2 px-4 py-2 text-sm"
+                      >
+                        <FaHandshake size={14} />
+                        Contratar
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div> 

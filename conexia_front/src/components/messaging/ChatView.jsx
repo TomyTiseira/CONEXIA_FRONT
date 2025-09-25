@@ -8,6 +8,34 @@ import { config } from '@/config';
 import { ImageIcon, FileText, ArrowLeft, Smile, Send, X as XIcon } from 'lucide-react';
 import AttachmentPreviewFullWidth from './AttachmentPreviewFullWidth';
 
+// Función para renderizar texto con links clickeables
+const renderTextWithLinks = (text, isMe) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`underline hover:no-underline ${
+            isMe ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 export default function ChatView({ user, onBack }) {
   const { user: me, profile } = useUserStore();
   const {
@@ -625,7 +653,7 @@ export default function ChatView({ user, onBack }) {
                     </div>
                     {(m.content && !contentPathLike) && (
                       <div className={`mt-2 px-3 py-2 rounded-lg text-sm long-break ${isMe ? 'bg-[#3a8586] text-white' : 'bg-[#e1f0f0] text-gray-800'}`}>
-                        {m.content}
+                        {renderTextWithLinks(m.content, isMe)}
                       </div>
                     )}
                     {timeChip}
@@ -642,7 +670,7 @@ export default function ChatView({ user, onBack }) {
               <div key={`m-${i}`} className={`flex ${isMe?'justify-end':'justify-start'}`}>
                 <div className="max-w-[78%]">
                   <div className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap long-break ${isMe?'bg-[#3a8586] text-white':'bg-[#e1f0f0] text-gray-800'}`}>
-                    {textVal}
+                    {renderTextWithLinks(textVal, isMe)}
                   </div>
                   {timeChip}
                 </div>

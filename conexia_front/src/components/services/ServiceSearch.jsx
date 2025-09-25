@@ -3,7 +3,8 @@ import { useServices } from '@/hooks/services';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import Link from 'next/link';
-import { FaTools } from 'react-icons/fa';
+import { FaLaptopCode } from 'react-icons/fa';
+import { Briefcase } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
@@ -77,10 +78,12 @@ export default function ServiceSearch() {
               
               {canCreateService && (
                 <Link href="/services/create">
-                  <Button variant="primary" className="flex items-center gap-2">
-                    <FaTools size={16} />
-                    Publicar servicio
-                  </Button>
+                  <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
+                    <span className="flex items-center justify-center gap-2 w-full">
+                      <Briefcase size={16} className="text-base" />
+                      <span>Publica tu servicio</span>
+                    </span>
+                  </button>
                 </Link>
               )}
             </div>

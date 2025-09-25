@@ -11,7 +11,15 @@ import { getMessagingSocket } from '@/lib/socket/messagingSocket';
 export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, allowAttachments = true }) {
   const [message, setMessage] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  // Persistir estado minimizado en localStorage
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      const saved = localStorage.getItem('conexia:chat:collapsed');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
   const [pendingAttachment, setPendingAttachment] = useState(null); // { file, type, url }
   const [attachmentError, setAttachmentError] = useState(null); // string
   const panelRef = useRef(null);
@@ -132,6 +140,13 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
     }
   }, [onClose, disableOutsideClose]);
 
+  // Persistir cambios en collapsed
+  useEffect(() => {
+    try {
+      localStorage.setItem('conexia:chat:collapsed', JSON.stringify(collapsed));
+    } catch {}
+  }, [collapsed]);
+
   // Handler para agregar emoji al mensaje (emoji-picker-react)
   const handleEmojiSelect = (emojiData) => {
     const emoji = emojiData?.emoji || '';
@@ -140,8 +155,10 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
   };
 
   // min-h-0 ensures the inner scroller can actually shrink and scroll inside a flex column
-  const containerBase = "w-[300px] bg-white rounded-t-lg rounded-b-none shadow-2xl border border-conexia-green border-b-0 flex flex-col relative animate-fadeIn overflow-hidden z-10 min-h-0";
+  const containerBase = "w-[300px] bg-white rounded-t-lg rounded-b-none shadow-2xl border border-conexia-green border-b-0 flex flex-col relative animate-fadeIn overflow-hidden min-h-0";
   const containerHeight = collapsed ? "h-[44px]" : "h-[420px]";
+  const containerZIndex = collapsed ? "z-10" : "z-10";
+  const containerPointerEvents = collapsed ? "pointer-events-none" : "pointer-events-auto";
   const formatDateLabel = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
@@ -567,6 +584,34 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
     return s;
   };
 
+  // Función para renderizar texto con links clickeables
+  const renderTextWithLinks = (text, isMe) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`underline hover:no-underline ${
+              isMe ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   // Garantizar join a la sala 1-1 al montar el panel (aunque no haya conversationId todavía)
   useEffect(() => {
     if (user?.id) {
@@ -593,15 +638,15 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
   }, [selectedChatId, user?.id]);
 
   return (
-    <div ref={panelRef} className={`${containerBase} ${containerHeight}`} style={{ background: '#fff' }}>
+    <div ref={panelRef} className={`${containerBase} ${containerHeight} ${containerZIndex} ${containerPointerEvents}`} style={{ background: '#fff' }}>
       {/* Header */}
       <div
-        className="flex items-center gap-2 px-3 py-2 border-b bg-[#f3f9f8] min-h-[44px] cursor-pointer select-none"
+        className="flex items-center gap-2 px-3 py-2 border-b bg-[#f3f9f8] min-h-[44px] cursor-pointer select-none pointer-events-auto"
         onClick={() => setCollapsed(v => !v)}
       >
   <Image src={getProfilePictureUrl(user?.avatar) || defaultAvatar} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full object-cover" />
   <span className="font-semibold text-conexia-green text-base truncate">{getDisplayName(user?.name, user?.id)}</span>
-        <button className="ml-auto" title="Cerrar" onClick={(e) => { e.stopPropagation(); leaveConversation(); onClose(); }}>
+        <button className="ml-auto pointer-events-auto" title="Cerrar" onClick={(e) => { e.stopPropagation(); leaveConversation(); onClose(); }}>
           <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="#1e6e5c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </button>
       </div>
@@ -736,7 +781,7 @@ export default function ChatFloatingPanel({ user, onClose, disableOutsideClose, 
                         className={`px-3 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${isMe ? 'bg-[#3a8586] text-white' : 'bg-[#d6ececff] text-gray-900'}`}
                         style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                       >
-                        {textValue}
+                        {renderTextWithLinks(textValue, isMe)}
                       </div>
                       {timeChip}
                     </div>

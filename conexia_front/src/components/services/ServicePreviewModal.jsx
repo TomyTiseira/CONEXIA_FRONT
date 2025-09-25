@@ -17,7 +17,7 @@ export default function ServicePreviewModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold text-conexia-green-dark">
@@ -33,11 +33,11 @@ export default function ServicePreviewModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Título y descripción */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-            <p className="text-gray-600 whitespace-pre-wrap">{description}</p>
+            <p className="text-gray-600 whitespace-pre-wrap break-words overflow-wrap-anywhere">{description}</p>
           </div>
 
           {/* Detalles en grid */}
@@ -119,8 +119,8 @@ export default function ServicePreviewModal({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex gap-4 p-6 border-t">
+        {/* Footer - Fixed at bottom */}
+        <div className="flex gap-4 p-6 border-t bg-white">
           <Button
             variant="cancel"
             onClick={onClose}
