@@ -7,7 +7,8 @@ const ServiceList = ({
   error, 
   showInactiveLabel = false,
   emptyMessage = "No se encontraron servicios",
-  emptyDescription = "Intenta ajustar los filtros o buscar con otros términos."
+  emptyDescription = "Intenta ajustar los filtros o buscar con otros términos.",
+  reserveGridSpace = false,
 }) => {
   
   if (loading) {
@@ -84,14 +85,24 @@ const ServiceList = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {services.map(service => (
-        <ServiceCard 
-          key={service.id} 
-          service={service} 
-          showInactiveLabel={showInactiveLabel}
-        />
-      ))}
+    <div className={`${reserveGridSpace ? 'min-h-[800px] flex flex-col' : ''}`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${reserveGridSpace ? 'flex-1' : ''}`}>
+        {services.map(service => (
+          <ServiceCard 
+            key={service.id} 
+            service={service} 
+            showInactiveLabel={showInactiveLabel}
+          />
+        ))}
+        {/* Rellenar con espacios vacíos sólo si se reserva espacio */}
+        {reserveGridSpace && services.length < 12 && (
+          Array.from({ length: 12 - services.length }).map((_, index) => (
+            <div key={`empty-${index}`} className="invisible">
+              <div className="aspect-[4/5] bg-transparent"></div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };
