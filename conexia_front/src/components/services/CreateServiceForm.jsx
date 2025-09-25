@@ -11,7 +11,7 @@ import ImageCarousel from '@/components/services/ImageCarousel';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
 import { validateImageFiles } from '@/utils/imageValidation';
 
-export default function CreateServiceForm() {
+export default function CreateServiceForm({ onShowPreview, onClosePreview, showPreview, onShowImageZoom, onConfirmPublish }) {
   const router = useRouter();
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useServiceCategories();
   const { publishService, loading } = useCreateService();
@@ -28,7 +28,6 @@ export default function CreateServiceForm() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [msg, setMsg] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
 
   // Borrador automático en localStorage
   useEffect(() => {
@@ -170,13 +169,13 @@ export default function CreateServiceForm() {
     }
 
     // Mostrar vista previa antes de publicar
-    setShowPreview(true);
+    onShowPreview(form, categories);
   };
 
   const handleConfirmPublish = async () => {
     try {
       await publishService(form);
-      setShowPreview(false);
+      onClosePreview();
       setMsg({ ok: true, text: 'Servicio publicado con éxito.' });
       
       // Limpiar borrador del localStorage
@@ -187,10 +186,15 @@ export default function CreateServiceForm() {
         router.push('/services');
       }, 1500);
     } catch (err) {
-      setShowPreview(false);
+      onClosePreview();
       setMsg({ ok: false, text: err.message || 'Error al publicar el servicio' });
     }
   };
+
+  // Expose handleConfirmPublish to parent
+  if (onConfirmPublish) {
+    onConfirmPublish.current = handleConfirmPublish;
+  }
 
   // Función para limpiar borrador
   const clearDraft = () => {
@@ -208,13 +212,9 @@ export default function CreateServiceForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="w-full space-y-8">
-      {/* Información Básica */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h2 className="text-xl font-semibold text-conexia-green-dark mb-4 flex items-center gap-2">
-          📋 Información Básica
-        </h2>
-        
+    <div className="w-full space-y-8">
+      <form onSubmit={handleSubmit} noValidate className="w-full space-y-8">
+        {/* Información del servicio */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Título */}
           <div className="md:col-span-2">
@@ -278,7 +278,7 @@ export default function CreateServiceForm() {
           {/* Precio */}
           <div>
             <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
-              Precio aproximado (ARS) * 
+              Precio aproximado (ARS) *
             </label>
             <InputField
               name="price"
@@ -291,16 +291,7 @@ export default function CreateServiceForm() {
               required
             />
           </div>
-        </div>
-      </div>
 
-      {/* Detalles Adicionales */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h2 className="text-xl font-semibold text-conexia-green-dark mb-4 flex items-center gap-2">
-          ⏱️ Detalles Adicionales
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Tiempo estimado */}
           <div>
             <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
@@ -317,89 +308,80 @@ export default function CreateServiceForm() {
             />
           </div>
         </div>
-      </div>
 
-      {/* Galería de Imágenes */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h2 className="text-xl font-semibold text-conexia-green-dark mb-4 flex items-center gap-2">
-          🖼️ Galería de Imágenes
-        </h2>
-        
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Sube imágenes de trabajos realizados para que las personas puedan ver ejemplos de tu trabajo 
-            (Máximo 5 imágenes, JPG/PNG, 5MB cada una)
-          </p>
+        {/* Galería de Imágenes */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border mt-8">
+          <h2 className="text-xl font-semibold text-conexia-green-dark mb-4 flex items-center gap-2">
+            Galería de Imágenes
+          </h2>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Sube imágenes de trabajos realizados para que las personas puedan ver ejemplos de tu trabajo 
+              (Máximo 5 imágenes, JPG/PNG, 5MB cada una)
+            </p>
 
-          {/* Zona de subida */}
-          <ImageUploadZone
-            images={form.images}
-            onImagesChange={handleImagesChange}
-            maxImages={5}
-            maxSizePerImage={5 * 1024 * 1024} // 5MB
-            acceptedFormats={['image/jpeg', 'image/png']}
-          />
+            {/* Zona de subida */}
+            <ImageUploadZone
+              images={form.images}
+              onImagesChange={handleImagesChange}
+              maxImages={5}
+              maxSizePerImage={5 * 1024 * 1024} // 5MB
+              acceptedFormats={['image/jpeg', 'image/png']}
+            />
 
-          {/* Carrusel de vista previa */}
-          {form.images.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Vista previa:</h3>
-              <ImageCarousel
-                images={form.images}
-                onRemove={handleRemoveImage}
-                showZoom={true}
-              />
-            </div>
-          )}
+            {/* Carrusel de vista previa */}
+            {form.images.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Vista previa:</h3>
+                <ImageCarousel
+                  images={form.images}
+                  onRemove={handleRemoveImage}
+                  showZoom={true}
+                  onZoomImage={onShowImageZoom}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Botones de acción */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-end">
-        <Button 
-          type="button" 
-          variant="cancel" 
-          onClick={() => router.push('/')}
-          className="sm:w-auto w-full"
-        >
-          Cancelar
-        </Button>
-        <Button 
-          type="button" 
-          variant="informative" 
-          onClick={clearDraft}
-          className="sm:w-auto w-full"
-        >
-          Limpiar formulario
-        </Button>
-        <Button 
-          type="submit" 
-          variant="primary" 
-          disabled={loading}
-          className="sm:w-auto w-full"
-        >
-          Vista previa
-        </Button>
-      </div>
-
-      {/* Mensaje de resultado */}
-      {msg && (
-        <div className="text-center">
-          <p className={`text-sm ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
-            {msg.text}
-          </p>
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
+          <Button 
+            type="button" 
+            variant="cancel" 
+            onClick={() => router.push('/')}
+            className="sm:w-auto w-full"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            type="button" 
+            variant="informative" 
+            onClick={clearDraft}
+            className="sm:w-auto w-full"
+          >
+            Limpiar formulario
+          </Button>
+          <Button 
+            type="submit" 
+            variant="primary" 
+            disabled={loading}
+            className="sm:w-auto w-full"
+          >
+            Vista previa
+          </Button>
         </div>
-      )}
 
-      {/* Modal de vista previa */}
-      <ServicePreviewModal
-        open={showPreview}
-        onClose={() => setShowPreview(false)}
-        onConfirm={handleConfirmPublish}
-        serviceData={form}
-        category={Array.isArray(categories) ? categories.find(cat => cat.id == form.categoryId) : null}
-        loading={loading}
-      />
-    </form>
+        {/* Mensaje de resultado */}
+        {msg && (
+          <div className="text-center mt-4">
+            <p className={`text-sm ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
+              {msg.text}
+            </p>
+          </div>
+        )}
+      </form>
+    </div>
   );
 }

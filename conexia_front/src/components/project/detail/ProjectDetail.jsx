@@ -45,8 +45,17 @@ export default function ProjectDetail({ projectId }) {
     if (!messageText.trim() || !project?.ownerId) return;
     setSendingMessage(true);
     try {
+      // Crear mensaje con contexto del proyecto
+      const projectLink = `${window.location.origin}/project/${project.id}`;
+      const contextMessage = `📋 Consulta sobre el proyecto: "${project.title}"
+
+🔗 Ver proyecto: ${projectLink}
+
+💬 Mensaje:
+${messageText.trim()}`;
+      
       // enviar texto directo al dueño sin cambiar la selección global
-      await sendTextMessageTo({ receiverId: project.ownerId, content: messageText.trim() });
+      await sendTextMessageTo({ receiverId: project.ownerId, content: contextMessage });
       // refrescos ligeros
       loadConversations({ page: 1, limit: 10, append: false });
       refreshUnreadCount();
@@ -152,7 +161,7 @@ export default function ProjectDetail({ projectId }) {
                     {roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR ? (
                       <button
                         className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
-                        style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
+                        style={{ boxShadow: '0 2px 8px 0 rgba(167, 119, 119, 0.06)' }}
                         onClick={() => {
                           setMenuOpen(false);
                           router.push(`/reports/project/${projectId}`);
@@ -373,12 +382,16 @@ export default function ProjectDetail({ projectId }) {
                           <Button
                             type="button"
                             variant="neutral"
-                            className="text-[11px] md:text-sm px-4 md:px-5 py-2 rounded-lg [&:disabled]:opacity-100"
+                            className={`text-[11px] md:text-sm px-4 md:px-5 py-2 rounded-lg transition-all duration-200 relative ${
+                              !messageText.trim() || sendingMessage
+                                ? 'after:absolute after:inset-0 after:bg-gray-400 after:opacity-40 after:rounded-lg after:pointer-events-none'
+                                : ''
+                            }`}
                             onClick={handleSendMessage}
                             disabled={!messageText.trim() || sendingMessage}
                             style={{minWidth: '70px', height: '34px'}}
                           >
-                            Enviar
+                            {sendingMessage ? 'Enviando...' : 'Enviar'}
                           </Button>
                         </div>
                       </div>
@@ -508,22 +521,6 @@ export default function ProjectDetail({ projectId }) {
       {/* Widget de mensajería reutilizable (igual que en ClientCommunity/ProjectSearch) */}
       <MessagingWidget
         avatar={avatar}
-        chats={[
-          {
-            id: 1,
-            avatar: '/images/default-avatar.png',
-            name: 'Javier Carrizo',
-            lastMessage: 'Hola Alex, el entorno laboral exige crecer...',
-            date: '30 ago',
-          },
-          {
-            id: 2,
-            avatar: '/images/default-avatar.png',
-            name: 'Rocío Brageda',
-            lastMessage: 'Tú: Hola linda, soy papá soltero de una beba',
-            date: '22 may',
-          },
-        ]}
       />
     </>
   );

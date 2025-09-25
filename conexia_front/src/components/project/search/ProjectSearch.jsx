@@ -373,22 +373,6 @@ export default function ProjectSearch() {
       {/* Widget de mensajería reutilizable (igual que en ClientCommunity) */}
       <MessagingWidget
         avatar={avatar}
-        chats={[
-          {
-            id: 1,
-            avatar: '/images/default-avatar.png',
-            name: 'Javier Carrizo',
-            lastMessage: 'Hola Alex, el entorno laboral exige crecer...',
-            date: '30 ago',
-          },
-          {
-            id: 2,
-            avatar: '/images/default-avatar.png',
-            name: 'Rocío Brageda',
-            lastMessage: 'Tú: Hola linda, soy papá soltero de una beba',
-            date: '22 may',
-          },
-        ]}
       />
     </>
   );
