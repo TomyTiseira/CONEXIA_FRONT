@@ -15,6 +15,7 @@ import BackButton from '@/components/ui/BackButton';
 import Navbar from '@/components/navbar/Navbar';
 import ServiceImageCarousel from './ServiceImageCarousel';
 import ServiceDeactivateModal from './ServiceDeactivateModal';
+import ServiceDeleteConflictModal from '@/components/ui/ServiceDeleteConflictModal';
 import ServiceEditModal from './ServiceEditModal';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
@@ -32,6 +33,7 @@ const ServiceDetail = ({ serviceId }) => {
   const { editService, loading: isEditing } = useEditService();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConflictModal, setShowConflictModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState(null);
   
@@ -123,13 +125,24 @@ const ServiceDetail = ({ serviceId }) => {
         router.push(`/profile/${user?.id}`);
       }, 1500);
     } catch (error) {
-      console.error('Error al eliminar servicio:', error);
       setShowDeleteModal(false);
-      setToast({
-        type: 'error',
-        message: 'Error al eliminar el servicio. Inténtalo de nuevo.'
-      });
+      
+      // Manejar específicamente el error 409 (conflicto por contratos activos)
+      if (error.statusCode === 409) {
+        setShowConflictModal(true);
+      } else {
+        console.error('Error al eliminar servicio:', error);
+        setToast({
+          type: 'error',
+          message: error.message || 'Error al eliminar el servicio. Inténtalo de nuevo.'
+        });
+      }
     }
+  };
+
+  const handleViewContracts = () => {
+    setShowConflictModal(false);
+    router.push('/services/my-hirings?tab=requests');
   };
 
   const handleContract = () => {
@@ -569,6 +582,14 @@ ${messageText.trim()}`;
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
         serviceTitle={service.title}
+      />
+
+      {/* Modal de conflicto por contratos activos */}
+      <ServiceDeleteConflictModal
+        open={showConflictModal}
+        onClose={() => setShowConflictModal(false)}
+        serviceTitle={service.title}
+        onViewContracts={handleViewContracts}
       />
 
       {/* Toast de notificaciones */}
