@@ -29,9 +29,14 @@ export default function ServiceDeactivateModal({ open, onClose, onConfirm, servi
         <p className="text-sm text-gray-700 mb-2">
           ¿Estás seguro que deseas dar de baja "{serviceTitle}"?
         </p>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-500 mb-2">
           Por favor, indica el motivo de la baja.
         </p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+          <p className="text-xs text-yellow-800">
+            <strong>Nota:</strong> Si este servicio tiene contrataciones activas, no podrá ser eliminado hasta que finalices o canceles todas las contrataciones pendientes.
+          </p>
+        </div>
         
         <textarea
           className="w-full border rounded-lg p-2 text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-conexia-green/30"

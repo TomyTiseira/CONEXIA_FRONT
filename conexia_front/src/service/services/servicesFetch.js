@@ -211,7 +211,11 @@ export async function deleteService(serviceId, reason) {
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(json?.message || 'Error al eliminar el servicio');
+    // Crear un error personalizado para el caso de conflicto (409)
+    const error = new Error(json?.message || 'Error al eliminar el servicio');
+    error.statusCode = res.status;
+    error.status = json?.status;
+    throw error;
   }
 
   return json;
