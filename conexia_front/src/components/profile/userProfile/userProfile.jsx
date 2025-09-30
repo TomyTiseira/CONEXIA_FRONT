@@ -362,16 +362,14 @@ export default function UserProfile() {
         <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
           {/* Portada y foto de perfil */}
           <div className="relative h-48 rounded overflow-hidden bg-gray-100 mb-8">
-            {user.coverPicture && (
-              <Image
-                src={`${config.IMAGE_URL}/${user.coverPicture}`}
-                alt="Foto de portada"
-                layout="fill"
-                objectFit="cover"
-                className="object-cover"
-                priority
-              />
-            )}
+            <Image
+              src={user.coverPicture ? `${config.IMAGE_URL}/${user.coverPicture}` : '/bg-smoke.png'}
+              alt="Foto de portada"
+              layout="fill"
+              objectFit="cover"
+              className="object-cover"
+              priority
+            />
           </div>
           <div className="relative flex flex-col sm:flex-row sm:items-center mb-4 sm:justify-between" style={{ minHeight: 64 }}>
             <div className="flex flex-col sm:flex-row sm:items-center">
