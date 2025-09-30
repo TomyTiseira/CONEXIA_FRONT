@@ -734,7 +734,7 @@ export default function CreateProfileForm() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
+    <div className="w-full max-w-5xl mx-auto px-4 py-10">
       <div className="flex justify-center mb-6">
         <ConexiaLogo width={80} height={32} />
       </div>
@@ -923,7 +923,7 @@ export default function CreateProfileForm() {
         </div>
 
         {/* Habilidades por Rubro */}
-        <div>
+        <div className="-mt-6">
           <label className="block font-medium text-conexia-green mb-1">Habilidades (Opcional)</label>
           <RubroSkillsSelector
             selectedSkills={form.skills}
