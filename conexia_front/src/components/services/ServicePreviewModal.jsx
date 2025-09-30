@@ -1,6 +1,7 @@
 'use client';
 
 import { X, CheckCircle, DollarSign, Clock, Tag, Image as ImageIcon } from 'lucide-react';
+import { getUnitLabel } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
 
 export default function ServicePreviewModal({ 
@@ -13,7 +14,7 @@ export default function ServicePreviewModal({
 }) {
   if (!open) return null;
 
-  const { title, description, price, estimatedHours, images } = serviceData;
+  const { title, description, price, timeUnit, images } = serviceData;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -60,13 +61,13 @@ export default function ServicePreviewModal({
               </div>
             </div>
 
-            {/* Tiempo estimado */}
-            {estimatedHours && (
+            {/* Unidad de tiempo */}
+            {timeUnit && (
               <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg sm:col-span-2">
                 <Clock className="text-orange-600" size={20} />
                 <div>
-                  <p className="text-sm text-gray-600">Tiempo estimado</p>
-                  <p className="font-semibold text-gray-900">{estimatedHours} horas</p>
+                  <p className="text-sm text-gray-600">Unidad de tiempo</p>
+                  <p className="font-semibold text-gray-900">Servicio por {getUnitLabel(timeUnit)}</p>
                 </div>
               </div>
             )}

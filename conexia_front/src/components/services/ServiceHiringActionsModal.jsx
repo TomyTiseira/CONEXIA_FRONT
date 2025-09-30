@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { X, AlertTriangle } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { isExpired } from '@/utils/quotationVigency';
 
 export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onSuccess, onError }) {
   const { 
@@ -170,7 +171,20 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
             </p>
           </div>
           
-          <div className="space-y-3">
+          {isExpired(hiring) ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-red-600 mt-0.5" size={20} />
+                <div>
+                  <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
+                  <p className="text-sm text-red-600">
+                    Esta cotización ha expirado y no se pueden realizar más acciones.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
             {availableActions.includes('accept') && (
               <button
                 onClick={() => setConfirmAction('accept')}
@@ -222,9 +236,10 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 </div>
               </button>
             )}
-          </div>
+            </div>
+          )}
           
-          {availableActions.length === 0 && (
+          {!isExpired(hiring) && availableActions.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">No hay acciones disponibles para esta solicitud.</p>
             </div>

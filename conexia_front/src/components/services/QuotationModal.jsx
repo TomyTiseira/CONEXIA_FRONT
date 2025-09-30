@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { X, Clock, DollarSign, FileText } from 'lucide-react';
+import { X, Clock, DollarSign, FileText, AlertCircle } from 'lucide-react';
+import { isExpired, getVigencyStatus } from '@/utils/quotationVigency';
+import { getUnitLabel } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
 
 export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onError }) {
@@ -120,7 +122,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
               <div>
                 <p className="text-sm text-gray-600">Precio Base</p>
                 <p className="font-medium text-conexia-green">
-                  ${hiring.service?.price?.toLocaleString()}
+                  ${hiring.service?.price?.toLocaleString()}{hiring.service?.timeUnit ? ` por ${getUnitLabel(hiring.service.timeUnit)}` : ''}
                 </p>
               </div>
               <div>
@@ -160,7 +162,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                 Cotización del Proveedor
               </h4>
               <div className="bg-conexia-green/5 border border-conexia-green/20 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="bg-white rounded-lg p-3">
                     <p className="text-sm text-gray-600">Precio Final</p>
                     <p className="text-2xl font-bold text-conexia-green">
@@ -176,6 +178,12 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                       {hiring.estimatedHours} horas
                     </p>
                   </div>
+                  <div className="bg-white rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Vigencia</p>
+                    <p className={`text-lg font-bold ${getVigencyStatus(hiring).className}`}>
+                      {getVigencyStatus(hiring).text}
+                    </p>
+                  </div>
                 </div>
                 
                 {hiring.quotationNotes && (
@@ -189,7 +197,21 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           )}
 
           {/* Acciones disponibles */}
-          {availableActions.length > 0 && (
+          {isExpired(hiring) ? (
+            <div className="border-t border-gray-200 pt-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="text-red-600 mt-0.5" size={20} />
+                  <div>
+                    <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
+                    <p className="text-sm text-red-600">
+                      Esta cotización ha expirado y no se pueden realizar más acciones.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : availableActions.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
               <h4 className="font-medium text-gray-900 mb-4">Acciones Disponibles</h4>
               <div className="flex flex-wrap gap-3">
