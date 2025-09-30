@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { formatPrice } from '@/utils/formatPrice';
+import { getUnitLabel } from '@/utils/timeUnit';
 import { FaClock, FaUser, FaEdit, FaTrash, FaHandshake, FaComments, FaArrowLeft, FaTag, FaCalendar, FaPaperPlane } from 'react-icons/fa';
 import { IoCheckmarkCircleSharp } from 'react-icons/io5';
 import { config } from '@/config';
@@ -15,7 +16,9 @@ import BackButton from '@/components/ui/BackButton';
 import Navbar from '@/components/navbar/Navbar';
 import ServiceImageCarousel from './ServiceImageCarousel';
 import ServiceDeactivateModal from './ServiceDeactivateModal';
+import ServiceDeleteConflictModal from '@/components/ui/ServiceDeleteConflictModal';
 import ServiceEditModal from './ServiceEditModal';
+import ServiceHiringModal from './ServiceHiringModal';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import { useDeleteService } from '@/hooks/services/useDeleteService';
@@ -32,6 +35,8 @@ const ServiceDetail = ({ serviceId }) => {
   const { editService, loading: isEditing } = useEditService();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [showHiringModal, setShowHiringModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState(null);
   
@@ -123,18 +128,62 @@ const ServiceDetail = ({ serviceId }) => {
         router.push(`/profile/${user?.id}`);
       }, 1500);
     } catch (error) {
-      console.error('Error al eliminar servicio:', error);
       setShowDeleteModal(false);
+      
+      // Manejar específicamente el error 409 (conflicto por contratos activos)
+      if (error.statusCode === 409) {
+        setShowConflictModal(true);
+      } else {
+        console.error('Error al eliminar servicio:', error);
+        setToast({
+          type: 'error',
+          message: error.message || 'Error al eliminar el servicio. Inténtalo de nuevo.'
+        });
+      }
+    }
+  };
+
+  const handleViewContracts = () => {
+    setShowConflictModal(false);
+    router.push('/services/my-hirings?tab=requests');
+  };
+
+  const handleQuote = () => {
+    // Lógica de botones dinámicos según estado del servicio
+    if (service?.hasPendingQuotation) {
+      // Cancelar solicitud existente
+      handleCancelQuotation();
+    } else if (service?.hasActiveQuotation) {
+      // No hacer nada, botón estará deshabilitado
+      return;
+    } else {
+      // Crear nueva cotización/solicitud
+      setShowHiringModal(true);
+    }
+  };
+
+  const handleCancelQuotation = async () => {
+    try {
+      // TODO: Implementar cancelación de cotización
+      alert('Funcionalidad de cancelar cotización en desarrollo');
+      // await cancelQuotation(service.id);
+      // loadServiceDetail(serviceId); // Recargar datos
+    } catch (error) {
       setToast({
         type: 'error',
-        message: 'Error al eliminar el servicio. Inténtalo de nuevo.'
+        message: 'Error al cancelar la solicitud',
+        isVisible: true
       });
     }
   };
 
-  const handleContract = () => {
-    // Aquí iría la lógica para contratar el servicio
-    alert('Funcionalidad de contratación en desarrollo');
+  const handleHiringSuccess = (message) => {
+    setToast({
+      type: 'success',
+      message: message,
+      isVisible: true
+    });
+    loadServiceDetail(serviceId); // Recargar para actualizar estado
   };
 
   // Envío de mensaje con contexto del servicio
@@ -346,7 +395,7 @@ ${messageText.trim()}`;
                     <div className="flex items-center gap-2 mt-1 text-gray-600">
                       <FaClock size={14} />
                       <span className="text-sm">
-                        Estimado: {service.estimatedHours ? `${service.estimatedHours} horas` : 'no indicado'}
+                        {service.timeUnit ? `Precio por ${getUnitLabel(service.timeUnit)}` : 'Precio base'}
                       </span>
                     </div>
                   </div>
@@ -538,12 +587,18 @@ ${messageText.trim()}`;
                     )}
                     {canContract && (
                       <Button
-                        variant="neutral"
-                        onClick={handleContract}
+                        variant={service?.hasPendingQuotation ? "danger" : service?.hasActiveQuotation ? "secondary" : "neutral"}
+                        onClick={handleQuote}
+                        disabled={service?.hasActiveQuotation}
                         className="flex items-center gap-2 px-4 py-2 text-sm"
                       >
                         <FaHandshake size={14} />
-                        Contratar
+                        {service?.hasPendingQuotation 
+                          ? 'Cancelar Solicitud' 
+                          : service?.hasActiveQuotation 
+                            ? 'Cotización en curso' 
+                            : 'Cotizar'
+                        }
                       </Button>
                     )}
                   </div>
@@ -569,6 +624,22 @@ ${messageText.trim()}`;
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
         serviceTitle={service.title}
+      />
+
+      {/* Modal de conflicto por contratos activos */}
+      <ServiceDeleteConflictModal
+        open={showConflictModal}
+        onClose={() => setShowConflictModal(false)}
+        serviceTitle={service.title}
+        onViewContracts={handleViewContracts}
+      />
+
+      {/* Modal de contratación/cotización */}
+      <ServiceHiringModal
+        service={service}
+        isOpen={showHiringModal}
+        onClose={() => setShowHiringModal(false)}
+        onSuccess={handleHiringSuccess}
       />
 
       {/* Toast de notificaciones */}

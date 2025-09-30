@@ -6,6 +6,7 @@ import { fetchUserServices } from '@/service/services/servicesFetch';
 import { fetchMyServiceRequests } from '@/service/service-hirings/serviceHiringsFetch';
 import { useUserStore } from '@/store/userStore';
 import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, Eye } from 'lucide-react';
+import { getUnitLabel } from '@/utils/timeUnit';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import Toast from '@/components/ui/Toast';
@@ -283,8 +284,15 @@ export default function MyServicesPage() {
                             <td className="px-6 py-4">
                               {getServiceStatusBadge(service.status)}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-900">
-                              ${service.price?.toLocaleString()}
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium text-gray-900">
+                                  ${service.price?.toLocaleString()}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  por {service.timeUnit ? getUnitLabel(service.timeUnit) : 'unidad'}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex flex-col">
@@ -361,9 +369,14 @@ export default function MyServicesPage() {
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <p className="text-sm text-gray-600">Precio</p>
-                            <p className="font-medium text-conexia-green">
-                              ${service.price?.toLocaleString()}
-                            </p>
+                            <div className="flex flex-col">
+                              <p className="font-medium text-conexia-green">
+                                ${service.price?.toLocaleString()}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                por {service.timeUnit ? getUnitLabel(service.timeUnit) : 'unidad'}
+                              </p>
+                            </div>
                           </div>
                           <div>
                             <p className="text-sm text-gray-600">Solicitudes</p>

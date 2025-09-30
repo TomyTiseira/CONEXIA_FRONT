@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useQuotations } from '@/hooks/service-hirings/useQuotations';
-import { X, DollarSign, Clock, FileText } from 'lucide-react';
+import { X, DollarSign, Clock, FileText, Calendar } from 'lucide-react';
+import { getUnitLabel } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
+import { getUserDisplayName } from '@/utils/formatUserName';
 
 export default function QuotationFormModal({ hiring, isOpen, isEditing = false, onClose, onSuccess, onError }) {
   const { createQuote, updateQuote, loading } = useQuotations();
@@ -11,7 +13,8 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
   const [formData, setFormData] = useState({
     quotedPrice: '',
     estimatedHours: '',
-    quotationNotes: ''
+    quotationNotes: '',
+    quotationValidityDays: ''
   });
   const [errors, setErrors] = useState({});
 
@@ -21,7 +24,8 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
       setFormData({
         quotedPrice: isEditing && hiring.quotedPrice ? hiring.quotedPrice.toString() : '',
         estimatedHours: isEditing && hiring.estimatedHours ? hiring.estimatedHours.toString() : '',
-        quotationNotes: isEditing && hiring.quotationNotes ? hiring.quotationNotes : ''
+        quotationNotes: isEditing && hiring.quotationNotes ? hiring.quotationNotes : '',
+        quotationValidityDays: isEditing && hiring.quotationValidityDays ? hiring.quotationValidityDays.toString() : ''
       });
       setErrors({});
     }
@@ -42,6 +46,12 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
     const hours = parseInt(formData.estimatedHours);
     if (!formData.estimatedHours || isNaN(hours) || hours < 1) {
       newErrors.estimatedHours = 'Las horas estimadas son requeridas y deben ser al menos 1';
+    }
+
+    // Validar vigencia
+    const validity = parseInt(formData.quotationValidityDays);
+    if (!formData.quotationValidityDays || isNaN(validity) || validity < 1) {
+      newErrors.quotationValidityDays = 'La vigencia es requerida y debe ser al menos 1 día';
     }
 
     // Validar notas (opcional pero con límite)
@@ -65,7 +75,8 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
       const quotationData = {
         quotedPrice: parseFloat(formData.quotedPrice),
         estimatedHours: parseInt(formData.estimatedHours),
-        quotationNotes: formData.quotationNotes.trim() || undefined
+        quotationNotes: formData.quotationNotes.trim() || undefined,
+        quotationValidityDays: parseInt(formData.quotationValidityDays)
       };
 
       if (isEditing) {
@@ -125,8 +136,10 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
               <h4 className="font-medium text-gray-900 mb-3">Información de la Solicitud</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Cliente ID:</span>
-                  <span className="ml-2 font-medium">#{hiring.userId}</span>
+                  <span className="text-gray-600">Cliente:</span>
+                  <span className="ml-2 font-medium">
+                    {hiring.clientName || getUserDisplayName({ name: hiring.name, lastName: hiring.lastName })}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-600">Fecha:</span>
@@ -171,15 +184,15 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                   <p className="text-sm text-red-600 mt-1">{errors.quotedPrice}</p>
                 )}
                 <p className="text-xs text-gray-500 mt-1">
-                  Precio base del servicio: ${hiring.service?.price?.toLocaleString()}
+                  Precio base: ${hiring.service?.price?.toLocaleString()}{hiring.service?.timeUnit ? ` por ${getUnitLabel(hiring.service.timeUnit)}` : ''}
                 </p>
               </div>
 
-              {/* Horas estimadas */}
+              {/* Duración estimada */}
               <div>
                 <label htmlFor="estimatedHours" className="block text-sm font-medium text-gray-700 mb-2">
                   <Clock size={16} className="inline mr-1" />
-                  Tiempo Estimado (horas) *
+                  Duración aprox. del servicio (horas) *
                 </label>
                 <input
                   type="number"
@@ -198,6 +211,32 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                 )}
                 <p className="text-xs text-gray-500 mt-1">
                   Tiempo aproximado que te tomará completar el trabajo
+                </p>
+              </div>
+
+              {/* Vigencia de la cotización */}
+              <div>
+                <label htmlFor="quotationValidityDays" className="block text-sm font-medium text-gray-700 mb-2">
+                  <Calendar size={16} className="inline mr-1" />
+                  Vigencia de la cotización (días) *
+                </label>
+                <input
+                  type="number"
+                  id="quotationValidityDays"
+                  min="1"
+                  value={formData.quotationValidityDays}
+                  onChange={(e) => handleInputChange('quotationValidityDays', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                    errors.quotationValidityDays ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="Ej: 7"
+                  disabled={loading}
+                />
+                {errors.quotationValidityDays && (
+                  <p className="text-sm text-red-600 mt-1">{errors.quotationValidityDays}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  La cotización será válida por este número de días
                 </p>
               </div>
 

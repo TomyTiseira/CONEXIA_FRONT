@@ -9,6 +9,8 @@ import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import QuotationFormModal from '@/components/services/QuotationFormModal';
 import Toast from '@/components/ui/Toast';
+import { getUserDisplayName } from '@/utils/formatUserName';
+import { getUnitLabel } from '@/utils/timeUnit';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -193,7 +195,7 @@ export default function ServiceRequestsPage({ serviceId }) {
                 <div className="text-center">
                   <p className="text-sm text-gray-600">Precio Base</p>
                   <p className="text-xl font-bold text-conexia-green">
-                    ${service.price?.toLocaleString()}
+                    ${service.price?.toLocaleString()}{service.timeUnit ? ` por ${getUnitLabel(service.timeUnit)}` : ''}
                   </p>
                 </div>
                 
@@ -292,7 +294,7 @@ export default function ServiceRequestsPage({ serviceId }) {
                           <td className="px-6 py-4">
                             <div className="flex items-center">
                               <div className="text-sm font-medium text-gray-900">
-                                Cliente #{hiring.userId}
+                                {getUserDisplayName({ name: hiring.name, lastName: hiring.lastName }) || `Cliente #${hiring.userId}`}
                               </div>
                             </div>
                           </td>
@@ -367,7 +369,7 @@ export default function ServiceRequestsPage({ serviceId }) {
                         <div className="flex items-center gap-3">
                           <div>
                             <h3 className="font-medium text-gray-900">
-                              Cliente #{hiring.userId}
+                              {getUserDisplayName({ name: hiring.name, lastName: hiring.lastName }) || `Cliente #${hiring.userId}`}
                             </h3>
                             <p className="text-sm text-gray-500">
                               {formatDate(hiring.createdAt)}
