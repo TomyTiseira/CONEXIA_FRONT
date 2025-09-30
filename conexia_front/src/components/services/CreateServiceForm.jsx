@@ -11,7 +11,7 @@ import ImageCarousel from '@/components/services/ImageCarousel';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
 import { validateImageFiles } from '@/utils/imageValidation';
 
-export default function CreateServiceForm({ onShowPreview, onClosePreview, showPreview, onShowImageZoom, onConfirmPublish }) {
+export default function CreateServiceForm({ onShowPreview, onClosePreview, showPreview, onShowImageZoom, onConfirmPublish, onShowToast }) {
   const router = useRouter();
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useServiceCategories();
   const { publishService, loading } = useCreateService();
@@ -21,13 +21,12 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
     description: '',
     price: '',
     categoryId: '',
-    estimatedHours: '',
+    timeUnit: '',
     images: []
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
-  const [msg, setMsg] = useState(null);
 
   // Borrador automático en localStorage
   useEffect(() => {
@@ -120,12 +119,9 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
         }
         break;
 
-      case 'estimatedHours':
-        if (value && value.trim()) {
-          const numHours = Number(value);
-          if (isNaN(numHours) || numHours < 1) {
-            error = 'Debe ser un número mayor o igual a 1';
-          }
+      case 'timeUnit':
+        if (!value) {
+          error = 'Este campo es obligatorio';
         }
         break;
 
@@ -142,8 +138,8 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
   };
 
   const validateAll = () => {
-    const requiredFields = ['title', 'description', 'price', 'categoryId'];
-    const allFields = [...requiredFields, 'estimatedHours'];
+    const requiredFields = ['title', 'description', 'price', 'categoryId', 'timeUnit'];
+    const allFields = [...requiredFields];
     const newTouched = {};
     let isValid = true;
 
@@ -161,7 +157,6 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMsg(null);
 
     const isValid = validateAll();
     if (!isValid) {
@@ -175,8 +170,20 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
   const handleConfirmPublish = async () => {
     try {
       await publishService(form);
+      
+      // Cerrar modal inmediatamente
       onClosePreview();
-      setMsg({ ok: true, text: 'Servicio publicado con éxito.' });
+      
+      // Mostrar toast de éxito usando la función del padre
+      if (onShowToast) {
+        setTimeout(() => {
+          onShowToast({
+            type: 'success',
+            message: 'Servicio publicado con éxito.',
+            isVisible: true
+          });
+        }, 200);
+      }
       
       // Limpiar borrador del localStorage
       localStorage.removeItem('serviceDraft');
@@ -184,10 +191,21 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
       // Redireccionar después de un tiempo
       setTimeout(() => {
         router.push('/services');
-      }, 1500);
+      }, 3000);
     } catch (err) {
+      // Cerrar modal inmediatamente
       onClosePreview();
-      setMsg({ ok: false, text: err.message || 'Error al publicar el servicio' });
+      
+      // Mostrar toast de error usando la función del padre
+      if (onShowToast) {
+        setTimeout(() => {
+          onShowToast({
+            type: 'error',
+            message: err.message || 'Error al publicar el servicio',
+            isVisible: true
+          });
+        }, 200);
+      }
     }
   };
 
@@ -204,7 +222,7 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
       description: '',
       price: '',
       categoryId: '',
-      estimatedHours: '',
+      timeUnit: '',
       images: []
     });
     setTouched({});
@@ -294,19 +312,24 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
             />
           </div>
 
-          {/* Tiempo estimado */}
+          {/* Unidad de tiempo */}
           <div>
             <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
-              Tiempo de finalización aproximado (Opcional)
+              Unidad de tiempo *
             </label>
-            <InputField
-              name="estimatedHours"
-              type="number"
-              placeholder="Ej: 40 horas"
-              value={form.estimatedHours}
-              onChange={(e) => handleChange('estimatedHours', e.target.value)}
-              onBlur={() => handleBlur('estimatedHours')}
-              error={touched.estimatedHours && errors.estimatedHours}
+            <SelectField
+              name="timeUnit"
+              placeholder="Seleccionar unidad"
+              options={[
+                { value: 'hours', label: 'Horas' },
+                { value: 'days', label: 'Días' },
+                { value: 'weeks', label: 'Semanas' }
+              ]}
+              value={form.timeUnit}
+              onChange={(e) => handleChange('timeUnit', e.target.value)}
+              onBlur={() => handleBlur('timeUnit')}
+              error={touched.timeUnit && errors.timeUnit}
+              required
             />
           </div>
         </div>
@@ -375,15 +398,8 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
           </Button>
         </div>
 
-        {/* Mensaje de resultado */}
-        {msg && (
-          <div className="text-center mt-4">
-            <p className={`text-sm ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
-              {msg.text}
-            </p>
-          </div>
-        )}
       </form>
+
     </div>
   );
 }

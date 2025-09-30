@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import { formatPrice } from '@/utils/formatPrice';
+import { getTimeUnitOptions } from '@/utils/timeUnit';
 
 export default function ServiceEditModal({ 
   open, 
@@ -11,7 +12,7 @@ export default function ServiceEditModal({
 }) {
   const [formData, setFormData] = useState({
     price: '',
-    estimatedHours: ''
+    timeUnit: ''
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -20,7 +21,7 @@ export default function ServiceEditModal({
     if (service && open) {
       setFormData({
         price: service.price || '',
-        estimatedHours: service.estimatedHours || ''
+        timeUnit: service.timeUnit || ''
       });
       setErrors({});
       setTouched({});
@@ -42,12 +43,9 @@ export default function ServiceEditModal({
       }
     }
 
-    // Horas estimadas opcional, pero si se proporciona debe ser >= 1
-    if (formData.estimatedHours && formData.estimatedHours.toString().trim() !== '') {
-      const hoursNum = parseInt(formData.estimatedHours);
-      if (isNaN(hoursNum) || hoursNum < 1) {
-        newErrors.estimatedHours = 'Las horas estimadas deben ser un número mayor o igual a 1';
-      }
+    // Unidad de tiempo es obligatoria
+    if (!formData.timeUnit || formData.timeUnit.toString().trim() === '') {
+      newErrors.timeUnit = 'La unidad de tiempo es obligatoria';
     }
 
     setErrors(newErrors);
@@ -55,13 +53,11 @@ export default function ServiceEditModal({
   };
 
   const handleSubmit = () => {
-    setTouched({ price: true, estimatedHours: true });
+    setTouched({ price: true, timeUnit: true });
     if (validateForm()) {
       const updatedData = {
         price: parseFloat(formData.price),
-        estimatedHours: formData.estimatedHours && formData.estimatedHours.toString().trim() !== '' 
-          ? parseInt(formData.estimatedHours) 
-          : null
+        timeUnit: formData.timeUnit
       };
       
       onConfirm(updatedData);
@@ -69,7 +65,7 @@ export default function ServiceEditModal({
   };
 
   const handleClose = () => {
-    setFormData({ price: '', estimatedHours: '' });
+    setFormData({ price: '', timeUnit: '' });
     setErrors({});
     setTouched({});
     onClose();
@@ -145,25 +141,29 @@ export default function ServiceEditModal({
             )}
           </div>
 
-          {/* Horas estimadas */}
+          {/* Unidad de tiempo */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tiempo estimado (opcional)
+              Unidad de tiempo <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              min="1"
+            <select
               className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green/30 ${
-                touched.estimatedHours && errors.estimatedHours ? 'border-red-500' : 'border-gray-300'
+                touched.timeUnit && errors.timeUnit ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Horas"
-              value={formData.estimatedHours}
-              onChange={e => handleInputChange('estimatedHours', e.target.value)}
-              onBlur={() => setTouched(prev => ({ ...prev, estimatedHours: true }))}
+              value={formData.timeUnit}
+              onChange={e => handleInputChange('timeUnit', e.target.value)}
+              onBlur={() => setTouched(prev => ({ ...prev, timeUnit: true }))}
               disabled={loading}
-            />
-            {touched.estimatedHours && errors.estimatedHours && (
-              <span className="text-xs text-red-600 mt-1">{errors.estimatedHours}</span>
+            >
+              <option value="">Seleccionar unidad</option>
+              {getTimeUnitOptions().map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {touched.timeUnit && errors.timeUnit && (
+              <span className="text-xs text-red-600 mt-1">{errors.timeUnit}</span>
             )}
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function ServiceEditModal({
           <Button 
             variant="primary" 
             onClick={handleSubmit} 
-            disabled={loading || (touched.price && errors.price) || (touched.estimatedHours && errors.estimatedHours)}
+            disabled={loading || (touched.price && errors.price) || (touched.timeUnit && errors.timeUnit)}
           >
             {loading ? 'Guardando...' : 'Guardar cambios'}
           </Button>

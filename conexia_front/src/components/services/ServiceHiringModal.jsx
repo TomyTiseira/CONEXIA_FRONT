@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
+import { getUnitLabel } from '@/utils/timeUnit';
 import { X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
@@ -177,6 +178,11 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
           </p>
           <p className="text-lg font-semibold text-conexia-green">
             ${service?.price?.toLocaleString()}
+            {service?.timeUnit && (
+              <span className="text-sm text-gray-600 ml-1">
+                por {getUnitLabel(service.timeUnit)}
+              </span>
+            )}
           </p>
         </div>
 

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { ChevronDown, Eye, FileText, MoreVertical, ArrowLeft, Filter } from 'lucide-react';
+import { getUnitLabel } from '@/utils/timeUnit';
+import { calculateDaysLeft, isExpired } from '@/utils/quotationVigency';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import QuotationModal from '@/components/services/QuotationModal';
@@ -118,6 +120,21 @@ export default function MyServiceHiringsPage() {
     return ['quoted', 'accepted', 'rejected', 'negotiating'].includes(hiring.status?.code);
   };
 
+  // Usar funciones importadas de las utilidades
+
+  const getVigencyDisplay = (hiring) => {
+    if (!canViewQuotation(hiring)) return "N/A";
+    
+    if (isExpired(hiring)) {
+      return <span className="text-red-600 font-medium">Vencida</span>;
+    }
+    
+    const daysLeft = calculateDaysLeft(hiring);
+    if (daysLeft === "N/A") return "N/A";
+    
+    return `${daysLeft} días`;
+  };
+
   const hasActions = (hiring) => {
     return hiring.availableActions && hiring.availableActions.length > 0;
   };
@@ -217,6 +234,9 @@ export default function MyServiceHiringsPage() {
                           Cotización
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Vigencia
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Acciones
                         </th>
                       </tr>
@@ -252,12 +272,15 @@ export default function MyServiceHiringsPage() {
                                   ${parseFloat(hiring.quotedPrice).toLocaleString()}
                                 </span>
                                 <span className="text-sm text-gray-500">
-                                  {hiring.estimatedHours}h
+                                  por {hiring.service?.timeUnit ? getUnitLabel(hiring.service.timeUnit) : 'unidad'}
                                 </span>
                               </div>
                             ) : (
                               <span className="text-sm text-gray-500">Pendiente</span>
                             )}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            {getVigencyDisplay(hiring)}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex gap-2">
@@ -317,16 +340,27 @@ export default function MyServiceHiringsPage() {
                         <p className="text-sm text-gray-900">{hiring.description}</p>
                       </div>
                       
+                      {!hiring.quotedPrice && (
+                        <div className="mb-3 p-2 bg-gray-50 rounded border">
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>Estado: Pendiente de cotización</span>
+                          </div>
+                        </div>
+                      )}
+                      
                       {hiring.quotedPrice && (
                         <div className="mb-3 p-2 bg-white rounded border">
                           <p className="text-sm text-gray-600 mb-1">Cotización:</p>
-                          <div className="flex justify-between">
+                          <div className="flex flex-col">
                             <span className="font-medium text-conexia-green">
                               ${parseFloat(hiring.quotedPrice).toLocaleString()}
                             </span>
                             <span className="text-sm text-gray-500">
-                              {hiring.estimatedHours}h
+                              por {hiring.service?.timeUnit ? getUnitLabel(hiring.service.timeUnit) : 'unidad'}
                             </span>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Vigencia: {getVigencyDisplay(hiring)}</span>
                           </div>
                         </div>
                       )}

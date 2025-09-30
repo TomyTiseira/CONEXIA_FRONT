@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { formatPrice } from '@/utils/formatPrice';
+import { getUnitLabel } from '@/utils/timeUnit';
 import { FaClock } from 'react-icons/fa';
 import { config } from '@/config';
 import ServiceImageCarousel from './ServiceImageCarousel';
@@ -111,44 +112,32 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
         </div>
       </div>
 
-      {/* Badges - Categoría, precio y horas */}
-      <div className="flex flex-col gap-1 mb-4 w-full px-2 min-h-[56px]">
+      {/* Badges - Categoría y precio */}
+      <div className="flex flex-col gap-2 mb-4 w-full px-2 min-h-[56px]">
         <div className="gap-1" style={{minHeight:'16px'}} />
         
-        {/* Primera fila: Categoría y Horas estimadas */}
-        <div className="flex gap-1 w-full">
-          {service.category?.name && (
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium truncate flex-1 min-w-0 text-center">
+        {/* Categoría completa */}
+        {service.category?.name && (
+          <div className="flex w-full">
+            <span className="bg-blue-100 text-blue-700 px-3 py-2 rounded text-xs font-medium truncate w-full text-center">
               {service.category.name}
             </span>
-          )}
-          <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium truncate flex-1 min-w-0 text-center flex items-center justify-center gap-1">
-            <FaClock size={10} />
-            {service.estimatedHours}h
-          </span>
-        </div>
+          </div>
+        )}
         
-        {/* Segunda fila: Precio */}
+        {/* Precio con unidad integrada */}
         <div className="flex w-full">
           <span className="bg-conexia-green/10 text-conexia-green px-2 py-1 rounded text-sm font-bold truncate w-full text-center">
             {formatPrice(service.price)}
+            {service.timeUnit && ` por ${getUnitLabel(service.timeUnit)}`}
           </span>
         </div>
       </div>
 
-      {/* Botones de acción */}
-      <div className="w-full mt-auto px-2 space-y-2">
-        {canHire && (
-          <button
-            className="bg-conexia-green text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-conexia-green/90 transition w-full"
-            onClick={() => setShowHiringModal(true)}
-          >
-            Contratar
-          </button>
-        )}
-        
+      {/* Botón de acción */}
+      <div className="w-full mt-auto px-2">
         <button
-          className={`${canHire ? 'bg-gray-500 hover:bg-gray-600' : 'bg-conexia-green hover:bg-conexia-green/90'} text-white px-4 py-2 rounded-md text-sm font-semibold transition w-full`}
+          className="bg-conexia-green hover:bg-conexia-green/90 text-white px-4 py-2 rounded-md text-sm font-semibold transition w-full"
           onClick={() => router.push(`/services/${service.id}`)}
         >
           Ver detalle

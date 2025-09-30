@@ -18,10 +18,8 @@ export function useCreateService() {
       formData.append('price', String(form.price)); // Aseguramos que sea string
       formData.append('categoryId', form.categoryId);
 
-      // Campos opcionales
-      if (form.estimatedHours) {
-        formData.append('estimatedHours', form.estimatedHours);
-      }
+      // Campo obligatorio timeUnit
+      formData.append('timeUnit', form.timeUnit);
 
       // Imágenes (máximo 5)
       if (form.images && form.images.length > 0) {

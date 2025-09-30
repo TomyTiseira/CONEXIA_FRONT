@@ -8,6 +8,7 @@ import { NotFound } from '@/components/ui';
 import { ROLES } from '@/constants/roles';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
 import ImageZoomModal from '@/components/services/ImageZoomModal';
+import Toast from '@/components/ui/Toast';
 import Navbar from '@/components/navbar/Navbar';
 import { ArrowLeft } from 'lucide-react';
 
@@ -19,6 +20,7 @@ export default function CreateServicePage() {
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [zoomImages, setZoomImages] = useState([]);
   const [zoomIndex, setZoomIndex] = useState(0);
+  const [toast, setToast] = useState(null);
   const confirmPublishRef = useRef();
 
   const handleShowPreview = (serviceData, serviceCategories) => {
@@ -48,6 +50,14 @@ export default function CreateServicePage() {
     if (confirmPublishRef.current) {
       confirmPublishRef.current();
     }
+  };
+
+  const handleShowToast = (toastData) => {
+    setToast(toastData);
+  };
+
+  const handleCloseToast = () => {
+    setToast(null);
   };
 
   return (
@@ -84,6 +94,7 @@ export default function CreateServicePage() {
                 onShowImageZoom={handleShowImageZoom}
                 showPreview={showPreview}
                 onConfirmPublish={confirmPublishRef}
+                onShowToast={handleShowToast}
               />
             </div>
           </section>
@@ -108,6 +119,17 @@ export default function CreateServicePage() {
         images={zoomImages}
         initialIndex={zoomIndex}
       />
+      
+      {/* Toast para notificaciones */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={handleCloseToast}
+          position="top-center"
+        />
+      )}
     </ProtectedRoute>
   );
 }
