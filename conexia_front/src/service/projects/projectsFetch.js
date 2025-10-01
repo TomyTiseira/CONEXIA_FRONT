@@ -86,7 +86,9 @@ export async function fetchProjects({ title, category, skills, collaboration, co
         description: p.description,
         image: p.image,
         userId: p.userId,
-        owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
+        owner: typeof p.owner === 'object' && p.owner !== null 
+          ? `${p.owner.name || ''} ${p.owner.lastName || ''}`.trim() || p.owner.id || ''
+          : p.owner,
         ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
         ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
         category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
@@ -170,7 +172,9 @@ export async function fetchRecommendations({ skillIds = [], limit = 12, page = 1
         description: p.description,
         image: p.image,
         userId: p.userId, // Agregar userId para el filtro de proyectos propios
-        owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
+        owner: typeof p.owner === 'object' && p.owner !== null 
+          ? `${p.owner.name || ''} ${p.owner.lastName || ''}`.trim() || p.owner.id || ''
+          : p.owner,
         ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
         ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
         category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
@@ -240,7 +244,9 @@ export async function fetchMyProjects({ ownerId, active, page = 1, limit = 16 })
       description: p.description,
       image: p.image,
       userId: p.userId,
-      owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
+      owner: typeof p.owner === 'object' && p.owner !== null 
+        ? `${p.owner.name || ''} ${p.owner.lastName || ''}`.trim() || p.owner.id || ''
+        : p.owner,
       ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
       ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
       category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
@@ -287,7 +293,9 @@ export async function fetchProjectsByUserId(userId) {
     description: p.description,
     image: p.image,
     userId: p.userId,
-    owner: typeof p.owner === 'object' && p.owner !== null ? p.owner.name || p.owner.id || '' : p.owner,
+    owner: typeof p.owner === 'object' && p.owner !== null 
+      ? `${p.owner.name || ''} ${p.owner.lastName || ''}`.trim() || p.owner.id || ''
+      : p.owner,
     ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
     ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
     category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,

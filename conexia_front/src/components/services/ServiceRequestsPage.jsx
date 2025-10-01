@@ -3,11 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
+import { useQuotationErrorHandler } from '@/hooks/service-hirings/useQuotationErrorHandler';
 import { fetchServiceDetail } from '@/service/services/servicesFetch';
 import { ArrowLeft, User, Calendar, DollarSign, Clock, FileText, Edit, Plus } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import QuotationFormModal from '@/components/services/QuotationFormModal';
+import PaymentAccountRequiredModal from '@/components/services/PaymentAccountRequiredModal';
+import UserBannedModal from '@/components/services/UserBannedModal';
 import Toast from '@/components/ui/Toast';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabel } from '@/utils/timeUnit';
@@ -53,6 +56,14 @@ export default function ServiceRequestsPage({ serviceId }) {
     error, 
     loadMyServiceRequests
   } = useServiceHirings();
+  
+  const {
+    showPaymentAccountModal,
+    showUserBannedModal,
+    handleQuotationError: handleSpecificQuotationError,
+    closePaymentAccountModal,
+    closeUserBannedModal
+  } = useQuotationErrorHandler();
 
   const [service, setService] = useState(null);
   const [serviceLoading, setServiceLoading] = useState(true);
@@ -462,6 +473,21 @@ export default function ServiceRequestsPage({ serviceId }) {
         }}
         onSuccess={handleQuotationSuccess}
         onError={handleQuotationError}
+      />
+
+      {/* Modales de validación específicos */}
+      <PaymentAccountRequiredModal
+        isOpen={showPaymentAccountModal}
+        onClose={closePaymentAccountModal}
+      />
+
+      <UserBannedModal
+        isOpen={showUserBannedModal}
+        onClose={closeUserBannedModal}
+        onAccept={() => {
+          // En este contexto, el usuario ya está viendo las solicitudes
+          // por lo que no necesitamos actualizar estado específico
+        }}
       />
 
       {/* Toast */}

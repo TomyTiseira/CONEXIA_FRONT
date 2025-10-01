@@ -2,13 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { useQuotations } from '@/hooks/service-hirings/useQuotations';
+import { useQuotationErrorHandler } from '@/hooks/service-hirings/useQuotationErrorHandler';
+import { useHiringStatusUpdater } from '@/hooks/service-hirings/useHiringStatusUpdater';
 import { X, DollarSign, Clock, FileText, Calendar } from 'lucide-react';
 import { getUnitLabel } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
 import { getUserDisplayName } from '@/utils/formatUserName';
+import PaymentAccountRequiredModal from './PaymentAccountRequiredModal';
+import UserBannedModal from './UserBannedModal';
 
-export default function QuotationFormModal({ hiring, isOpen, isEditing = false, onClose, onSuccess, onError }) {
+export default function QuotationFormModal({ hiring, isOpen, isEditing = false, onClose, onSuccess, onError, onHiringUpdate }) {
   const { createQuote, updateQuote, loading } = useQuotations();
+  const {
+    showPaymentAccountModal,
+    showUserBannedModal,
+    handleQuotationError,
+    closePaymentAccountModal,
+    closeUserBannedModal
+  } = useQuotationErrorHandler();
+  const { markAsRejectedDueToBannedUser } = useHiringStatusUpdater();
   
   const [formData, setFormData] = useState({
     quotedPrice: '',
@@ -89,7 +101,13 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
 
       onClose();
     } catch (error) {
-      onError?.(error.message || 'Error al procesar la cotización');
+      // Intentar manejar errores específicos primero
+      const wasHandled = handleQuotationError(error);
+      
+      // Si no se manejó como error específico, mostrar error genérico
+      if (!wasHandled) {
+        onError?.(error.message || 'Error al procesar la cotización');
+      }
     }
   };
 
@@ -304,6 +322,30 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
           </div>
         </form>
       </div>
+
+      {/* Modales de error específicos */}
+      <PaymentAccountRequiredModal
+        isOpen={showPaymentAccountModal}
+        onClose={() => {
+          closePaymentAccountModal();
+          // Cerrar también el modal principal cuando se cancela
+          onClose();
+        }}
+      />
+
+      <UserBannedModal
+        isOpen={showUserBannedModal}
+        onClose={closeUserBannedModal}
+        onAccept={() => {
+          // Actualizar el estado de la solicitud como rechazada
+          if (hiring && onHiringUpdate) {
+            markAsRejectedDueToBannedUser(hiring.id, onHiringUpdate);
+          }
+          onSuccess?.('La solicitud ha sido rechazada automáticamente');
+          // Cerrar el modal principal de cotización
+          onClose();
+        }}
+      />
     </div>
   );
 }
