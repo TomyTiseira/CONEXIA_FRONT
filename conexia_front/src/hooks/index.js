@@ -18,3 +18,5 @@ export * from './connections/useFindConnection';
 // Hooks de contratación de servicios
 export * from './service-hirings/useServiceHirings';
 export * from './service-hirings/useQuotations';
+export * from './service-hirings/useQuotationErrorHandler';
+export * from './service-hirings/useHiringStatusUpdater';

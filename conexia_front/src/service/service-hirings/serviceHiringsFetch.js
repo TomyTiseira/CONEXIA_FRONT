@@ -41,12 +41,13 @@ export async function fetchMyServiceHirings(filters = {}) {
  * @returns {Promise<Object>} Objeto con data y pagination
  */
 export async function fetchMyServiceRequests(filters = {}) {
-  const { status, page = 1, limit = 10 } = filters;
+  const { status, page = 1, limit = 10, serviceId } = filters;
   
   const params = new URLSearchParams();
   params.append('page', page.toString());
   params.append('limit', limit.toString());
   if (status) params.append('status', status);
+  if (serviceId) params.append('serviceId', serviceId.toString());
 
   const res = await fetch(`${config.API_URL}/service-hirings/my-services?${params.toString()}`, {
     method: 'GET',
@@ -173,11 +174,18 @@ export async function createQuotation(hiringId, data) {
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(json?.message || 'Error al crear la cotización');
+    // Crear un error personalizado con información adicional para el manejo específico
+    const error = new Error(json?.message || 'Error al crear la cotización');
+    error.statusCode = res.status;
+    error.errorType = getErrorType(json?.message);
+    throw error;
   }
 
   if (!json.success) {
-    throw new Error(json.message || 'Error en la respuesta del servidor');
+    const error = new Error(json.message || 'Error en la respuesta del servidor');
+    error.statusCode = json.statusCode || 400;
+    error.errorType = getErrorType(json.message);
+    throw error;
   }
 
   return json.data;
@@ -200,7 +208,18 @@ export async function updateQuotation(hiringId, data) {
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(json?.message || 'Error al actualizar la cotización');
+    // Crear un error personalizado con información adicional para el manejo específico
+    const error = new Error(json?.message || 'Error al actualizar la cotización');
+    error.statusCode = res.status;
+    error.errorType = getErrorType(json?.message);
+    throw error;
+  }
+
+  if (!json.success) {
+    const error = new Error(json.message || 'Error en la respuesta del servidor');
+    error.statusCode = json.statusCode || 400;
+    error.errorType = getErrorType(json.message);
+    throw error;
   }
 
   return json.data;
@@ -255,4 +274,25 @@ export async function negotiateQuotation(hiringId, data = {}) {
   }
 
   return json.data;
+}
+
+/**
+ * Helper function para determinar el tipo de error basado en el mensaje
+ * @param {string} message - Mensaje de error del backend
+ * @returns {string} Tipo de error identificado
+ */
+function getErrorType(message) {
+  if (!message) return 'unknown';
+  
+  if (message.includes('cuenta bancaria o digital activa') || 
+      message.includes('cuenta de pago')) {
+    return 'missing_payment_account';
+  }
+  
+  if (message.includes('usuario solicitante fue dado de baja') || 
+      message.includes('usuario solicitante fue dado de baja o baneado')) {
+    return 'user_banned';
+  }
+  
+  return 'unknown';
 }
