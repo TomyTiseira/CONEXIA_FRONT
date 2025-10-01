@@ -277,6 +277,76 @@ export async function negotiateQuotation(hiringId, data = {}) {
 }
 
 /**
+ * Contratar un servicio después de aceptar cotización
+ * @param {number} hiringId - ID de la contratación
+ * @param {string} paymentMethod - Método de pago: 'credit_card' | 'debit_card' | 'bank_transfer'
+ * @returns {Promise<Object>} Información del pago y URL de MercadoPago
+ */
+export async function contractService(hiringId, paymentMethod) {
+ 
+  const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/contract`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ paymentMethod }),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    console.error('Backend error response:', json);
+    // Crear un error personalizado con información adicional
+    const error = new Error(json?.message || 'Error al contratar el servicio');
+    error.statusCode = res.status;
+    error.errorType = getContractErrorType(json?.message);
+    throw error;
+  }
+
+  if (!json.success) {
+    console.error('Backend success=false:', json);
+    const error = new Error(json.message || 'Error en la respuesta del servidor');
+    error.statusCode = json.statusCode || 400;
+    error.errorType = getContractErrorType(json.message);
+    throw error;
+  }
+  
+  // El backend devuelve la estructura: json.data.data contiene la info del pago
+  // Necesitamos restructurar para que el hook encuentre response.payment.paymentUrl
+  const paymentData = json.data.data;
+  
+  return {
+    ...json.data,
+    payment: paymentData // Esto hará que response.payment contenga la info del pago
+  };
+}
+
+/**
+ * Helper function para determinar el tipo de error de contratación
+ * @param {string} message - Mensaje de error del backend
+ * @returns {string} Tipo de error identificado
+ */
+function getContractErrorType(message) {
+  if (!message) return 'unknown';
+  
+  if (message.includes('does not have payment accounts configured') || 
+      message.includes('cuentas de pago configuradas')) {
+    return 'missing_payment_accounts';
+  }
+  
+  if (message.includes('User is banned') || 
+      message.includes('usuario está baneado')) {
+    return 'user_banned';
+  }
+  
+  if (message.includes('not in accepted status') || 
+      message.includes('estado aceptado')) {
+    return 'invalid_status';
+  }
+  
+  return 'unknown';
+}
+
+/**
  * Helper function para determinar el tipo de error basado en el mensaje
  * @param {string} message - Mensaje de error del backend
  * @returns {string} Tipo de error identificado

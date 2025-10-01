@@ -2,11 +2,16 @@
 
 import { useState } from 'react';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { X, AlertTriangle } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import ContractServiceButton from './ContractServiceButton';
 import { isExpired } from '@/utils/quotationVigency';
 
 export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onSuccess, onError }) {
+  const handleContractSuccess = (result) => {
+    onSuccess?.('Servicio contratado exitosamente. Redirigiendo a MercadoPago...');
+    onClose();
+  };
   const { 
     acceptHiring, 
     rejectHiring, 
@@ -235,6 +240,24 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                   <p className="text-sm text-gray-600">Eliminar esta solicitud</p>
                 </div>
               </button>
+            )}
+            
+            {/* Botón de contratar servicio si está en estado accepted */}
+            {hiring.status?.code === 'accepted' && (
+              <div className="border border-conexia-green/20 rounded-lg p-4 bg-conexia-green/5">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">💳</span>
+                  <div>
+                    <p className="font-medium text-conexia-green">Contratar Servicio</p>
+                    <p className="text-sm text-conexia-green/80">Proceder al pago con MercadoPago</p>
+                  </div>
+                </div>
+                <ContractServiceButton 
+                  serviceHiring={hiring}
+                  onContractSuccess={handleContractSuccess}
+                  className="w-full"
+                />
+              </div>
             )}
             </div>
           )}
