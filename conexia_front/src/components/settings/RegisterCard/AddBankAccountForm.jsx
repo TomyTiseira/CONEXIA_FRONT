@@ -2,10 +2,9 @@
 
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
+import { useFetch } from '@/hooks/useFetch';
+import { fetchBanks, addBankAccount } from '@/service/payment/paymentFetch';
 
-const BANKS = [
-  'Banco Nación', 'Banco Galicia', 'Banco Santander', 'Banco Macro', 'Banco BBVA', 'Banco Provincia', 'Banco ICBC', 'Banco Supervielle', 'Banco Patagonia', 'Banco HSBC', 'Banco Credicoop', 'Banco Ciudad', 'Banco Itaú', 'Banco Comafi', 'Banco Brubank', 'Banco Ualá', 'Otro'
-];
 const ACCOUNT_TYPES = ['Caja de ahorro', 'Cuenta corriente'];
 
 function validateCBU(value) {
@@ -15,7 +14,15 @@ function validateAlias(value) {
   return /^[a-zA-Z0-9.-]{6,20}$/.test(value);
 }
 function validateCUIT(value) {
-  return /^\d{2}-\d{8}-\d{1}$/.test(value);
+  // Valida formato XX-XXXXXXXX-X y que los dígitos sean válidos
+  if (!/^\d{2}-\d{7,8}-\d{1}$/.test(value)) return false;
+  const parts = value.split('-');
+  if (parts.length !== 3) return false;
+  // Validar que los dígitos sean numéricos y tengan la longitud correcta
+  if (parts[0].length !== 2 || !/\d{2}/.test(parts[0])) return false;
+  if (parts[1].length < 7 || parts[1].length > 8 || !/\d{7,8}/.test(parts[1])) return false;
+  if (parts[2].length !== 1 || !/\d{1}/.test(parts[2])) return false;
+  return true;
 }
 
 export default function AddBankAccountForm({ onSubmit, onCancel, existingAccounts = [] }) {
@@ -27,7 +34,10 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
   const [cuit, setCUIT] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = e => {
+  // Fetch bancos dinámicamente
+  const { data: banks, isLoading: banksLoading, error: banksError } = useFetch(fetchBanks);
+
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
     if (!bank || !accountType || !holder || !cuit || (!cbu && !alias)) {
@@ -50,9 +60,37 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       setError('Esta cuenta ya está registrada.');
       return;
     }
-    // Simular validación externa
-    // TODO: Integrar con API bancaria/AFIP
-    onSubmit({ bank, accountType, cbu, alias, holder, cuit });
+
+    // Buscar el objeto banco seleccionado
+    const selectedBank = Array.isArray(banks) ? banks.find(b => b.name === bank) : null;
+    if (!selectedBank) {
+      setError('Banco inválido.');
+      return;
+    }
+
+    // Mapear tipo de cuenta
+    let bankAccountType = '';
+    if (accountType === 'Caja de ahorro') bankAccountType = 'savings';
+    else if (accountType === 'Cuenta corriente') bankAccountType = 'checking';
+    else {
+      setError('Tipo de cuenta inválido.');
+      return;
+    }
+
+    try {
+      const result = await addBankAccount({
+        bankId: selectedBank.id,
+        bankAccountType,
+        cbu,
+        accountHolderName: holder,
+        cuilCuit: cuit,
+        alias: alias || undefined
+      });
+      // Si todo ok, llamar a onSubmit con mensaje de éxito
+      onSubmit(result?.message || 'Cuenta bancaria registrada correctamente');
+    } catch (err) {
+      setError(err?.message || 'Error al registrar la cuenta bancaria');
+    }
   };
 
   return (
@@ -60,10 +98,13 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       <h2 className="text-lg font-semibold text-conexia-green mb-2">Agregar cuenta bancaria</h2>
       <div>
         <label className="block text-sm font-semibold mb-1">Banco</label>
-        <select value={bank} onChange={e => setBank(e.target.value)} className="w-full border rounded p-2">
-          <option value="">Seleccionar banco</option>
-          {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+        <select value={bank} onChange={e => setBank(e.target.value)} className="w-full border rounded p-2" disabled={banksLoading || banksError}>
+          <option value="">{banksLoading ? 'Cargando bancos...' : banksError ? 'Error al cargar bancos' : 'Seleccionar banco'}</option>
+          {Array.isArray(banks) && banks.map(b => (
+            <option key={b.id} value={b.name}>{b.name}</option>
+          ))}
         </select>
+        {banksError && <div className="text-red-600 text-xs mt-1">No se pudieron cargar los bancos</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Tipo de cuenta</label>
@@ -77,7 +118,7 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
         <input type="text" value={alias} onChange={e => setAlias(e.target.value)} className="w-full border rounded p-2" placeholder="Alias" />
       </div>
       <div>
-        <label className="block text-sm font-semibold mb-1">CBU (opcional)</label>
+        <label className="block text-sm font-semibold mb-1">CBU</label>
         <input type="text" value={cbu} onChange={e => setCBU(e.target.value)} className="w-full border rounded p-2" placeholder="CBU" />
       </div>
       <div>
@@ -86,7 +127,20 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">CUIT/CUIL del titular</label>
-        <input type="text" value={cuit} onChange={e => setCUIT(e.target.value)} className="w-full border rounded p-2" placeholder="XX-XXXXXXXX-X" />
+        <input
+          type="text"
+          value={cuit}
+          onChange={e => {
+            let val = e.target.value.replace(/[^\d]/g, ''); // Solo números
+            if (val.length > 2) val = val.slice(0,2) + '-' + val.slice(2);
+            if (val.length > 11) val = val.slice(0,11) + '-' + val.slice(11,12);
+            if (val.length > 13) val = val.slice(0,13); // Limitar a XX-XXXXXXXX-X
+            setCUIT(val);
+          }}
+          className="w-full border rounded p-2"
+          placeholder="XX-XXXXXXXX-X"
+          maxLength={13}
+        />
       </div>
       {error && <div className="text-red-600 text-sm">{error}</div>}
       <div className="flex gap-4 justify-end mt-2">
