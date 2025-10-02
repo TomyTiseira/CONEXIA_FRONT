@@ -2,13 +2,11 @@
 
 import { useState } from 'react';
 import { CreditCard } from 'lucide-react';
-import Button from '@/components/ui/Button';
 import ContractServiceModal from './ContractServiceModal';
 
 export default function ContractServiceButton({ 
   serviceHiring, 
-  onContractSuccess,
-  className = ""
+  onContractSuccess
 }) {
   const [showModal, setShowModal] = useState(false);
 
@@ -25,14 +23,13 @@ export default function ContractServiceButton({
 
   return (
     <>
-      <Button
-        variant="primary"
+      <button
         onClick={() => setShowModal(true)}
-        className={`flex items-center gap-2 ${className}`}
+        className="p-2 text-conexia-green hover:text-conexia-green/80 hover:bg-conexia-green/10 rounded"
+        title="Contratar Servicio"
       >
         <CreditCard size={16} />
-        Contratar Servicio
-      </Button>
+      </button>
 
       <ContractServiceModal
         serviceHiring={serviceHiring}

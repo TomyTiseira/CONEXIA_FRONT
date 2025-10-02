@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { contractService } from '@/service/service-hirings/serviceHiringsFetch';
 
 /**
- * Hook personalizado para contratar servicios
+ * Hook personalizado para contratar servicios con MercadoPago Checkout Pro
  */
 export function useContractService() {
   const [loading, setLoading] = useState(false);
@@ -11,7 +11,7 @@ export function useContractService() {
   /**
    * Contratar un servicio
    * @param {number} hiringId - ID de la contratación
-   * @param {string} paymentMethod - Método de pago
+   * @param {string} paymentMethod - Método de pago: 'credit_card' | 'debit_card' | 'bank_transfer'
    * @returns {Promise<Object>} Datos del pago y URL de MercadoPago
    */
   const contractHiring = async (hiringId, paymentMethod) => {
@@ -19,28 +19,29 @@ export function useContractService() {
     setError(null);
     
     try {
+      // Llamar al backend para crear la preferencia de pago
       const response = await contractService(hiringId, paymentMethod);
       
-      // Redirigir a MercadoPago si hay URL de pago (buscar en ambas propiedades)
-      const paymentUrl = response.payment?.paymentUrl || response.payment?.mercadoPagoUrl;
-      if (paymentUrl) {
-        
-        // Intentar abrir en nueva ventana
-        const newWindow = window.open(paymentUrl, '_blank');
-        
-        // Si el popup fue bloqueado, usar location.href como fallback
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          window.location.href = paymentUrl;
-        }
+      // El backend debe devolver { success: true, data: { mercadoPagoUrl, paymentId, preferenceId } }
+      if (response.success && response.data?.mercadoPagoUrl) {
+        // Redirección INMEDIATA a MercadoPago (Checkout Pro)
+        window.location.href = response.data.mercadoPagoUrl;
       } else {
-        console.warn('No payment URL found in response');
+        console.error('❌ [FRONTEND] No se recibió URL de pago válida:', response);
+        throw new Error(response.message || 'No se pudo obtener la URL de pago');
       }
       
       return response;
     } catch (err) {
-      console.error('Contract Service Error:', err);
-      setError(err.message);
-      throw err;
+      console.error('❌ [FRONTEND] Error en contratación:', {
+        error: err.message,
+        stack: err.stack,
+        timestamp: new Date().toISOString()
+      });
+      
+      const errorMessage = err.message || 'Error al procesar la contratación';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }

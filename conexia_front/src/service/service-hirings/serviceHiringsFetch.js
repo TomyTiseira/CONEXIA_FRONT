@@ -283,19 +283,25 @@ export async function negotiateQuotation(hiringId, data = {}) {
  * @returns {Promise<Object>} Información del pago y URL de MercadoPago
  */
 export async function contractService(hiringId, paymentMethod) {
- 
+
+  const requestBody = { paymentMethod };
+  
   const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/contract`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ paymentMethod }),
+    body: JSON.stringify(requestBody),
   });
 
   const json = await res.json();
 
   if (!res.ok) {
-    console.error('Backend error response:', json);
-    // Crear un error personalizado con información adicional
+    console.error('❌ [API] HTTP Error:', {
+      status: res.status,
+      message: json?.message,
+      fullError: json
+    });
+    
     const error = new Error(json?.message || 'Error al contratar el servicio');
     error.statusCode = res.status;
     error.errorType = getContractErrorType(json?.message);
@@ -303,21 +309,24 @@ export async function contractService(hiringId, paymentMethod) {
   }
 
   if (!json.success) {
-    console.error('Backend success=false:', json);
+    console.error('❌ [API] Business Logic Error:', {
+      message: json.message,
+      statusCode: json.statusCode,
+      fullError: json
+    });
+    
     const error = new Error(json.message || 'Error en la respuesta del servidor');
     error.statusCode = json.statusCode || 400;
     error.errorType = getContractErrorType(json.message);
     throw error;
   }
-  
-  // El backend devuelve la estructura: json.data.data contiene la info del pago
-  // Necesitamos restructurar para que el hook encuentre response.payment.paymentUrl
-  const paymentData = json.data.data;
-  
-  return {
+
+  const responseData = {
     ...json.data,
-    payment: paymentData // Esto hará que response.payment contenga la info del pago
+    payment: json.data.data
   };
+
+  return responseData;
 }
 
 /**

@@ -57,25 +57,20 @@ export default function ContractServiceModal({
   if (!isOpen || !serviceHiring) return null;
 
   const handleContract = async () => {
+
     try {
       const result = await contractHiring(serviceHiring.id, selectedPaymentMethod);
     
-      // Verificar si hay URL de pago (revisar ambas propiedades)
-      const hasPaymentUrl = result.payment?.paymentUrl || result.payment?.mercadoPagoUrl;
-      if (hasPaymentUrl) {
-        // Mostrar mensaje de éxito con redirección
-        setToast({
-          type: 'success',
-          message: 'Servicio contratado exitosamente. Redirigiendo a MercadoPago...',
-          isVisible: true
-        });
-      } else {
-        // Mostrar mensaje de éxito pero sin redirección
-        setToast({
-          type: 'warning',
-          message: 'Servicio contratado, pero no se recibió URL de pago. Verifica tu estado de pago.',
-          isVisible: true
-        });
+      // Si llegamos aquí, significa que la redirección no funcionó
+      // (normalmente el usuario debería ser redirigido a MercadoPago)
+      setToast({
+        type: 'warning',
+        message: 'Si no fuiste redirigido a MercadoPago, revisa tu bloqueador de popups.',
+        isVisible: true
+      });
+
+      if (onSuccess) {
+        onSuccess(result);
       }
 
       // Llamar callback de éxito

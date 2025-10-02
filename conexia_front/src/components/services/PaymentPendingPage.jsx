@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Clock, ArrowLeft, FileText, RefreshCw } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Navbar from '@/components/navbar/Navbar';
@@ -9,9 +9,18 @@ import Navbar from '@/components/navbar/Navbar';
 export default function PaymentPendingPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const hiringId = params?.hiringId;
   
+  // Parámetros de MercadoPago
+  const paymentId = searchParams.get('payment_id');
+  const status = searchParams.get('status');
+  const externalReference = searchParams.get('external_reference');
+  const merchantOrderId = searchParams.get('merchant_order_id');
+  const preferenceId = searchParams.get('preference_id');
+  
   const [refreshCounter, setRefreshCounter] = useState(30);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Contador para refresh automático

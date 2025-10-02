@@ -252,11 +252,12 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                     <p className="text-sm text-conexia-green/80">Proceder al pago con MercadoPago</p>
                   </div>
                 </div>
-                <ContractServiceButton 
-                  serviceHiring={hiring}
-                  onContractSuccess={handleContractSuccess}
-                  className="w-full"
-                />
+                <div className="flex justify-center">
+                  <ContractServiceButton 
+                    serviceHiring={hiring}
+                    onContractSuccess={handleContractSuccess}
+                  />
+                </div>
               </div>
             )}
             </div>

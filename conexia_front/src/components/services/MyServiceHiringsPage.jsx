@@ -321,7 +321,6 @@ export default function MyServiceHiringsPage() {
                               <ContractServiceButton 
                                 serviceHiring={hiring}
                                 onContractSuccess={handleContractSuccess}
-                                className="text-xs px-2 py-1"
                               />
                               
                               {hasActions(hiring) && (
@@ -421,11 +420,10 @@ export default function MyServiceHiringsPage() {
                       </div>
                       
                       {/* Botón de contratar servicio para mobile */}
-                      <div className="mt-3">
+                      <div className="mt-3 flex justify-center">
                         <ContractServiceButton 
                           serviceHiring={hiring}
                           onContractSuccess={handleContractSuccess}
-                          className="w-full text-sm"
                         />
                       </div>
                     </div>

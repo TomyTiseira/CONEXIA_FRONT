@@ -1,6 +1,7 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { XCircle, ArrowLeft, RotateCcw } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Navbar from '@/components/navbar/Navbar';
@@ -8,7 +9,54 @@ import Navbar from '@/components/navbar/Navbar';
 export default function PaymentFailedPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const hiringId = params?.hiringId;
+  
+  // Parámetros de MercadoPago
+  const paymentId = searchParams.get('payment_id');
+  const status = searchParams.get('status');
+  const externalReference = searchParams.get('external_reference');
+  const merchantOrderId = searchParams.get('merchant_order_id');
+  const preferenceId = searchParams.get('preference_id');
+  
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Notificar al backend sobre el pago fallido
+    if (paymentId && status) {
+      updatePaymentStatus();
+    } else {
+      setLoading(false);
+    }
+  }, [paymentId, status, hiringId]);
+
+  const updatePaymentStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/service-hirings/${hiringId}/payment-status`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            payment_id: paymentId,
+            status,
+            external_reference: externalReference,
+            merchant_order_id: merchantOrderId,
+            preference_id: preferenceId
+          })
+        }
+      );
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRetry = () => {
     router.push('/services/my-hirings');

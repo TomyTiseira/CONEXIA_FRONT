@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, ArrowLeft, FileText } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Navbar from '@/components/navbar/Navbar';
@@ -9,25 +9,87 @@ import Navbar from '@/components/navbar/Navbar';
 export default function PaymentSuccessPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const hiringId = params?.hiringId;
   
+  // Parámetros de MercadoPago
+  const paymentId = searchParams.get('payment_id');
+  const status = searchParams.get('status');
+  const externalReference = searchParams.get('external_reference');
+  const merchantOrderId = searchParams.get('merchant_order_id');
+  const preferenceId = searchParams.get('preference_id');
+  
   const [countdown, setCountdown] = useState(5);
+  const [loading, setLoading] = useState(true);
+  const [paymentInfo, setPaymentInfo] = useState(null);
 
   useEffect(() => {
-    // Countdown para redirección automática
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          router.push('/services/my-hirings');
-          return 0;
-        }
-        return prev - 1;
+    // Procesar información del pago cuando lleguen los parámetros
+    if (paymentId && status) {
+      updatePaymentStatus();
+    } else {
+      console.warn('⚠️  [PAYMENT SUCCESS] Faltan parámetros de pago:', {
+        hasPaymentId: !!paymentId,
+        hasStatus: !!status
       });
-    }, 1000);
+    }
+  }, [paymentId, status, hiringId]);
 
-    return () => clearInterval(timer);
-  }, [router]);
+  useEffect(() => {
+    // Countdown para redirección automática solo después de procesar
+    if (!loading) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            router.push('/services/my-hirings');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [loading, router]);
+
+  const updatePaymentStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const requestBody = {
+        payment_id: paymentId,
+        status,
+        external_reference: externalReference,
+        merchant_order_id: merchantOrderId,
+        preference_id: preferenceId
+      };
+      
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/service-hirings/${hiringId}/payment-status`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(requestBody)
+        }
+      );
+      
+      const result = await response.json();
+      
+      setPaymentInfo(result);
+      
+    } catch (error) {
+      console.error('❌ [PAYMENT SUCCESS] Error updating payment status:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -51,6 +113,25 @@ export default function PaymentSuccessPage() {
             y el proveedor será notificado para comenzar el trabajo.
           </p>
 
+          {/* Información del pago */}
+          {paymentId && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Información del pago:</strong>
+                <br />
+                • ID de pago: {paymentId}
+                <br />
+                • Estado: {status}
+                {externalReference && (
+                  <>
+                    <br />
+                    • Referencia: {externalReference}
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+
           {/* Información adicional */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-green-800">
@@ -64,10 +145,16 @@ export default function PaymentSuccessPage() {
             </p>
           </div>
 
-          {/* Contador de redirección */}
-          <p className="text-sm text-gray-500 mb-6">
-            Serás redirigido automáticamente en {countdown} segundos...
-          </p>
+          {/* Mostrar loading o countdown */}
+          {loading ? (
+            <p className="text-sm text-gray-500 mb-6">
+              Procesando información del pago...
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500 mb-6">
+              Serás redirigido automáticamente en {countdown} segundos...
+            </p>
+          )}
 
           {/* Botones de acción */}
           <div className="flex flex-col sm:flex-row gap-3">
