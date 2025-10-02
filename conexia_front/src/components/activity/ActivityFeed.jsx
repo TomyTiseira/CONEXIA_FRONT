@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MdBarChart } from 'react-icons/md';
 import PublicationCard from './PublicationCard';
 import Button from '@/components/ui/Button';
 import PropTypes from 'prop-types';
 import { useRouter } from 'next/navigation';
 import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
+import Toast from '@/components/ui/Toast';
 
 export default function ActivityFeed({ publications, isOwner, userId }) {
   const router = useRouter();
   const visiblePublications = publications.slice(0, 2);
+  const [toast, setToast] = useState(null);
   
   // Cuando este componente se monte, asegurémonos de que todas las publicaciones estén cerradas
   useEffect(() => {
@@ -34,7 +36,12 @@ export default function ActivityFeed({ publications, isOwner, userId }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {visiblePublications.map(pub => (
-              <PublicationCard key={pub.id} publication={pub} isGridItem={true} />
+              <PublicationCard
+                key={pub.id}
+                publication={pub}
+                isGridItem={true}
+                onShowToast={(t)=> setToast(t)}
+              />
             ))}
           </div>
         )}
@@ -51,6 +58,16 @@ export default function ActivityFeed({ publications, isOwner, userId }) {
             <span className="w-full text-center">Ver más…</span>
           </a>
         </div>
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={toast.isVisible}
+            onClose={() => setToast(null)}
+            position="top-center"
+            duration={4000}
+          />
+        )}
       </div>
     </section>
   );

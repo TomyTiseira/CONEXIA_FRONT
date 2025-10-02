@@ -9,6 +9,7 @@ import PublicationCard from '@/components/activity/PublicationCard';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import Image from 'next/image';
 import PublicationModal from './publications/PublicationModal';
+import Toast from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
@@ -31,6 +32,7 @@ export default function ClientCommunity() {
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
   const { user: userStore } = useUserStore();
+  const [toast, setToast] = useState(null);
 
   // Hook para recomendaciones
   const { 
@@ -98,9 +100,14 @@ export default function ClientCommunity() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadingPublications, hasMore]);
 
-    // Simulación de publicación
-    const handlePublish = (data) => {
-
+    // Resultado de publicación (success/error) proveniente del modal
+    const handlePublish = (result) => {
+      if (!result) return;
+      if (result.success) {
+        setToast({ type: 'success', message: 'Publicación creada con éxito', isVisible: true });
+      } else {
+        setToast({ type: 'error', message: result.error || 'No se pudo crear la publicación', isVisible: true });
+      }
     };
 
     const isInternal = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
@@ -214,6 +221,7 @@ export default function ClientCommunity() {
                   <PublicationCard 
                     key={publicationComplete.id} 
                     publication={publicationComplete} 
+                    onShowToast={(t)=> setToast(t)}
                   />
                 );
               })}
@@ -236,9 +244,17 @@ export default function ClientCommunity() {
           </div>
         </div>
         {/* Widget de mensajería reutilizable */}
-        <MessagingWidget
-          avatar={avatar}
-        />
+        <MessagingWidget avatar={avatar} />
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={toast.isVisible}
+            onClose={() => setToast(null)}
+            position="top-center"
+            duration={4000}
+          />
+        )}
       </main>
     );
   }

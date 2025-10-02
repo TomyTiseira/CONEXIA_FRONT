@@ -42,7 +42,7 @@ const getMediaUrl = (mediaUrl) => {
 
 
 
-function PublicationCard({ publication, isGridItem = false }) {
+function PublicationCard({ publication, isGridItem = false, onShowToast }) {
   const { sendRequest, loading: connectLoading, success: connectSuccess, error: connectError } = useSendConnectionRequest();
   const { user } = useAuth();
   const { roleName } = useUserStore();
@@ -517,20 +517,27 @@ function PublicationCard({ publication, isGridItem = false }) {
     return userReaction && userReaction.type === type;
   };
 
-  const handleEdit = async (updatedPublication) => {
-    try {
-      // El nuevo modal maneja toda la lógica internamente
-      // Solo necesitamos cerrar el modal y recargar
-      setShowEditModal(false);
-      
-      // Esperar un momento para que el usuario vea el mensaje de éxito
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (err) {
-      console.error('Error al editar publicación:', err);
+  const handleEdit = async (result) => {
+    setShowEditModal(false);
+    if (result?.success) {
+      // Actualizar publicación en memoria sin reload si tenemos data
+      if (result.data) {
+        // Merge simple de campos cambiados (description, privacy, media)
+        publication.description = result.data.description ?? publication.description;
+        publication.privacy = result.data.privacy ?? publication.privacy;
+        if (Array.isArray(result.data.media)) publication.media = result.data.media;
+        if (result.data.mediaUrl) publication.mediaUrl = result.data.mediaUrl;
+      }
+      onShowToast && onShowToast({ type: 'success', message: 'Publicación actualizada', isVisible: true });
+      // Forzar re-render ligero cambiando un estado local
+      setRerenderTick(t => t + 1);
+    } else if (result?.error) {
+      onShowToast && onShowToast({ type: 'error', message: result.error || 'Error al actualizar', isVisible: true });
+      console.error('Error al editar publicación:', result.error);
     }
   };
+
+  const [rerenderTick, setRerenderTick] = useState(0); // usado para forzar re-render tras mutación directa
 
   const handleDelete = async () => {
     setDeleteLoading(true);
@@ -542,14 +549,18 @@ function PublicationCard({ publication, isGridItem = false }) {
       // Iniciar proceso de eliminación
       await deletePublication(publicationId);
       setShowDeleteModal(false);
-      window.location.reload();
+      onShowToast && onShowToast({ type: 'success', message: 'Publicación eliminada', isVisible: true });
+      setDeleted(true);
     } catch (err) {
       // Error silencioso - no mostramos alertas
       console.error('Error al eliminar publicación:', err);
+      onShowToast && onShowToast({ type: 'error', message: 'Error al eliminar publicación', isVisible: true });
     } finally {
       setDeleteLoading(false);
     }
   };
+
+  const [deleted, setDeleted] = useState(false);
 
   // Cargar todos los comentarios
   const loadAllComments = async () => {
@@ -992,6 +1003,9 @@ function PublicationCard({ publication, isGridItem = false }) {
       setReportLoading(false);
     }
   };
+
+  // Early return moved here so all hooks above run every render
+  if (deleted) return null;
 
   return (
     <div id={`pub-${publicationId}`} className={`publication-card bg-white rounded-2xl shadow border border-[#c6e3e4] flex flex-col relative w-full max-w-2xl mx-auto mb-2 box-border transition-shadow hover:shadow-xl ${showCommentSection ? 'publication-card-open' : ''} ${isGridItem ? 'grid-publication-card' : ''}`} style={{ minWidth: 0, height: isGridItem && !showCommentSection ? 'auto' : 'auto' }}>
@@ -2197,6 +2211,11 @@ function PublicationCard({ publication, isGridItem = false }) {
 
 PublicationCard.propTypes = {
   publication: PropTypes.object.isRequired
+};
+PublicationCard.propTypes = {
+  publication: PropTypes.object.isRequired,
+  isGridItem: PropTypes.bool,
+  onShowToast: PropTypes.func
 };
 
 // Componente auxiliar para truncar descripción y mostrar 'ver más'
