@@ -9,7 +9,7 @@ import { useInternalRoles } from '@/hooks/internal-users/useInternalRoles';
 import useUpdateInternalUser from '@/hooks/internal-users/useUpdateInternalUser';
 import { ROLES, ROLES_NAME } from '@/constants/roles';
 
-export default function EditInternalUserModal({ user, onClose, onUserUpdated }) {
+export default function EditInternalUserModal({ user, onClose, onUserUpdated, onError }) {
   const { roles } = useInternalRoles(); // [{ key: 1, value: 'admin' }, { key: 3, value: 'moderador' }]
   const { handleUpdate, updatingId } = useUpdateInternalUser();
 
@@ -21,7 +21,7 @@ export default function EditInternalUserModal({ user, onClose, onUserUpdated }) 
   const [initialRoleId, setInitialRoleId] = useState('');
   const [touched, setTouched] = useState({});
   const [showPwd, setShowPwd] = useState(false);
-  const [msg, setMsg] = useState(null);
+  // Mensajes internos reemplazados por Toast externo
 
   const isAdmin = user.role === ROLES.ADMIN;
   const isModerator = user.role === ROLES.MODERATOR;
@@ -38,23 +38,7 @@ export default function EditInternalUserModal({ user, onClose, onUserUpdated }) 
     }
   }, [roles, user.role]);
 
-  useEffect(() => {
-    if (msg?.ok) {
-      const timeout = setTimeout(() => {
-        setMsg(null);
-        onClose();
-        if (onUserUpdated) onUserUpdated();
-      }, 1500);
-      return () => clearTimeout(timeout);
-    }
-  }, [msg, onClose, onUserUpdated]);
-
-  useEffect(() => {
-    if (msg && !msg.ok) {
-      const timeout = setTimeout(() => setMsg(null), 5000);
-      return () => clearTimeout(timeout);
-    }
-  }, [msg]);
+  // Eliminado: manejo temporal de mensajes locales
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -102,7 +86,7 @@ export default function EditInternalUserModal({ user, onClose, onUserUpdated }) 
     const isRoleChanged = form.roleId.toString() !== initialRoleId.toString();
 
     if (!isPasswordChanged && !isRoleChanged) {
-      setMsg({ ok: false, text: 'No se está haciendo ninguna actualización.' });
+  if (onError) onError('No se está haciendo ninguna actualización.');
       return;
     }
 
@@ -121,7 +105,8 @@ export default function EditInternalUserModal({ user, onClose, onUserUpdated }) 
       const fieldsText = changedFields.join(' y ');
       const successMessage = `Usuario actualizado correctamente. Se modifico ${fieldsText}.`;
 
-      setMsg({ ok: true, text: successMessage });
+      if (onUserUpdated) onUserUpdated(successMessage);
+      onClose();
     } catch (error) {
       const message = error.message || '';
       let userFriendlyMessage = 'Ocurrió un error al actualizar el usuario.';
@@ -132,7 +117,7 @@ export default function EditInternalUserModal({ user, onClose, onUserUpdated }) 
         userFriendlyMessage = 'La nueva contraseña no puede ser igual a la contraseña actual.';
       }
 
-      setMsg({ ok: false, text: userFriendlyMessage });
+      if (onError) onError(userFriendlyMessage);
     }
   };
 
@@ -198,14 +183,7 @@ export default function EditInternalUserModal({ user, onClose, onUserUpdated }) 
             />
           </div>
 
-          {/* Mensaje final */}
-          <div className="min-h-[40px] text-center text-sm transition-all duration-300">
-            {msg && (
-              <p className={msg.ok ? 'text-green-600' : 'text-red-600'}>
-                {msg.text}
-              </p>
-            )}
-          </div>
+          {/* Mensaje final eliminado: feedback vía Toast externo */}
 
           {/* Botones */}
           <div className="flex justify-end gap-2 mt-2">

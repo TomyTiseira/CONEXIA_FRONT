@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useInternalRoles } from '@/hooks/internal-users/useInternalRoles';
 import { useCreateInternalUser } from '@/hooks/internal-users/useCreateInternalUser';
 import InputField from '@/components/form/InputField';
@@ -9,7 +9,7 @@ import { validateEmail, validatePassword } from '@/utils/validation';
 import { ROLES_NAME } from '@/constants/roles';
 import SelectField from '@/components/form/SelectField';
 
-export default function CreateInternalUserModal({ onClose, onUserCreated }) {
+export default function CreateInternalUserModal({ onClose, onUserCreated, onError }) {
   const { roles } = useInternalRoles();
   const { createUser, loading } = useCreateInternalUser();
 
@@ -23,16 +23,7 @@ export default function CreateInternalUserModal({ onClose, onUserCreated }) {
   const [focused, setFocused] = useState({});
   const [showPwd, setShowPwd] = useState(false);
 
-  // Mensaje de error o éxito: { ok: true | false, text: string }
-  const [msg, setMsg] = useState(null);
-
-  // Limpiar mensaje luego de 5 segundos
-  useEffect(() => {
-    if (msg) {
-      const timeout = setTimeout(() => setMsg(null), 5000);
-      return () => clearTimeout(timeout);
-    }
-  }, [msg]);
+  // Feedback visual interno eliminado: ahora se gestiona con Toast externo
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -58,10 +49,7 @@ export default function CreateInternalUserModal({ onClose, onUserCreated }) {
     const passwordError = validatePassword(form.password);
     const roleError = !form.roleId ? 'Debe seleccionar un rol.' : '';
 
-    if (emailError || passwordError || roleError) {
-      setMsg(null); // no mostrar mensaje general
-      return;
-    }
+    if (emailError || passwordError || roleError) return; // Errores ya se muestran en inputs
 
     try {
       await createUser({
@@ -70,19 +58,14 @@ export default function CreateInternalUserModal({ onClose, onUserCreated }) {
         roleId: parseInt(form.roleId, 10),
       });
 
-      setMsg({ ok: true, text: 'Usuario creado exitosamente.' });
-
-      setTimeout(() => {
-        onClose();
-        if (onUserCreated) onUserCreated();
-      }, 1500);
+      if (onUserCreated) onUserCreated();
+      onClose();
       
     } catch (error) {
-      if (error.message.includes('already exists')) {
-        setMsg({ ok: false, text: 'Este correo ya está registrado.' });
-      } else {
-        setMsg({ ok: false, text: 'Ocurrió un error al registrar el usuario.' });
-      }
+      const errMsg = error.message.includes('already exists')
+        ? 'Este correo ya está registrado.'
+        : 'Ocurrió un error al registrar el usuario.';
+      if (onError) onError(errMsg);
     }
   };
 
@@ -143,14 +126,7 @@ export default function CreateInternalUserModal({ onClose, onUserCreated }) {
           </div>
 
 
-          {/* Mensaje general */}
-          <div className="min-h-[40px] text-center text-sm transition-all duration-300">
-            {msg && (
-              <p className={msg.ok ? 'text-green-600' : 'text-red-600'}>
-                {msg.text}
-              </p>
-            )}
-          </div>
+          {/* Mensaje general eliminado: feedback via Toast */}
 
           {/* Botones */}
           <div className="flex justify-end gap-2 mt-2">
