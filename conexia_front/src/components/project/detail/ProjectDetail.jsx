@@ -91,28 +91,16 @@ ${messageText.trim()}`;
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   if (!project) return <div className="min-h-screen flex items-center justify-center text-conexia-green">Proyecto no encontrado</div>;
 
-  // Función para mostrar primer nombre y primer apellido
-  const getShortName = (fullName) => {
+  // Función para mostrar nombre completo del propietario
+  const getOwnerName = (fullName) => {
     if (!fullName) return 'Usuario';
-    const names = fullName.trim().split(' ').filter(name => name.length > 0);
-    
-    if (names.length === 0) return 'Usuario';
-    if (names.length === 1) return names[0];
-    if (names.length === 2) return `${names[0]} ${names[1]}`;
-    
-    // Para 3 o más nombres, asumimos: Primer_Nombre [Segundo_Nombre] Primer_Apellido [Segundo_Apellido]
-    // Tomamos el primer nombre (names[0]) y el primer apellido (names[2] si existe, sino names[1])
-    if (names.length >= 3) {
-      return `${names[0]} ${names[2]}`;
-    }
-    
-    return `${names[0]} ${names[1]}`;
+    return fullName.trim() || 'Usuario';
   };
 
   const isOwner = user && project && (String(user.id) === String(project.ownerId) || project.isOwner);
   
   const skills = Array.isArray(project.skills) ? project.skills : (project.skills ? [project.skills] : []);
-  const ownerName = getShortName(project.owner || ''); // owner ya viene como string del backend
+  const ownerName = getOwnerName(project.owner || ''); // owner ya viene como string completo del backend
   const ownerImage = project.ownerImage || null; // ownerImage ya viene como string del backend
   const contractTypes = Array.isArray(project.contractType) ? project.contractType : (project.contractType ? [project.contractType] : []);
   const collaborationTypes = Array.isArray(project.collaborationType) ? project.collaborationType : (project.collaborationType ? [project.collaborationType] : []);

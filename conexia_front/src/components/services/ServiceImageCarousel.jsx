@@ -52,7 +52,7 @@ export default function ServiceImageCarousel({
     
     const imageClass = size === 'small'
       ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm'
-      : 'object-cover w-full h-full';
+      : 'object-contain w-full h-full bg-gray-50';
       
     return (
       <div className={`${containerClass} ${className}`}>
@@ -75,7 +75,7 @@ export default function ServiceImageCarousel({
     
     const imageClass = size === 'small'
       ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm'
-      : 'object-cover w-full h-full';
+      : 'object-contain w-full h-full bg-gray-50';
       
     return (
       <div className={`${containerClass} ${className}`}>
@@ -98,7 +98,7 @@ export default function ServiceImageCarousel({
   
   const imageClass = size === 'small'
     ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm transition-opacity duration-300'
-    : 'object-cover transition-opacity duration-300 w-full h-full';
+    : 'object-contain transition-opacity duration-300 w-full h-full bg-gray-50';
     
   const buttonSize = size === 'small' ? 'w-5 h-5' : 'w-8 h-8';
   const iconSize = size === 'small' ? 8 : 12;

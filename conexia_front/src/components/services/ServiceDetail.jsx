@@ -360,12 +360,12 @@ ${messageText.trim()}`;
                     {service.images && service.images.length > 0 ? (
                       <ServiceImageCarousel images={service.images} title={service.title} />
                     ) : (
-                      <div className="relative w-full h-full overflow-hidden rounded-lg">
+                      <div className="relative w-full h-full overflow-hidden rounded-lg bg-gray-50">
                         <Image
                           src="/default_project.jpeg"
                           alt={service.title}
                           fill
-                          className="object-cover"
+                          className="object-contain"
                         />
                       </div>
                     )}
