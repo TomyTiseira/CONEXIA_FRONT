@@ -76,7 +76,7 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
         bankAccountType,
         cbu,
         accountHolderName: holder,
-        cuilCuit: cuit.replace(/-/g, ''),
+        cuilCuit: cuit, // Enviar con guiones
         alias: alias || undefined
       });
       // Si todo ok, llamar a onSubmit con mensaje de éxito

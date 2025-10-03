@@ -69,7 +69,7 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
         digitalPlatformId: selectedPlatform.id,
         cvu,
         accountHolderName: holder,
-        cuilCuit: cuit.replace(/-/g, ''),
+        cuilCuit: cuit, // Enviar con guiones
         alias: alias || undefined
       });
       // Si todo ok, llamar a onSubmit con mensaje de éxito
