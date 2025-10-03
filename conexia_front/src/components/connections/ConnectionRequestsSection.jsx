@@ -42,7 +42,7 @@ export default function ConnectionRequestsSection() {
       setSelectedRequestId(null);
       // Actualizar el contexto para reflejar el cambio en toda la aplicación
       refreshRequests();
-      setToast({ type: 'info', message: 'Solicitud rechazada.', isVisible: true });
+  setToast({ type: 'rejected', message: 'Solicitud rechazada.', isVisible: true });
     } catch (err) {
       console.error('Error al rechazar solicitud:', err);
       setToast({ type: 'error', message: 'Error al rechazar la solicitud.', isVisible: true });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle, AlertCircle, X, Info, AlertTriangle } from 'lucide-react';
+import { CheckCircle, AlertCircle, X, Info, AlertTriangle, XCircle } from 'lucide-react';
 
 export default function Toast({ 
   type = 'info', 
@@ -36,6 +36,8 @@ export default function Toast({
         return <CheckCircle size={20} />;
       case 'error':
         return <AlertCircle size={20} />;
+      case 'rejected':
+        return <XCircle size={20} />;
       case 'warning':
         return <AlertTriangle size={20} />;
       case 'info':
@@ -49,6 +51,8 @@ export default function Toast({
       case 'success':
         return 'bg-green-500 text-white';
       case 'error':
+        return 'bg-red-600 text-white';
+      case 'rejected':
         return 'bg-red-500 text-white';
       case 'warning':
         return 'bg-yellow-500 text-white';

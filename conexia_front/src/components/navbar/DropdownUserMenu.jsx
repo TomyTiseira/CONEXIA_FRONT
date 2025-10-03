@@ -10,6 +10,7 @@ import { getProfileById } from '@/service/profiles/profilesFetch';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
+import { FaRegLightbulb } from 'react-icons/fa';
 
 const defaultAvatar = '/images/default-avatar.png';
 
@@ -141,6 +142,27 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
             >
               <Briefcase size={16} />
               Mis Servicios
+            </Link>
+          </div>
+          <div className="border-t pt-1 mt-1">
+            <div className="px-4 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Proyectos
+            </div>
+            <Link
+              href="/project/my-postulations"
+              onClick={handleClose}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+            >
+              <FileText size={16} />
+              Mis Postulaciones
+            </Link>
+            <Link
+              href={`/projects/user/${userId}`}
+              onClick={handleClose}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+            >
+              <FaRegLightbulb size={16} />
+              Mis Proyectos
             </Link>
           </div>
         </>

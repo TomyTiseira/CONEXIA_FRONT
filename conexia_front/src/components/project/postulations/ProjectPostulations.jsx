@@ -10,6 +10,7 @@ import { getProfileById } from '@/service/profiles/profilesFetch';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import PostulationsTable from './PostulationsTable';
 import PostulationEvaluationModal from './PostulationEvaluationModal';
+import Toast from '@/components/ui/Toast';
 import Pagination from '@/components/common/Pagination';
 
 export default function ProjectPostulations({ projectId }) {
@@ -25,6 +26,7 @@ export default function ProjectPostulations({ projectId }) {
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
   const [selectedPostulation, setSelectedPostulation] = useState(null);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
+  const [toast, setToast] = useState({ isVisible: false, type: 'info', message: '' });
 
   // Verificar si el usuario es dueño del proyecto
   const isOwner = user && project && (String(user.id) === String(project.ownerId) || project.isOwner);
@@ -151,6 +153,20 @@ export default function ProjectPostulations({ projectId }) {
     loadPostulations();
   };
 
+  const handleEvaluationResult = (result) => {
+    // result: { status: 'approved' | 'rejected', message }
+    setShowEvaluationModal(false);
+    setSelectedPostulation(null);
+    if (result?.status === 'approved') {
+      setToast({ isVisible: true, type: 'success', message: result.message || 'Postulación aprobada correctamente.' });
+    } else if (result?.status === 'rejected') {
+      setToast({ isVisible: true, type: 'rejected', message: result.message || 'Postulación rechazada.' });
+    } else if (result?.status === 'error') {
+      setToast({ isVisible: true, type: 'error', message: result.message || 'Error al evaluar la postulación.' });
+    }
+    loadPostulations();
+  };
+
   const handleStatusChange = (statusId) => {
     setSelectedStatus(statusId);
     setCurrentPage(1); // Reset to first page when changing filter
@@ -194,18 +210,19 @@ export default function ProjectPostulations({ projectId }) {
             {/* Filtro por estado */}
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700">Filtrar por estado:</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
-              >
-                <option value="">Todos los estados</option>
-                {postulationStatuses.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+                >
+                                 
+                  <option value="">Todos los estados</option>
+                  {postulationStatuses.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
             </div>
           </div>
 
@@ -261,9 +278,17 @@ export default function ProjectPostulations({ projectId }) {
         <PostulationEvaluationModal
           postulation={selectedPostulation}
           onClose={() => setShowEvaluationModal(false)}
-          onApproved={handlePostulationApproved}
+          onResult={handleEvaluationResult}
         />
       )}
+
+      <Toast
+        position="top-center"
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast(t => ({ ...t, isVisible: false }))}
+      />
     </>
   );
 }
