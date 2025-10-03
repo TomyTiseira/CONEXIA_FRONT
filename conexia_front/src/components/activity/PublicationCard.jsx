@@ -22,6 +22,7 @@ import { createPublicationReport } from '@/service/reports/publicationReportsFet
 import { ROLES } from '@/constants/roles';
 import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 import ReportPublicationModal from './report/ReportPublicationModal';
+import Toast from '@/components/ui/Toast';
 
 const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
@@ -969,11 +970,21 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
 
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
+  // Toast local de respaldo si el padre no provee onShowToast
+  const [internalToast, setInternalToast] = useState(null);
 
   // Handler para enviar el reporte
-  const handleReportSubmit = async (data, setMsg) => {
+  const handleReportSubmit = async (data) => {
     setReportLoading(true);
-    setMsg(null);
+    // Cerramos el modal inmediatamente para feedback consistente (como eliminar / crear etc.)
+    setShowReportModal(false);
+    const showToast = (payload) => {
+      if (onShowToast) {
+        onShowToast({ ...payload, isVisible: true });
+      } else {
+        setInternalToast({ ...payload, isVisible: true });
+      }
+    };
     try {
       await createPublicationReport({
         publicationId: publication.id,
@@ -981,23 +992,19 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
         otherReason: data.other,
         description: data.description
       });
-      setMsg({ ok: true, text: 'Publicación reportada con éxito.' });
-      setTimeout(() => setShowReportModal(false), 1500);
+      showToast({ type: 'success', message: 'Reporte enviado correctamente.' });
     } catch (err) {
-      // Verificar si es un conflicto (ya reportado)
       const alreadyReportedRegex = /User \d+ has already reported publication \d+/;
       const isConflictError = (
         (err.message && err.message.toLowerCase().includes('conflict')) ||
         (err.message && alreadyReportedRegex.test(err.message)) ||
         (err.message && err.message.includes('has already reported'))
       );
-      
       if (isConflictError) {
-        setMsg({ ok: false, text: 'Ya has reportado esta publicación.' });
+        showToast({ type: 'warning', message: 'Ya habías reportado esta publicación.' });
       } else {
-        // Solo loguear errores inesperados, no los conflictos normales
         console.error('Error al reportar publicación:', err);
-        setMsg({ ok: false, text: 'Error al enviar el reporte. Inténtalo nuevamente.' });
+        showToast({ type: 'error', message: 'Error al enviar el reporte. Inténtalo más tarde.' });
       }
     } finally {
       setReportLoading(false);
@@ -2203,6 +2210,16 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
             </div>
           </div>
         </div>
+      )}
+      {internalToast && (
+        <Toast
+          type={internalToast.type}
+          message={internalToast.message}
+          isVisible={internalToast.isVisible}
+          onClose={() => setInternalToast(null)}
+          position="top-center"
+          duration={4000}
+        />
       )}
     </div>
   );

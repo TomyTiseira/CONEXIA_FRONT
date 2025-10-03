@@ -13,6 +13,7 @@ import { HiUserAdd } from 'react-icons/hi';
 import { config } from "@/config";
 import { NotFound } from "@/components/ui";
 import Navbar from "@/components/navbar/Navbar";
+import Toast from '@/components/ui/Toast';
 
 import EditProfileForm from "./EditProfileForm";
 import { updateUserProfile } from "@/service/profiles/updateProfile";
@@ -43,6 +44,7 @@ export default function UserProfile() {
   const [isOwner, setIsOwner] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showMyProjects, setShowMyProjects] = useState(false);
+  const [toast, setToast] = useState(null); // Toast de feedback de actualización de perfil
 
   // Detección robusta de roles (igual que en Navbar)
   // Se toma de useUserStore y se chequea tanto roleName como user?.role
@@ -85,6 +87,21 @@ export default function UserProfile() {
     fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, searchParams, authUser, roleName]);
+
+  // Efecto para mostrar toast después de actualizar el perfil (solo dueño, clave escopada)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!authUser || String(authUser.id) !== String(id)) return; // Solo dueño
+    const key = `profileUpdateToast:${id}`;
+    try {
+      const stored = sessionStorage.getItem(key);
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (String(data.userId) === String(id)) setToast(data);
+        sessionStorage.removeItem(key);
+      }
+    } catch {}
+  }, [authUser, id]);
 
   if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
 
@@ -315,8 +332,36 @@ export default function UserProfile() {
       if (authUser && authUser.id === parseInt(id)) {
         setProfileStore(data.data.profile);
       }
+      // Guardar estado para mostrar toast en la vista del perfil tras la edición (solo dueño)
+      if (typeof window !== 'undefined') {
+        const toastKey = `profileUpdateToast:${id}`;
+        sessionStorage.setItem(toastKey, JSON.stringify({
+          type: response.success ? 'success' : 'warning',
+            message: response.success ? 'Perfil actualizado correctamente.' : 'El perfil se guardó con advertencias.',
+          isVisible: true,
+          userId: id
+        }));
+      }
+      // Mostrar inmediatamente el toast sin esperar re-mount
+      setToast({
+        type: response.success ? 'success' : 'warning',
+        message: response.success ? 'Perfil actualizado correctamente.' : 'El perfil se guardó con advertencias.',
+        isVisible: true
+      });
+      // Forzar refresco de datos (App Router) para garantizar consistencia visual
+      try { router.refresh && router.refresh(); } catch {}
     } catch (err) {
-      alert(err.message || 'Error al actualizar el perfil');
+      // Persistir error para mostrar toast luego (solo dueño)
+      if (typeof window !== 'undefined') {
+        const toastKey = `profileUpdateToast:${id}`;
+        sessionStorage.setItem(toastKey, JSON.stringify({
+          type: 'error',
+          message: err.message || 'Error al actualizar el perfil',
+          isVisible: true,
+          userId: id
+        }));
+      }
+      setToast({ type: 'error', message: err.message || 'Error al actualizar el perfil', isVisible: true });
     } finally {
       setLoading(false);
     }
@@ -358,6 +403,17 @@ export default function UserProfile() {
     <div className="bg-conexia-soft min-h-screen">
   <Navbar />
       <div className="max-w-5xl mx-auto flex flex-col gap-0 mt-4 px-2 md:px-0">
+        {/* Toast global para feedback de actualización */}
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={toast.isVisible}
+            onClose={() => setToast(null)}
+            position="top-center"
+            duration={4000}
+          />
+        )}
         {/* Rectángulo de datos personales */}
         <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
           {/* Portada y foto de perfil */}
@@ -448,6 +504,12 @@ export default function UserProfile() {
                     const data = await getProfileById(id);
                     setProfile(data.data);
                     setAccepting(false);
+                    // Toast local inmediato
+                    setToast({ type: 'success', message: 'Conexión aceptada.', isVisible: true });
+                    // Flag para página de conexiones
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.setItem('connectionAcceptedToast', JSON.stringify({ type: 'success', message: 'Conexión aceptada.', isVisible: true }));
+                    }
                   }}
                   disabled={acceptLoading || accepting}
                   style={{ minWidth: 80 }}
@@ -466,6 +528,7 @@ export default function UserProfile() {
                     const data = await getProfileById(id);
                     setProfile(data.data);
                     setRejecting(false);
+                    setToast({ type: 'info', message: 'Solicitud rechazada.', isVisible: true });
                   }}
                   disabled={rejectLoading || rejecting}
                   style={{ minWidth: 80 }}
@@ -615,3 +678,20 @@ function Section({ title, children }) {
     </div>
   );
 }
+
+// Efecto para recoger el toast guardado en sessionStorage al volver de la edición
+// (Se coloca después de la declaración del componente para mantener el archivo organizado)
+if (typeof window !== 'undefined') {
+  // Usamos un microtask para no interferir con SSR hydration
+  Promise.resolve().then(() => {
+    try {
+      const evt = new Event('__profile_update_toast_init__');
+      window.dispatchEvent(evt);
+    } catch {}
+  });
+}
+
+// Listener aislado para inicializar el toast cuando se monta el componente (solo en navegador)
+// Se agrega fuera para no recrear lógica en cada render
+// Nota: Accede al DOM indirectamente, sin romper reglas de hooks.
+

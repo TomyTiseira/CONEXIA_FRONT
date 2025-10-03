@@ -437,14 +437,23 @@ export default function EditPublicationModalMultiple({
                           );
                         })}
                       </div>
-                      {fileError && <div className="text-red-500 text-xs mt-1">{fileError}</div>}
-                      {submitError && <div className="text-red-500 text-xs mt-1">{submitError}</div>}
+                      {/* fileError and submitError moved to static area above legend */}
                     </div>
                   </div>
                 </div>
-                <div className="w-full border border-[#c6e3e4] border-t-0 bg-[#f8fcfc] rounded-b-2xl" style={{ margin:0 }}>
-                  <div className="px-4 pt-2 pb-1"><div className="text-[11px] text-conexia-green/60 leading-snug">{FILES_LEGEND}</div></div>
-                  <div className="h-px bg-[#e0f0f0] mx-3" />
+                <div className="w-full border border-[#c6e3e4] border-t-0 bg-[#f8fcfc] rounded-b-2xl relative" style={{ margin:0 }}>
+                  <div className="px-4 pt-2">
+                    <div className="min-h-[26px] flex flex-col gap-1" aria-live="polite" aria-atomic="true">
+                      {fileError && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 text-[11px] px-3 py-1 rounded-md text-center shadow-sm w-full" role="alert">{fileError}</div>
+                      )}
+                      {submitError && !fileError && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 text-[11px] px-3 py-1 rounded-md text-center shadow-sm w-full" role="alert">{submitError}</div>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-conexia-green/60 leading-snug mt-1">{FILES_LEGEND}</div>
+                  </div>
+                  <div className="h-px bg-[#e0f0f0] mx-3 mt-2" />
                   <div className="flex items-center gap-3 px-3 pt-2 pb-2">
                     <div className="relative">
                       <button type="button" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#e0f0f0] text-conexia-green/60 hover:text-conexia-green" onClick={()=>setShowEmoji(v=>!v)} title="Emoji"><BsEmojiSmile /></button>

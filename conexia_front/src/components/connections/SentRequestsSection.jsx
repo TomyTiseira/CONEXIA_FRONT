@@ -5,6 +5,7 @@ import { getSentConnectionRequests } from '@/service/connections/getSentConnecti
 import { useCancelConnectionRequest } from '@/hooks/connections/useCancelConnectionRequest';
 import SentConnectionRequestCard from '@/components/connections/SentConnectionRequestCard';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import Toast from '@/components/ui/Toast';
 
 export default function SentRequestsSection() {
   const [requests, setRequests] = useState([]);
@@ -12,6 +13,7 @@ export default function SentRequestsSection() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState(null);
+  const [toast, setToast] = useState(null);
   const { cancelRequest, loading: cancelLoading } = useCancelConnectionRequest();
   const router = useRouter();
 
@@ -48,15 +50,17 @@ export default function SentRequestsSection() {
 
   const handleCancel = async () => {
     if (!selectedRequestId) return;
-    
+    // Cerrar modal inmediatamente para una UX consistente
+    setShowModal(false);
+    const requestId = selectedRequestId;
+    setSelectedRequestId(null);
     try {
-      await cancelRequest(selectedRequestId);
-      setRequests(prev => prev.filter(req => req.id !== selectedRequestId));
-      setShowModal(false);
-      setSelectedRequestId(null);
+      await cancelRequest(requestId);
+      setRequests(prev => prev.filter(req => req.id !== requestId));
+      setToast({ type: 'success', message: 'Solicitud cancelada.', isVisible: true });
     } catch (err) {
       console.error('Error al cancelar solicitud:', err);
-      // Opcional: Mostrar mensaje de error
+      setToast({ type: 'error', message: 'Error al cancelar la solicitud.', isVisible: true });
     }
   };
 
@@ -97,6 +101,17 @@ export default function SentRequestsSection() {
         cancelButtonText="Cancelar"
         isLoading={cancelLoading}
       />
+
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={4000}
+        />
+      )}
     </div>
   );
 }

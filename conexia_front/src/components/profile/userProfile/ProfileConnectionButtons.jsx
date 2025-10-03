@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Toast from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import { useSendConnectionRequest } from '@/hooks/connections/useSendConnectionRequest';
 import { useAcceptConnectionRequest } from '@/hooks/connections/useAcceptConnectionRequest';
@@ -46,6 +47,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sent, setSent] = useState(false);
+  const [toast, setToast] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false); // Nuevo estado para evitar duplicados
   const dropdownRef = useRef(null);
@@ -112,24 +114,23 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
   
   // Función común para eliminar contacto (usa el mismo endpoint que cancelar)
   const handleDeleteContact = useCallback(async () => {
-    if (!connection || isDeleting || deletingRef.current) return; // Triple protección contra duplicados
-    
+    if (!connection || isDeleting || deletingRef.current) return;
+    // Cerrar modal inmediatamente para UX consistente
+    setShowDeleteModal(false);
     setIsDeleting(true);
     deletingRef.current = true;
     try {
-      // Usar el hook de cancelar normal ya que es el mismo endpoint
       await cancelRequest(connection.id);
-      // Refrescar estado global/local desde el servidor y limpiar estados locales
       await refreshRequests();
       await refreshConnection();
       setLocalConnection(null);
       setSent(false);
       setDropdownOpen(false);
-      
+      setToast({ type: 'success', message: 'Contacto eliminado correctamente.', isVisible: true });
     } catch (error) {
       console.error('Error al eliminar contacto:', error);
+      setToast({ type: 'error', message: 'No se pudo eliminar el contacto.', isVisible: true });
     } finally {
-      setShowDeleteModal(false);
       setIsDeleting(false);
       deletingRef.current = false;
     }
@@ -228,6 +229,16 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={deleteLoading || isDeleting}
         />
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={toast.isVisible}
+            onClose={() => setToast(null)}
+            position="top-center"
+            duration={4000}
+          />
+        )}
       </>
     );
   }
@@ -253,8 +264,8 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
     };
 
     const handleCancel = async () => {
+      setShowCancelModal(false); // cierre inmediato
       try {
-        // Primero necesitamos obtener el ID de la solicitud pendiente
         const result = await refreshRequests();
         const pendingRequest = result?.requests?.find(
           req => req.receiverId === receiverId && req.senderId === id
@@ -263,11 +274,14 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           await cancelRequest(pendingRequest.id);
           setSent(false);
           await refreshRequests();
-          await refreshConnection(); // Actualizar la conexión local
-          setShowCancelModal(false); // Cerrar el modal después de cancelar
+          await refreshConnection();
+          setToast({ type: 'success', message: 'Solicitud cancelada.', isVisible: true });
+        } else {
+          setToast({ type: 'warning', message: 'No se encontró la solicitud.', isVisible: true });
         }
       } catch (error) {
         console.error('Error al cancelar solicitud:', error);
+        setToast({ type: 'error', message: 'Error al cancelar la solicitud.', isVisible: true });
       }
     };
     
@@ -384,6 +398,16 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={cancelLoading}
         />
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={toast.isVisible}
+            onClose={() => setToast(null)}
+            position="top-center"
+            duration={4000}
+          />
+        )}
       </>
     );
   }
@@ -394,16 +418,18 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
     if (isAdmin || isModerator) return null;
 
     const handleCancel = async () => {
+      // Cerrar el modal inmediatamente para consistencia
+      setShowCancelModal(false);
       try {
         await cancelRequest(connection.id);
-        await refreshRequests(); // Actualizamos el contexto para reflejar el cambio
-        await refreshConnection(); // Actualizamos la conexión local
-        setSent(false); // Cambiamos el estado local
-        setLocalConnection(null); // Reseteamos la conexión local
-        setShowCancelModal(false); // Cerrar el modal después de cancelar
+        await refreshRequests();
+        await refreshConnection();
+        setSent(false);
+        setLocalConnection(null);
+        setToast({ type: 'success', message: 'Solicitud cancelada.', isVisible: true });
       } catch (error) {
         console.error('Error al cancelar solicitud:', error);
-        // No cerrar el modal si hay error
+        setToast({ type: 'error', message: 'Error al cancelar la solicitud.', isVisible: true });
       }
     };
 
@@ -491,6 +517,16 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={cancelLoading}
         />
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={toast.isVisible}
+            onClose={() => setToast(null)}
+            position="top-center"
+            duration={4000}
+          />
+        )}
       </>
     );
   }
@@ -580,6 +616,16 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           cancelButtonText="Cancelar"
           isLoading={rejectLoading}
         />
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={toast.isVisible}
+            onClose={() => setToast(null)}
+            position="top-center"
+            duration={4000}
+          />
+        )}
 
       </>
     );
@@ -611,6 +657,16 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
             <ChatFloatingPanel user={chatUser} onClose={() => setChatOpen(false)} />
           </div>
         </>
+      )}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={4000}
+        />
       )}
     </>
   );

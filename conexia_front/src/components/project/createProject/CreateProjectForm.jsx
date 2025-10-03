@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Toast from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useSkills } from '@/hooks/useSkills';
@@ -27,7 +28,8 @@ export default function CreateProjectForm() {
   };
   const router = useRouter();
   const imageInputRef = useRef(null);
-  const [msg, setMsg] = useState(null); 
+  // Local toast state for error (success handled after redirect)
+  const [toast, setToast] = useState({ visible: false, type: 'success', message: '' });
 
   const [form, setForm] = useState({
     title: '',
@@ -199,12 +201,16 @@ export default function CreateProjectForm() {
         }
       };
       await publishProject(formToSend);
-      setMsg({ ok: true, text: 'Proyecto publicado con éxito.' });
-      setTimeout(() => {
-        router.push('/project/search');
-      }, 1500); // 1,5 segundos
+      // Guardar mensaje para mostrar en /project/search
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('projectCreationToast', JSON.stringify({
+          type: 'success',
+            message: 'Proyecto publicado con éxito.'
+        }));
+      }
+      router.push('/project/search');
     } catch (err) {
-      setMsg({ ok: false, text: err.message || 'Error al publicar el proyecto' });
+      setToast({ visible: true, type: 'error', message: err.message || 'Error al publicar el proyecto' });
     }
   };
 
@@ -411,17 +417,15 @@ export default function CreateProjectForm() {
         </Button>
       </div>
 
-      {/* Mensaje de error o éxito */}
-      <div className="md:col-span-2 min-h-[48px] mt-2">
-        {msg && (
-          // Ocultar mensaje en inglés de fechas
-          msg.text && msg.text.toLowerCase().includes('start date must be before end date') ? null : (
-            <p className={`text-sm text-center ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
-              {msg.text}
-            </p>
-          )
-        )}
-      </div>
+      {/* Toast de error (success se muestra tras redirect) */}
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.visible}
+        onClose={() => setToast(t => ({ ...t, visible: false }))}
+        position="top-center"
+        duration={5000}
+      />
     </form>
   );
 }
