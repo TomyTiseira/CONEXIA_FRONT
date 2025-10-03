@@ -2,6 +2,7 @@
 
 'use client';
 import React, { useState } from 'react';
+import { useRoleValidation } from '@/hooks/useRoleValidation';
 import Toast from '@/components/ui/Toast';
 import AddBankAccountForm from './AddBankAccountForm';
 import AddDigitalAccountForm from './AddDigitalAccountForm';
@@ -10,7 +11,13 @@ import { useFetch } from '@/hooks/useFetch';
 import { fetchPaymentAccounts, deleteBankAccount, fetchBankAccountById } from '@/service/payment/paymentFetch';
 
 export default function PaymentAccountsSection() {
+  const { isInitialLoading, hasAnyRole } = useRoleValidation();
   const [toast, setToast] = useState(null);
+  const [showBankForm, setShowBankForm] = useState(false);
+  const [showDigitalForm, setShowDigitalForm] = useState(false);
+  const { data: accounts, isLoading, error, refetch } = useFetch(fetchPaymentAccounts);
+  if (isInitialLoading) return null;
+  if (!hasAnyRole(['user'])) return null;
   // Eliminar cuenta bancaria
   const handleDeleteBank = async (id) => {
     if (!window.confirm('¿Seguro que deseas eliminar esta cuenta bancaria?')) return;
@@ -30,12 +37,6 @@ export default function PaymentAccountsSection() {
       });
     }
   };
-
-  const [showBankForm, setShowBankForm] = useState(false);
-  const [showDigitalForm, setShowDigitalForm] = useState(false);
-
-  // Fetch cuentas del usuario
-  const { data: accounts, isLoading, error, refetch } = useFetch(fetchPaymentAccounts);
 
   // Separar cuentas bancarias y digitales
   const bankAccounts = Array.isArray(accounts)

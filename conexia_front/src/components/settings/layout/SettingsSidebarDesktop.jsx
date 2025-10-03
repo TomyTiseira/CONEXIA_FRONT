@@ -1,18 +1,20 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import { useRoleValidation } from '@/hooks/useRoleValidation';
 import { User, ShieldCheck, Eye, CreditCard } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 
-const sections = [
-	{ id: 'account', label: 'Cuenta', icon: User, path: '/settings/account' },
-	{ id: 'security', label: 'Seguridad', icon: ShieldCheck, path: '/settings/security' },
-	{ id: 'privacy', label: 'Privacidad', icon: Eye, path: '/settings/privacy' },
-	{ id: 'payment', label: 'Datos de cobro', icon: CreditCard, path: '/settings/payment' },
-];
-
 export default function SettingsSidebarDesktop({ active }) {
+	const { hasAnyRole } = useRoleValidation();
 	const router = useRouter();
+	const sections = [
+		{ id: 'account', label: 'Cuenta', icon: User, path: '/settings/account' },
+		{ id: 'security', label: 'Seguridad', icon: ShieldCheck, path: '/settings/security' },
+		{ id: 'privacy', label: 'Privacidad', icon: Eye, path: '/settings/privacy' },
+		// Solo mostrar 'Datos de cobro' si el usuario tiene rol 'user'
+		...(hasAnyRole(['user']) ? [{ id: 'payment', label: 'Datos de cobro', icon: CreditCard, path: '/settings/payment' }] : [])
+	];
 
 	return (
 		<nav className="p-4">

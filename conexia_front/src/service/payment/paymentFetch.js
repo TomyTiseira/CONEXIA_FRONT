@@ -39,7 +39,10 @@ export async function addBankAccount({ bankId, bankAccountType, cbu, accountHold
     body: JSON.stringify(body)
   });
   const response = await res.json();
-  if (!res.ok) throw new Error(response.message || 'Error al registrar cuenta bancaria');
+  if (!res.ok) {
+    // Si el backend provee un mensaje, mostrarlo; si no, mostrar mensaje en español
+    throw new Error(response.message ? response.message : 'Error al registrar cuenta bancaria');
+  }
   return response.data;
 }
 

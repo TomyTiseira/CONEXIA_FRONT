@@ -69,13 +69,20 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
         digitalPlatformId: selectedPlatform.id,
         cvu,
         accountHolderName: holder,
-        cuilCuit: cuit,
+        cuilCuit: cuit.replace(/-/g, ''),
         alias: alias || undefined
       });
       // Si todo ok, llamar a onSubmit con mensaje de éxito
       onSubmit(result?.message || 'Cuenta digital registrada correctamente');
     } catch (err) {
-      setError(err?.message || 'Error al registrar la cuenta digital');
+      let errorMsg = err?.message || 'Error al registrar la cuenta digital';
+      if (errorMsg.includes('Invalid CUIL/CUIT format')) {
+        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+      }
+      if (errorMsg.toLowerCase().includes('ya existe') || errorMsg.toLowerCase().includes('already exists')) {
+        errorMsg = 'Este medio de cobro ya está registrado.';
+      }
+      setError(errorMsg);
     }
   };
 

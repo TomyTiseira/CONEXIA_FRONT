@@ -14,15 +14,8 @@ function validateAlias(value) {
   return /^[a-zA-Z0-9.-]{6,20}$/.test(value);
 }
 function validateCUIT(value) {
-  // Valida formato XX-XXXXXXXX-X y que los dígitos sean válidos
-  if (!/^\d{2}-\d{7,8}-\d{1}$/.test(value)) return false;
-  const parts = value.split('-');
-  if (parts.length !== 3) return false;
-  // Validar que los dígitos sean numéricos y tengan la longitud correcta
-  if (parts[0].length !== 2 || !/\d{2}/.test(parts[0])) return false;
-  if (parts[1].length < 7 || parts[1].length > 8 || !/\d{7,8}/.test(parts[1])) return false;
-  if (parts[2].length !== 1 || !/\d{1}/.test(parts[2])) return false;
-  return true;
+  // Valida formato XX-XXXXXXXX-X o XX-XXXXXXX-X (7 u 8 dígitos en el centro)
+  return /^\d{2}-\d{7,8}-\d{1}$/.test(value);
 }
 
 export default function AddBankAccountForm({ onSubmit, onCancel, existingAccounts = [] }) {
@@ -83,13 +76,20 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
         bankAccountType,
         cbu,
         accountHolderName: holder,
-        cuilCuit: cuit,
+        cuilCuit: cuit.replace(/-/g, ''),
         alias: alias || undefined
       });
       // Si todo ok, llamar a onSubmit con mensaje de éxito
       onSubmit(result?.message || 'Cuenta bancaria registrada correctamente');
     } catch (err) {
-      setError(err?.message || 'Error al registrar la cuenta bancaria');
+      let errorMsg = err?.message || 'Error al registrar la cuenta bancaria';
+      if (errorMsg.includes('Invalid CUIL/CUIT format')) {
+        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+      }
+      if (errorMsg.toLowerCase().includes('ya existe') || errorMsg.toLowerCase().includes('already exists')) {
+        errorMsg = 'Este medio de cobro ya está registrado.';
+      }
+      setError(errorMsg);
     }
   };
 
@@ -132,6 +132,7 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
           value={cuit}
           onChange={e => {
             let val = e.target.value.replace(/[^\d]/g, ''); // Solo números
+            // Formatear: XX-XXXXXXX-X o XX-XXXXXXXX-X
             if (val.length > 2) val = val.slice(0,2) + '-' + val.slice(2);
             if (val.length > 11) val = val.slice(0,11) + '-' + val.slice(11,12);
             if (val.length > 13) val = val.slice(0,13); // Limitar a XX-XXXXXXXX-X
