@@ -20,10 +20,14 @@ export default function ConnectionRequestsSection() {
 
   const handleAccepted = (id) => {
     setLocalRequests((prev) => prev.filter((req) => req.id !== id));
-    // Mostrar toast inmediato aquí también (redundante por UX snappy)
-    setToast({ type: 'success', message: 'Conexión aceptada.', isVisible: true });
+    // Mostrar toast inmediato solo si no hay flag global (evita duplicados)
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('connectionAcceptedToast', JSON.stringify({ type: 'success', message: 'Conexión aceptada.', isVisible: true }));
+      const stored = sessionStorage.getItem('connectionAcceptedToast');
+      if (!stored) {
+        setToast({ type: 'success', message: 'Conexión aceptada.', isVisible: true });
+      }
+    } else {
+      setToast({ type: 'success', message: 'Conexión aceptada.', isVisible: true });
     }
   };
   

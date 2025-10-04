@@ -562,71 +562,31 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
 
     return (
       <>
-        {/* Mobile: primero Enviar mensaje, luego Aceptar y Rechazar, todos más chicos y alineados */}
+        {/* Mobile: Enviar mensaje con estilo unificado */}
         <div className="flex flex-col items-center justify-center w-full mt-2 sm:hidden gap-2">
           <Button
             variant="primary"
-            className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-56 whitespace-nowrap"
+            className="flex items-center justify-center px-4 h-10 text-sm font-semibold w-56 whitespace-nowrap rounded-full"
             onClick={openChat}
             style={{lineHeight: '1.2'}}
           >
             <Send className="w-4 h-4 mr-2" />
             <span className="truncate">Enviar mensaje</span>
           </Button>
-          <div className="flex gap-2 w-56 justify-center">
+        </div>
+        {/* Desktop: Enviar mensaje agrupado con Aceptar/Rechazar en columna derecha */}
+        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
+          <div className="flex flex-col gap-2 items-end">
             <Button
-              variant="neutral"
-              className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-1/2 whitespace-nowrap"
-              onClick={() => setShowAcceptModal(true)}
-              disabled={acceptLoading}
+              variant="primary"
+              className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
+              onClick={openChat}
             >
-              <Check className="w-4 h-4 mr-2" />
-              Aceptar
-            </Button>
-            <Button
-              variant="cancel"
-              className="flex items-center justify-center px-4 py-2 text-sm font-semibold w-1/2 whitespace-nowrap"
-              onClick={() => setShowRejectModal(true)}
-              disabled={rejectLoading}
-            >
-              <X className="w-4 h-4 mr-2" />
-              Rechazar
+              <Send className="w-4 h-4 mr-2" />
+              Enviar mensaje
             </Button>
           </div>
         </div>
-
-        <ConfirmModal
-          isOpen={showAcceptModal}
-          onClose={() => setShowAcceptModal(false)}
-          onConfirm={handleAccept}
-          title="Aceptar solicitud"
-          message="¿Estás seguro que deseas aceptar esta solicitud de conexión?"
-          confirmButtonText="Aceptar"
-          cancelButtonText="Cancelar"
-          isLoading={acceptLoading}
-        />
-
-        <ConfirmModal
-          isOpen={showRejectModal}
-          onClose={() => setShowRejectModal(false)}
-          onConfirm={handleReject}
-          title="Rechazar solicitud"
-          message="¿Estás seguro que deseas rechazar esta solicitud de conexión?"
-          confirmButtonText="Rechazar"
-          cancelButtonText="Cancelar"
-          isLoading={rejectLoading}
-        />
-        {toast && (
-          <Toast
-            type={toast.type}
-            message={toast.message}
-            isVisible={toast.isVisible}
-            onClose={() => setToast(null)}
-            position="top-center"
-            duration={4000}
-          />
-        )}
-
       </>
     );
   }

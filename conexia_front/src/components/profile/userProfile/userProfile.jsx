@@ -490,51 +490,47 @@ export default function UserProfile() {
                   })()}
                 </span>
               </div>
-              {/* Botones */}
-              <div className="flex gap-2 w-full sm:w-auto sm:justify-end justify-center">
-                <button
-                  className="flex items-center justify-center bg-conexia-green text-white font-semibold rounded-lg border border-[#e0f0f0] hover:bg-[#285c5c] transition-colors focus:outline-none shadow-sm px-4 py-1 text-sm"
-                  type="button"
-                  onClick={async () => {
-                    setAccepting(true);
-                    await acceptRequest(profile.profile?.connectionData?.id);
-                    // Refrescar el contexto global para actualizar el contador de solicitudes en la navbar
-                    await refreshRequests();
-                    // Refrescar perfil
-                    const data = await getProfileById(id);
-                    setProfile(data.data);
-                    setAccepting(false);
-                    // Toast local inmediato
-                    setToast({ type: 'success', message: 'Conexión aceptada.', isVisible: true });
-                    // Flag para página de conexiones
-                    if (typeof window !== 'undefined') {
-                      sessionStorage.setItem('connectionAcceptedToast', JSON.stringify({ type: 'success', message: 'Conexión aceptada.', isVisible: true }));
-                    }
-                  }}
-                  disabled={acceptLoading || accepting}
-                  style={{ minWidth: 80 }}
-                >
-                  {acceptLoading || accepting ? 'Aceptando...' : 'Aceptar'}
-                </button>
-                <button
-                  className="flex items-center justify-center bg-[#f5f6f6] text-[#777d7d] hover:bg-[#f1f2f2] border border-[#e1e4e4] font-semibold rounded-lg focus:outline-none shadow-sm px-4 py-1 text-sm"
-                  type="button"
-                  onClick={async () => {
-                    setRejecting(true);
-                    await rejectRequest(profile.profile?.connectionData?.id);
-                    // Refrescar el contexto global para actualizar el contador de solicitudes en la navbar
-                    await refreshRequests();
-                    // Refrescar perfil
-                    const data = await getProfileById(id);
-                    setProfile(data.data);
-                    setRejecting(false);
-                    setToast({ type: 'info', message: 'Solicitud rechazada.', isVisible: true });
-                  }}
-                  disabled={rejectLoading || rejecting}
-                  style={{ minWidth: 80 }}
-                >
-                  {rejectLoading || rejecting ? 'Rechazando...' : 'Rechazar'}
-                </button>
+              {/* Botones y Enviar mensaje en desktop */}
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end justify-center items-center">
+                <div className="flex gap-2">
+                  <button
+                    className="flex items-center justify-center bg-conexia-green text-white font-semibold rounded-lg border border-[#e0f0f0] hover:bg-[#285c5c] transition-colors focus:outline-none shadow-sm px-4 py-1 text-sm"
+                    type="button"
+                    onClick={async () => {
+                      setAccepting(true);
+                      await acceptRequest(profile.profile?.connectionData?.id);
+                      await refreshRequests();
+                      const data = await getProfileById(id);
+                      setProfile(data.data);
+                      setAccepting(false);
+                      setToast({ type: 'success', message: 'Conexión aceptada.', isVisible: true });
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.setItem('connectionAcceptedToast', JSON.stringify({ type: 'success', message: 'Conexión aceptada.', isVisible: true }));
+                      }
+                    }}
+                    disabled={acceptLoading || accepting}
+                    style={{ minWidth: 80 }}
+                  >
+                    {acceptLoading || accepting ? 'Aceptando...' : 'Aceptar'}
+                  </button>
+                  <button
+                    className="flex items-center justify-center bg-[#f5f6f6] text-[#777d7d] hover:bg-[#f1f2f2] border border-[#e1e4e4] font-semibold rounded-lg focus:outline-none shadow-sm px-4 py-1 text-sm"
+                    type="button"
+                    onClick={async () => {
+                      setRejecting(true);
+                      await rejectRequest(profile.profile?.connectionData?.id);
+                      await refreshRequests();
+                      const data = await getProfileById(id);
+                      setProfile(data.data);
+                      setRejecting(false);
+                      setToast({ type: 'rejected', message: 'Solicitud rechazada.', isVisible: true });
+                    }}
+                    disabled={rejectLoading || rejecting}
+                    style={{ minWidth: 80 }}
+                  >
+                    {rejectLoading || rejecting ? 'Rechazando...' : 'Rechazar'}
+                  </button>
+                </div>
               </div>
             </div>
           )}
