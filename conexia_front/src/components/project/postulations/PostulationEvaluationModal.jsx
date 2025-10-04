@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { approvePostulation, rejectPostulation } from '@/service/postulations/postulationService';
 import { config } from '@/config';
 
-export default function PostulationEvaluationModal({ postulation, onClose, onApproved }) {
+export default function PostulationEvaluationModal({ postulation, onClose, onApproved, onResult }) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState('');
@@ -16,19 +16,19 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
     try {
       setIsApproving(true);
       setError('');
-      
       await approvePostulation(postulation.id);
-      
-      setSuccess('Postulación aprobada correctamente');
-      
-      // Mostrar mensaje de éxito por un momento antes de cerrar
-      setTimeout(() => {
+      const message = 'Postulación aprobada correctamente';
+      setSuccess(message);
+      if (onResult) {
+        onResult({ status: 'approved', message });
+      } else if (onApproved) {
         onApproved();
-      }, 1500);
-      
-    } catch (error) {
-      console.error('Error approving postulation:', error);
-      setError(error.message || 'Error al aprobar la postulación');
+      }
+    } catch (err) {
+      console.error('Error approving postulation:', err);
+      const errMsg = err.message || 'Error al aprobar la postulación';
+      setError(errMsg);
+      if (onResult) onResult({ status: 'error', message: errMsg });
     } finally {
       setIsApproving(false);
     }
@@ -42,12 +42,13 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
       await rejectPostulation(postulation.id);
       
       setSuccess('Postulación rechazada correctamente');
-      
-      // Mostrar mensaje de éxito por un momento antes de cerrar
-      setTimeout(() => {
-        onApproved(); // Same callback to refresh the list
-      }, 1500);
-      
+      const message = 'Postulación rechazada correctamente';
+      setSuccess(message);
+      if (onResult) {
+        onResult({ status: 'rejected', message });
+      } else if (onApproved) {
+        onApproved();
+      }
     } catch (error) {
       console.error('Error rejecting postulation:', error);
       setError(error.message || 'Error al rechazar la postulación');
@@ -185,7 +186,7 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
             className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded font-medium hover:bg-gray-400 transition"
             disabled={isApproving || isRejecting}
           >
-            Volver
+            Cancelar
           </button>
           
           <button

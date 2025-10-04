@@ -11,6 +11,7 @@ import CreateInternalUserModal from '@/components/admin/internal-users/CreateInt
 import useDeleteInternalUser from '@/hooks/internal-users/useDeleteInternalUser';
 import DeleteInternalUserModal from '@/components/admin/internal-users/DeleteInternalUserModal';
 import EditInternalUserModal from '@/components/admin/internal-users/EditInternalUserModal';
+import Toast from '@/components/ui/Toast';
 
 function InternalUsersContent() {
   const internalUsers = useInternalUsers();
@@ -19,9 +20,16 @@ function InternalUsersContent() {
   const [userToEdit, setUserToEdit] = useState(null);
   const { handleDelete, deletingId } = useDeleteInternalUser();
 
+  // Toast state
+  const [toast, setToast] = useState({ isVisible: false, type: 'info', message: '' });
+
+  const showToast = (type, message) => {
+    setToast({ isVisible: true, type, message });
+  };
+
   return (
     <>
-      <NavbarAdmin />
+  <NavbarAdmin />
 
       <main className="bg-[#eaf5f2] min-h-screen p-8 space-y-6 max-w-7xl mx-auto pb-24">
         <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative">
@@ -63,7 +71,11 @@ function InternalUsersContent() {
       {isModalOpen && (
         <CreateInternalUserModal
           onClose={() => setIsModalOpen(false)}
-          onUserCreated={internalUsers.refetch}
+          onUserCreated={() => {
+            internalUsers.refetch();
+            showToast('success', 'Usuario interno creado correctamente.');
+          }}
+          onError={(msg) => showToast('error', msg || 'Error al crear usuario interno.')}
         />
       )}
 
@@ -73,7 +85,11 @@ function InternalUsersContent() {
           loading={deletingId === userToDelete.id}
           onConfirm={() => handleDelete(userToDelete.id)}
           onCancel={() => setUserToDelete(null)}
-          onUserDeleted={internalUsers.refetch}
+          onUserDeleted={() => {
+            internalUsers.refetch();
+            showToast('success', 'Usuario interno eliminado.');
+          }}
+          onError={(msg) => showToast('error', msg || 'Error al eliminar usuario interno.')}
         />
       )}
 
@@ -81,9 +97,21 @@ function InternalUsersContent() {
         <EditInternalUserModal
           user={userToEdit}
           onClose={() => setUserToEdit(null)}
-          onUserUpdated={internalUsers.refetch}
+          onUserUpdated={() => {
+            internalUsers.refetch();
+            showToast('success', 'Usuario interno actualizado.');
+          }}
+          onError={(msg) => showToast('error', msg || 'Error al actualizar usuario interno.')}
         />
       )}
+
+      <Toast
+        position="top-center"
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast((t) => ({ ...t, isVisible: false }))}
+      />
     </>
   );
 }

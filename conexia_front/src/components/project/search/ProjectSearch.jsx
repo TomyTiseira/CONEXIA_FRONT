@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import Toast from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/common/Pagination';
 import { fetchProjects } from '@/service/projects/projectsFetch';
@@ -44,6 +45,8 @@ export default function ProjectSearch() {
   const pageSize = 12;
   const [allProjectsList, setAllProjectsList] = useState([]);
   const [isLoadingAllProjects, setIsLoadingAllProjects] = useState(false);
+  // Toast state (e.g., for project created redirect)
+  const [toast, setToast] = useState({ visible: false, type: 'success', message: '' });
 
   // Aplica los filtros automáticamente al cambiar cualquier filtro
   const [pendingFilters, setPendingFilters] = useState(filters);
@@ -86,6 +89,27 @@ export default function ProjectSearch() {
 
     loadAllProjects();
   }, [roleName, hasRecommendations, isLoadingRecommendations, user?.id]);
+
+  // Leer sessionStorage para toast (creación o eliminación de proyecto)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Prioridad a la eliminación si existen ambos
+      const deletion = sessionStorage.getItem('projectDeletionToast');
+      const creation = sessionStorage.getItem('projectCreationToast');
+      const target = deletion || creation;
+      if (target) {
+        try {
+          const data = JSON.parse(target);
+          setToast({ visible: true, type: data.type || 'success', message: data.message || 'Acción realizada.' });
+        } catch {
+          // ignore parse error
+        } finally {
+          if (deletion) sessionStorage.removeItem('projectDeletionToast');
+          if (creation) sessionStorage.removeItem('projectCreationToast');
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const applyFilters = async () => {
@@ -387,6 +411,14 @@ export default function ProjectSearch() {
       {/* Widget de mensajería reutilizable (igual que en ClientCommunity) */}
       <MessagingWidget
         avatar={avatar}
+      />
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.visible}
+        onClose={() => setToast(t => ({ ...t, visible: false }))}
+        position="top-center"
+        duration={5000}
       />
     </>
   );

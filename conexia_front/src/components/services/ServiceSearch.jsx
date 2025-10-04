@@ -123,18 +123,8 @@ export default function ServiceSearch() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
-              {canViewHirings && (
-                <button 
-                  onClick={() => router.push('/services/my-hirings')}
-                  className="bg-blue-600 text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-blue-700 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full sm:w-auto"
-                >
-                  <FileText size={16} />
-                  <span>Mis Solicitudes</span>
-                </button>
-              )}
-              
               {canCreateService && (
-                <Link href="/services/create" className="w-full sm:w-auto">
+                <Link href="/services/create" className="w-full sm:w-auto order-1 sm:order-none">
                   <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
                     <span className="flex items-center justify-center gap-2 w-full">
                       <Briefcase size={16} className="text-base" />
@@ -142,6 +132,15 @@ export default function ServiceSearch() {
                     </span>
                   </button>
                 </Link>
+              )}
+              {canViewHirings && (
+                <button 
+                  onClick={() => router.push('/services/my-hirings')}
+                  className="bg-[#367d7d] text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-[#2b6a6a] transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full sm:w-auto order-2 sm:order-none"
+                >
+                  <FileText size={16} />
+                  <span>Mis Solicitudes</span>
+                </button>
               )}
             </div>
           </div>

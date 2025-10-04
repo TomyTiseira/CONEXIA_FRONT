@@ -1,17 +1,4 @@
-// Modal de éxito tipo toast
-function SuccessModal({ open }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20">
-      <div className="bg-white border border-[#c6e3e4] rounded-2xl shadow-2xl flex flex-col items-center px-8 py-8 animate-fadeIn">
-        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-conexia-green/10 mb-4">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#e0f0f0"/><path d="M7 13.5l3 3 7-7" stroke="#1e6e5c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </div>
-        <div className="text-conexia-green text-lg font-semibold mb-2">Publicación realizada con éxito</div>
-      </div>
-    </div>
-  );
-}
+// (El antiguo SuccessModal se eliminó; ahora se usa Toast externo)
 import { useState, useRef, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Image from 'next/image';
@@ -133,7 +120,6 @@ function VisibilityModal({ open, onClose, value, onChange }) {
 }
 
 export default function PublicationModal({ open, onClose, onPublish, user }) {
-  const [showSuccess, setShowSuccess] = useState(false);
   const avatar = user?.profilePicture
     ? `${config.IMAGE_URL}/${user.profilePicture}`
     : '/images/default-avatar.png';
@@ -145,6 +131,9 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
   const [showEmoji, setShowEmoji] = useState(false);
   const fileInputRef = useRef();
   const textareaRef = useRef();
+  // Visor de medios (carousel interno antes de publicar)
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   // Ajusta la altura del textarea dinámicamente desde un mínimo hasta un máximo
   const MIN_TEXTAREA_HEIGHT = 38; // 2 líneas aprox
@@ -214,23 +203,30 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // Abrir visor de medios en índice específico
+  const openViewerAt = (idx) => {
+    setViewerIndex(idx);
+    setViewerOpen(true);
+  };
+  const closeViewer = () => setViewerOpen(false);
+  const nextViewer = (e) => { e?.stopPropagation?.(); setViewerIndex((i) => (i + 1) % files.length); };
+  const prevViewer = (e) => { e?.stopPropagation?.(); setViewerIndex((i) => (i - 1 + files.length) % files.length); };
+
   const handlePublish = async () => {
     if (!description.trim() || loading) return;
     setLoading(true);
     setSubmitError('');
-    let privacy = 'public';
-    if (visibility === 'contacts') privacy = 'onlyFriends';
+    let privacy = visibility === 'contacts' ? 'onlyFriends' : 'public';
     try {
-      // Enviar todos los archivos
       await createPublication({ description, files, privacy });
-      if (onPublish) onPublish({ description, files, privacy });
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        handleClose();
-      }, 1500);
+      // Notificar inmediatamente y cerrar modal
+      onPublish && onPublish({ success: true, description, privacy });
+      handleClose();
     } catch (err) {
-      setSubmitError(err.message || 'Error al crear publicación');
+      const msg = err?.message || 'Error al crear publicación';
+      setSubmitError(msg);
+      onPublish && onPublish({ success: false, error: msg });
+      handleClose();
     } finally {
       setLoading(false);
     }
@@ -261,7 +257,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
     adjustTextareaHeight();
   }, [description]);
 
-  if (!open && !showSuccess) return null;
+  if (!open) return null;
 
   return (
     <>
@@ -276,7 +272,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
           }}
         />
 
-  <div className="relative w-full max-w-2xl mx-2 bg-white rounded-2xl shadow-2xl border border-[#c6e3e4] animate-fadeIn flex flex-col" style={{ minHeight: 420, maxHeight: 600 }}>
+  <div className="relative w-full max-w-2xl mx-2 bg-white rounded-2xl shadow-2xl border border-[#c6e3e4] animate-fadeIn flex flex-col" style={{ minHeight: 460, maxHeight: 680 }}>
           {/* Header */}
           <div className="p-4 border-b border-[#e0f0f0] bg-[#eef6f6] rounded-t-2xl">
             <div className="flex items-center gap-3 relative">
@@ -306,16 +302,16 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
           </div>
 
           {/* Body (scrollable, LinkedIn style) */}
-          <div className="flex-1 flex flex-col items-center justify-center px-2 py-4">
+          <div className="flex-1 flex flex-col items-center justify-center px-2 py-4 overflow-x-hidden">
             <div className="w-full max-w-xl flex flex-col items-center justify-center">
               {/* Bloque scrolleable: textarea + previews de archivos */}
               <div className="flex flex-col w-full" style={{ alignItems: 'center' }}>
                 <div
-                  className="bg-[#f8fcfc] border border-[#c6e3e4] rounded-t-2xl flex flex-col p-0 relative overflow-y-scroll w-full"
+                  className="bg-[#f8fcfc] border border-[#c6e3e4] rounded-t-2xl flex flex-col p-0 relative overflow-y-auto overflow-x-hidden w-full"
                   style={{
                     minHeight: 160,
-                    maxHeight: 280,
-                    height: 280,
+                    maxHeight: 320,
+                    height: 320,
                     margin: 0,
                     borderBottom: 'none',
                   }}
@@ -346,33 +342,49 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
                         files={files} 
                         onRemove={handleRemoveFile}
                         maxFiles={MAX_FILES}
+                        onSelect={openViewerAt}
                       />
                     </div>
                   </div>
                 </div>
-                {/* Controles de adjuntos pegados abajo del input, sin separación */}
-                <div className="flex items-center gap-3 px-3 py-2 border border-[#c6e3e4] border-t-0 bg-[#f8fcfc] rounded-b-2xl w-full" style={{ margin: 0 }}>
-                  <button
-                    type="button"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#e0f0f0] text-conexia-green/60 hover:text-conexia-green"
-                    onClick={() => setShowEmoji((v) => !v)}
-                    title="Emoji"
-                  >
-                    <BsEmojiSmile />
-                  </button>
-                  <button type="button" onClick={() => handleFileIconClick('image')} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]" style={{ boxShadow: 'none', border: 'none' }}>
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><circle cx="8" cy="10" r="2" fill="#1e6e5c"/><path d="M21 19l-5.5-7-4.5 6-3-4-4 5" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round"/></svg>
-                  </button>
-                  <button type="button" onClick={() => handleFileIconClick('video')} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]" style={{ boxShadow: 'none', border: 'none' }}>
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><polygon points="10,9 16,12 10,15" fill="#1e6e5c"/></svg>
-                  </button>
-                  <button type="button" onClick={() => handleFileIconClick('gif')} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]" style={{ boxShadow: 'none', border: 'none' }}>
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><text x="7" y="17" fontSize="8" fill="#1e6e5c">GIF</text></svg>
-                  </button>
-                  <span className="text-xs text-conexia-green/50 ml-auto">{description.length}/{MAX_DESCRIPTION}</span>
+                {/* Controles + leyenda (leyenda arriba, sin fondo extra) */}
+                    <div className="w-full border border-[#c6e3e4] border-t-0 bg-[#f8fcfc] rounded-b-2xl relative" style={{ margin: 0 }}>
+                      {/* Static error area above legend */}
+                      <div className="px-4 pt-2">
+                        <div className="min-h-[26px] transition-opacity duration-150 flex items-center justify-center" aria-live="polite" aria-atomic="true">
+                          {fileError && (
+                            <div className="bg-red-50 border border-red-200 text-red-600 text-[11px] px-3 py-1 rounded-md text-center shadow-sm w-full" role="alert">
+                              {fileError}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-conexia-green/60 leading-snug mt-1">
+                          {FILES_LEGEND}
+                        </div>
+                      </div>
+                      <div className="h-px bg-[#e0f0f0] mx-3 mt-2" />
+                      <div className="flex items-center gap-3 px-3 pt-2 pb-2">
+                    <button
+                      type="button"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#e0f0f0] text-conexia-green/60 hover:text-conexia-green"
+                      onClick={() => setShowEmoji((v) => !v)}
+                      title="Emoji"
+                    >
+                      <BsEmojiSmile />
+                    </button>
+                    <button type="button" onClick={() => handleFileIconClick('image')} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]" style={{ boxShadow: 'none', border: 'none' }}>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><circle cx="8" cy="10" r="2" fill="#1e6e5c"/><path d="M21 19l-5.5-7-4.5 6-3-4-4 5" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round"/></svg>
+                    </button>
+                    <button type="button" onClick={() => handleFileIconClick('video')} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]" style={{ boxShadow: 'none', border: 'none' }}>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><polygon points="10,9 16,12 10,15" fill="#1e6e5c"/></svg>
+                    </button>
+                    <button type="button" onClick={() => handleFileIconClick('gif')} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]" style={{ boxShadow: 'none', border: 'none' }}>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><text x="7" y="17" fontSize="8" fill="#1e6e5c">GIF</text></svg>
+                    </button>
+                    <span className="text-xs text-conexia-green/50 ml-auto">{description.length}/{MAX_DESCRIPTION}</span>
+                  </div>
                 </div>
                 <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} multiple />
-                {fileError && <div className="text-red-500 text-xs mb-1">{fileError}</div>}
 
                 {showEmoji && (
                   <div className="absolute bottom-20 left-6 z-50">
@@ -406,7 +418,7 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
 
           {/* Footer */}
           <div className="flex flex-col items-end gap-2 p-4 border-t border-[#e0f0f0] bg-[#eef6f6] rounded-b-2xl">
-            <div className="w-full text-xs text-conexia-green/60 mb-2 text-left">{FILES_LEGEND}</div>
+            {/* Legend moved: now displayed directly under the editor area above the icon buttons */}
             <div className="flex items-center justify-end gap-2 w-full">
               <Button type="button" variant="cancel" onClick={handleClose} className="!px-4 !py-2 !rounded-lg">
                 Cancelar
@@ -424,7 +436,72 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
           {submitError && <div className="text-red-500 text-xs text-center pb-2">{submitError}</div>}
         </div>
       </div>
-      <SuccessModal open={showSuccess} />
+      {viewerOpen && files.length > 0 && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn"
+          onClick={closeViewer}
+        >
+          <div
+            className="relative w-full max-w-4xl mx-4 bg-white rounded-2xl border border-[#c6e3e4] flex flex-col items-center justify-center p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeViewer}
+              className="absolute z-20 top-4 right-4 w-9 h-9 flex items-center justify-center bg-white/90 hover:bg-white text-conexia-green rounded-full shadow-md border border-[#c6e3e4] transition-colors focus:outline-none focus:ring-2 focus:ring-conexia-green/40"
+              aria-label="Cerrar visor"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
+            <div className="w-full h-[70vh] flex items-center justify-center relative select-none bg-[#f8fcfc] rounded-xl border border-[#e0f0f0]">
+              {files[viewerIndex].type.startsWith('image/') ? (
+                <img
+                  src={URL.createObjectURL(files[viewerIndex])}
+                  alt={`Preview ${viewerIndex + 1}`}
+                  className="max-h-full max-w-full object-contain"
+                />
+              ) : files[viewerIndex].type.startsWith('video/') ? (
+                <video
+                  src={URL.createObjectURL(files[viewerIndex])}
+                  controls
+                  autoPlay
+                  className="max-h-full max-w-full object-contain"
+                />
+              ) : (
+                <div className="text-white">Archivo</div>
+              )}
+              {files.length > 1 && (
+                <>
+                  <button
+                    onClick={prevViewer}
+                    className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    onClick={nextViewer}
+                    className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center"
+                  >
+                    ›
+                  </button>
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
+                    {files.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setViewerIndex(i)}
+                        className={`w-3 h-3 rounded-full ${i === viewerIndex ? 'bg-white' : 'bg-white/40'}`}
+                        aria-label={`Ir a ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                  <div className="absolute top-3 left-4 text-white/80 text-sm bg-black/40 px-3 py-1 rounded-full">
+                    {viewerIndex + 1} / {files.length}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

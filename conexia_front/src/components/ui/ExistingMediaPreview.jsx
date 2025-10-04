@@ -1,22 +1,24 @@
 "use client";
+import { config } from '@/config';
+
+// Export helper to reuse in modals
+export const buildExistingMediaUrl = (mediaUrl) => {
+  if (!mediaUrl) return '';
+  if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) return mediaUrl;
+  const base = config?.IMAGE_URL || '';
+  if (mediaUrl.startsWith('/uploads')) {
+    const pathWithoutUploads = mediaUrl.replace('/uploads', '');
+    return `${base}/uploads${pathWithoutUploads}`;
+  }
+  if (mediaUrl.startsWith('/')) return `${base}/uploads${mediaUrl}`;
+  return `${base}/uploads/${mediaUrl}`;
+};
 
 export default function ExistingMediaPreview({ media, removedIds, onToggleRemove }) {
   if (!media || media.length === 0) return null;
 
   // Función para construir URL de medios (similar a getMediaUrl)
-  const getMediaUrl = (mediaUrl) => {
-    if (!mediaUrl) return '';
-    if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) return mediaUrl;
-    
-    // Si la URL del backend viene con /uploads, construir URL completa
-    if (mediaUrl.startsWith('/uploads')) {
-      const pathWithoutUploads = mediaUrl.replace('/uploads', '');
-      return `http://localhost:8080/uploads${pathWithoutUploads}`;
-    }
-    
-    if (mediaUrl.startsWith('/')) return `http://localhost:8080/uploads${mediaUrl}`;
-    return `http://localhost:8080/uploads/${mediaUrl}`;
-  };
+  const getMediaUrl = buildExistingMediaUrl;
 
   return (
     <div className="existing-media-preview">

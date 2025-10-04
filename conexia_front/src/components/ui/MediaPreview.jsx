@@ -1,27 +1,27 @@
 "use client";
 import { useState } from 'react';
 
-export default function MediaPreview({ files, onRemove, maxFiles = 5 }) {
+export default function MediaPreview({ files, onRemove, maxFiles = 5, onSelect }) {
   if (!files || files.length === 0) return null;
 
   return (
     <div className="media-preview-grid">
       {files.map((file, index) => (
-        <div key={index} className="media-preview-item">
+        <div key={index} className="media-preview-item" onClick={() => onSelect && onSelect(index)}>
           {file.type.startsWith('image/') ? (
-            <img 
+            <img
               src={URL.createObjectURL(file)}
               alt={`Preview ${index + 1}`}
-              className="preview-media"
+              className="preview-media clickable"
             />
           ) : file.type.startsWith('video/') ? (
-            <video 
+            <video
               src={URL.createObjectURL(file)}
-              className="preview-media"
+              className="preview-media clickable"
               muted
             />
           ) : (
-            <div className="preview-placeholder">
+            <div className="preview-placeholder clickable">
               <span>Archivo</span>
             </div>
           )}
@@ -40,24 +40,25 @@ export default function MediaPreview({ files, onRemove, maxFiles = 5 }) {
       <style jsx>{`
         .media-preview-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-          gap: 8px;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
           margin-top: 8px;
-          padding: 0 4px;
+          padding: 0 4px 4px 4px;
           max-width: 100%;
-          overflow: hidden;
         }
 
         .media-preview-item {
           position: relative;
-          aspect-ratio: 1;
-          border-radius: 6px;
+          border-radius: 10px;
           overflow: hidden;
           border: 2px solid #e0f0f0;
           background: #f8fcfc;
-          max-width: 100px;
-          max-height: 100px;
+          width: 100%;
+          height: 180px; /* Larger preview height */
+          cursor: pointer;
+          transition: transform 0.15s ease;
         }
+        .media-preview-item:hover { transform: scale(1.01); }
 
         .preview-media {
           width: 100%;
@@ -107,6 +108,10 @@ export default function MediaPreview({ files, onRemove, maxFiles = 5 }) {
           padding: 1px 4px;
           border-radius: 8px;
           font-size: 8px;
+        }
+
+        @media (max-width: 640px) {
+          .media-preview-item { height: 150px; }
         }
       `}</style>
     </div>

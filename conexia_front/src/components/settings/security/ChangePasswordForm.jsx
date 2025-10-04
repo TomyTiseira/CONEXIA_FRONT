@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Toast from '@/components/ui/Toast';
 import InputField from '@/components/form/InputField';
 import { validatePassword, validateRepeatPwd } from '@/utils/validation';
 import { updatePassword } from '@/service/user/userFetch';
@@ -17,7 +18,8 @@ export default function ChangePasswordForm() {
 
     const [touched, setTouched] = useState({});
     const [focused, setFocused] = useState({});
-    const [msg, setMsg] = useState(null); // <- mensaje de éxito o error
+    // Eliminamos mensaje inline; usaremos Toast para error y sessionStorage para éxito
+    const [toast, setToast] = useState({ visible: false, type: 'info', message: '' });
     const [show, setShow] = useState({
         current: false,
         new: false,
@@ -62,26 +64,22 @@ export default function ChangePasswordForm() {
 
     try {
         await updatePassword(form);
-        setMsg({ ok: true, text: 'Contraseña actualizada correctamente.' });
-        setForm({ currentPassword: '', newPassword: '', repeatPassword: '' });
-        setTouched({});
-
-        setTimeout(() => {
-        setMsg(null);
+        // Guardar toast para pantalla anterior
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('passwordChangeToast', JSON.stringify({
+            type: 'success',
+            message: 'Contraseña actualizada correctamente.'
+          }));
+        }
         router.push('/settings/security');
-      }, 1000);
     } catch (err) {
         let text = 'Ocurrió un error al cambiar la contraseña.';
-
         if (err.message === 'Invalid current password') {
             text = 'La contraseña actual es incorrecta.';
         } else if (err.message === 'New password cannot be the same as the current password') {
             text = 'La nueva contraseña no puede ser igual a la actual.';
         }
-
-        setMsg({ ok: false, text });
-
-        setTimeout(() => setMsg(null), 4000);
+        setToast({ visible: true, type: 'error', message: text });
     }
     };
 
@@ -166,14 +164,14 @@ export default function ChangePasswordForm() {
               </Button>
             </div>
 
-            {/* Espacio para mensaje de éxito o error */}
-            <div className="min-h-[30px] mt-4 text-center text-sm transition-all duration-300">
-            {msg && (
-                <p className={`${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
-                {msg.text}
-                </p>
-            )}
-            </div>
+                        <Toast
+                            type={toast.type}
+                            message={toast.message}
+                            isVisible={toast.visible}
+                            onClose={() => setToast(t => ({ ...t, visible: false }))}
+                            position="top-center"
+                            duration={5000}
+                        />
         </form>
         </div>
     );

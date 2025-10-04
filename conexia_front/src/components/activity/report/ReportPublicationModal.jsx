@@ -15,7 +15,6 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
   const [otherText, setOtherText] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
-  const [msg, setMsg] = useState(null);
   const handleReasonChange = (reason) => {
     setSelectedReason(reason);
     if (reason !== "Otro") {
@@ -24,7 +23,6 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
   };
   const handleSubmit = () => {
     setError("");
-    setMsg(null);
     if (!selectedReason) {
       setError("Debes seleccionar un motivo.");
       return;
@@ -41,11 +39,12 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
       setError("La descripción es obligatoria.");
       return;
     }
+    // Delegamos totalmente el feedback al padre (toast + cierre)
     onSubmit({
       reason: selectedReason,
       other: selectedReason === "Otro" ? otherText : undefined,
       description,
-    }, setMsg);
+    });
   };
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
@@ -109,15 +108,7 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
           />
         </div>
         {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-        {msg && (
-          <div className={`text-sm mb-2 ${
-            typeof msg === 'object' 
-              ? (msg.ok ? 'text-green-600' : 'text-red-600')
-              : 'text-conexia-green'
-          }`}>
-            {typeof msg === 'object' ? msg.text : msg}
-          </div>
-        )}
+        {/* Feedback visual (éxito/error) ahora se muestra mediante Toast externo y el modal se cierra automáticamente tras el intento */}
         <div className="flex justify-end gap-2 mt-4">
           <Button onClick={onCancel} variant="secondary" disabled={loading}>Cancelar</Button>
           <Button onClick={handleSubmit} variant="primary" disabled={loading}>

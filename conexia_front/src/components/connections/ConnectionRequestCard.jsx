@@ -28,6 +28,9 @@ export default function ConnectionRequestCard({ name, profession, image, request
       // Actualizar el contexto para reflejar el cambio en toda la aplicación
       refreshRequests();
       if (onAccepted) onAccepted(requestId);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('connectionAcceptedToast', JSON.stringify({ type: 'success', message: 'Conexión aceptada.', isVisible: true }));
+      }
     } catch (err) {
       // Opcional: mostrar error
     }

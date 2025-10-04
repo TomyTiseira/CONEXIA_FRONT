@@ -3,6 +3,7 @@ import PublicationCard from './PublicationCard';
 import { getProfilePublications } from '@/service/publications/profilePublicationsFetch';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
+import Toast from '@/components/ui/Toast';
 
 export default function UserActivitiesFeed({ userId }) {
   const [profile, setProfile] = useState(null);
@@ -13,6 +14,7 @@ export default function UserActivitiesFeed({ userId }) {
   const [hasMore, setHasMore] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
   const limit = 10;
+  const [toast, setToast] = useState(null);
 
   // Obtener perfil del usuario a mostrar
   useEffect(() => {
@@ -87,7 +89,7 @@ export default function UserActivitiesFeed({ userId }) {
               <div className="text-conexia-green/70">No hay publicaciones para mostrar.</div>
             )}
             {publications.map(pub => (
-              <PublicationCard key={pub.id} publication={pub} />
+              <PublicationCard key={pub.id} publication={pub} onShowToast={(t)=> setToast(t)} />
             ))}
             {loading && publications.length > 0 && (
               <div className="text-conexia-green/70 py-4 text-center">Cargando más publicaciones...</div>
@@ -96,6 +98,16 @@ export default function UserActivitiesFeed({ userId }) {
               <div className="text-conexia-green/60 py-4 text-center">No hay más publicaciones.</div>
             )}
           </div>
+          {toast && (
+            <Toast
+              type={toast.type}
+              message={toast.message}
+              isVisible={toast.isVisible}
+              onClose={() => setToast(null)}
+              position="top-center"
+              duration={4000}
+            />
+          )}
         </div>
       </div>
     </main>

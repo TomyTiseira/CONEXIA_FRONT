@@ -10,33 +10,39 @@ import { ROLES } from "@/constants/roles";
 export default function DeleteProjectModal({ projectId, onCancel, onProjectDeleted, loading }) {
   const [motivo, setMotivo] = useState("");
   const [error, setError] = useState("");
-  const [msg, setMsg] = useState(null);
+  // Eliminamos mensajes inline; usaremos sessionStorage + redirect toast
   const router = useRouter();
   const { user } = useAuth();
 
+  const [processing, setProcessing] = useState(false);
   const handleSubmit = async () => {
+    if (processing) return;
     setError("");
-    setMsg(null);
     if (!motivo.trim()) {
       setError("El motivo de baja es obligatorio.");
       return;
     }
-
+    setProcessing(true);
     try {
-      await deleteProjectById(projectId, motivo); // Usar 'motivo' como 'reason'
-
-      setMsg({ ok: true, text: "Proyecto dado de baja exitosamente." });
-
-      setTimeout(() => {
-        // Redirigir, actualizar UI o llamar callback
-        onProjectDeleted?.();
-        
-        // Siempre redirigir a la búsqueda de proyectos
-        router.push("/project/search");
-      }, 1000);
+      await deleteProjectById(projectId, motivo);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('projectDeletionToast', JSON.stringify({
+          type: 'success',
+          message: 'Proyecto eliminado correctamente.'
+        }));
+      }
     } catch (err) {
       console.error("Error al eliminar proyecto:", err);
-      setMsg({ ok: false, text: err.message || "Error al dar de baja el proyecto." });
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('projectDeletionToast', JSON.stringify({
+          type: 'error',
+          message: err.message || 'Error al eliminar el proyecto.'
+        }));
+      }
+    } finally {
+      onProjectDeleted?.();
+      onCancel?.();
+      router.push('/project/search');
     }
   };
 
@@ -62,17 +68,14 @@ export default function DeleteProjectModal({ projectId, onCancel, onProjectDelet
             placeholder="Escribe el motivo de la baja..."
           />
         </div>
-        <div className="min-h-[40px] text-center text-sm transition-all duration-300 mb-2">
-          {error && <p className="text-red-600">{error}</p>}
-          {msg && (
-            <p className={msg.ok ? "text-green-600" : "text-red-600"}>{msg.text}</p>
-          )}
+        <div className="min-h-[24px] mb-2 text-center text-sm text-red-600">
+          {error || '\u00A0'}
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="success" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Procesando..." : "Confirmar"}
+          <Button variant="success" onClick={handleSubmit} disabled={loading || processing}>
+            {processing || loading ? "Eliminando..." : "Confirmar"}
           </Button>
-          <Button variant="cancel" onClick={onCancel} disabled={loading}>
+          <Button variant="cancel" onClick={onCancel} disabled={loading || processing}>
             Cancelar
           </Button>
         </div>

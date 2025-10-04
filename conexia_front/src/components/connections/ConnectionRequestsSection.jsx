@@ -1,9 +1,10 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConnectionRequestCard from '@/components/connections/ConnectionRequestCard';
 import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
 import { useRejectConnectionRequest } from '@/hooks/connections/useRejectConnectionRequest';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import Toast from '@/components/ui/Toast';
 
 export default function ConnectionRequestsSection() {
   const { requests, loading, error, refreshRequests } = useConnectionRequests();
@@ -11,6 +12,7 @@ export default function ConnectionRequestsSection() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState(null);
   const { rejectRequest, loading: rejectLoading } = useRejectConnectionRequest();
+  const [toast, setToast] = useState(null);
 
   React.useEffect(() => {
     setLocalRequests(requests);
@@ -18,6 +20,15 @@ export default function ConnectionRequestsSection() {
 
   const handleAccepted = (id) => {
     setLocalRequests((prev) => prev.filter((req) => req.id !== id));
+    // Mostrar toast inmediato solo si no hay flag global (evita duplicados)
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('connectionAcceptedToast');
+      if (!stored) {
+        setToast({ type: 'success', message: 'Conexión aceptada.', isVisible: true });
+      }
+    } else {
+      setToast({ type: 'success', message: 'Conexión aceptada.', isVisible: true });
+    }
   };
   
   const handleOpenRejectModal = (id) => {
@@ -35,11 +46,25 @@ export default function ConnectionRequestsSection() {
       setSelectedRequestId(null);
       // Actualizar el contexto para reflejar el cambio en toda la aplicación
       refreshRequests();
+  setToast({ type: 'rejected', message: 'Solicitud rechazada.', isVisible: true });
     } catch (err) {
       console.error('Error al rechazar solicitud:', err);
-      // Opcional: Mostrar mensaje de error
+      setToast({ type: 'error', message: 'Error al rechazar la solicitud.', isVisible: true });
     }
   };
+
+  // Efecto para consumir flag global (si llegó desde perfil)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = sessionStorage.getItem('connectionAcceptedToast');
+      if (stored) {
+        const data = JSON.parse(stored);
+        setToast(data);
+        sessionStorage.removeItem('connectionAcceptedToast');
+      }
+    } catch {}
+  }, []);
 
   return (
     <div className="w-full">
@@ -78,6 +103,16 @@ export default function ConnectionRequestsSection() {
         cancelButtonText="Cancelar"
         isLoading={rejectLoading}
       />
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={4000}
+        />
+      )}
     </div>
   );
 }

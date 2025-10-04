@@ -16,7 +16,6 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
   const [otherText, setOtherText] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
-  const [msg, setMsg] = useState(null);
   const handleReasonChange = (reason) => {
     setSelectedReason(reason);
     if (reason !== "Otro") {
@@ -25,17 +24,14 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
   };
   const handleSubmit = () => {
     setError("");
-    setMsg(null);
     if (!selectedReason) {
       setError("Debes seleccionar un motivo.");
       return;
     }
-    // Validación para 'Otro'
     if (selectedReason === "Otro" && !otherText.trim()) {
       setError("Debes completar el campo 'Otro'.");
       return;
     }
-    // No permitir enviar otherReason si el motivo no es 'Otro'
     if (selectedReason !== "Otro" && otherText.trim()) {
       setError("No debes completar el campo 'Otro' si el motivo no es 'Otro'.");
       return;
@@ -48,7 +44,7 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
       reason: selectedReason,
       other: selectedReason === "Otro" ? otherText : undefined,
       description,
-    }, setMsg);
+    });
   };
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
@@ -119,11 +115,9 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
             maxLength={500}
           />
         </div>
-  <div className="min-h-[24px] text-center text-sm transition-all duration-300 mb-1">
+        <div className="min-h-[24px] text-center text-sm transition-all duration-300 mb-1">
           {error && <p className="text-red-600">{error}</p>}
-          {msg && (
-            <p className={msg.ok ? 'text-green-600' : 'text-red-600'}>{msg.text}</p>
-          )}
+          {/* Mensajes de resultado ahora se manejan con Toast externo */}
         </div>
         <style jsx>{`
           div[class*='max-h-[95vh]']::-webkit-scrollbar {

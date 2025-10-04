@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Toast from '@/components/ui/Toast';
 import Navbar from '@/components/navbar/Navbar';
 import { MoreVertical } from 'lucide-react';
 import Image from 'next/image';
@@ -27,6 +28,7 @@ export default function ProjectDetail({ projectId }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
+  const [toast, setToast] = useState(null); // Toast para resultado de reporte
   const [menuOpen, setMenuOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -474,9 +476,10 @@ ${messageText.trim()}`;
           <ReportProjectModal
             onCancel={() => setShowReportModal(false)}
             loading={reportLoading}
-            onSubmit={async (data, setMsg) => {
+            onSubmit={async (data) => {
               setReportLoading(true);
-              setMsg(null);
+              // Cerrar modal inmediatamente
+              setShowReportModal(false);
               try {
                 await createProjectReport({
                   projectId: Number(projectId),
@@ -484,19 +487,20 @@ ${messageText.trim()}`;
                   otherReason: data.other,
                   description: data.description,
                 });
-                setMsg({ ok: true, text: 'Proyecto reportado con éxito.' });
-                setTimeout(() => setShowReportModal(false), 1500);
+                setToast({ type: 'success', message: 'Proyecto reportado con éxito.', isVisible: true });
+                setAlreadyReported(true);
               } catch (err) {
-                // Interceptar mensaje exacto del backend
                 const alreadyReportedRegex = /Project with id \d+ has already been reported by user \d+/;
-                if (
+                const conflict = (
                   (err.message && err.message.toLowerCase().includes('conflict')) ||
                   (err.message && alreadyReportedRegex.test(err.message))
-                ) {
-                  setMsg({ ok: false, text: 'Ya has reportado este proyecto.' });
-                  setTimeout(() => setShowReportModal(false), 1500);
+                );
+                if (conflict) {
+                  setToast({ type: 'warning', message: 'Ya has reportado este proyecto.', isVisible: true });
+                  setAlreadyReported(true);
                 } else {
-                  setMsg({ ok: false, text: err.message || 'Error al reportar el proyecto' });
+                  console.error('Error al reportar proyecto:', err);
+                  setToast({ type: 'error', message: 'Error al reportar el proyecto. Inténtalo más tarde.', isVisible: true });
                 }
               } finally {
                 setReportLoading(false);
@@ -510,6 +514,16 @@ ${messageText.trim()}`;
       <MessagingWidget
         avatar={avatar}
       />
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={4000}
+        />
+      )}
     </>
   );
 }
