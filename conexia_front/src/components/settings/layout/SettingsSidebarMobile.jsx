@@ -4,8 +4,11 @@ import { User, ShieldCheck, Eye } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 
+import { CreditCard } from 'lucide-react';
+
 const sections = [
   { id: 'account', label: 'Cuenta', icon: User, path: '/settings/account' },
+  { id: 'payment', label: 'Datos de cobro', icon: CreditCard, path: '/settings/payment-accounts' },
   { id: 'security', label: 'Seguridad', icon: ShieldCheck, path: '/settings/security' },
   { id: 'privacy', label: 'Privacidad', icon: Eye, path: '/settings/privacy' },
 ];

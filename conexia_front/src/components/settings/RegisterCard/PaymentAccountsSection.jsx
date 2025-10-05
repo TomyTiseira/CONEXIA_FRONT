@@ -8,11 +8,15 @@ import AddBankAccountForm from './AddBankAccountForm';
 import AddDigitalAccountForm from './AddDigitalAccountForm';
 import Button from '@/components/ui/Button';
 import { useFetch } from '@/hooks/useFetch';
-import { fetchPaymentAccounts, deleteBankAccount, fetchBankAccountById } from '@/service/payment/paymentFetch';
+import { fetchPaymentAccounts, deleteBankAccount, fetchBankAccountById, editAccountAliasAndName } from '@/service/payment/paymentFetch';
+import EditAccountModal from './EditAccountModal';
 
 export default function PaymentAccountsSection() {
   const { isInitialLoading, hasAnyRole } = useRoleValidation();
   const [toast, setToast] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editAccount, setEditAccount] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
   const [showBankForm, setShowBankForm] = useState(false);
   const [showDigitalForm, setShowDigitalForm] = useState(false);
   const { data: accounts, isLoading, error, refetch } = useFetch(fetchPaymentAccounts);
@@ -69,6 +73,28 @@ export default function PaymentAccountsSection() {
     setShowDigitalForm(type === 'digital');
   };
 
+  // Handler para abrir modal de edición
+  function handleEditAccount(acc) {
+    setEditAccount(acc);
+    setEditModalOpen(true);
+  }
+
+  // Guardar cambios de alias/customName
+  async function handleSaveEditAccount({ alias, customName }) {
+    setEditLoading(true);
+    try {
+      await editAccountAliasAndName(editAccount.id, { alias, customName });
+      setEditModalOpen(false);
+      setEditAccount(null);
+      setToast({ type: 'success', message: 'Datos actualizados correctamente', isVisible: true });
+      refetch();
+    } catch (err) {
+      setToast({ type: 'error', message: err?.message || 'Error al actualizar datos', isVisible: true });
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
   return (
     <section>
       <h2 className="text-2xl font-bold text-conexia-green mb-6">Datos de cobro</h2>
@@ -104,8 +130,23 @@ export default function PaymentAccountsSection() {
                       <span className="font-semibold">{acc.bankName} - {acc.bankAccountType === 'savings' ? 'Caja de ahorro' : 'Cuenta corriente'}</span>
                       <span className="text-gray-700">{acc.accountHolderName}</span>
                       <span className="text-gray-500">CBU: ****{acc.cbuLast4 || (acc.cbu ? acc.cbu.slice(-4) : '')}</span>
+                      {acc.alias && <span className="text-gray-500">Alias: {acc.alias}</span>}
+                      {acc.customName && <span className="text-gray-500">Nombre: {acc.customName}</span>}
                     </div>
                     <div className="flex gap-2 items-center">
+                      {/* Botón editar alias/customName */}
+                      <button
+                        className="group p-2 rounded hover:bg-blue-100 focus:outline-none relative"
+                        onClick={() => handleEditAccount(acc)}
+                        aria-label="Editar"
+                      >
+                        <span className="sr-only">Editar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-blue-600">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.25 2.25 0 1 1 3.182 3.182L7.5 20.213l-4.5 1.5 1.5-4.5 12.362-12.726z" />
+                        </svg>
+                        <span className="absolute z-10 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -top-8 left-1/2 -translate-x-1/2">Editar</span>
+                      </button>
+                      {/* Botón eliminar */}
                       <button
                         className="group p-2 rounded hover:bg-red-100 focus:outline-none relative"
                         onClick={() => handleDeleteBank(acc.id)}
@@ -157,11 +198,23 @@ export default function PaymentAccountsSection() {
                       <span className="font-semibold">{acc.digitalPlatformName}</span>
                       <span className="text-gray-700">{acc.accountHolderName}</span>
                       <span className="text-gray-500">CVU: ****{acc.cvuLast4 || acc.cbuLast4 || (acc.cvu ? acc.cvu.slice(-4) : acc.cbu ? acc.cbu.slice(-4) : '')}</span>
+                      {acc.alias && <span className="text-gray-500">Alias: {acc.alias}</span>}
+                      {acc.customName && <span className="text-gray-500">Nombre: {acc.customName}</span>}
                     </div>
                     <div className="flex gap-2 items-center">
-                      {/* Botón ver detalle con tooltip */}
-                      {/* Botón ver detalle eliminado */}
-                      {/* Botón eliminar con tooltip */}
+                      {/* Botón editar alias/customName */}
+                      <button
+                        className="group p-2 rounded hover:bg-blue-100 focus:outline-none relative"
+                        onClick={() => handleEditAccount(acc)}
+                        aria-label="Editar"
+                      >
+                        <span className="sr-only">Editar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-blue-600">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.25 2.25 0 1 1 3.182 3.182L7.5 20.213l-4.5 1.5 1.5-4.5 12.362-12.726z" />
+                        </svg>
+                        <span className="absolute z-10 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -top-8 left-1/2 -translate-x-1/2">Editar</span>
+                      </button>
+                      {/* Botón eliminar */}
                       <button
                         className="group p-2 rounded hover:bg-red-100 focus:outline-none relative"
                         onClick={() => handleDeleteBank(acc.id)}
@@ -174,6 +227,9 @@ export default function PaymentAccountsSection() {
                         <span className="absolute z-10 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -top-8 left-1/2 -translate-x-1/2">Eliminar</span>
                       </button>
                     </div>
+// ...existing code...
+// Handler para abrir modal de edición y guardar cambios
+// Mover estos handlers antes del return, dentro del componente
                   </li>
                 ))}
               </ul>
@@ -192,6 +248,14 @@ export default function PaymentAccountsSection() {
           position="top-center"
         />
       )}
+      {/* Modal edición alias/customName */}
+      <EditAccountModal
+        open={editModalOpen}
+        onClose={() => { setEditModalOpen(false); setEditAccount(null); }}
+        account={editAccount}
+        onSave={handleSaveEditAccount}
+        loading={editLoading}
+      />
     </section>
   );
 }
