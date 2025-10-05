@@ -544,8 +544,8 @@ ${messageText.trim()}`;
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   Descripción del servicio
                 </h2>
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                <div className="w-full">
+                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed break-words word-wrap overflow-wrap-anywhere">
                     {service.description}
                   </p>
                 </div>
@@ -553,24 +553,22 @@ ${messageText.trim()}`;
 
               {/* Navegación y Acciones */}
               <div className="mt-8 pt-8 border-t">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  {/* Breadcrumbs y botón volver */}
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-row items-center justify-between w-full gap-2">
+                  {/* Botón volver a la izquierda */}
+                  <div className="flex-shrink-0">
                     <BackButton
                       onClick={() => router.back()}
                       text="Volver"
                     />
-                    
                   </div>
-
-                  {/* Botones de acción */}
-                  <div className="flex gap-2">
+                  {/* Botones de acción alineados a la derecha */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {canEdit && (
                       <>
                         <Button
                           variant="primary"
                           onClick={handleEdit}
-                          className="flex items-center gap-2 px-4 py-2 text-sm"
+                          className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
                         >
                           <FaEdit size={14} />
                           Editar
@@ -578,7 +576,7 @@ ${messageText.trim()}`;
                         <Button
                           variant="danger"
                           onClick={handleDelete}
-                          className="flex items-center gap-2 px-4 py-2 text-sm"
+                          className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
                         >
                           <FaTrash size={14} />
                           Eliminar
@@ -590,7 +588,7 @@ ${messageText.trim()}`;
                         variant={service?.hasPendingQuotation ? "danger" : service?.hasActiveQuotation ? "secondary" : "neutral"}
                         onClick={handleQuote}
                         disabled={service?.hasActiveQuotation}
-                        className="flex items-center gap-2 px-4 py-2 text-sm"
+                        className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
                       >
                         <FaHandshake size={14} />
                         {service?.hasPendingQuotation 
