@@ -20,3 +20,4 @@ export * from './service-hirings/useServiceHirings';
 export * from './service-hirings/useQuotations';
 export * from './service-hirings/useQuotationErrorHandler';
 export * from './service-hirings/useHiringStatusUpdater';
+export * from './service-hirings/useContractService';
