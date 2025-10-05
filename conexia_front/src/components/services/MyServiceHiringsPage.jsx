@@ -10,6 +10,7 @@ import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import QuotationModal from '@/components/services/QuotationModal';
 import ServiceHiringActionsModal from '@/components/services/ServiceHiringActionsModal';
+import ContractServiceButton from '@/components/services/ContractServiceButton';
 import Toast from '@/components/ui/Toast';
 
 const STATUS_OPTIONS = [
@@ -17,6 +18,7 @@ const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pendiente' },
   { value: 'quoted', label: 'Cotizado' },
   { value: 'accepted', label: 'Aceptado' },
+  { value: 'approved', label: 'Aprobado' },
   { value: 'rejected', label: 'Rechazado' },
   { value: 'cancelled', label: 'Cancelado' },
   { value: 'negotiating', label: 'Negociando' },
@@ -29,6 +31,7 @@ const getStatusBadge = (statusCode) => {
     pending: { label: 'Pendiente', className: 'bg-yellow-100 text-yellow-800' },
     quoted: { label: 'Cotizado', className: 'bg-blue-100 text-blue-800' },
     accepted: { label: 'Aceptado', className: 'bg-green-100 text-green-800' },
+    approved: { label: 'Aprobado', className: 'bg-conexia-green/10 text-conexia-green' },
     rejected: { label: 'Rechazado', className: 'bg-red-100 text-red-800' },
     cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
     negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
@@ -102,6 +105,18 @@ export default function MyServiceHiringsPage() {
       message: message,
       isVisible: true
     });
+  };
+
+  const handleContractSuccess = (result) => {
+    setToast({
+      type: 'success',
+      message: '¡Servicio contratado exitosamente! Redirigiendo a MercadoPago...',
+      isVisible: true
+    });
+    // Recargar datos para reflejar el nuevo estado
+    setTimeout(() => {
+      loadMyHirings(filters);
+    }, 2000);
   };
 
   const handleCloseToast = () => {
@@ -283,7 +298,7 @@ export default function MyServiceHiringsPage() {
                             {getVigencyDisplay(hiring)}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
                               <button
                                 onClick={() => router.push(`/services/${hiring.service.id}`)}
                                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
@@ -301,6 +316,12 @@ export default function MyServiceHiringsPage() {
                                   <FileText size={16} />
                                 </button>
                               )}
+                              
+                              {/* Botón de contratar servicio */}
+                              <ContractServiceButton 
+                                serviceHiring={hiring}
+                                onContractSuccess={handleContractSuccess}
+                              />
                               
                               {hasActions(hiring) && (
                                 <button
@@ -370,7 +391,7 @@ export default function MyServiceHiringsPage() {
                           {formatDate(hiring.createdAt)}
                         </span>
                         
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <button
                             onClick={() => router.push(`/services/${hiring.service.id}`)}
                             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded"
@@ -396,6 +417,14 @@ export default function MyServiceHiringsPage() {
                             </button>
                           )}
                         </div>
+                      </div>
+                      
+                      {/* Botón de contratar servicio para mobile */}
+                      <div className="mt-3 flex justify-center">
+                        <ContractServiceButton 
+                          serviceHiring={hiring}
+                          onContractSuccess={handleContractSuccess}
+                        />
                       </div>
                     </div>
                   ))}

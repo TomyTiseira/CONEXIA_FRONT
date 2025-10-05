@@ -23,6 +23,31 @@ import GlobalSearchBar from '@/components/common/GlobalSearchBar';
 import { useMessaging } from '@/hooks/messaging/useMessaging'; // ya importado
 import { getMessagingSocket } from '@/lib/socket/messagingSocket'; // <- NUEVO
 
+// Componente separado para el buscador mobile para evitar problemas de hidratación
+function MobileSearchBar() {
+  const [query, setQuery] = useState('');
+  const router = useRouter();
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-[280px]">
+      <input
+        type="text"
+        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-conexia-green"
+        placeholder="Buscar..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
+      />
+    </div>
+  );
+}
+
 export default function NavbarCommunity() {
   const { count: connectionRequestsCount } = useConnectionRequests();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -112,7 +137,7 @@ export default function NavbarCommunity() {
           </Link>
           {/* Search: allow shrink so center area keeps room */}
           <div className="flex items-center h-full min-w-0 flex-1">
-            <GlobalSearchBar className="w-full min-w-[120px] sm:min-w-[200px] lg:min-w-[280px] max-w-[520px]" />
+            <GlobalSearchBar />
           </div>
         </div>
 
@@ -195,45 +220,53 @@ export default function NavbarCommunity() {
       </nav>
 
       {/* Mobile Top Bar */}
-  <nav className="md:hidden flex justify-between items-center px-4 py-2 bg-white shadow h-[56px]">
-        <Link href="/" className="flex items-center gap-2 select-none">
-          <Image src="/logo.png" alt="Conexia" width={30} height={30} />
-        </Link>
-        <div className="flex items-center gap-4 text-conexia-green">
-          <div className="relative">
-            <Link href="/messaging" prefetch={false} className="block">
-              <MessageCircle
-                size={20}
-                className="cursor-pointer hover:text-conexia-green/80"
-              />
+  <nav className="md:hidden bg-white shadow">
+        <div className="flex items-center justify-between px-4 py-2 h-[56px]">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Link href="/" className="flex items-center select-none flex-shrink-0">
+              <Image src="/logo.png" alt="Conexia" width={30} height={30} />
             </Link>
-            {displayUnread > 0 && (
-              <span className={`absolute -top-1 -right-2 min-w-[20px] h-[16px] px-1 rounded-full bg-[#e6424b] text-white leading-[16px] text-center ${mobileBadgeText}`}>
-                {displayUnread}
-              </span>
-            )}
+            {/* Search bar in mobile top row */}
+            <div className="flex-1 min-w-0 mx-2">
+              <MobileSearchBar />
+            </div>
           </div>
-          <Link href="/notifications" prefetch={false} className="block">
-            <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
-          </Link>
-          <div className="relative">
-            <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
-                <div className="w-8 h-8 rounded-full overflow-hidden relative">
-                  <Image
-                    src={
-                      profile && profile.profilePicture
-                        ? `${config.IMAGE_URL}/${profile.profilePicture}`
-                        : defaultAvatar
-                    }
-                    alt="Foto de perfil"
-                    fill
-                    sizes="32px"
-                    className="object-cover"
-                  />
-                </div>
-              <ChevronDown size={16} />
-            </button>
-            {menuOpen && <DropdownUserMenu onLogout={handleLogout} onClose={() => setMenuOpen(false)} />}
+          <div className="flex items-center gap-3 text-conexia-green flex-shrink-0">
+            <div className="relative">
+              <Link href="/messaging" prefetch={false} className="block">
+                <MessageCircle
+                  size={18}
+                  className="cursor-pointer hover:text-conexia-green/80"
+                />
+              </Link>
+              {displayUnread > 0 && (
+                <span className={`absolute -top-1 -right-2 min-w-[18px] h-[14px] px-1 rounded-full bg-[#e6424b] text-white leading-[14px] text-center ${mobileBadgeText}`}>
+                  {displayUnread}
+                </span>
+              )}
+            </div>
+            <Link href="/notifications" prefetch={false} className="block">
+              <Bell size={18} className="cursor-pointer hover:text-conexia-green/80" />
+            </Link>
+            <div className="relative">
+              <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
+                  <div className="w-7 h-7 rounded-full overflow-hidden relative">
+                    <Image
+                      src={
+                        profile && profile.profilePicture
+                          ? `${config.IMAGE_URL}/${profile.profilePicture}`
+                          : defaultAvatar
+                      }
+                      alt="Foto de perfil"
+                      fill
+                      sizes="28px"
+                      className="object-cover"
+                    />
+                  </div>
+                <ChevronDown size={14} />
+              </button>
+              {menuOpen && <DropdownUserMenu onLogout={handleLogout} onClose={() => setMenuOpen(false)} />}
+            </div>
           </div>
         </div>
       </nav>
