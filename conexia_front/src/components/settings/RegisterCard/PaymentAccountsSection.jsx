@@ -10,10 +10,14 @@ import Button from '@/components/ui/Button';
 import { useFetch } from '@/hooks/useFetch';
 import { fetchPaymentAccounts, deleteBankAccount, fetchBankAccountById, editAccountAliasAndName } from '@/service/payment/paymentFetch';
 import EditAccountModal from './EditAccountModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function PaymentAccountsSection() {
   const { isInitialLoading, hasAnyRole } = useRoleValidation();
   const [toast, setToast] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteAccount, setDeleteAccount] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editAccount, setEditAccount] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
@@ -23,24 +27,27 @@ export default function PaymentAccountsSection() {
   if (isInitialLoading) return null;
   if (!hasAnyRole(['user'])) return null;
   // Eliminar cuenta bancaria
-  const handleDeleteBank = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta cuenta bancaria?')) return;
+  // Abrir modal de confirmación
+  function handleRequestDelete(acc, type) {
+    setDeleteAccount({ ...acc, type });
+    setDeleteModalOpen(true);
+  }
+
+  // Confirmar eliminación
+  async function handleConfirmDelete() {
+    setDeleteLoading(true);
     try {
-      const res = await deleteBankAccount(id);
+      await deleteBankAccount(deleteAccount.id);
+      setDeleteModalOpen(false);
+      setDeleteAccount(null);
+      setToast({ type: 'success', message: 'Cuenta eliminada correctamente', isVisible: true });
       refetch();
-      setToast({
-        type: 'success',
-        message: res?.message || 'Cuenta eliminada correctamente',
-        isVisible: true
-      });
     } catch (err) {
-      setToast({
-        type: 'error',
-        message: err?.message || 'Error al eliminar la cuenta',
-        isVisible: true
-      });
+      setToast({ type: 'error', message: err?.message || 'Error al eliminar la cuenta', isVisible: true });
+    } finally {
+      setDeleteLoading(false);
     }
-  };
+  }
 
   // Separar cuentas bancarias y digitales
   const bankAccounts = Array.isArray(accounts)
@@ -149,7 +156,7 @@ export default function PaymentAccountsSection() {
                       {/* Botón eliminar */}
                       <button
                         className="group p-2 rounded hover:bg-red-100 focus:outline-none relative"
-                        onClick={() => handleDeleteBank(acc.id)}
+                        onClick={() => handleRequestDelete(acc, 'bank')}
                         aria-label="Eliminar"
                       >
                         <span className="sr-only">Eliminar</span>
@@ -217,9 +224,17 @@ export default function PaymentAccountsSection() {
                       {/* Botón eliminar */}
                       <button
                         className="group p-2 rounded hover:bg-red-100 focus:outline-none relative"
-                        onClick={() => handleDeleteBank(acc.id)}
+                        onClick={() => handleRequestDelete(acc, 'digital')}
                         aria-label="Eliminar"
                       >
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmDeleteModal
+        open={deleteModalOpen}
+        onClose={() => { setDeleteModalOpen(false); setDeleteAccount(null); }}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLoading}
+        accountType={deleteAccount?.type}
+      />
                         <span className="sr-only">Eliminar</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-red-600">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 7.5V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v1.5M3.75 7.5h16.5M9.75 11.25v6m4.5-6v6M5.25 7.5v12a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-12" />

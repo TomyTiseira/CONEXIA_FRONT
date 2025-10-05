@@ -19,6 +19,7 @@ function validateCUIT(value) {
 }
 
 export default function AddBankAccountForm({ onSubmit, onCancel, existingAccounts = [] }) {
+  const [touched, setTouched] = useState({});
   const [bank, setBank] = useState('');
   const [accountType, setAccountType] = useState('');
   const [cbu, setCBU] = useState('');
@@ -34,26 +35,23 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
+    setTouched({
+      bank: true,
+      accountType: true,
+      cbu: true,
+      alias: true,
+      holder: true,
+      cuit: true,
+      cardName: true
+    });
+    // Validaciones por campo
     if (!bank || !accountType || !holder || !cuit || (!cbu && !alias) || !cardName) {
-      setError('Todos los campos son obligatorios.');
       return;
     }
-    if (cbu && !validateCBU(cbu)) {
-      setError('El CBU debe tener exactamente 22 dígitos.');
-      return;
-    }
-    if (alias && !validateAlias(alias)) {
-      setError('El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).');
-      return;
-    }
-    if (!validateCUIT(cuit)) {
-      setError('El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.');
-      return;
-    }
-    if (existingAccounts.some(acc => acc.cbu === cbu || acc.alias === alias)) {
-      setError('Esta cuenta ya está registrada.');
-      return;
-    }
+    if (cbu && !validateCBU(cbu)) return;
+    if (alias && !validateAlias(alias)) return;
+    if (!validateCUIT(cuit)) return;
+    if (existingAccounts.some(acc => acc.cbu === cbu || acc.alias === alias)) return;
 
     // Buscar el objeto banco seleccionado
     const selectedBank = Array.isArray(banks) ? banks.find(b => b.name === bank) : null;
@@ -101,6 +99,7 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       <div>
         <label className="block text-sm font-semibold mb-1">Banco</label>
         <select value={bank} onChange={e => setBank(e.target.value)} className="w-full border rounded p-2" disabled={banksLoading || banksError}>
+  {touched.bank && !bank && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
           <option value="">{banksLoading ? 'Cargando bancos...' : banksError ? 'Error al cargar bancos' : 'Seleccionar banco'}</option>
           {Array.isArray(banks) && banks.map(b => (
             <option key={b.id} value={b.name}>{b.name}</option>
@@ -111,6 +110,7 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       <div>
         <label className="block text-sm font-semibold mb-1">Tipo de cuenta</label>
         <select value={accountType} onChange={e => setAccountType(e.target.value)} className="w-full border rounded p-2">
+  {touched.accountType && !accountType && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
           <option value="">Seleccionar tipo</option>
           {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
@@ -118,15 +118,20 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       <div>
         <label className="block text-sm font-semibold mb-1">Alias (opcional)</label>
         <input type="text" value={alias} onChange={e => setAlias(e.target.value)} className="w-full border rounded p-2" placeholder="Alias" />
+  {touched.alias && !alias && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
+  {alias && !validateAlias(alias) && <div className="text-red-600 text-xs mt-1">El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos)</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">CBU</label>
         <input type="text" value={cbu} onChange={e => setCBU(e.target.value)} className="w-full border rounded p-2" placeholder="CBU" />
+  {touched.cbu && !cbu && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
+  {cbu && !validateCBU(cbu) && <div className="text-red-600 text-xs mt-1">El CBU debe tener exactamente 22 dígitos numéricos</div>}
   {cbu && (!/^\d{22}$/.test(cbu)) && <div className="text-red-600 text-xs mt-1">El CBU debe tener exactamente 22 dígitos numéricos</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Titular de la cuenta</label>
         <input type="text" value={holder} onChange={e => setHolder(e.target.value)} className="w-full border rounded p-2" placeholder="Nombre completo" />
+  {touched.holder && !holder && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">CUIT/CUIL del titular</label>
@@ -145,6 +150,8 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
           placeholder="XX-XXXXXXXX-X"
           maxLength={13}
         />
+          {touched.cuit && !cuit && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
+          {cuit && !validateCUIT(cuit) && <div className="text-red-600 text-xs mt-1">El CUIT/CUIL debe tener formato XX-XXXXXXXX-X</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Nombre identificador de la tarjeta</label>
@@ -156,6 +163,7 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
           placeholder="Ej: Mi cuenta sueldo, Banco Nación"
           maxLength={40}
         />
+          {touched.cardName && !cardName && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
       </div>
       {error && <div className="text-red-600 text-sm">{error}</div>}
       <div className="flex gap-4 justify-end mt-2">
