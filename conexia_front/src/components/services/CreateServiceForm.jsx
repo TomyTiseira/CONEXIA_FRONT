@@ -11,7 +11,7 @@ import ImageCarousel from '@/components/services/ImageCarousel';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
 import { validateImageFiles } from '@/utils/imageValidation';
 
-export default function CreateServiceForm({ onShowPreview, onClosePreview, showPreview, onShowImageZoom, onConfirmPublish, onShowToast }) {
+export default function CreateServiceForm({ onShowPreview, onClosePreview, showPreview, onShowImageZoom, onConfirmPublish, onShowToast, onShowClearConfirm, onConfirmClear }) {
   const router = useRouter();
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useServiceCategories();
   const { publishService, loading } = useCreateService();
@@ -216,6 +216,13 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
 
   // Función para limpiar borrador
   const clearDraft = () => {
+    if (onShowClearConfirm) {
+      onShowClearConfirm();
+    }
+  };
+
+  // Función para confirmar el limpiado del formulario (expuesta al padre)
+  const handleConfirmClear = () => {
     localStorage.removeItem('serviceDraft');
     setForm({
       title: '',
@@ -227,7 +234,21 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
     });
     setTouched({});
     setErrors({});
+    
+    // Mostrar toast de confirmación si está disponible
+    if (onShowToast) {
+      onShowToast({
+        type: 'success',
+        message: 'Formulario limpiado correctamente',
+        isVisible: true
+      });
+    }
   };
+
+  // Expose handleConfirmClear to parent
+  if (onConfirmClear) {
+    onConfirmClear.current = handleConfirmClear;
+  }
 
   return (
     <div className="w-full space-y-8">
@@ -375,7 +396,11 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
           <Button 
             type="button" 
             variant="cancel" 
-            onClick={() => router.push('/')}
+            onClick={() => {
+              // Limpiar borrador al cancelar
+              localStorage.removeItem('serviceDraft');
+              router.push('/services');
+            }}
             className="sm:w-auto w-full"
           >
             Cancelar
