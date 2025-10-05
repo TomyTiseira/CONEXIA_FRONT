@@ -26,7 +26,10 @@ export default function MediaPreview({ files, onRemove, maxFiles = 5, onSelect }
             </div>
           )}
           <button
-            onClick={() => onRemove(index)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(index);
+            }}
             className="remove-btn"
             type="button"
             title="Eliminar archivo"
@@ -79,24 +82,28 @@ export default function MediaPreview({ files, onRemove, maxFiles = 5, onSelect }
 
         .remove-btn {
           position: absolute;
-          top: 2px;
-          right: 2px;
-          background: rgba(255, 0, 0, 0.8);
+          top: 4px;
+          right: 4px;
+          background: rgba(255, 0, 0, 0.9);
           color: white;
           border: none;
-          width: 16px;
-          height: 16px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
-          font-size: 10px;
+          font-size: 12px;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: background-color 0.2s;
+          transition: all 0.2s;
+          z-index: 10;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .remove-btn:hover {
           background: rgba(255, 0, 0, 1);
+          transform: scale(1.1);
+          box-shadow: 0 3px 6px rgba(0,0,0,0.3);
         }
 
         .order-indicator {
