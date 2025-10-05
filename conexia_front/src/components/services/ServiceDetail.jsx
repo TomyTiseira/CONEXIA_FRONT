@@ -77,8 +77,8 @@ const ServiceDetail = ({ serviceId }) => {
   };
 
   const isOwner = service?.isOwner;
-  const canEdit = isOwner && roleName === ROLES.USER;
-  const canDelete = canEdit;
+  const canEdit = isOwner && roleName === ROLES.USER && service?.status === 'active' && service?.isActive !== false;
+  const canDelete = isOwner && roleName === ROLES.USER && service?.status === 'active' && service?.isActive !== false;
   const canContract = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canViewOnly = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
@@ -123,9 +123,25 @@ const ServiceDetail = ({ serviceId }) => {
         message: 'Servicio eliminado exitosamente. Redirigiendo...'
       });
       
-      // Redirigir al perfil del usuario después de un breve delay
+      // Redirigir inteligentemente según de dónde vino el usuario
       setTimeout(() => {
-        router.push(`/profile/${user?.id}`);
+        // Verificar si hay historial de navegación
+        if (window.history.length > 1) {
+          // Intentar obtener la URL de referencia
+          const referrer = document.referrer;
+          const currentOrigin = window.location.origin;
+          
+          // Si viene de dentro de la aplicación, usar router.back()
+          if (referrer && referrer.startsWith(currentOrigin)) {
+            router.back();
+          } else {
+            // Si no hay referrer o viene de fuera, ir al perfil del usuario
+            router.push(`/profile/${user?.id}`);
+          }
+        } else {
+          // Si no hay historial, ir al perfil del usuario
+          router.push(`/profile/${user?.id}`);
+        }
       }, 1500);
     } catch (error) {
       setShowDeleteModal(false);
@@ -544,8 +560,8 @@ ${messageText.trim()}`;
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   Descripción del servicio
                 </h2>
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                <div className="w-full">
+                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed break-words word-wrap overflow-wrap-anywhere">
                     {service.description}
                   </p>
                 </div>
@@ -553,24 +569,22 @@ ${messageText.trim()}`;
 
               {/* Navegación y Acciones */}
               <div className="mt-8 pt-8 border-t">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  {/* Breadcrumbs y botón volver */}
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-row items-center justify-between w-full gap-2">
+                  {/* Botón volver a la izquierda */}
+                  <div className="flex-shrink-0">
                     <BackButton
                       onClick={() => router.back()}
                       text="Volver"
                     />
-                    
                   </div>
-
-                  {/* Botones de acción */}
-                  <div className="flex gap-2">
+                  {/* Botones de acción alineados a la derecha */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {canEdit && (
                       <>
                         <Button
                           variant="primary"
                           onClick={handleEdit}
-                          className="flex items-center gap-2 px-4 py-2 text-sm"
+                          className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
                         >
                           <FaEdit size={14} />
                           Editar
@@ -578,7 +592,7 @@ ${messageText.trim()}`;
                         <Button
                           variant="danger"
                           onClick={handleDelete}
-                          className="flex items-center gap-2 px-4 py-2 text-sm"
+                          className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
                         >
                           <FaTrash size={14} />
                           Eliminar
@@ -590,7 +604,7 @@ ${messageText.trim()}`;
                         variant={service?.hasPendingQuotation ? "danger" : service?.hasActiveQuotation ? "secondary" : "neutral"}
                         onClick={handleQuote}
                         disabled={service?.hasActiveQuotation}
-                        className="flex items-center gap-2 px-4 py-2 text-sm"
+                        className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
                       >
                         <FaHandshake size={14} />
                         {service?.hasPendingQuotation 

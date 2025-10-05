@@ -6,7 +6,8 @@ import {
   acceptQuotation,
   rejectQuotation,
   cancelServiceHiring,
-  negotiateQuotation
+  negotiateQuotation,
+  contractService
 } from '@/service/service-hirings/serviceHiringsFetch';
 
 /**
@@ -156,6 +157,28 @@ export function useServiceHirings() {
     }
   };
 
+  // Contratar servicio
+  const contractHiring = async (hiringId, paymentMethod) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await contractService(hiringId, paymentMethod);
+      // Actualizar el hiring en el estado local
+      setHirings(prev => prev.map(h => 
+        h.id === hiringId 
+          ? { ...h, status: { ...h.status, code: 'approved' }, availableActions: response.availableActions || [] }
+          : h
+      ));
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     hirings,
     pagination,
@@ -168,6 +191,7 @@ export function useServiceHirings() {
     rejectHiring,
     cancelHiring,
     negotiateHiring,
+    contractHiring,
     setHirings,
     setError
   };

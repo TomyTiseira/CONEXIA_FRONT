@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useServices } from '@/hooks/services';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { fetchServices } from '@/service/services/servicesFetch';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import Link from 'next/link';
@@ -11,72 +11,103 @@ import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import ServiceFilters from './ServiceFilters';
 import ServiceList from './ServiceList';
+import ServiceSearchBar from './ServiceSearchBar';
 
 export default function ServiceSearch() {
   const router = useRouter();
   const { roleName } = useUserStore();
-  const { 
-    services, 
-    pagination, 
-    loading, 
-    error, 
-    filters: currentFilters,
-    loadAllServices,
-    applyFilters 
-  } = useServices();
 
   const canCreateService = roleName === ROLES.USER;
   const canViewHirings = roleName === ROLES.USER;
-  const [isMounted, setIsMounted] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const timeoutRef = useRef(null);
+  
+  // Estado exactamente como ProjectSearch
+  const [filters, setFilters] = useState({ title: '' });
+  const [services, setServices] = useState([]);
+  const [pagination, setPagination] = useState({ 
+    page: 1, 
+    limit: 12, 
+    total: 0, 
+    totalPages: 1, 
+    hasNext: false, 
+    hasPrev: false 
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
 
-  // Cargar todos los servicios UNA SOLA VEZ al montar
+  // Estructura exacta de ProjectSearch
+  const [pendingFilters, setPendingFilters] = useState(filters);
+  const filtersKey = useMemo(() => JSON.stringify(pendingFilters), [pendingFilters]);
+
+  // useEffect para manejar filtros exactamente como ProjectSearch
   useEffect(() => {
-    setIsMounted(true);
-    loadAllServices();
-  }, [loadAllServices]);
-
-  const handleSearch = (newSearchTerm = searchTerm) => {
-    if (!isMounted) return;
+    const applyFilters = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const params = {
+          search: pendingFilters.title.trim() || undefined,
+          page,
+          limit: pageSize
+        };
+        
+        const { services: servicesData, pagination: paginationData } = await fetchServices(params);
+        
+        setServices(servicesData || []);
+        setPagination(paginationData || { 
+          page: 1, 
+          limit: 12, 
+          total: 0, 
+          totalPages: 1, 
+          hasNext: false, 
+          hasPrev: false 
+        });
+      } catch (err) {
+        console.error('Error cargando servicios:', err);
+        setError(err.message);
+        setServices([]);
+        setPagination({ 
+          page: 1, 
+          limit: 12, 
+          total: 0, 
+          totalPages: 1, 
+          hasNext: false, 
+          hasPrev: false 
+        });
+      } finally {
+        setLoading(false);
+      }
+      
+      // CLAVE: setFilters AL FINAL como ProjectSearch
+      setFilters(pendingFilters);
+    };
     
-    applyFilters({ title: newSearchTerm, page: 1 });
-  };
+    applyFilters();
+  }, [filtersKey, page]); // Usar filtersKey exactamente como ProjectSearch
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
 
-    // Limpiar timeout anterior
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
 
-    // Debounce: esperar 500ms antes de buscar
-    timeoutRef.current = setTimeout(() => {
-      handleSearch(value);
-    }, 500);
+
+
+  // handleSearch exactamente como ProjectSearch
+  const handleSearch = (newFilters) => {
+    setPendingFilters(newFilters);
+    setPage(1); // Reiniciar a la primera página al cambiar filtros
   };
 
   const handleClearSearch = () => {
-    setSearchTerm('');
-    // Limpiar timeout pendiente
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    handleSearch('');
+    handleSearch({ title: '' });
   };
 
   const handleFiltersChange = (newFilters) => {
-    if (!isMounted) return;
-    
-    applyFilters({ ...newFilters, page: 1 });
+    // TODO: Implementar filtros adicionales si es necesario
+    console.log('Filtros adicionales:', newFilters);
   };
 
-  const handlePageChange = (page) => {
-    if (!isMounted) return;
-    
-    applyFilters({ page });
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
   };
 
   return (
@@ -94,31 +125,7 @@ export default function ServiceSearch() {
               </div>
               <div className="flex-1 flex justify-center md:justify-center w-full md:w-auto md:ml-6">
                 <div className="w-full max-w-xl">
-                  <div className="flex items-center w-full bg-white rounded-full shadow px-4 py-2 gap-2 border border-conexia-green/20 focus-within:border-conexia-green transition">
-                    <Search className="text-conexia-green/70 mr-1" size={22} />
-                    <input
-                      type="text"
-                      placeholder="Buscar servicios..."
-                      value={searchTerm}
-                      onChange={handleInputChange}
-                      className="flex-1 bg-transparent outline-none text-conexia-green placeholder:text-conexia-green/40 text-base px-2"
-                      disabled={loading}
-                    />
-                    {searchTerm && (
-                      <button
-                        onClick={handleClearSearch}
-                        className="text-conexia-green/40 hover:text-conexia-green/60 ml-2"
-                        type="button"
-                      >
-                        ✕
-                      </button>
-                    )}
-                    {loading && (
-                      <div className="ml-2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-conexia-green"></div>
-                      </div>
-                    )}
-                  </div>
+                  <ServiceSearchBar filters={filters} onSearch={handleSearch} />
                 </div>
               </div>
             </div>
@@ -151,7 +158,7 @@ export default function ServiceSearch() {
               <ServiceFilters 
                 onFiltersChange={handleFiltersChange}
                 loading={loading}
-                currentFilters={currentFilters}
+                currentFilters={filters}
               />
             </aside>
 
@@ -162,7 +169,7 @@ export default function ServiceSearch() {
                 {!loading && services.length > 0 && (
                   <p className="text-gray-600 text-sm">
                     Mostrando {services.length} de {pagination.total} servicio{pagination.total !== 1 ? 's' : ''}
-                    {currentFilters.title && ` para "${currentFilters.title}"`}
+                    {filters.title && ` para "${filters.title}"`}
                   </p>
                 )}
               </div>
