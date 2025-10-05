@@ -8,6 +8,7 @@ import { NotFound } from '@/components/ui';
 import { ROLES } from '@/constants/roles';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
 import ImageZoomModal from '@/components/services/ImageZoomModal';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import Toast from '@/components/ui/Toast';
 import Navbar from '@/components/navbar/Navbar';
 import { ArrowLeft } from 'lucide-react';
@@ -21,7 +22,9 @@ export default function CreateServicePage() {
   const [zoomImages, setZoomImages] = useState([]);
   const [zoomIndex, setZoomIndex] = useState(0);
   const [toast, setToast] = useState(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const confirmPublishRef = useRef();
+  const confirmClearRef = useRef();
 
   const handleShowPreview = (serviceData, serviceCategories) => {
     setPreviewData(serviceData);
@@ -60,6 +63,21 @@ export default function CreateServicePage() {
     setToast(null);
   };
 
+  const handleShowClearConfirm = () => {
+    setShowClearConfirm(true);
+  };
+
+  const handleCloseClearConfirm = () => {
+    setShowClearConfirm(false);
+  };
+
+  const handleConfirmClear = () => {
+    if (confirmClearRef.current) {
+      confirmClearRef.current();
+    }
+    setShowClearConfirm(false);
+  };
+
   return (
     <ProtectedRoute
       allowedRoles={[ROLES.USER]}
@@ -95,6 +113,8 @@ export default function CreateServicePage() {
                 showPreview={showPreview}
                 onConfirmPublish={confirmPublishRef}
                 onShowToast={handleShowToast}
+                onShowClearConfirm={handleShowClearConfirm}
+                onConfirmClear={confirmClearRef}
               />
             </div>
           </section>
@@ -118,6 +138,17 @@ export default function CreateServicePage() {
         onClose={handleCloseImageZoom}
         images={zoomImages}
         initialIndex={zoomIndex}
+      />
+      
+      {/* Modal de confirmación para limpiar formulario */}
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={handleCloseClearConfirm}
+        onConfirm={handleConfirmClear}
+        title="Limpiar formulario"
+        message="¿Estás seguro de que quieres limpiar todos los datos del formulario? Esta acción no se puede deshacer."
+        confirmButtonText="Limpiar"
+        cancelButtonText="Cancelar"
       />
       
       {/* Toast para notificaciones */}

@@ -193,24 +193,58 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
       setFileError('');
       setFiles(uniqueFiles);
     } catch (error) {
+      // Mostrar el error pero no bloquear la funcionalidad
       setFileError(error.message);
+      // Limpiar el error después de 4 segundos para no bloquear permanentemente
+      setTimeout(() => {
+        setFileError('');
+      }, 4000);
     }
   };
 
   const handleRemoveFile = (idx) => {
-    setFiles(files.filter((_, i) => i !== idx));
+    const newFiles = files.filter((_, i) => i !== idx);
+    setFiles(newFiles);
     setFileError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
+    
+    // Ajustar viewerIndex si es necesario
+    if (viewerOpen) {
+      if (newFiles.length === 0) {
+        // Si no quedan archivos, cerrar el viewer
+        setViewerOpen(false);
+        setViewerIndex(0);
+      } else if (viewerIndex >= newFiles.length) {
+        // Si el índice actual es mayor que la nueva longitud, ajustar al último archivo
+        setViewerIndex(newFiles.length - 1);
+      } else if (viewerIndex > idx) {
+        // Si eliminamos un archivo antes del actual, decrementar el índice
+        setViewerIndex(viewerIndex - 1);
+      }
+      // Si viewerIndex < idx, no necesitamos hacer nada
+    }
   };
 
   // Abrir visor de medios en índice específico
   const openViewerAt = (idx) => {
-    setViewerIndex(idx);
-    setViewerOpen(true);
+    if (idx >= 0 && idx < files.length && files[idx]) {
+      setViewerIndex(idx);
+      setViewerOpen(true);
+    }
   };
   const closeViewer = () => setViewerOpen(false);
-  const nextViewer = (e) => { e?.stopPropagation?.(); setViewerIndex((i) => (i + 1) % files.length); };
-  const prevViewer = (e) => { e?.stopPropagation?.(); setViewerIndex((i) => (i - 1 + files.length) % files.length); };
+  const nextViewer = (e) => { 
+    e?.stopPropagation?.(); 
+    if (files.length > 0) {
+      setViewerIndex((i) => (i + 1) % files.length); 
+    }
+  };
+  const prevViewer = (e) => { 
+    e?.stopPropagation?.(); 
+    if (files.length > 0) {
+      setViewerIndex((i) => (i - 1 + files.length) % files.length); 
+    }
+  };
 
   const handlePublish = async () => {
     if (!description.trim() || loading) return;
@@ -256,6 +290,14 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
   useEffect(() => {
     adjustTextareaHeight();
   }, [description]);
+
+  // Efecto para cerrar el viewer si no hay archivos válidos o el índice es inválido
+  useEffect(() => {
+    if (viewerOpen && (files.length === 0 || viewerIndex >= files.length || !files[viewerIndex])) {
+      setViewerOpen(false);
+      setViewerIndex(0);
+    }
+  }, [viewerOpen, files.length, viewerIndex, files]);
 
   if (!open) return null;
 
@@ -453,21 +495,23 @@ export default function PublicationModal({ open, onClose, onPublish, user }) {
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
             </button>
             <div className="w-full h-[70vh] flex items-center justify-center relative select-none bg-[#f8fcfc] rounded-xl border border-[#e0f0f0]">
-              {files[viewerIndex].type.startsWith('image/') ? (
+              {files[viewerIndex] && files[viewerIndex].type.startsWith('image/') ? (
                 <img
                   src={URL.createObjectURL(files[viewerIndex])}
                   alt={`Preview ${viewerIndex + 1}`}
                   className="max-h-full max-w-full object-contain"
                 />
-              ) : files[viewerIndex].type.startsWith('video/') ? (
+              ) : files[viewerIndex] && files[viewerIndex].type.startsWith('video/') ? (
                 <video
                   src={URL.createObjectURL(files[viewerIndex])}
                   controls
                   autoPlay
                   className="max-h-full max-w-full object-contain"
                 />
-              ) : (
+              ) : files[viewerIndex] ? (
                 <div className="text-white">Archivo</div>
+              ) : (
+                <div className="text-white">Error: Archivo no encontrado</div>
               )}
               {files.length > 1 && (
                 <>
