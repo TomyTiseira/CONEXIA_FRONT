@@ -77,8 +77,8 @@ const ServiceDetail = ({ serviceId }) => {
   };
 
   const isOwner = service?.isOwner;
-  const canEdit = isOwner && roleName === ROLES.USER;
-  const canDelete = canEdit;
+  const canEdit = isOwner && roleName === ROLES.USER && service?.status === 'active' && service?.isActive !== false;
+  const canDelete = isOwner && roleName === ROLES.USER && service?.status === 'active' && service?.isActive !== false;
   const canContract = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canViewOnly = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
@@ -123,9 +123,25 @@ const ServiceDetail = ({ serviceId }) => {
         message: 'Servicio eliminado exitosamente. Redirigiendo...'
       });
       
-      // Redirigir al perfil del usuario después de un breve delay
+      // Redirigir inteligentemente según de dónde vino el usuario
       setTimeout(() => {
-        router.push(`/profile/${user?.id}`);
+        // Verificar si hay historial de navegación
+        if (window.history.length > 1) {
+          // Intentar obtener la URL de referencia
+          const referrer = document.referrer;
+          const currentOrigin = window.location.origin;
+          
+          // Si viene de dentro de la aplicación, usar router.back()
+          if (referrer && referrer.startsWith(currentOrigin)) {
+            router.back();
+          } else {
+            // Si no hay referrer o viene de fuera, ir al perfil del usuario
+            router.push(`/profile/${user?.id}`);
+          }
+        } else {
+          // Si no hay historial, ir al perfil del usuario
+          router.push(`/profile/${user?.id}`);
+        }
       }, 1500);
     } catch (error) {
       setShowDeleteModal(false);
