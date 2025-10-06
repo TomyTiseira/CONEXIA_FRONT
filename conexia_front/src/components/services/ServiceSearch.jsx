@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { fetchServices } from '@/service/services/servicesFetch';
+import { useServices } from '@/hooks/services/useServices';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import Link from 'next/link';
@@ -20,94 +20,70 @@ export default function ServiceSearch() {
   const canCreateService = roleName === ROLES.USER;
   const canViewHirings = roleName === ROLES.USER;
   
-  // Estado exactamente como ProjectSearch
-  const [filters, setFilters] = useState({ title: '' });
-  const [services, setServices] = useState([]);
-  const [pagination, setPagination] = useState({ 
-    page: 1, 
-    limit: 12, 
-    total: 0, 
-    totalPages: 1, 
-    hasNext: false, 
-    hasPrev: false 
+  // Estado para filtros
+  const [searchFilters, setSearchFilters] = useState({
+    title: '',
+    category: [],
+    priceMin: '',
+    priceMax: '',
+    sortBy: '',
+    page: 1,
+    limit: 12
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const pageSize = 12;
+  
+  // Usar el hook useServices que ya tiene toda la lógica de filtros
+  const { 
+    services, 
+    pagination, 
+    loading, 
+    error, 
+    filters, 
+    applyFilters,
+    loadAllServices
+  } = useServices();
 
-  // Estructura exacta de ProjectSearch
-  const [pendingFilters, setPendingFilters] = useState(filters);
-  const filtersKey = useMemo(() => JSON.stringify(pendingFilters), [pendingFilters]);
-
-  // useEffect para manejar filtros exactamente como ProjectSearch
+  // Cargar servicios al montar el componente
   useEffect(() => {
-    const applyFilters = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const params = {
-          search: pendingFilters.title.trim() || undefined,
-          page,
-          limit: pageSize
-        };
-        
-        const { services: servicesData, pagination: paginationData } = await fetchServices(params);
-        
-        setServices(servicesData || []);
-        setPagination(paginationData || { 
-          page: 1, 
-          limit: 12, 
-          total: 0, 
-          totalPages: 1, 
-          hasNext: false, 
-          hasPrev: false 
-        });
-      } catch (err) {
-        console.error('Error cargando servicios:', err);
-        setError(err.message);
-        setServices([]);
-        setPagination({ 
-          page: 1, 
-          limit: 12, 
-          total: 0, 
-          totalPages: 1, 
-          hasNext: false, 
-          hasPrev: false 
-        });
-      } finally {
-        setLoading(false);
-      }
-      
-      // CLAVE: setFilters AL FINAL como ProjectSearch
-      setFilters(pendingFilters);
-    };
-    
-    applyFilters();
-  }, [filtersKey, page]); // Usar filtersKey exactamente como ProjectSearch
+    loadAllServices();
+  }, []);
 
 
 
 
 
-  // handleSearch exactamente como ProjectSearch
+  // Manejar búsqueda por título
   const handleSearch = (newFilters) => {
-    setPendingFilters(newFilters);
-    setPage(1); // Reiniciar a la primera página al cambiar filtros
+    const updatedFilters = {
+      ...searchFilters,
+      ...newFilters,
+      page: 1 // Reiniciar a la primera página
+    };
+    setSearchFilters(updatedFilters);
+    applyFilters(updatedFilters);
   };
 
   const handleClearSearch = () => {
     handleSearch({ title: '' });
   };
 
+  // Manejar cambios en filtros (ordenamiento, categorías, precios)
   const handleFiltersChange = (newFilters) => {
-    // TODO: Implementar filtros adicionales si es necesario
-    console.log('Filtros adicionales:', newFilters);
+    const updatedFilters = {
+      ...searchFilters,
+      ...newFilters,
+      page: 1 // Reiniciar a la primera página
+    };
+    setSearchFilters(updatedFilters);
+    applyFilters(updatedFilters);
   };
 
   const handlePageChange = (newPage) => {
-    setPage(newPage);
+    const updatedFilters = {
+      ...searchFilters,
+      page: newPage
+    };
+    setSearchFilters(updatedFilters);
+    applyFilters(updatedFilters);
   };
 
   return (
@@ -125,7 +101,7 @@ export default function ServiceSearch() {
               </div>
               <div className="flex-1 flex justify-center md:justify-center w-full md:w-auto md:ml-6">
                 <div className="w-full max-w-xl">
-                  <ServiceSearchBar filters={filters} onSearch={handleSearch} />
+                  <ServiceSearchBar filters={searchFilters} onSearch={handleSearch} />
                 </div>
               </div>
             </div>
@@ -158,7 +134,7 @@ export default function ServiceSearch() {
               <ServiceFilters 
                 onFiltersChange={handleFiltersChange}
                 loading={loading}
-                currentFilters={filters}
+                currentFilters={searchFilters}
               />
             </aside>
 
@@ -169,7 +145,7 @@ export default function ServiceSearch() {
                 {!loading && services.length > 0 && (
                   <p className="text-gray-600 text-sm">
                     Mostrando {services.length} de {pagination.total} servicio{pagination.total !== 1 ? 's' : ''}
-                    {filters.title && ` para "${filters.title}"`}
+                    {searchFilters.title && ` para "${searchFilters.title}"`}
                   </p>
                 )}
               </div>

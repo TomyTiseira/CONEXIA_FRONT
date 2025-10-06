@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { X, Clock, DollarSign, FileText, AlertCircle } from 'lucide-react';
 import { isExpired, getVigencyStatus } from '@/utils/quotationVigency';
-import { getUnitLabel } from '@/utils/timeUnit';
+import { getUnitLabel, getUnitLabelPlural } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
 
 export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onError }) {
@@ -175,7 +175,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                       Tiempo Estimado
                     </p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {hiring.estimatedHours} horas
+                      {hiring.estimatedHours} {hiring.estimatedTimeUnit ? (hiring.estimatedHours > 1 ? getUnitLabelPlural(hiring.estimatedTimeUnit) : getUnitLabel(hiring.estimatedTimeUnit)) : 'horas'}
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-3">
@@ -228,8 +228,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                 {availableActions.includes('reject') && (
                   <Button
                     onClick={() => handleAction('reject')}
-                    variant="outline"
-                    className="border-red-300 text-red-600 hover:bg-red-50"
+                    className="bg-red-600 hover:bg-red-700 text-white"
                     disabled={actionLoading}
                   >
                     Rechazar
@@ -249,8 +248,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                 {availableActions.includes('cancel') && (
                   <Button
                     onClick={() => handleAction('cancel')}
-                    variant="outline"
-                    className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                    className="bg-gray-600 hover:bg-gray-700 text-white"
                     disabled={actionLoading}
                   >
                     Cancelar Solicitud

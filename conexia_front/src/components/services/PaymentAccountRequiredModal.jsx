@@ -11,7 +11,7 @@ export default function PaymentAccountRequiredModal({ isOpen, onClose }) {
 
   const handleGoToPaymentAccounts = () => {
     // Redireccionar a la sección de configuración de cuenta donde se pueden gestionar las cuentas de pago
-    router.push('/settings/account');
+    router.push('/settings/payment');
     onClose();
   };
 

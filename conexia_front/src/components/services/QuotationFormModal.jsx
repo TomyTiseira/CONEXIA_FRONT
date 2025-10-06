@@ -5,7 +5,7 @@ import { useQuotations } from '@/hooks/service-hirings/useQuotations';
 import { useQuotationErrorHandler } from '@/hooks/service-hirings/useQuotationErrorHandler';
 import { useHiringStatusUpdater } from '@/hooks/service-hirings/useHiringStatusUpdater';
 import { X, DollarSign, Clock, FileText, Calendar } from 'lucide-react';
-import { getUnitLabel } from '@/utils/timeUnit';
+import { getUnitLabel, getTimeUnitOptions } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import PaymentAccountRequiredModal from './PaymentAccountRequiredModal';
@@ -25,6 +25,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
   const [formData, setFormData] = useState({
     quotedPrice: '',
     estimatedHours: '',
+    estimatedTimeUnit: '',
     quotationNotes: '',
     quotationValidityDays: ''
   });
@@ -36,6 +37,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
       setFormData({
         quotedPrice: isEditing && hiring.quotedPrice ? hiring.quotedPrice.toString() : '',
         estimatedHours: isEditing && hiring.estimatedHours ? hiring.estimatedHours.toString() : '',
+        estimatedTimeUnit: isEditing && hiring.estimatedTimeUnit ? hiring.estimatedTimeUnit : '',
         quotationNotes: isEditing && hiring.quotationNotes ? hiring.quotationNotes : '',
         quotationValidityDays: isEditing && hiring.quotationValidityDays ? hiring.quotationValidityDays.toString() : ''
       });
@@ -54,10 +56,15 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
       newErrors.quotedPrice = 'El precio es requerido y debe ser mayor a 0';
     }
 
-    // Validar horas
-    const hours = parseInt(formData.estimatedHours);
-    if (!formData.estimatedHours || isNaN(hours) || hours < 1) {
-      newErrors.estimatedHours = 'Las horas estimadas son requeridas y deben ser al menos 1';
+    // Validar duración estimada
+    const duration = parseInt(formData.estimatedHours);
+    if (!formData.estimatedHours || isNaN(duration) || duration < 1) {
+      newErrors.estimatedHours = 'La duración estimada es requerida y debe ser al menos 1';
+    }
+
+    // Validar unidad de tiempo
+    if (!formData.estimatedTimeUnit) {
+      newErrors.estimatedTimeUnit = 'La unidad de tiempo es requerida';
     }
 
     // Validar vigencia
@@ -87,6 +94,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
       const quotationData = {
         quotedPrice: parseFloat(formData.quotedPrice),
         estimatedHours: parseInt(formData.estimatedHours),
+        estimatedTimeUnit: formData.estimatedTimeUnit,
         quotationNotes: formData.quotationNotes.trim() || undefined,
         quotationValidityDays: parseInt(formData.quotationValidityDays)
       };
@@ -208,24 +216,53 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
 
               {/* Duración estimada */}
               <div>
-                <label htmlFor="estimatedHours" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Clock size={16} className="inline mr-1" />
-                  Duración aprox. del servicio (horas) *
+                  Duración aprox. del servicio *
                 </label>
-                <input
-                  type="number"
-                  id="estimatedHours"
-                  min="1"
-                  value={formData.estimatedHours}
-                  onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                    errors.estimatedHours ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="1"
-                  disabled={loading}
-                />
-                {errors.estimatedHours && (
-                  <p className="text-sm text-red-600 mt-1">{errors.estimatedHours}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      type="number"
+                      id="estimatedHours"
+                      min="1"
+                      value={formData.estimatedHours}
+                      onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                        errors.estimatedHours ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      placeholder="1"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <select
+                      id="estimatedTimeUnit"
+                      value={formData.estimatedTimeUnit}
+                      onChange={(e) => handleInputChange('estimatedTimeUnit', e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                        errors.estimatedTimeUnit ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      disabled={loading}
+                    >
+                      <option value="">Seleccionar unidad</option>
+                      {getTimeUnitOptions().map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {(errors.estimatedHours || errors.estimatedTimeUnit) && (
+                  <div className="mt-1">
+                    {errors.estimatedHours && (
+                      <p className="text-sm text-red-600">{errors.estimatedHours}</p>
+                    )}
+                    {errors.estimatedTimeUnit && (
+                      <p className="text-sm text-red-600">{errors.estimatedTimeUnit}</p>
+                    )}
+                  </div>
                 )}
                 <p className="text-xs text-gray-500 mt-1">
                   Tiempo aproximado que te tomará completar el trabajo

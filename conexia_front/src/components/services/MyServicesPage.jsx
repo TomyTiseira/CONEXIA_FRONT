@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchUserServices } from '@/service/services/servicesFetch';
 import { fetchMyServiceRequests } from '@/service/service-hirings/serviceHiringsFetch';
 import { useUserStore } from '@/store/userStore';
-import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, Eye } from 'lucide-react';
+import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, Eye, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { getUnitLabel } from '@/utils/timeUnit';
+import { config } from '@/config';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import Toast from '@/components/ui/Toast';
@@ -23,6 +24,10 @@ export default function MyServicesPage() {
   const [filters, setFilters] = useState({
     page: 1,
     includeInactive: false
+  });
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'asc'
   });
 
   useEffect(() => {
@@ -95,12 +100,76 @@ export default function MyServicesPage() {
     }));
   };
 
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) {
+      return <ChevronsUpDown size={14} className="text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp size={14} className="text-conexia-green" />
+      : <ChevronDown size={14} className="text-conexia-green" />;
+  };
+
+  const sortedServices = React.useMemo(() => {
+    if (!sortConfig.key) return services;
+    
+    return [...services].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortConfig.key) {
+        case 'price':
+          aValue = a.price || 0;
+          bValue = b.price || 0;
+          break;
+        case 'requests':
+          aValue = (requestsCounts[a.id] || { total: 0 }).total;
+          bValue = (requestsCounts[b.id] || { total: 0 }).total;
+          break;
+        case 'updatedAt':
+          aValue = new Date(a.updatedAt);
+          bValue = new Date(b.updatedAt);
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [services, sortConfig, requestsCounts]);
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  const getImageSrc = (imagePath) => {
+    if (!imagePath) {
+      return '/default_project.jpeg';
+    }
+    
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Usar config.IMAGE_URL como en proyectos y quitar el /uploads del path
+    const cleanPath = imagePath.startsWith('/uploads/') ? imagePath.substring(9) : imagePath;
+    return `${config.IMAGE_URL}/${cleanPath}`;
   };
 
   const getServiceStatusBadge = (status) => {
@@ -251,14 +320,41 @@ export default function MyServicesPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Estado
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Precio
+                        <th 
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors select-none group"
+                          onClick={() => handleSort('price')}
+                          title="Click para ordenar por precio"
+                        >
+                          <div className="flex items-center gap-2">
+                            Precio
+                            <span className="group-hover:scale-110 transition-transform">
+                              {getSortIcon('price')}
+                            </span>
+                          </div>
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Solicitudes
+                        <th 
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors select-none group"
+                          onClick={() => handleSort('requests')}
+                          title="Click para ordenar por número de solicitudes"
+                        >
+                          <div className="flex items-center gap-2">
+                            Solicitudes
+                            <span className="group-hover:scale-110 transition-transform">
+                              {getSortIcon('requests')}
+                            </span>
+                          </div>
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Última Actualización
+                        <th 
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors select-none group"
+                          onClick={() => handleSort('updatedAt')}
+                          title="Click para ordenar por fecha de actualización"
+                        >
+                          <div className="flex items-center gap-2">
+                            Última Actualización
+                            <span className="group-hover:scale-110 transition-transform">
+                              {getSortIcon('updatedAt')}
+                            </span>
+                          </div>
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Acciones
@@ -266,7 +362,7 @@ export default function MyServicesPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {services.map((service) => {
+                      {sortedServices.map((service) => {
                         const counts = requestsCounts[service.id] || { total: 0, pending: 0 };
                         
                         return (
@@ -334,9 +430,22 @@ export default function MyServicesPage() {
                   </table>
                 </div>
 
+                {/* Paginación para desktop */}
+                {pagination.totalPages > 1 && (
+                  <div className="hidden md:block px-6 py-4 border-t border-gray-200 flex justify-center">
+                    <Pagination
+                      currentPage={pagination.page || 1}
+                      totalPages={pagination.totalPages || 1}
+                      hasNextPage={pagination.hasNext || false}
+                      hasPreviousPage={pagination.hasPrev || false}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
+
                 {/* Cards para mobile */}
                 <div className="md:hidden space-y-4 p-4">
-                  {services.map((service) => {
+                  {sortedServices.map((service) => {
                     const counts = requestsCounts[service.id] || { total: 0, pending: 0 };
                     
                     return (
@@ -347,8 +456,11 @@ export default function MyServicesPage() {
                               {service.images && service.images.length > 0 ? (
                                 <img
                                   className="h-12 w-12 rounded-lg object-cover"
-                                  src={service.images[0]}
+                                  src={getImageSrc(service.images[0])}
                                   alt=""
+                                  onError={(e) => {
+                                    e.target.src = '/default_project.jpeg';
+                                  }}
                                 />
                               ) : (
                                 <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
@@ -418,9 +530,9 @@ export default function MyServicesPage() {
                   })}
                 </div>
 
-                {/* Paginación */}
+                {/* Paginación para mobile */}
                 {pagination.totalPages > 1 && (
-                  <div className="px-6 py-4 border-t border-gray-200 flex justify-center">
+                  <div className="md:hidden px-4 py-4 flex justify-center">
                     <Pagination
                       currentPage={pagination.page || 1}
                       totalPages={pagination.totalPages || 1}

@@ -10,6 +10,7 @@ import ImageUploadZone from '@/components/services/ImageUploadZone';
 import ImageCarousel from '@/components/services/ImageCarousel';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
 import { validateImageFiles } from '@/utils/imageValidation';
+import { getTimeUnitOptions } from '@/utils/timeUnit';
 
 export default function CreateServiceForm({ onShowPreview, onClosePreview, showPreview, onShowImageZoom, onConfirmPublish, onShowToast, onShowClearConfirm, onConfirmClear }) {
   const router = useRouter();
@@ -341,11 +342,7 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
             <SelectField
               name="timeUnit"
               placeholder="Seleccionar unidad"
-              options={[
-                { value: 'hours', label: 'Horas' },
-                { value: 'days', label: 'Días' },
-                { value: 'weeks', label: 'Semanas' }
-              ]}
+              options={getTimeUnitOptions()}
               value={form.timeUnit}
               onChange={(e) => handleChange('timeUnit', e.target.value)}
               onBlur={() => handleBlur('timeUnit')}
