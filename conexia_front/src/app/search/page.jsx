@@ -93,6 +93,28 @@ function SearchResultsPageContent() {
         </div>
         {/* Contenido principal */}
         <section className="flex-1 flex flex-col gap-12">
+          {/* Mensaje cuando no hay resultados */}
+          {projects.length === 0 && people.length === 0 && services.length === 0 && query.trim() && (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center max-w-md mx-auto px-6">
+                <div className="w-20 h-20 bg-conexia-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-conexia-green/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-conexia-green mb-3">
+                  No encontramos resultados
+                </h3>
+                <p className="text-gray-600 mb-4 leading-relaxed">
+                  No hay coincidencias para "<span className="font-medium text-conexia-green">{query}</span>" en proyectos, personas o servicios.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Intenta con términos diferentes o revisa la ortografía de tu búsqueda.
+                </p>
+              </div>
+            </div>
+          )}
+          
           {/* Proyectos */}
           {projects.length > 0 && (
             <div ref={projectsSectionRef}>
@@ -162,28 +184,44 @@ function SearchSidebar({ sections, selected, onSelect }) {
       style={{ minWidth: '320px', maxWidth: 440, width: '100%', height: 'fit-content', minHeight: 320 }}
     >
       <h2 className="text-conexia-green font-semibold text-xl tracking-tight mb-4">Panel de búsqueda</h2>
-      <nav className="flex flex-col gap-2">
-        {sections.map(({ key, label, icon: Icon, description }) => (
-          <div key={key} className="relative w-full">
-            <button
-              onClick={() => onSelect(key)}
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left hover:bg-conexia-green/10 focus:outline-none border border-transparent w-full ${
-                selected === key ? 'bg-conexia-green/10 border-conexia-green text-conexia-green font-semibold shadow-md' : 'text-conexia-green/80'
-              }`}
-              aria-current={selected === key}
-              style={{ minHeight: 56 }}
-            >
-              <Icon size={22} className="shrink-0 text-conexia-green/80" />
-              <span className="flex flex-col items-start w-full relative">
-                <span className="text-base leading-tight flex items-center">
-                  {label}
+      {sections.length > 0 ? (
+        <nav className="flex flex-col gap-2">
+          {sections.map(({ key, label, icon: Icon, description }) => (
+            <div key={key} className="relative w-full">
+              <button
+                onClick={() => onSelect(key)}
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left hover:bg-conexia-green/10 focus:outline-none border border-transparent w-full ${
+                  selected === key ? 'bg-conexia-green/10 border-conexia-green text-conexia-green font-semibold shadow-md' : 'text-conexia-green/80'
+                }`}
+                aria-current={selected === key}
+                style={{ minHeight: 56 }}
+              >
+                <Icon size={22} className="shrink-0 text-conexia-green/80" />
+                <span className="flex flex-col items-start w-full relative">
+                  <span className="text-base leading-tight flex items-center">
+                    {label}
+                  </span>
+                  <span className="text-xs text-conexia-green/60 leading-tight">{description}</span>
                 </span>
-                <span className="text-xs text-conexia-green/60 leading-tight">{description}</span>
-              </span>
-            </button>
+              </button>
+            </div>
+          ))}
+        </nav>
+      ) : (
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-conexia-green/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-conexia-green/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p className="text-conexia-green/80 text-sm font-medium mb-2">Sin resultados</p>
+            <p className="text-conexia-green/60 text-xs leading-relaxed">
+              No se encontraron coincidencias en ninguna categoría
+            </p>
           </div>
-        ))}
-      </nav>
+        </div>
+      )}
     </aside>
   );
 }
