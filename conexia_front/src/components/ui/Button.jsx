@@ -9,6 +9,7 @@ export default function Button({
     onClick,
     className = '',
     variant = 'primary', // 'primary' | 'secondary' | 'neutral' | 'informative' | 'danger' | 'success'
+    loading,
     ...props
     }) {
     const baseStyles =
@@ -30,12 +31,14 @@ export default function Button({
         connect: 'bg-[#388181ff] text-white hover:bg-[#1f6363ff]',
     };
 
+    // No pasar 'loading' al DOM
+    const { ...restProps } = props;
     return (
         <button
         type={type}
         onClick={onClick}
         className={clsx(baseStyles, variants[variant], className)}
-        {...props}
+        {...restProps}
         >
         {children}
         </button>

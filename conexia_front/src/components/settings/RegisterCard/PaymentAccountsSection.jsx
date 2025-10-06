@@ -15,39 +15,48 @@ import ConfirmDeleteModal from './ConfirmDeleteModal';
 export default function PaymentAccountsSection() {
   const { isInitialLoading, hasAnyRole } = useRoleValidation();
   const [toast, setToast] = useState(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteAccount, setDeleteAccount] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editAccount, setEditAccount] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
   const [showBankForm, setShowBankForm] = useState(false);
   const [showDigitalForm, setShowDigitalForm] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteAccount, setDeleteAccount] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { data: accounts, isLoading, error, refetch } = useFetch(fetchPaymentAccounts);
   if (isInitialLoading) return null;
   if (!hasAnyRole(['user'])) return null;
-  // Eliminar cuenta bancaria
+
   // Abrir modal de confirmación
-  function handleRequestDelete(acc, type) {
-    setDeleteAccount({ ...acc, type });
+  const handleRequestDelete = (acc) => {
+    setDeleteAccount(acc);
     setDeleteModalOpen(true);
-  }
+  };
 
   // Confirmar eliminación
-  async function handleConfirmDelete() {
+  const handleConfirmDelete = async () => {
+    if (!deleteAccount) return;
     setDeleteLoading(true);
     try {
       await deleteBankAccount(deleteAccount.id);
       setDeleteModalOpen(false);
       setDeleteAccount(null);
-      setToast({ type: 'success', message: 'Cuenta eliminada correctamente', isVisible: true });
       refetch();
+      setToast({
+        type: 'success',
+        message: 'Cuenta eliminada correctamente',
+        isVisible: true
+      });
     } catch (err) {
-      setToast({ type: 'error', message: err?.message || 'Error al eliminar la cuenta', isVisible: true });
+      setToast({
+        type: 'error',
+        message: err?.message || 'Error al eliminar la cuenta',
+        isVisible: true
+      });
     } finally {
       setDeleteLoading(false);
     }
-  }
+  };
 
   // Separar cuentas bancarias y digitales
   const bankAccounts = Array.isArray(accounts)
@@ -68,8 +77,12 @@ export default function PaymentAccountsSection() {
   const handleAddDigital = (msg) => {
     setShowDigitalForm(false);
     refetch();
-    if (msg) {
+    if (typeof msg === 'string') {
       setToast({ type: 'success', message: msg, isVisible: true });
+    } else if (msg && typeof msg.message === 'string') {
+      setToast({ type: 'success', message: msg.message, isVisible: true });
+    } else {
+      setToast({ type: 'success', message: 'Cuenta digital registrada correctamente', isVisible: true });
     }
   };
 
@@ -153,18 +166,18 @@ export default function PaymentAccountsSection() {
                         </svg>
                         <span className="absolute z-10 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -top-8 left-1/2 -translate-x-1/2">Editar</span>
                       </button>
-                      {/* Botón eliminar */}
-                      <button
-                        className="group p-2 rounded hover:bg-red-100 focus:outline-none relative"
-                        onClick={() => handleRequestDelete(acc, 'bank')}
+                      <Button
+                        variant="delete"
+                        type="button"
+                        onClick={() => handleRequestDelete(acc)}
+                        className="p-2 rounded-md bg-transparent hover:bg-red-500/20 active:bg-red-500/30 transition-colors flex items-center justify-center group focus:outline-none"
                         aria-label="Eliminar"
                       >
                         <span className="sr-only">Eliminar</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-red-600">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 7.5V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v1.5M3.75 7.5h16.5M9.75 11.25v6m4.5-6v6M5.25 7.5v12a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-12" />
                         </svg>
-                        <span className="absolute z-10 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -top-8 left-1/2 -translate-x-1/2">Eliminar</span>
-                      </button>
+                      </Button>
                     </div>
                   </li>
                 ))}
@@ -206,7 +219,7 @@ export default function PaymentAccountsSection() {
                       <span className="text-gray-700">{acc.accountHolderName}</span>
                       <span className="text-gray-500">CVU: ****{acc.cvuLast4 || acc.cbuLast4 || (acc.cvu ? acc.cvu.slice(-4) : acc.cbu ? acc.cbu.slice(-4) : '')}</span>
                       {acc.alias && <span className="text-gray-500">Alias: {acc.alias}</span>}
-                      {acc.customName && <span className="text-gray-500">Nombre: {acc.customName}</span>}
+                      {acc.customName && <span className="text-gray-500">Nombre identificador: {acc.customName}</span>}
                     </div>
                     <div className="flex gap-2 items-center">
                       {/* Botón editar alias/customName */}
@@ -222,29 +235,19 @@ export default function PaymentAccountsSection() {
                         <span className="absolute z-10 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -top-8 left-1/2 -translate-x-1/2">Editar</span>
                       </button>
                       {/* Botón eliminar */}
-                      <button
-                        className="group p-2 rounded hover:bg-red-100 focus:outline-none relative"
-                        onClick={() => handleRequestDelete(acc, 'digital')}
+                      <Button
+                        variant="delete"
+                        type="button"
+                        onClick={() => handleRequestDelete(acc)}
+                        className="p-2 rounded-md bg-transparent hover:bg-red-500/20 active:bg-red-500/30 transition-colors flex items-center justify-center group focus:outline-none"
                         aria-label="Eliminar"
                       >
-      {/* Modal de confirmación de eliminación */}
-      <ConfirmDeleteModal
-        open={deleteModalOpen}
-        onClose={() => { setDeleteModalOpen(false); setDeleteAccount(null); }}
-        onConfirm={handleConfirmDelete}
-        loading={deleteLoading}
-        accountType={deleteAccount?.type}
-      />
                         <span className="sr-only">Eliminar</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-red-600">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 7.5V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v1.5M3.75 7.5h16.5M9.75 11.25v6m4.5-6v6M5.25 7.5v12a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-12" />
                         </svg>
-                        <span className="absolute z-10 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -top-8 left-1/2 -translate-x-1/2">Eliminar</span>
-                      </button>
+                      </Button>
                     </div>
-// ...existing code...
-// Handler para abrir modal de edición y guardar cambios
-// Mover estos handlers antes del return, dentro del componente
                   </li>
                 ))}
               </ul>
@@ -252,7 +255,13 @@ export default function PaymentAccountsSection() {
           </div>
         </div>
       </div>
-      {/* Modal de detalle eliminado */}
+      {/* Modal de confirmación de eliminación (solo una vez, fuera de los map) */}
+      <ConfirmDeleteModal
+        open={deleteModalOpen}
+        onClose={() => { setDeleteModalOpen(false); setDeleteAccount(null); }}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLoading}
+      />
       {/* Toast para notificaciones */}
       {toast?.isVisible && (
         <Toast

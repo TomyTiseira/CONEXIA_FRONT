@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 
 export default function EditAccountModal({ open, onClose, account, onSave, loading }) {
   const [alias, setAlias] = useState(account?.alias || '');
   const [customName, setCustomName] = useState(account?.customName || '');
   const [error, setError] = useState('');
+
+  // Sincronizar los valores cuando cambia la cuenta a editar
+  useEffect(() => {
+    setAlias(account?.alias || '');
+    setCustomName(account?.customName || '');
+  }, [account]);
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -48,7 +54,7 @@ export default function EditAccountModal({ open, onClose, account, onSave, loadi
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <div className="flex gap-2 justify-end mt-2">
             <Button type="button" variant="neutral" onClick={onClose} disabled={loading}>Cancelar</Button>
-            <Button type="submit" variant="primary" loading={loading}>Guardar</Button>
+            <Button type="submit" variant="primary" {...(loading ? { loading: true } : {})}>Guardar</Button>
           </div>
         </form>
       </div>

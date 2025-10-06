@@ -38,7 +38,7 @@ export async function fetchDigitalPlatforms() {
   return response.data;
 }
 
-export async function addBankAccount({ bankId, bankAccountType, cbu, accountHolderName, cuilCuit, alias }) {
+export async function addBankAccount({ bankId, bankAccountType, cbu, accountHolderName, cuilCuit, alias, customName }) {
   const body = {
     bankId,
     bankAccountType,
@@ -47,7 +47,8 @@ export async function addBankAccount({ bankId, bankAccountType, cbu, accountHold
     cuilCuit
   };
   if (alias) body.alias = alias;
-  if (arguments[0].cardName) body.cardName = arguments[0].cardName;
+  // No enviar cardName, solo customName
+  if (customName) body.customName = customName;
   const res = await fetchWithRefresh(`${config.API_URL}/payment-accounts/bank-account`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -62,7 +63,7 @@ export async function addBankAccount({ bankId, bankAccountType, cbu, accountHold
   return response.data;
 }
 
-export async function addDigitalAccount({ digitalPlatformId, cvu, accountHolderName, cuilCuit, alias }) {
+export async function addDigitalAccount({ digitalPlatformId, cvu, accountHolderName, cuilCuit, alias, customName }) {
   const body = {
     digitalPlatformId,
     cvu,
@@ -70,7 +71,8 @@ export async function addDigitalAccount({ digitalPlatformId, cvu, accountHolderN
     cuilCuit
   };
   if (alias) body.alias = alias;
-  if (arguments[0].cardName) body.cardName = arguments[0].cardName;
+  // No enviar cardName, solo customName
+  if (customName) body.customName = customName;
   const res = await fetchWithRefresh(`${config.API_URL}/payment-accounts/digital-account`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

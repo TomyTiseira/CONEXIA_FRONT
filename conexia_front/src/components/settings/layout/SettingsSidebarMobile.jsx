@@ -8,7 +8,7 @@ import { CreditCard } from 'lucide-react';
 
 const sections = [
   { id: 'account', label: 'Cuenta', icon: User, path: '/settings/account' },
-  { id: 'payment', label: 'Datos de cobro', icon: CreditCard, path: '/settings/payment-accounts' },
+  { id: 'payment', label: 'Datos de cobro', icon: CreditCard, path: '/settings/payment' },
   { id: 'security', label: 'Seguridad', icon: ShieldCheck, path: '/settings/security' },
   { id: 'privacy', label: 'Privacidad', icon: Eye, path: '/settings/privacy' },
 ];

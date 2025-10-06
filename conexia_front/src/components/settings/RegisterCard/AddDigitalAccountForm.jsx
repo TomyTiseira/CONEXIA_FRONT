@@ -39,24 +39,56 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
+    // Validar campos obligatorios y marcar como tocados
     setTouched({
       platform: true,
       cvu: true,
-      alias: true,
       holder: true,
-      cuit: true,
-      customName: true
+      cuit: true
     });
-    // Validaciones por campo
-    if (!platform || !cvu || !holder || !cuit) {
+    const missingFields = [];
+    if (!platform) missingFields.push('platform');
+    if (!cvu) missingFields.push('cvu');
+    if (!holder) missingFields.push('holder');
+    if (!cuit) missingFields.push('cuit');
+    if (missingFields.length > 0) {
+      setError('Se deben cargar todos los datos obligatorios del formulario.');
       return;
     }
-    if (!validateCVU(cvu)) return;
-    if (alias && !validateAlias(alias)) return;
-    if (!validateCUIT(cuit)) return;
-    if (existingAccounts.some(acc => acc.cvu === cvu || acc.alias === alias)) return;
-    if (onSubmit) {
-      onSubmit({ platform, cvu, alias, holder, cuit, customName });
+    if (!validateCVU(cvu)) {
+      setError('El CVU debe tener exactamente 22 dígitos.');
+      return;
+    }
+    if (!validateAlias(alias)) {
+      setError('El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).');
+      return;
+    }
+    if (!validateCUIT(cuit)) {
+      setError('El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.');
+      return;
+    }
+    if (existingAccounts.some(acc => acc.cvu === cvu || acc.alias === alias)) {
+      setError('Esta cuenta ya está registrada.');
+      return;
+    }
+    // Enviar datos correctamente al backend
+    const selectedPlatform = Array.isArray(platforms) ? platforms.find(p => p.name === platform) : null;
+    if (!selectedPlatform) {
+      setError('Plataforma inválida.');
+      return;
+    }
+    try {
+      const result = await addDigitalAccount({
+        digitalPlatformId: selectedPlatform.id,
+        cvu,
+        alias: alias || undefined,
+        accountHolderName: holder,
+        cuilCuit: cuit,
+        customName
+      });
+      if (onSubmit) onSubmit(result?.message || 'Cuenta digital registrada correctamente');
+    } catch (err) {
+      setError(err?.message || 'Error al registrar la cuenta digital');
     }
   };
 
@@ -67,7 +99,6 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
       <div>
         <label className="block text-sm font-semibold mb-1">Plataforma</label>
         <select value={platform} onChange={e => { setPlatform(e.target.value); setTouched(t => ({...t, platform: true})); }} className="w-full border rounded p-2" disabled={platformsLoading || platformsError}>
-  {touched.platform && !platform && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
           <option value="">{platformsLoading ? 'Cargando plataformas...' : platformsError ? 'Error al cargar plataformas' : 'Seleccionar plataforma'}</option>
           {Array.isArray(platforms) && platforms.map(p => (
             <option key={p.id} value={p.name}>{p.name}</option>
@@ -80,15 +111,11 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
       <div>
         <label className="block text-sm font-semibold mb-1">Alias (opcional)</label>
         <input type="text" value={alias} onChange={e => { setAlias(e.target.value); }} className="w-full border rounded p-2" placeholder="Alias" />
-  {touched.alias && !alias && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
-  {alias && !validateAlias(alias) && <div className="text-red-600 text-xs mt-1">El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos)</div>}
       </div>
       {/* CVU */}
       <div>
         <label className="block text-sm font-semibold mb-1">CVU</label>
         <input type="text" value={cvu} onChange={e => { setCVU(e.target.value); setTouched(t => ({...t, cvu: true})); }} className="w-full border rounded p-2" placeholder="CVU" />
-  {touched.cvu && !cvu && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
-  {cvu && !validateCVU(cvu) && <div className="text-red-600 text-xs mt-1">El CVU debe tener exactamente 22 dígitos numéricos</div>}
   {cvu && (!/^\d{22}$/.test(cvu)) && <div className="text-red-600 text-xs mt-1">El CVU debe tener exactamente 22 dígitos numéricos</div>}
         {touched.cvu && !cvu && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
       </div>
@@ -96,7 +123,6 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
       <div>
         <label className="block text-sm font-semibold mb-1">Titular de la cuenta</label>
         <input type="text" value={holder} onChange={e => { setHolder(e.target.value); setTouched(t => ({...t, holder: true})); }} className="w-full border rounded p-2" placeholder="Nombre completo" />
-  {touched.holder && !holder && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
         {touched.holder && !holder && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
       </div>
       {/* CUIT/CUIL */}
@@ -117,8 +143,6 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
           placeholder="XX-XXXXXXXX-X"
           maxLength={13}
         />
-          {touched.cuit && !cuit && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
-          {cuit && !validateCUIT(cuit) && <div className="text-red-600 text-xs mt-1">El CUIT/CUIL debe tener formato XX-XXXXXXXX-X</div>}
         {touched.cuit && !cuit && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
       </div>
       {/* Nombre identificador */}
