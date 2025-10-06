@@ -13,6 +13,12 @@ export default function UserServices({ userId }) {
   // Determinar si el usuario autenticado es el dueño
   const isOwner = authUser && userId && String(authUser.id) === String(userId);
 
+  useEffect(() => {
+    if (userId) {
+      loadUserServices();
+    }
+  }, [userId, loadUserServices]);
+
   // Función para recargar servicios cuando se actualicen
   const handleServiceUpdated = () => {
     if (loadUserServices) {
@@ -63,6 +69,8 @@ export default function UserServices({ userId }) {
             onServiceUpdated={handleServiceUpdated}
           />
         </div>
+        
+        {/* Botón ver más */}
         {services.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
             <a

@@ -156,7 +156,7 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md min-w-[300px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             Contratar Servicio
@@ -172,8 +172,8 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
 
         {/* Información del servicio */}
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <h4 className="font-medium text-gray-900 mb-2">{service?.title}</h4>
-          <p className="text-sm text-gray-600 mb-2">
+          <h4 className="font-medium text-gray-900 mb-2 break-words overflow-wrap-anywhere line-clamp-2 leading-tight max-w-full">{service?.title}</h4>
+          <p className="text-sm text-gray-600 mb-2 break-words">
             Por: {service?.owner?.firstName} {service?.owner?.lastName}
           </p>
           <p className="text-lg font-semibold text-conexia-green">
@@ -200,7 +200,7 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
               }}
               placeholder="Explica detalladamente qué necesitas para que el proveedor pueda hacer una cotización precisa..."
               rows={4}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-conexia-green focus:border-transparent resize-none"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-conexia-green focus:border-transparent resize-none break-words"
               disabled={loading}
               required
             />

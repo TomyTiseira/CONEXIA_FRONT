@@ -63,6 +63,13 @@ div[class*="grid-cols-1"][class*="md:grid-cols-2"][class*="gap-6"][class*="items
   overflow: hidden;
 }
 
+/* Utility class para manejar palabras muy largas que podrían romper el layout */
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
 /* Estilos para el carousel de medios */
 .publication-carousel {
   position: relative;

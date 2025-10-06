@@ -95,7 +95,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900">
@@ -117,7 +117,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">Título</p>
-                <p className="font-medium text-gray-900">{hiring.service?.title}</p>
+                <p className="font-medium text-gray-900 break-words overflow-wrap-anywhere line-clamp-2 leading-tight">{hiring.service?.title}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Precio Base</p>

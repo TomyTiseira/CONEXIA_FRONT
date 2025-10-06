@@ -23,54 +23,48 @@ function validateCUIT(value) {
 }
 
 export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAccounts = [] }) {
+  // Limpiar error de campo al escribir
+  const handleFieldChange = (field, valueSetter) => e => {
+    valueSetter(e.target.value);
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
   const [touched, setTouched] = useState({});
   const [platform, setPlatform] = useState('');
   const [cvu, setCVU] = useState('');
   const [alias, setAlias] = useState('');
   const [holder, setHolder] = useState('');
   const [cuit, setCUIT] = useState('');
-  const [cardName, setCardName] = useState('');
   const [customName, setCustomName] = useState('');
-  const [error, setError] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [errors, setErrors] = useState({});
 
   // Fetch plataformas digitales dinámicamente
   const { data: platforms, isLoading: platformsLoading, error: platformsError } = useFetch(fetchDigitalPlatforms);
 
   const handleSubmit = async e => {
     e.preventDefault();
-    setError('');
-    // Validar campos obligatorios y marcar como tocados
+    const newErrors = {};
     setTouched({
       platform: true,
       cvu: true,
+      alias: true,
       holder: true,
       cuit: true
     });
-    const missingFields = [];
-    if (!platform) missingFields.push('platform');
-    if (!cvu) missingFields.push('cvu');
-    if (!holder) missingFields.push('holder');
-    if (!cuit) missingFields.push('cuit');
-    if (missingFields.length > 0) {
-      setError('Se deben cargar todos los datos obligatorios del formulario.');
-      return;
-    }
-    if (!validateCVU(cvu)) {
-      setError('El CVU debe tener exactamente 22 dígitos.');
-      return;
-    }
-    if (!validateAlias(alias)) {
-      setError('El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).');
-      return;
-    }
-    if (!validateCUIT(cuit)) {
-      setError('El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.');
-      return;
-    }
-    if (existingAccounts.some(acc => acc.cvu === cvu || acc.alias === alias)) {
-      setError('Esta cuenta ya está registrada.');
-      return;
-    }
+    if (!platform) newErrors.platform = 'Este campo es obligatorio.';
+    if (!alias) newErrors.alias = 'Este campo es obligatorio.';
+    if (!cvu) newErrors.cvu = 'Este campo es obligatorio.';
+    if (!holder) newErrors.holder = 'Este campo es obligatorio.';
+    if (!cuit) newErrors.cuit = 'Este campo es obligatorio.';
+    if (cvu && !validateCVU(cvu)) newErrors.cvu = 'El CVU debe tener exactamente 22 dígitos.';
+    if (alias && !validateAlias(alias)) newErrors.alias = 'El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).';
+    if (cuit && !validateCUIT(cuit)) newErrors.cuit = 'El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.';
+    if (existingAccounts.some(acc => acc.cvu === cvu)) newErrors.cvu = 'Este CVU ya está registrado.';
+    if (existingAccounts.some(acc => acc.alias === alias)) newErrors.alias = 'Este alias ya está registrado.';
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
     // Enviar datos correctamente al backend
     const selectedPlatform = Array.isArray(platforms) ? platforms.find(p => p.name === platform) : null;
     if (!selectedPlatform) {
@@ -88,44 +82,60 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
       });
       if (onSubmit) onSubmit(result?.message || 'Cuenta digital registrada correctamente');
     } catch (err) {
-      setError(err?.message || 'Error al registrar la cuenta digital');
+      let errorMsg = err?.message || 'Error al registrar la cuenta digital';
+      if (errorMsg.includes('Invalid CUIL/CUIT format') || errorMsg.includes('Invalid CUIT/CUIL format')) {
+        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+      }
+      if (errorMsg.toLowerCase().includes('ya existe') || errorMsg.toLowerCase().includes('already exists')) {
+        errorMsg = 'Este medio de cobro ya está registrado.';
+      }
+      if (errorMsg.includes('CUIL') || errorMsg.includes('CUIT')) {
+        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+      }
+      setErrors({ general: errorMsg });
     }
   };
 
   return (
     <form className="bg-white rounded-2xl shadow p-6 max-w-lg mx-auto flex flex-col gap-4" onSubmit={handleSubmit}>
-      <h2 className="text-lg font-semibold text-conexia-green mb-2">Agregar cuenta digital</h2>
-      {/* Plataforma */}
+      <div>
+        <label className="block text-sm font-semibold mb-1">Nombre identificador de la cuenta (opcional)</label>
+        <input
+          type="text"
+          value={customName}
+          onChange={handleFieldChange('customName', setCustomName)}
+          className="w-full border rounded p-2"
+          placeholder="Ej: Mi cuenta MercadoPago, para cobros"
+          maxLength={40}
+        />
+      </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Plataforma</label>
-        <select value={platform} onChange={e => { setPlatform(e.target.value); setTouched(t => ({...t, platform: true})); }} className="w-full border rounded p-2" disabled={platformsLoading || platformsError}>
+        <select value={platform} onChange={handleFieldChange('platform', setPlatform)} className="w-full border rounded p-2" disabled={platformsLoading || platformsError}>
           <option value="">{platformsLoading ? 'Cargando plataformas...' : platformsError ? 'Error al cargar plataformas' : 'Seleccionar plataforma'}</option>
           {Array.isArray(platforms) && platforms.map(p => (
             <option key={p.id} value={p.name}>{p.name}</option>
           ))}
         </select>
         {platformsError && <div className="text-red-600 text-xs mt-1">No se pudieron cargar las plataformas</div>}
-        {touched.platform && !platform && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
+        {errors.platform && <div className="text-red-600 text-xs mt-1">{errors.platform}</div>}
       </div>
-      {/* Alias */}
       <div>
-        <label className="block text-sm font-semibold mb-1">Alias (opcional)</label>
-        <input type="text" value={alias} onChange={e => { setAlias(e.target.value); }} className="w-full border rounded p-2" placeholder="Alias" />
+        <label className="block text-sm font-semibold mb-1">Alias</label>
+        <input type="text" value={alias} onChange={handleFieldChange('alias', setAlias)} className="w-full border rounded p-2" placeholder="Alias" />
+        {errors.alias && <div className="text-red-600 text-xs mt-1">{errors.alias}</div>}
       </div>
-      {/* CVU */}
       <div>
         <label className="block text-sm font-semibold mb-1">CVU</label>
-        <input type="text" value={cvu} onChange={e => { setCVU(e.target.value); setTouched(t => ({...t, cvu: true})); }} className="w-full border rounded p-2" placeholder="CVU" />
-  {cvu && (!/^\d{22}$/.test(cvu)) && <div className="text-red-600 text-xs mt-1">El CVU debe tener exactamente 22 dígitos numéricos</div>}
-        {touched.cvu && !cvu && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
+        <input type="text" value={cvu} onChange={handleFieldChange('cvu', setCVU)} className="w-full border rounded p-2" placeholder="CVU" />
+        {cvu && (!/^\d{22}$/.test(cvu)) && <div className="text-red-600 text-xs mt-1">El CVU debe tener exactamente 22 dígitos numéricos</div>}
+        {errors.cvu && <div className="text-red-600 text-xs mt-1">{errors.cvu}</div>}
       </div>
-      {/* Titular */}
       <div>
         <label className="block text-sm font-semibold mb-1">Titular de la cuenta</label>
-        <input type="text" value={holder} onChange={e => { setHolder(e.target.value); setTouched(t => ({...t, holder: true})); }} className="w-full border rounded p-2" placeholder="Nombre completo" />
-        {touched.holder && !holder && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
+        <input type="text" value={holder} onChange={handleFieldChange('holder', setHolder)} className="w-full border rounded p-2" placeholder="Nombre completo" />
+        {errors.holder && <div className="text-red-600 text-xs mt-1">{errors.holder}</div>}
       </div>
-      {/* CUIT/CUIL */}
       <div>
         <label className="block text-sm font-semibold mb-1">CUIT/CUIL del titular</label>
         <input
@@ -137,28 +147,17 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
             if (val.length > 10) val = val.slice(0,11) + '-' + val.slice(11,12);
             if (val.length > 13) val = val.slice(0,13); // Limitar a XX-XXXXXXXX-X
             setCUIT(val);
-            setTouched(t => ({...t, cuit: true}));
+            if (errors.cuit) {
+              setErrors(prev => ({ ...prev, cuit: undefined }));
+            }
           }}
           className="w-full border rounded p-2"
           placeholder="XX-XXXXXXXX-X"
           maxLength={13}
         />
-        {touched.cuit && !cuit && <div className="text-red-600 text-xs mt-1">Este campo es obligatorio</div>}
+        {errors.cuit && <div className="text-red-600 text-xs mt-1">{errors.cuit}</div>}
       </div>
-      {/* Nombre identificador */}
-      <div>
-        <label className="block text-sm font-semibold mb-1">Nombre identificador de la cuenta (opcional)</label>
-        <input
-          type="text"
-          value={customName}
-          onChange={e => setCustomName(e.target.value)}
-          className="w-full border rounded p-2"
-          placeholder="Ej: Mi cuenta MercadoPago, para cobros"
-          maxLength={40}
-        />
-      </div>
-      {/* Error general */}
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {errors.general && <div className="text-red-600 text-sm">{errors.general}</div>}
       <div className="flex gap-4 justify-end mt-2">
         <Button variant="danger" type="button" onClick={onCancel}>Cancelar</Button>
         <Button variant="primary" type="submit">Agregar</Button>
