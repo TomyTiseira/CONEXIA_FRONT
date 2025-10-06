@@ -39,7 +39,7 @@ export default function ServiceDeactivateModal({ open, onClose, onConfirm, servi
         </div>
         
         <textarea
-          className="w-full border rounded-lg p-2 text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-conexia-green/30"
+          className="w-full border rounded-lg p-2 text-sm h-[80px] max-h-[80px] resize-none overflow-y-auto focus:outline-none focus:ring-2 focus:ring-conexia-green/30"
           placeholder="Motivo de la baja (obligatorio)"
           value={reason}
           onChange={e => setReason(e.target.value)}

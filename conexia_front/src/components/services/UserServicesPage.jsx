@@ -55,14 +55,9 @@ export default function UserServicesPage({ userId }) {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#f0f8f8] overflow-hidden flex flex-col">
-      {/* Navbar fijo arriba */}
-      <div className="fixed top-0 left-0 w-full z-30">
-        <Navbar />
-      </div>
-
-      {/* Contenido principal */}
-      <main className="flex-1 pt-20 pb-8">
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-64px)] bg-[#f0f8f8] py-8 pb-20 md:pb-8">
         <div className="container mx-auto px-4 py-4">
           {/* Header */}
           <div className="mb-8">
@@ -155,7 +150,7 @@ export default function UserServicesPage({ userId }) {
           {/* Botón Atrás y Paginado */}
           <div className="mt-6">
             {/* En móvil: botón atrás a la izquierda y paginado centrado en la misma línea */}
-            <div className="flex items-center md:hidden px-6 sm:px-0">
+            <div className="flex items-center md:hidden">
               <BackButton
                 text={isOwner ? 'Volver a mi perfil' : 'Atrás'}
                 onClick={() => {
@@ -181,7 +176,7 @@ export default function UserServicesPage({ userId }) {
             </div>
             
             {/* En desktop: botón atrás a la izquierda, paginado centrado */}
-            <div className="hidden md:flex md:items-center px-6 sm:px-0">
+            <div className="hidden md:flex md:items-center">
               <BackButton
                 text={isOwner ? 'Volver a mi perfil' : 'Atrás'}
                 onClick={() => {
@@ -209,7 +204,7 @@ export default function UserServicesPage({ userId }) {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }
