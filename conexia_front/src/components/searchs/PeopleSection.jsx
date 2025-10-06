@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import SearchSection from './SearchSection';
 import PeopleList from '@/components/common/PeopleList';
 import { MdPersonOutline, MdKeyboardArrowDown, MdKeyboardArrowUp, MdCheck } from 'react-icons/md';
@@ -13,13 +13,34 @@ export default function PeopleSection({
   onScroll,
 }) {
   const scrollRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Detectar si estamos en móvil
+  useEffect(() => {
+    setIsClient(true);
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+  
+  // Lógica responsiva para mostrar el botón "Ver todos"
+  // Solo aplicar la lógica después de que el componente se haya hidratado en el cliente
+  const shouldShowToggle = !isClient ? false : (isMobile ? people.length > 2 : people.length >= 5);
+  const defaultShowCount = !isClient ? people.length : (isMobile ? 2 : 5);
+  
   return (
     <SearchSection
       title="Personas"
       description="Encuentra personas en la comunidad de Conexia."
       showAll={showAll}
       onToggleShowAll={onToggleShowAll}
-      showToggle={people.length > 3}
+      showToggle={shouldShowToggle}
       showContent={showContent}
       onToggleContent={onToggleContent}
       icon={MdPersonOutline}
@@ -35,10 +56,11 @@ export default function PeopleSection({
     >
       <div
         ref={scrollRef}
+        className="mb-4 md:mb-0"
         style={{ maxHeight: 600, overflowY: 'auto' }}
         onScroll={onScroll}
       >
-        <PeopleList people={showAll ? people : people.slice(0, 3)} />
+        <PeopleList people={showAll ? people : people.slice(0, defaultShowCount)} />
         {showAll && hasMore && (
           <div className="text-center py-4 text-conexia-green">Cargando más personas...</div>
         )}

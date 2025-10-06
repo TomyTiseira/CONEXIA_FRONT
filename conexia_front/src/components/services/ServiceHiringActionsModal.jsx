@@ -219,12 +219,12 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
             {availableActions.includes('reject') && (
               <button
                 onClick={() => setConfirmAction('reject')}
-                className="w-full flex items-center gap-3 p-4 border border-red-200 rounded-lg hover:bg-red-50 transition text-left"
+                className="w-full flex items-center gap-3 p-4 border border-red-200 bg-red-500 rounded-lg hover:bg-red-600 transition text-left"
               >
                 <span className="text-2xl">❌</span>
                 <div>
-                  <p className="font-medium text-red-800">Rechazar</p>
-                  <p className="text-sm text-red-600">No aceptar la cotización</p>
+                  <p className="font-medium text-white">Rechazar</p>
+                  <p className="text-sm text-red-100">No aceptar la cotización</p>
                 </div>
               </button>
             )}
@@ -232,12 +232,12 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
             {availableActions.includes('cancel') && (
               <button
                 onClick={() => setConfirmAction('cancel')}
-                className="w-full flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-left"
+                className="w-full flex items-center gap-3 p-4 border border-gray-200 bg-gray-500 rounded-lg hover:bg-gray-600 transition text-left"
               >
                 <span className="text-2xl">🗑️</span>
                 <div>
-                  <p className="font-medium text-gray-800">Cancelar Solicitud</p>
-                  <p className="text-sm text-gray-600">Eliminar esta solicitud</p>
+                  <p className="font-medium text-white">Cancelar Solicitud</p>
+                  <p className="text-sm text-gray-100">Eliminar esta solicitud</p>
                 </div>
               </button>
             )}

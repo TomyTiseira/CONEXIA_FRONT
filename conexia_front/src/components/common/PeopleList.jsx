@@ -15,12 +15,12 @@ export default function PeopleList({ people = [] }) {
     return `${firstName} ${firstLastName}`.trim();
   };
   return (
-    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5 items-stretch mt-0 w-full px-6 sm:px-0">
+    <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5 items-stretch mt-0 mb-6 sm:mb-0 w-full px-4 sm:px-0">
       {people.map((person) => (
         <button
           key={person.id}
-          className="rounded-2xl shadow border border-[#c6e3e4] flex flex-col items-center bg-white hover:shadow-xl transition-shadow no-underline focus:outline-none"
-          style={{ width: 170, minWidth: 170, maxWidth: 170, height: 200, paddingBottom: 0, justifyContent: 'flex-start', cursor: 'pointer' }}
+          className="rounded-2xl shadow border border-[#c6e3e4] flex flex-col items-center bg-white hover:shadow-xl transition-shadow no-underline focus:outline-none w-full"
+          style={{ minWidth: 'auto', maxWidth: '100%', height: 200, paddingBottom: 0, justifyContent: 'flex-start', cursor: 'pointer' }}
           tabIndex={0}
           onClick={() => router.push(`/profile/${person.id}`)}
           aria-label={`Ver perfil de ${getShortName(person.name, person.lastName)}`}
@@ -55,7 +55,7 @@ export default function PeopleList({ people = [] }) {
             <h3 className="font-bold text-conexia-green text-center leading-tight mt-3 mb-1 text-base" style={{ marginTop: 12 }}>
               {getShortName(person.name, person.lastName)}
             </h3>
-            <div className="text-[0.90rem] text-conexia-green/80 text-center w-full px-2 line-clamp-3" style={{ lineHeight: '1.18', maxWidth: 140, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div className="text-[0.90rem] text-conexia-green/80 text-center w-full px-2 line-clamp-3" style={{ lineHeight: '1.18', maxWidth: '100%', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {person.profession || person.email}
             </div>
           </div>
