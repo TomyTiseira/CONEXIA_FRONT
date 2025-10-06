@@ -25,6 +25,7 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
   const [alias, setAlias] = useState('');
   const [holder, setHolder] = useState('');
   const [cuit, setCUIT] = useState('');
+  const [cardName, setCardName] = useState('');
   const [error, setError] = useState('');
 
   // Fetch bancos dinámicamente
@@ -77,7 +78,8 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
         cbu,
         accountHolderName: holder,
         cuilCuit: cuit, // Enviar con guiones
-        alias: alias || undefined
+        alias: alias || undefined,
+        customName: cardName
       });
       // Si todo ok, llamar a onSubmit con mensaje de éxito
       onSubmit(result?.message || 'Cuenta bancaria registrada correctamente');
@@ -120,6 +122,7 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       <div>
         <label className="block text-sm font-semibold mb-1">CBU</label>
         <input type="text" value={cbu} onChange={e => setCBU(e.target.value)} className="w-full border rounded p-2" placeholder="CBU" />
+  {cbu && (!/^\d{22}$/.test(cbu)) && <div className="text-red-600 text-xs mt-1">El CBU debe tener exactamente 22 dígitos numéricos</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Titular de la cuenta</label>
@@ -141,6 +144,17 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
           className="w-full border rounded p-2"
           placeholder="XX-XXXXXXXX-X"
           maxLength={13}
+        />
+      </div>
+      <div>
+  <label className="block text-sm font-semibold mb-1">Nombre identificador de la cuenta (opcional)</label>
+        <input
+          type="text"
+          value={cardName}
+          onChange={e => setCardName(e.target.value)}
+          className="w-full border rounded p-2"
+          placeholder="Ej: Mi cuenta sueldo, Banco Nación"
+          maxLength={40}
         />
       </div>
       {error && <div className="text-red-600 text-sm">{error}</div>}

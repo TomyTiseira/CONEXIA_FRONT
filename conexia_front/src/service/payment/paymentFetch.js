@@ -1,3 +1,18 @@
+// Editar alias y customName de una cuenta
+export async function editAccountAliasAndName(id, { alias, customName }) {
+  const body = {};
+  if (alias !== undefined) body.alias = alias;
+  if (customName !== undefined) body.customName = customName;
+  const res = await fetchWithRefresh(`${config.API_URL}/payment-accounts/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body)
+  });
+  const response = await res.json();
+  if (!res.ok) throw new Error(response.message || 'Error al editar datos de la cuenta');
+  return response.data;
+}
 import { config } from '@/config';
 import { fetchWithRefresh } from '@/service/auth/fetchWithRefresh';
 
@@ -23,7 +38,7 @@ export async function fetchDigitalPlatforms() {
   return response.data;
 }
 
-export async function addBankAccount({ bankId, bankAccountType, cbu, accountHolderName, cuilCuit, alias }) {
+export async function addBankAccount({ bankId, bankAccountType, cbu, accountHolderName, cuilCuit, alias, customName }) {
   const body = {
     bankId,
     bankAccountType,
@@ -32,6 +47,8 @@ export async function addBankAccount({ bankId, bankAccountType, cbu, accountHold
     cuilCuit
   };
   if (alias) body.alias = alias;
+  // No enviar cardName, solo customName
+  if (customName) body.customName = customName;
   const res = await fetchWithRefresh(`${config.API_URL}/payment-accounts/bank-account`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -46,7 +63,7 @@ export async function addBankAccount({ bankId, bankAccountType, cbu, accountHold
   return response.data;
 }
 
-export async function addDigitalAccount({ digitalPlatformId, cvu, accountHolderName, cuilCuit, alias }) {
+export async function addDigitalAccount({ digitalPlatformId, cvu, accountHolderName, cuilCuit, alias, customName }) {
   const body = {
     digitalPlatformId,
     cvu,
@@ -54,6 +71,8 @@ export async function addDigitalAccount({ digitalPlatformId, cvu, accountHolderN
     cuilCuit
   };
   if (alias) body.alias = alias;
+  // No enviar cardName, solo customName
+  if (customName) body.customName = customName;
   const res = await fetchWithRefresh(`${config.API_URL}/payment-accounts/digital-account`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
