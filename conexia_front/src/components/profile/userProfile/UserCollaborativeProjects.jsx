@@ -68,7 +68,7 @@ export default function UserCollaborativeProjects({ userId }) {
             className=""
           />
         </div>
-        {projects.length > 3 && (
+        {projects.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
             <a
               href={`/projects/user/${userId}`}

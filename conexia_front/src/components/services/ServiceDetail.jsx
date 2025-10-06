@@ -161,7 +161,7 @@ const ServiceDetail = ({ serviceId }) => {
 
   const handleViewContracts = () => {
     setShowConflictModal(false);
-    router.push('/services/my-hirings?tab=requests');
+    router.push(`/services/my-services/${service.id}/requests`);
   };
 
   const handleQuote = () => {
