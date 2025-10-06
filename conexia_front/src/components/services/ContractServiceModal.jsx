@@ -111,7 +111,7 @@ export default function ContractServiceModal({
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full min-w-[300px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
           {/* Header */}
           <div className="flex justify-between items-center p-6 border-b">
             <h3 className="text-lg font-semibold text-gray-900">
@@ -130,10 +130,10 @@ export default function ContractServiceModal({
           <div className="p-6">
             {/* Resumen del servicio */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h4 className="font-medium text-gray-900 mb-2">
+              <h4 className="font-medium text-gray-900 mb-2 break-words overflow-wrap-anywhere line-clamp-2 leading-tight max-w-full">
                 {serviceHiring.service?.title}
               </h4>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600 mb-2 break-words">
                 Por: {serviceHiring.service?.owner?.firstName} {serviceHiring.service?.owner?.lastName}
               </p>
               <div className="flex justify-between items-center">

@@ -26,34 +26,35 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
   const [holder, setHolder] = useState('');
   const [cuit, setCUIT] = useState('');
   const [cardName, setCardName] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+
+  // Limpiar error de campo al escribir
+  const handleFieldChange = (field, valueSetter) => e => {
+    valueSetter(e.target.value);
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
 
   // Fetch bancos dinámicamente
   const { data: banks, isLoading: banksLoading, error: banksError } = useFetch(fetchBanks);
 
   const handleSubmit = async e => {
     e.preventDefault();
-    setError('');
-    if (!bank || !accountType || !holder || !cuit || (!cbu && !alias)) {
-      setError('Todos los campos son obligatorios.');
-      return;
-    }
-    if (cbu && !validateCBU(cbu)) {
-      setError('El CBU debe tener exactamente 22 dígitos.');
-      return;
-    }
-    if (alias && !validateAlias(alias)) {
-      setError('El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).');
-      return;
-    }
-    if (!validateCUIT(cuit)) {
-      setError('El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.');
-      return;
-    }
-    if (existingAccounts.some(acc => acc.cbu === cbu || acc.alias === alias)) {
-      setError('Esta cuenta ya está registrada.');
-      return;
-    }
+    const newErrors = {};
+    if (!bank) newErrors.bank = 'Este campo es obligatorio.';
+    if (!accountType) newErrors.accountType = 'Este campo es obligatorio.';
+    if (!holder) newErrors.holder = 'Este campo es obligatorio.';
+    if (!cuit) newErrors.cuit = 'Este campo es obligatorio.';
+    if (!alias) newErrors.alias = 'Este campo es obligatorio.';
+    if (!cbu) newErrors.cbu = 'Este campo es obligatorio.';
+    if (cbu && !validateCBU(cbu)) newErrors.cbu = 'El CBU debe tener exactamente 22 dígitos.';
+    if (alias && !validateAlias(alias)) newErrors.alias = 'El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).';
+    if (cuit && !validateCUIT(cuit)) newErrors.cuit = 'El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.';
+    if (existingAccounts.some(acc => acc.cbu === cbu)) newErrors.cbu = 'Este CBU ya está registrado.';
+    if (existingAccounts.some(acc => acc.alias === alias)) newErrors.alias = 'Este alias ya está registrado.';
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     // Buscar el objeto banco seleccionado
     const selectedBank = Array.isArray(banks) ? banks.find(b => b.name === bank) : null;
@@ -85,48 +86,66 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       onSubmit(result?.message || 'Cuenta bancaria registrada correctamente');
     } catch (err) {
       let errorMsg = err?.message || 'Error al registrar la cuenta bancaria';
-      if (errorMsg.includes('Invalid CUIL/CUIT format')) {
+      if (errorMsg.includes('Invalid CUIL/CUIT format') || errorMsg.includes('Invalid CUIT/CUIL format')) {
         errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
       }
       if (errorMsg.toLowerCase().includes('ya existe') || errorMsg.toLowerCase().includes('already exists')) {
         errorMsg = 'Este medio de cobro ya está registrado.';
       }
-      setError(errorMsg);
+      if (errorMsg.includes('CUIL') || errorMsg.includes('CUIT')) {
+        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+      }
+      setErrors({ general: errorMsg });
     }
   };
 
   return (
     <form className="bg-white rounded-2xl shadow p-6 max-w-lg mx-auto flex flex-col gap-4" onSubmit={handleSubmit}>
-      <h2 className="text-lg font-semibold text-conexia-green mb-2">Agregar cuenta bancaria</h2>
+      <div>
+        <label className="block text-sm font-semibold mb-1">Nombre identificador de la cuenta (opcional)</label>
+        <input
+          type="text"
+          value={cardName}
+          onChange={handleFieldChange('cardName', setCardName)}
+          className="w-full border rounded p-2"
+          placeholder="Ej: Mi cuenta sueldo, Banco Nación"
+          maxLength={40}
+        />
+      </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Banco</label>
-        <select value={bank} onChange={e => setBank(e.target.value)} className="w-full border rounded p-2" disabled={banksLoading || banksError}>
+        <select value={bank} onChange={handleFieldChange('bank', setBank)} className="w-full border rounded p-2" disabled={banksLoading || banksError}>
           <option value="">{banksLoading ? 'Cargando bancos...' : banksError ? 'Error al cargar bancos' : 'Seleccionar banco'}</option>
           {Array.isArray(banks) && banks.map(b => (
             <option key={b.id} value={b.name}>{b.name}</option>
           ))}
         </select>
         {banksError && <div className="text-red-600 text-xs mt-1">No se pudieron cargar los bancos</div>}
+        {errors.bank && <div className="text-red-600 text-xs mt-1">{errors.bank}</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Tipo de cuenta</label>
-        <select value={accountType} onChange={e => setAccountType(e.target.value)} className="w-full border rounded p-2">
+        <select value={accountType} onChange={handleFieldChange('accountType', setAccountType)} className="w-full border rounded p-2">
           <option value="">Seleccionar tipo</option>
           {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
+        {errors.accountType && <div className="text-red-600 text-xs mt-1">{errors.accountType}</div>}
       </div>
       <div>
-        <label className="block text-sm font-semibold mb-1">Alias (opcional)</label>
-        <input type="text" value={alias} onChange={e => setAlias(e.target.value)} className="w-full border rounded p-2" placeholder="Alias" />
+        <label className="block text-sm font-semibold mb-1">Alias</label>
+        <input type="text" value={alias} onChange={handleFieldChange('alias', setAlias)} className="w-full border rounded p-2" placeholder="Alias" />
+        {errors.alias && <div className="text-red-600 text-xs mt-1">{errors.alias}</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">CBU</label>
-        <input type="text" value={cbu} onChange={e => setCBU(e.target.value)} className="w-full border rounded p-2" placeholder="CBU" />
-  {cbu && (!/^\d{22}$/.test(cbu)) && <div className="text-red-600 text-xs mt-1">El CBU debe tener exactamente 22 dígitos numéricos</div>}
+        <input type="text" value={cbu} onChange={handleFieldChange('cbu', setCBU)} className="w-full border rounded p-2" placeholder="CBU" />
+        {cbu && (!/^\d{22}$/.test(cbu)) && <div className="text-red-600 text-xs mt-1">El CBU debe tener exactamente 22 dígitos numéricos</div>}
+        {errors.cbu && <div className="text-red-600 text-xs mt-1">{errors.cbu}</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Titular de la cuenta</label>
-        <input type="text" value={holder} onChange={e => setHolder(e.target.value)} className="w-full border rounded p-2" placeholder="Nombre completo" />
+        <input type="text" value={holder} onChange={handleFieldChange('holder', setHolder)} className="w-full border rounded p-2" placeholder="Nombre completo" />
+        {errors.holder && <div className="text-red-600 text-xs mt-1">{errors.holder}</div>}
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">CUIT/CUIL del titular</label>
@@ -140,24 +159,17 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
             if (val.length > 11) val = val.slice(0,11) + '-' + val.slice(11,12);
             if (val.length > 13) val = val.slice(0,13); // Limitar a XX-XXXXXXXX-X
             setCUIT(val);
+            if (errors.cuit) {
+              setErrors(prev => ({ ...prev, cuit: undefined }));
+            }
           }}
           className="w-full border rounded p-2"
           placeholder="XX-XXXXXXXX-X"
           maxLength={13}
         />
+        {errors.cuit && <div className="text-red-600 text-xs mt-1">{errors.cuit}</div>}
       </div>
-      <div>
-  <label className="block text-sm font-semibold mb-1">Nombre identificador de la cuenta (opcional)</label>
-        <input
-          type="text"
-          value={cardName}
-          onChange={e => setCardName(e.target.value)}
-          className="w-full border rounded p-2"
-          placeholder="Ej: Mi cuenta sueldo, Banco Nación"
-          maxLength={40}
-        />
-      </div>
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {errors.general && <div className="text-red-600 text-sm">{errors.general}</div>}
       <div className="flex gap-4 justify-end mt-2">
         <Button variant="danger" type="button" onClick={onCancel}>Cancelar</Button>
         <Button variant="primary" type="submit">Agregar</Button>

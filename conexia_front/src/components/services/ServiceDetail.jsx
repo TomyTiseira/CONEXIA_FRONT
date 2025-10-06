@@ -8,7 +8,7 @@ import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { formatPrice } from '@/utils/formatPrice';
 import { getUnitLabel } from '@/utils/timeUnit';
-import { FaClock, FaUser, FaEdit, FaTrash, FaHandshake, FaComments, FaArrowLeft, FaTag, FaCalendar, FaPaperPlane } from 'react-icons/fa';
+import { FaClock, FaUser, FaEdit, FaTrash, FaHandshake, FaComments, FaArrowLeft, FaTag, FaCalendar, FaPaperPlane, FaTimes } from 'react-icons/fa';
 import { IoCheckmarkCircleSharp } from 'react-icons/io5';
 import { config } from '@/config';
 import Button from '@/components/ui/Button';
@@ -19,10 +19,12 @@ import ServiceDeactivateModal from './ServiceDeactivateModal';
 import ServiceDeleteConflictModal from '@/components/ui/ServiceDeleteConflictModal';
 import ServiceEditModal from './ServiceEditModal';
 import ServiceHiringModal from './ServiceHiringModal';
+import ServiceHiringActionsModal from './ServiceHiringActionsModal';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import { useDeleteService } from '@/hooks/services/useDeleteService';
 import { useEditService } from '@/hooks/services/useEditService';
+import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import Toast from '@/components/ui/Toast';
 import EmojiPicker from 'emoji-picker-react';
 
@@ -37,6 +39,9 @@ const ServiceDetail = ({ serviceId }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [showHiringModal, setShowHiringModal] = useState(false);
+  const [showActionsModal, setShowActionsModal] = useState(false);
+  const [pendingHiring, setPendingHiring] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState(null);
   
@@ -49,6 +54,9 @@ const ServiceDetail = ({ serviceId }) => {
   // Messaging hooks
   const { loadConversations, refreshUnreadCount } = useMessaging();
   const { sendTextMessageTo } = useChatMessages();
+  
+  // Service hirings hook
+  const { cancelHiring } = useServiceHirings();
 
   const handleImageError = () => {
     setImageError(true);
@@ -170,8 +178,8 @@ const ServiceDetail = ({ serviceId }) => {
       // Cancelar solicitud existente
       handleCancelQuotation();
     } else if (service?.hasActiveQuotation) {
-      // No hacer nada, botón estará deshabilitado
-      return;
+      // Abrir modal de acciones para cotización activa
+      handleActiveQuotation();
     } else {
       // Crear nueva cotización/solicitud
       setShowHiringModal(true);
@@ -180,15 +188,54 @@ const ServiceDetail = ({ serviceId }) => {
 
   const handleCancelQuotation = async () => {
     try {
-      // TODO: Implementar cancelación de cotización
-      alert('Funcionalidad de cancelar cotización en desarrollo');
-      // await cancelQuotation(service.id);
-      // loadServiceDetail(serviceId); // Recargar datos
+      // Verificar que existe el ID de la cotización pendiente
+      if (service?.pendingQuotationId) {
+        // Crear objeto con la información necesaria para el modal
+        const pendingHiring = {
+          id: service.pendingQuotationId,
+          service: service,
+          status: { code: 'pending', name: 'Pendiente' },
+          availableActions: ['cancel']
+        };
+        setPendingHiring(pendingHiring);
+        setShowCancelModal(true);
+      } else {
+        setToast({
+          type: 'error',
+          message: 'No se encontró una solicitud pendiente para cancelar'
+        });
+      }
     } catch (error) {
       setToast({
         type: 'error',
-        message: 'Error al cancelar la solicitud',
-        isVisible: true
+        message: 'Error al abrir las opciones de la solicitud'
+      });
+    }
+  };
+
+  const handleActiveQuotation = async () => {
+    try {
+      // Verificar que existe el ID de la cotización activa
+      if (service?.activeQuotationId) {
+        // Crear objeto con la información necesaria para el modal
+        const activeHiring = {
+          id: service.activeQuotationId,
+          service: service,
+          status: { code: 'quoted', name: 'Cotizado' },
+          availableActions: ['accept', 'reject', 'negotiate', 'cancel']
+        };
+        setPendingHiring(activeHiring);
+        setShowActionsModal(true);
+      } else {
+        setToast({
+          type: 'error',
+          message: 'No se encontró una cotización activa'
+        });
+      }
+    } catch (error) {
+      setToast({
+        type: 'error',
+        message: 'Error al abrir las opciones de la cotización'
       });
     }
   };
@@ -200,6 +247,23 @@ const ServiceDetail = ({ serviceId }) => {
       isVisible: true
     });
     loadServiceDetail(serviceId); // Recargar para actualizar estado
+  };
+
+  const handleDirectCancel = async () => {
+    try {
+      setShowCancelModal(false);
+      await cancelHiring(pendingHiring?.id);
+      setToast({
+        type: 'success',
+        message: 'Solicitud cancelada exitosamente'
+      });
+      loadServiceDetail(serviceId); // Recargar para actualizar estado
+    } catch (error) {
+      setToast({
+        type: 'error',
+        message: error.message || 'Error al cancelar la solicitud'
+      });
+    }
   };
 
   // Envío de mensaje con contexto del servicio
@@ -392,7 +456,7 @@ ${messageText.trim()}`;
                 <div className="space-y-4 flex flex-col h-full">
                   {/* Título y categoría */}
                   <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2 break-words overflow-wrap-anywhere leading-tight">
                       {service.title}
                     </h1>
                     <div className="flex items-center gap-2">
@@ -601,16 +665,16 @@ ${messageText.trim()}`;
                     )}
                     {canContract && (
                       <Button
-                        variant={service?.hasPendingQuotation ? "danger" : service?.hasActiveQuotation ? "secondary" : "neutral"}
+                        variant={service?.hasPendingQuotation ? "danger" : service?.hasActiveQuotation ? "primary" : "neutral"}
                         onClick={handleQuote}
-                        disabled={service?.hasActiveQuotation}
+                        disabled={false}
                         className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
                       >
                         <FaHandshake size={14} />
                         {service?.hasPendingQuotation 
                           ? 'Cancelar Solicitud' 
                           : service?.hasActiveQuotation 
-                            ? 'Cotización en curso' 
+                            ? 'Ver Cotización' 
                             : 'Cotizar'
                         }
                       </Button>
@@ -655,6 +719,62 @@ ${messageText.trim()}`;
         onClose={() => setShowHiringModal(false)}
         onSuccess={handleHiringSuccess}
       />
+
+      {/* Modal de acciones de contratación (cancelar solicitud) */}
+      <ServiceHiringActionsModal
+        hiring={pendingHiring}
+        isOpen={showActionsModal}
+        onClose={() => setShowActionsModal(false)}
+        onSuccess={handleHiringSuccess}
+      />
+
+      {/* Modal de cancelación directa */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <FaTrash size={20} className="text-orange-500" />
+                Confirmar Acción
+              </h3>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="text-4xl mb-3">🗑️</div>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                  Cancelar Solicitud
+                </h4>
+                <p className="text-gray-600 text-sm">
+                  Al cancelar esta solicitud, se eliminará permanentemente y no podrás recuperarla. Esta acción no se puede deshacer.
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowCancelModal(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleDirectCancel}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
+                >
+                  Sí, Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast de notificaciones */}
       <Toast

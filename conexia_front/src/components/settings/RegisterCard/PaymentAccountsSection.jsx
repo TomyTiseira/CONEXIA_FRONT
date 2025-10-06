@@ -109,7 +109,11 @@ export default function PaymentAccountsSection() {
       setToast({ type: 'success', message: 'Datos actualizados correctamente', isVisible: true });
       refetch();
     } catch (err) {
-      setToast({ type: 'error', message: err?.message || 'Error al actualizar datos', isVisible: true });
+      let errorMsg = err?.message || 'Error al actualizar datos';
+      if (errorMsg.toLowerCase().includes('invalid alias format') || errorMsg.toLowerCase().includes('ya tienes otra cuenta con este alias') || errorMsg.toLowerCase().includes('alias already exists')) {
+        errorMsg = 'El alias ingresado ya está en uso por otra cuenta. Por favor, elige uno diferente.';
+      }
+      setToast({ type: 'error', message: errorMsg, isVisible: true });
     } finally {
       setEditLoading(false);
     }
@@ -147,11 +151,13 @@ export default function PaymentAccountsSection() {
                 {bankAccounts.map((acc) => (
                   <li key={acc.id} className="border rounded p-3 flex items-center justify-between">
                     <div className="flex flex-col">
+                      {acc.customName && (
+                        <span className="text-lg font-bold mb-1" style={{ color: '#2b6a6a' }}>{acc.customName}</span>
+                      )}
                       <span className="font-semibold">{acc.bankName} - {acc.bankAccountType === 'savings' ? 'Caja de ahorro' : 'Cuenta corriente'}</span>
                       <span className="text-gray-700">{acc.accountHolderName}</span>
                       <span className="text-gray-500">CBU: ****{acc.cbuLast4 || (acc.cbu ? acc.cbu.slice(-4) : '')}</span>
                       {acc.alias && <span className="text-gray-500">Alias: {acc.alias}</span>}
-                      {acc.customName && <span className="text-gray-500">Nombre: {acc.customName}</span>}
                     </div>
                     <div className="flex gap-2 items-center">
                       {/* Botón editar alias/customName */}
@@ -215,11 +221,13 @@ export default function PaymentAccountsSection() {
                 {digitalAccounts.map((acc) => (
                   <li key={acc.id} className="border rounded p-3 flex items-center justify-between">
                     <div className="flex flex-col">
+                      {acc.customName && (
+                        <span className="text-lg font-bold mb-1" style={{ color: '#2b6a6a' }}>{acc.customName}</span>
+                      )}
                       <span className="font-semibold">{acc.digitalPlatformName}</span>
                       <span className="text-gray-700">{acc.accountHolderName}</span>
                       <span className="text-gray-500">CVU: ****{acc.cvuLast4 || acc.cbuLast4 || (acc.cvu ? acc.cvu.slice(-4) : acc.cbu ? acc.cbu.slice(-4) : '')}</span>
                       {acc.alias && <span className="text-gray-500">Alias: {acc.alias}</span>}
-                      {acc.customName && <span className="text-gray-500">Nombre identificador: {acc.customName}</span>}
                     </div>
                     <div className="flex gap-2 items-center">
                       {/* Botón editar alias/customName */}
@@ -270,6 +278,8 @@ export default function PaymentAccountsSection() {
           isVisible={toast.isVisible}
           onClose={() => setToast(null)}
           position="top-center"
+          // z-index alto para que quede por delante del modal
+          style={{ zIndex: 9999 }}
         />
       )}
       {/* Modal edición alias/customName */}

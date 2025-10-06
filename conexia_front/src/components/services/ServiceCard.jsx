@@ -87,9 +87,11 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
 
       {/* Título y dueño del servicio */}
       <div className="mb-2 flex flex-col items-center w-full">
-        <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2 w-full">
-          {service.title}
-        </h3>
+        <div className="h-12 sm:h-14 flex items-center justify-center w-full overflow-hidden">
+          <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2 w-full">
+            {service.title}
+          </h3>
+        </div>
         
         {/* Dueño del servicio */}
         <div 

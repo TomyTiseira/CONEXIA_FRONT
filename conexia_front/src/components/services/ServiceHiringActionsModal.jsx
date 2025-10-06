@@ -170,7 +170,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
         
         <div className="p-6">
           <div className="mb-4">
-            <h4 className="font-medium text-gray-900 mb-2">{hiring.service?.title}</h4>
+            <h4 className="font-medium text-gray-900 mb-2 break-words overflow-wrap-anywhere line-clamp-2 leading-tight max-w-full">{hiring.service?.title}</h4>
             <p className="text-sm text-gray-600">
               Estado actual: {hiring.status?.name || hiring.status?.code}
             </p>

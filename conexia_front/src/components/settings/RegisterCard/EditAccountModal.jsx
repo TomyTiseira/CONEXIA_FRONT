@@ -5,11 +5,14 @@ export default function EditAccountModal({ open, onClose, account, onSave, loadi
   const [alias, setAlias] = useState(account?.alias || '');
   const [customName, setCustomName] = useState(account?.customName || '');
   const [error, setError] = useState('');
+  const [existingAliases, setExistingAliases] = useState([]);
 
   // Sincronizar los valores cuando cambia la cuenta a editar
   useEffect(() => {
-    setAlias(account?.alias || '');
-    setCustomName(account?.customName || '');
+  setAlias(account?.alias || '');
+  setCustomName(account?.customName || '');
+  // Simulación: podrías obtener los alias existentes desde props o contexto global
+  setExistingAliases(account?.existingAliases || []);
   }, [account]);
 
   const handleSubmit = e => {
@@ -17,6 +20,11 @@ export default function EditAccountModal({ open, onClose, account, onSave, loadi
     setError('');
     if (!alias && !customName) {
       setError('Debes ingresar al menos un dato para editar.');
+      return;
+    }
+    // Validación de alias existente
+    if (alias && existingAliases.includes(alias)) {
+      setError('El alias ingresado ya está en uso por otra cuenta. Por favor, elige uno diferente.');
       return;
     }
     onSave({ alias, customName });
@@ -30,7 +38,7 @@ export default function EditAccountModal({ open, onClose, account, onSave, loadi
         <h2 className="text-lg font-bold mb-4">Editar alias y nombre identificador</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-semibold mb-1">Alias (opcional)</label>
+            <label className="block text-sm font-semibold mb-1">Alias</label>
             <input
               type="text"
               value={alias}
