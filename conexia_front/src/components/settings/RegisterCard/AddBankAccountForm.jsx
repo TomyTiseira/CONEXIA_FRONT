@@ -86,14 +86,20 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       onSubmit(result?.message || 'Cuenta bancaria registrada correctamente');
     } catch (err) {
       let errorMsg = err?.message || 'Error al registrar la cuenta bancaria';
-      if (errorMsg.includes('Invalid CUIL/CUIT format') || errorMsg.includes('Invalid CUIT/CUIL format')) {
-        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+      // Si el error es de CBU, mostrar solo en el campo CBU
+      if (errorMsg.toLowerCase().includes('cbu')) {
+        setErrors(prev => ({ ...prev, cbu: errorMsg }));
+        return;
       }
-      if (errorMsg.toLowerCase().includes('ya existe') || errorMsg.toLowerCase().includes('already exists')) {
-        errorMsg = 'Este medio de cobro ya está registrado.';
+      // Si el error es de alias, mostrar solo en el campo alias
+      if (errorMsg.toLowerCase().includes('alias')) {
+        setErrors(prev => ({ ...prev, alias: errorMsg }));
+        return;
       }
+      // Si el error es de CUIT/CUIL, mostrar solo en el campo cuit
       if (errorMsg.includes('CUIL') || errorMsg.includes('CUIT')) {
-        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+        setErrors(prev => ({ ...prev, cuit: errorMsg }));
+        return;
       }
       setErrors({ general: errorMsg });
     }
@@ -139,8 +145,10 @@ export default function AddBankAccountForm({ onSubmit, onCancel, existingAccount
       <div>
         <label className="block text-sm font-semibold mb-1">CBU</label>
         <input type="text" value={cbu} onChange={handleFieldChange('cbu', setCBU)} className="w-full border rounded p-2" placeholder="CBU" />
-        {cbu && (!/^\d{22}$/.test(cbu)) && <div className="text-red-600 text-xs mt-1">El CBU debe tener exactamente 22 dígitos numéricos</div>}
-        {errors.cbu && <div className="text-red-600 text-xs mt-1">{errors.cbu}</div>}
+        {(cbu && !/^\d{22}$/.test(cbu))
+          ? <div className="text-red-600 text-xs mt-1">El CBU debe tener exactamente 22 dígitos numéricos</div>
+          : errors.cbu && <div className="text-red-600 text-xs mt-1">{errors.cbu}</div>
+        }
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Titular de la cuenta</label>

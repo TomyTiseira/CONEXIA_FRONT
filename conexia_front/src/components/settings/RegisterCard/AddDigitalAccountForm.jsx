@@ -83,14 +83,20 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
       if (onSubmit) onSubmit(result?.message || 'Cuenta digital registrada correctamente');
     } catch (err) {
       let errorMsg = err?.message || 'Error al registrar la cuenta digital';
-      if (errorMsg.includes('Invalid CUIL/CUIT format') || errorMsg.includes('Invalid CUIT/CUIL format')) {
-        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+      // Si el error es de CVU, mostrar solo en el campo CVU
+      if (errorMsg.toLowerCase().includes('cvu')) {
+        setErrors(prev => ({ ...prev, cvu: errorMsg }));
+        return;
       }
-      if (errorMsg.toLowerCase().includes('ya existe') || errorMsg.toLowerCase().includes('already exists')) {
-        errorMsg = 'Este medio de cobro ya está registrado.';
+      // Si el error es de alias, mostrar solo en el campo alias
+      if (errorMsg.toLowerCase().includes('alias')) {
+        setErrors(prev => ({ ...prev, alias: errorMsg }));
+        return;
       }
+      // Si el error es de CUIT/CUIL, mostrar solo en el campo cuit
       if (errorMsg.includes('CUIL') || errorMsg.includes('CUIT')) {
-        errorMsg = 'El CUIT/CUIL ingresado no es válido. Verifica el formato y los dígitos.';
+        setErrors(prev => ({ ...prev, cuit: errorMsg }));
+        return;
       }
       setErrors({ general: errorMsg });
     }
@@ -128,8 +134,10 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
       <div>
         <label className="block text-sm font-semibold mb-1">CVU</label>
         <input type="text" value={cvu} onChange={handleFieldChange('cvu', setCVU)} className="w-full border rounded p-2" placeholder="CVU" />
-        {cvu && (!/^\d{22}$/.test(cvu)) && <div className="text-red-600 text-xs mt-1">El CVU debe tener exactamente 22 dígitos numéricos</div>}
-        {errors.cvu && <div className="text-red-600 text-xs mt-1">{errors.cvu}</div>}
+        {(cvu && !/^\d{22}$/.test(cvu))
+          ? <div className="text-red-600 text-xs mt-1">El CVU debe tener exactamente 22 dígitos numéricos</div>
+          : errors.cvu && <div className="text-red-600 text-xs mt-1">{errors.cvu}</div>
+        }
       </div>
       <div>
         <label className="block text-sm font-semibold mb-1">Titular de la cuenta</label>

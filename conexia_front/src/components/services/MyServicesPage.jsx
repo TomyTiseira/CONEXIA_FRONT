@@ -431,27 +431,24 @@ export default function MyServicesPage() {
                 </div>
 
                 {/* Paginación para desktop */}
-                {pagination.totalPages > 1 && (
-                  <div className="hidden md:block px-6 py-4 border-t border-gray-200 flex justify-center">
-                    <Pagination
-                      currentPage={pagination.page || 1}
-                      totalPages={pagination.totalPages || 1}
-                      hasNextPage={pagination.hasNext || false}
-                      hasPreviousPage={pagination.hasPrev || false}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                )}
+                <div className="hidden md:block px-6 py-4 border-t border-gray-200 flex justify-center">
+                  <Pagination
+                    currentPage={pagination.page || 1}
+                    totalPages={pagination.totalPages || 1}
+                    hasNextPage={pagination.hasNext || false}
+                    hasPreviousPage={pagination.hasPrev || false}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
 
                 {/* Cards para mobile */}
                 <div className="md:hidden space-y-4 p-4">
                   {sortedServices.map((service) => {
                     const counts = requestsCounts[service.id] || { total: 0, pending: 0 };
-                    
                     return (
                       <div key={service.id} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-3 flex-1">
+                        <div className="flex flex-col gap-2 mb-3">
+                          <div className="flex items-start gap-3">
                             <div className="flex-shrink-0">
                               {service.images && service.images.length > 0 ? (
                                 <img
@@ -469,13 +466,17 @@ export default function MyServicesPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-gray-900 truncate">
-                                {service.title}
-                              </h3>
+                              <div className="flex w-full items-center">
+                                <h3 className="font-medium text-gray-900 truncate max-w-[200px] sm:max-w-[260px]">
+                                  {service.title}
+                                </h3>
+                              </div>
                               <p className="text-sm text-gray-500">{service.category?.name}</p>
                             </div>
+                            <div className="flex-shrink-0 flex items-start justify-end w-[80px]">
+                              {getServiceStatusBadge(service.status)}
+                            </div>
                           </div>
-                          {getServiceStatusBadge(service.status)}
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4 mb-4">
@@ -531,17 +532,15 @@ export default function MyServicesPage() {
                 </div>
 
                 {/* Paginación para mobile */}
-                {pagination.totalPages > 1 && (
-                  <div className="md:hidden px-4 py-4 flex justify-center">
-                    <Pagination
-                      currentPage={pagination.page || 1}
-                      totalPages={pagination.totalPages || 1}
-                      hasNextPage={pagination.hasNext || false}
-                      hasPreviousPage={pagination.hasPrev || false}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                )}
+                <div className="md:hidden px-4 py-4 flex justify-center">
+                  <Pagination
+                    currentPage={pagination.page || 1}
+                    totalPages={pagination.totalPages || 1}
+                    hasNextPage={pagination.hasNext || false}
+                    hasPreviousPage={pagination.hasPrev || false}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
               </>
             )}
           </div>

@@ -188,7 +188,6 @@ export default function UserServicesPage({ userId }) {
                 }}
                 className="h-[38px] whitespace-nowrap text-sm"
               />
-              {pagination.totalPages > 1 && (
                 <div className="flex-1 flex justify-center items-center">
                   <div className="flex items-center -mt-6">
                     <Pagination
@@ -198,7 +197,6 @@ export default function UserServicesPage({ userId }) {
                     />
                   </div>
                 </div>
-              )}
               {/* Espaciador invisible para mantener el centrado */}
               <div className="w-[72px] flex items-center"></div>
             </div>
