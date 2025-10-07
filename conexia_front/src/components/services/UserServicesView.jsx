@@ -214,6 +214,18 @@ const UserServicesView = ({ userId }) => {
               <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">
                   {isOwnProfile ? 'Mis servicios' : 'Servicios del usuario'}
+                    {/* Paginación siempre visible al final */}
+                    {!loading && services.length > 0 && (
+                      <div className="mt-8 flex justify-center">
+                        <Pagination
+                          currentPage={pagination.page}
+                          totalPages={pagination.totalPages || 1}
+                          hasPreviousPage={pagination.page > 1}
+                          hasNextPage={pagination.page < (pagination.totalPages || 1)}
+                          onPageChange={handlePageChange}
+                        />
+                      </div>
+                    )}
                 </h1>
 
                 {services.length > 3 && (
@@ -264,11 +276,13 @@ const UserServicesView = ({ userId }) => {
               />
 
               {/* Paginación */}
-              {!loading && services.length > 0 && pagination.totalPages > 1 && (
+              {!loading && services.length > 0 && (
                 <div className="mt-8 flex justify-center">
                   <Pagination
                     currentPage={pagination.page}
-                    totalPages={pagination.totalPages}
+                    totalPages={pagination.totalPages || 1}
+                    hasPreviousPage={pagination.page > 1}
+                    hasNextPage={pagination.page < (pagination.totalPages || 1)}
                     onPageChange={handlePageChange}
                   />
                 </div>
