@@ -15,6 +15,7 @@ import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import Navbar from '@/components/navbar/Navbar';
 import ServiceImageCarousel from './ServiceImageCarousel';
+import ImageZoomModalServiceDetail from './ImageZoomModalServiceDetail';
 import ServiceDeactivateModal from './ServiceDeactivateModal';
 import ServiceDeleteConflictModal from '@/components/ui/ServiceDeleteConflictModal';
 import ServiceEditModal from './ServiceEditModal';
@@ -44,6 +45,18 @@ const ServiceDetail = ({ serviceId }) => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState(null);
+  // Modal de zoom de imagen
+  const [showImageZoom, setShowImageZoom] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
+
+  const handleShowImageZoom = (index = 0) => {
+    setZoomIndex(index);
+    setShowImageZoom(true);
+  };
+  const handleCloseImageZoom = () => {
+    setShowImageZoom(false);
+    setZoomIndex(0);
+  };
   
   // Messaging state
   const [messageText, setMessageText] = useState("");
@@ -397,6 +410,7 @@ ${messageText.trim()}`;
   }
 
   return (
+    <>
     <div className="relative min-h-screen w-full bg-[#f3f9f8] overflow-hidden flex flex-col">
       {/* Background Image */}
       <div 
@@ -433,22 +447,16 @@ ${messageText.trim()}`;
           {/* Contenido del servicio */}
           <div className="bg-white rounded-2xl shadow-lg border overflow-hidden">
             <div className="p-6 lg:p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[420px] lg:min-h-[480px]">
                 {/* Galería de imágenes */}
-                <div className="space-y-4">
-                  <div className="aspect-video bg-gray-100 rounded-lg">
-                    {service.images && service.images.length > 0 ? (
-                      <ServiceImageCarousel images={service.images} title={service.title} />
-                    ) : (
-                      <div className="relative w-full h-full overflow-hidden rounded-lg bg-gray-50">
-                        <Image
-                          src="/default_project.jpeg"
-                          alt={service.title}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                    )}
+                <div className="flex flex-col h-full justify-stretch">
+                  <div className="flex-1 flex flex-col justify-center">
+                    <ServiceImageCarousel 
+                      images={service.images} 
+                      title={service.title} 
+                      onImageClick={handleShowImageZoom}
+                      className="h-full"
+                    />
                   </div>
                 </div>
 
@@ -481,7 +489,7 @@ ${messageText.trim()}`;
                   </div>
 
                   {/* Información del propietario */}
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 p-3 rounded-xl border flex-1">
+                  <div className={`bg-gradient-to-r from-gray-50 to-gray-100/50 p-3 rounded-xl border ${canSendMessage ? 'flex-1' : ''}`}>
                     <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm">
                       <FaUser size={14} className="text-conexia-green" />
                       Publicado por
@@ -506,6 +514,22 @@ ${messageText.trim()}`;
                         </Link>
                       </div>
                     </div>
+                    
+                    {/* Fechas de publicación - aparecen aquí cuando no hay mensajería */}
+                    {!canSendMessage && (
+                      <div className="text-sm text-gray-500 space-y-1 mt-4">
+                        <div className="flex items-center gap-2">
+                          <FaCalendar size={12} />
+                          <span>Publicado: {formatDate(service.createdAt)}</span>
+                        </div>
+                        {service.updatedAt !== service.createdAt && (
+                          <div className="flex items-center gap-2">
+                            <FaCalendar size={12} />
+                            <span>Actualizado: {formatDate(service.updatedAt)}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     {/* Interfaz de mensajería */}
                     {canSendMessage && (
@@ -595,19 +619,21 @@ ${messageText.trim()}`;
                     )}
                   </div>
 
-                  {/* Fechas de publicación */}
-                  <div className="text-sm text-gray-500 space-y-1 mb-4">
-                    <div className="flex items-center gap-2">
-                      <FaCalendar size={12} />
-                      <span>Publicado: {formatDate(service.createdAt)}</span>
-                    </div>
-                    {service.updatedAt !== service.createdAt && (
+                  {/* Fechas de publicación - solo cuando hay mensajería */}
+                  {canSendMessage && (
+                    <div className="text-sm text-gray-500 space-y-1 mb-4">
                       <div className="flex items-center gap-2">
                         <FaCalendar size={12} />
-                        <span>Actualizado: {formatDate(service.updatedAt)}</span>
+                        <span>Publicado: {formatDate(service.createdAt)}</span>
                       </div>
-                    )}
-                  </div>
+                      {service.updatedAt !== service.createdAt && (
+                        <div className="flex items-center gap-2">
+                          <FaCalendar size={12} />
+                          <span>Actualizado: {formatDate(service.updatedAt)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {canViewOnly && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -785,7 +811,17 @@ ${messageText.trim()}`;
         duration={toast?.type === 'success' ? 3000 : 5000}
         position="top-center"
       />
-    </div> 
+
+    </div>
+
+    {/* Modal de zoom de imagen - fuera del contenedor principal */}
+    <ImageZoomModalServiceDetail
+      open={showImageZoom}
+      onClose={handleCloseImageZoom}
+      images={service?.images || []}
+      initialIndex={zoomIndex}
+    />
+    </>
   );
 }
 export default ServiceDetail;

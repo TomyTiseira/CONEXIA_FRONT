@@ -13,6 +13,7 @@ export default function ProjectReportsGrid({ projectId }) {
 
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+
   useEffect(() => {
     if (!projectId) return;
     setLoading(true);

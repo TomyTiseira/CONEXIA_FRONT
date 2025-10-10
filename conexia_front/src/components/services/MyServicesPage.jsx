@@ -160,7 +160,7 @@ export default function MyServicesPage() {
 
   const getImageSrc = (imagePath) => {
     if (!imagePath) {
-      return '/default_project.jpeg';
+      return '/default_service.jpg';
     }
     
     if (imagePath.startsWith('http')) {
@@ -456,7 +456,7 @@ export default function MyServicesPage() {
                                   src={getImageSrc(service.images[0])}
                                   alt=""
                                   onError={(e) => {
-                                    e.target.src = '/default_project.jpeg';
+                                    e.target.src = '/default_service.jpeg';
                                   }}
                                 />
                               ) : (
