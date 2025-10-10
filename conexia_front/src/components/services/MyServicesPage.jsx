@@ -14,7 +14,7 @@ import Toast from '@/components/ui/Toast';
 
 export default function MyServicesPage() {
   const router = useRouter();
-  const { profile } = useUserStore();
+  const { user } = useUserStore();
   const [services, setServices] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -35,13 +35,13 @@ export default function MyServicesPage() {
   }, [filters]);
 
   const loadMyServices = async () => {
-    if (!profile?.id) return;
+    if (!user?.id) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetchUserServices(profile.id, filters);
+      const response = await fetchUserServices(user.id, filters);
       setServices(response.services || []);
       setPagination(response.pagination || { page: 1, totalPages: 1, total: 0 });
       
