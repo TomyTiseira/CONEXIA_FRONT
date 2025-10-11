@@ -14,7 +14,7 @@ export default function ConfirmDeleteModal({ open, onClose, onConfirm, loading }
         </h2>
         <p className="mb-6 text-gray-700">¿Estás seguro que deseas eliminar este método de cobro? Esta acción no se puede deshacer.</p>
         <div className="flex gap-2 justify-end mt-2">
-          <Button type="button" variant="neutral" onClick={onClose} disabled={loading}>Cancelar</Button>
+          <Button type="button" variant="cancel" onClick={onClose} disabled={loading}>Cancelar</Button>
           <Button type="button" variant="danger" onClick={onConfirm} {...(loading ? { loading: true } : {})}>Eliminar</Button>
         </div>
       </div>

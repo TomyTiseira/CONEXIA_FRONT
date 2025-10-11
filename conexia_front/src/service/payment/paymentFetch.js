@@ -10,7 +10,21 @@ export async function editAccountAliasAndName(id, { alias, customName }) {
     body: JSON.stringify(body)
   });
   const response = await res.json();
-  if (!res.ok) throw new Error(response.message || 'Error al editar datos de la cuenta');
+  if (!res.ok) {
+    // Traducir mensajes comunes del backend
+    let errorMessage = response.message || 'Error al editar datos de la cuenta';
+    
+    // Limpiar mensajes mezclados del backend
+    if (errorMessage.includes('already exists') || errorMessage.includes('Ya tienes')) {
+      if (errorMessage.toLowerCase().includes('alias')) {
+        errorMessage = 'Ya tienes otra cuenta registrada con este alias';
+      } else {
+        errorMessage = 'Ya existe una cuenta con estos datos';
+      }
+    }
+    
+    throw new Error(errorMessage);
+  }
   return response.data;
 }
 import { config } from '@/config';
@@ -57,8 +71,22 @@ export async function addBankAccount({ bankId, bankAccountType, cbu, accountHold
   });
   const response = await res.json();
   if (!res.ok) {
-    // Si el backend provee un mensaje, mostrarlo; si no, mostrar mensaje en español
-    throw new Error(response.message ? response.message : 'Error al registrar cuenta bancaria');
+    // Traducir mensajes comunes del backend
+    let errorMessage = response.message || 'Error al registrar cuenta bancaria';
+    
+    // Limpiar mensajes mezclados del backend
+    if (errorMessage.includes('already exists') || errorMessage.includes('Ya tienes una cuenta')) {
+      // Casos específicos basados en el contenido del mensaje
+      if (errorMessage.toLowerCase().includes('cbu')) {
+        errorMessage = 'Ya existe una cuenta registrada con este número de CBU';
+      } else if (errorMessage.toLowerCase().includes('alias')) {
+        errorMessage = 'Ya tienes una cuenta registrada con este alias';
+      } else {
+        errorMessage = 'Ya tienes una cuenta bancaria registrada con estos datos';
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
   return response.data;
 }
@@ -80,7 +108,24 @@ export async function addDigitalAccount({ digitalPlatformId, cvu, accountHolderN
     body: JSON.stringify(body)
   });
   const response = await res.json();
-  if (!res.ok) throw new Error(response.message || 'Error al registrar cuenta digital');
+  if (!res.ok) {
+    // Traducir mensajes comunes del backend
+    let errorMessage = response.message || 'Error al registrar cuenta digital';
+    
+    // Limpiar mensajes mezclados del backend
+    if (errorMessage.includes('already exists') || errorMessage.includes('Ya tienes una cuenta')) {
+      // Casos específicos basados en el contenido del mensaje
+      if (errorMessage.toLowerCase().includes('cvu') || errorMessage.toLowerCase().includes('cbu')) {
+        errorMessage = 'Ya existe una cuenta registrada con este número de CVU/CBU';
+      } else if (errorMessage.toLowerCase().includes('alias')) {
+        errorMessage = 'Ya tienes una cuenta registrada con este alias';
+      } else {
+        errorMessage = 'Ya tienes una cuenta digital registrada con estos datos';
+      }
+    }
+    
+    throw new Error(errorMessage);
+  }
   return response.data;
 }
 

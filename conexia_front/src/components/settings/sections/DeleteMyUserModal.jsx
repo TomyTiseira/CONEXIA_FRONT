@@ -62,7 +62,7 @@ export default function DeleteMyUserModal({ email, onConfirm, onCancel, loading,
         <div className="mb-4">
           <label className="block text-conexia-green font-semibold mb-1">Motivo de baja <span className="text-red-500">*</span></label>
           <textarea
-            className="w-full border rounded p-2 text-sm"
+            className="w-full border rounded p-2 text-sm resize-none"
             value={motivo}
             onChange={e => setMotivo(e.target.value)}
             rows={3}

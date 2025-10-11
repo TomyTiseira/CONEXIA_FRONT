@@ -61,7 +61,7 @@ export default function EditAccountModal({ open, onClose, account, onSave, loadi
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <div className="flex gap-2 justify-end mt-2">
-            <Button type="button" variant="neutral" onClick={onClose} disabled={loading}>Cancelar</Button>
+            <Button type="button" variant="cancel" onClick={onClose} disabled={loading}>Cancelar</Button>
             <Button type="submit" variant="primary" {...(loading ? { loading: true } : {})}>Guardar</Button>
           </div>
         </form>
