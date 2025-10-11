@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { X, Clock, DollarSign, FileText, AlertCircle } from 'lucide-react';
+import { X, Clock, DollarSign, FileText, AlertCircle, Briefcase } from 'lucide-react';
 import { isExpired, getVigencyStatus } from '@/utils/quotationVigency';
 import { getUnitLabel, getUnitLabelPlural } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
@@ -95,25 +95,40 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-900">
-            {hasQuotation ? 'Cotización Recibida' : 'Detalle de Solicitud'}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-            disabled={actionLoading}
-          >
-            <X size={24} />
-          </button>
+      <div className="bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] flex flex-col">
+        {/* Header fijo */}
+        <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-bold text-conexia-green flex items-center gap-2">
+              {hasQuotation ? (
+                <>
+                  Cotización Recibida
+                </>
+              ) : (
+                <>
+                  Detalle de Solicitud
+                </>
+              )}
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+              disabled={actionLoading}
+            >
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        {/* Contenido con scroll */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Título Servicio Solicitado */}
+          <h4 className="font-medium text-conexia-green text-lg mb-2 flex items-center gap-2">
+            <Briefcase size={20} className="text-conexia-green" />
+            Servicio Solicitado
+          </h4>
           {/* Información del servicio */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Servicio Solicitado</h4>
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">Título</p>
@@ -140,28 +155,26 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             </div>
           </div>
 
-          {/* Mi descripción original */}
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-              <FileText size={18} />
-              Mi Solicitud
-            </h4>
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">
-                Fecha de solicitud: {formatDate(hiring.createdAt)}
-              </p>
-              <p className="text-gray-900">{hiring.description}</p>
-            </div>
+          {/* Título Mi Solicitud */}
+          <h4 className="font-medium text-blue-600 text-lg mb-2 flex items-center gap-2">
+            <FileText size={18} className="text-blue-600" />
+            Mi Solicitud
+          </h4>
+          <div className="bg-blue-50 rounded-lg p-4 mb-6">
+            <p className="text-sm text-gray-600 mb-1">
+              Fecha de solicitud: {formatDate(hiring.createdAt)}
+            </p>
+            <p className="text-gray-900">{hiring.description}</p>
           </div>
 
-          {/* Cotización (si existe) */}
+          {/* Título Cotización del Proveedor */}
           {hasQuotation && (
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                <DollarSign size={18} />
+            <>
+              <h4 className="font-medium text-green-700 text-lg mb-2 flex items-center gap-2">
+                <DollarSign size={18} className="text-green-700" />
                 Cotización del Proveedor
               </h4>
-              <div className="bg-conexia-green/5 border border-conexia-green/20 rounded-lg p-4">
+              <div className="bg-conexia-green/5 border border-conexia-green/20 rounded-lg p-4 mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="bg-white rounded-lg p-3">
                     <p className="text-sm text-gray-600">Precio Final</p>
@@ -185,7 +198,6 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                     </p>
                   </div>
                 </div>
-                
                 {hiring.quotationNotes && (
                   <div className="bg-white rounded-lg p-3">
                     <p className="text-sm text-gray-600 mb-2">Notas del Proveedor:</p>
@@ -193,7 +205,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                   </div>
                 )}
               </div>
-            </div>
+            </>
           )}
 
           {/* Acciones disponibles */}
@@ -268,15 +280,13 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 px-6 py-4 flex justify-end">
-          <Button
-            onClick={onClose}
-            variant="outline"
-            disabled={actionLoading}
-          >
-            Cerrar
-          </Button>
+        {/* Footer fijo */}
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg flex-shrink-0">
+          <div className="flex justify-end">
+            <Button variant="cancel" onClick={onClose} disabled={actionLoading}>
+              Cerrar
+            </Button>
+          </div>
         </div>
       </div>
     </div>

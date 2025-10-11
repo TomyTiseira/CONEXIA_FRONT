@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { fetchUserServices } from '@/service/services/servicesFetch';
 import { fetchMyServiceRequests } from '@/service/service-hirings/serviceHiringsFetch';
 import { useUserStore } from '@/store/userStore';
-import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, Eye, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { FaRegEye, FaFileInvoiceDollar, FaEllipsisH, FaExchangeAlt } from 'react-icons/fa';
+import { HiUserGroup } from 'react-icons/hi';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { config } from '@/config';
 import Navbar from '@/components/navbar/Navbar';
@@ -406,21 +408,27 @@ export default function MyServicesPage() {
                               {formatDate(service.updatedAt)}
                             </td>
                             <td className="px-6 py-4">
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => router.push(`/services/${service.id}`)}
-                                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                                  title="Ver detalle del servicio"
-                                >
-                                  <Eye size={16} />
-                                </button>
-                                <button
-                                  onClick={() => router.push(`/services/my-services/${service.id}/requests`)}
-                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                                  title={`Ver solicitudes (${counts.total})`}
-                                >
-                                  <Users size={16} />
-                                </button>
+                              <div className="flex items-center justify-center">
+                                <div className="flex items-center bg-gray-50 rounded-lg p-1 shadow-sm border">
+                                  {/* Botón para ver el servicio público */}
+                                  <button
+                                    onClick={() => router.push(`/services/${service.id}`)}
+                                    className="flex items-center justify-center w-8 h-8 text-gray-600 hover:text-white hover:bg-gray-600 rounded-md transition-all duration-200 group"
+                                    title="Ver servicio"
+                                  >
+                                    <Briefcase size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                  
+                                  {/* Botón para ver solicitudes */}
+                                  <button
+                                    onClick={() => router.push(`/services/my-services/${service.id}/requests`)}
+                                    className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                                    title="Ver solicitudes recibidas"
+                                    aria-label="Ver solicitudes recibidas"
+                                  >
+                                    <HiUserGroup className="text-[18px] group-hover:scale-110 transition-transform" />
+                                  </button>
+                                </div>
                               </div>
                             </td>
                           </tr>
@@ -509,21 +517,25 @@ export default function MyServicesPage() {
                             {formatDate(service.updatedAt)}
                           </span>
                           
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => router.push(`/services/${service.id}`)}
-                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded"
-                              title="Ver detalle del servicio"
-                            >
-                              <Eye size={16} />
-                            </button>
-                            <button
-                              onClick={() => router.push(`/services/my-services/${service.id}/requests`)}
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-white rounded"
-                              title={`Ver solicitudes (${counts.total})`}
-                            >
-                              <Users size={16} />
-                            </button>
+                          <div className="flex items-center gap-1">
+                            <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+                              <button
+                                onClick={() => router.push(`/services/${service.id}`)}
+                                className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-white hover:bg-gray-600 rounded-md transition-all duration-200 group"
+                                title="Ver servicio público"
+                              >
+                                <Briefcase size={14} className="group-hover:scale-110 transition-transform" />
+                              </button>
+                              
+                              <button
+                                onClick={() => router.push(`/services/my-services/${service.id}/requests`)}
+                                className="flex items-center justify-center w-7 h-7 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                                title="Ver solicitudes"
+                                aria-label="Ver solicitudes"
+                              >
+                                <HiUserGroup className="text-[15px] group-hover:scale-110 transition-transform" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>

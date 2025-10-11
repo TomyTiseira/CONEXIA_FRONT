@@ -103,11 +103,12 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-md">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <AlertTriangle size={20} className="text-orange-500" />
-              Confirmar Acción
+        <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+          {/* Header fijo */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
+            <h3 className="text-xl font-bold text-orange-600 flex items-center gap-2">
+              <AlertTriangle size={20} />
+              ⚠️ Confirmar Acción
             </h3>
             <button
               onClick={() => setConfirmAction(null)}
@@ -118,7 +119,8 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
             </button>
           </div>
           
-          <div className="p-6">
+          {/* Contenido con scroll */}
+          <div className="flex-1 overflow-y-auto p-6">
             <div className="text-center mb-6">
               <div className="text-4xl mb-3">{actionConfig.icon}</div>
               <h4 className="text-lg font-medium text-gray-900 mb-2">
@@ -128,11 +130,14 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 {actionConfig.description}
               </p>
             </div>
-            
+          </div>
+          
+          {/* Footer fijo */}
+          <div className="border-t border-gray-200 px-6 py-4 rounded-b-lg flex-shrink-0 bg-gray-50">
             <div className="flex gap-3">
               <Button
                 onClick={() => setConfirmAction(null)}
-                variant="outline"
+                variant="cancel"
                 className="flex-1"
                 disabled={loading}
               >
@@ -155,9 +160,10 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
   // Mostrar lista de acciones
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
+      <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+        {/* Header fijo */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
+          <h3 className="text-xl font-bold text-conexia-green">
             Acciones Disponibles
           </h3>
           <button
@@ -168,7 +174,8 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
           </button>
         </div>
         
-        <div className="p-6">
+        {/* Contenido con scroll */}
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="mb-4">
             <h4 className="font-medium text-gray-900 mb-2 break-words overflow-wrap-anywhere line-clamp-2 leading-tight max-w-full">{hiring.service?.title}</h4>
             <p className="text-sm text-gray-600">
@@ -270,8 +277,9 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
           )}
         </div>
         
-        <div className="border-t border-gray-200 px-6 py-4 flex justify-end">
-          <Button onClick={onClose} variant="outline">
+        {/* Footer fijo */}
+        <div className="border-t border-gray-200 px-6 py-4 flex justify-end rounded-b-lg flex-shrink-0 bg-gray-50">
+          <Button onClick={onClose} variant="cancel">
             Cerrar
           </Button>
         </div>
