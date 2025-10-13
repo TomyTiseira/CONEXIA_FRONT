@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { useQuotationErrorHandler } from '@/hooks/service-hirings/useQuotationErrorHandler';
 import { fetchServiceDetail } from '@/service/services/servicesFetch';
-import { ArrowLeft, User, Calendar, DollarSign, Clock, FileText, Edit, Plus } from 'lucide-react';
+import { ArrowLeft, User, Calendar, DollarSign, Clock, Edit, Plus } from 'lucide-react';
+import { FaFileInvoiceDollar, FaRegEye} from 'react-icons/fa';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import QuotationFormModal from '@/components/services/QuotationFormModal';
 import PaymentAccountRequiredModal from '@/components/services/PaymentAccountRequiredModal';
 import UserBannedModal from '@/components/services/UserBannedModal';
+import ProviderRequestDetailModal from '@/components/services/ProviderRequestDetailModal';
 import Toast from '@/components/ui/Toast';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabel } from '@/utils/timeUnit';
@@ -75,6 +77,7 @@ export default function ServiceRequestsPage({ serviceId }) {
   const [showQuotationModal, setShowQuotationModal] = useState(false);
   const [selectedHiring, setSelectedHiring] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -336,34 +339,45 @@ export default function ServiceRequestsPage({ serviceId }) {
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex gap-2">
-                              {canCreateQuote(hiring) && !hiring.quotedPrice && (
+                            <div className="flex items-center justify-center">
+                              <div className="flex items-center bg-gray-50 rounded-lg p-1 shadow-sm border">
+                                {/* Botón para ver detalle de solicitud */}
                                 <button
-                                  onClick={() => handleCreateQuotation(hiring)}
-                                  className="p-2 text-conexia-green hover:text-conexia-green/80 hover:bg-conexia-green/10 rounded"
-                                  title="Crear cotización"
+                                  onClick={() => setSelectedRequest(hiring)}
+                                  className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                                  title="Ver detalles de la solicitud"
                                 >
-                                  <Plus size={16} />
+                                  <FaRegEye className="text-[16px] group-hover:scale-110 transition-transform" />
                                 </button>
-                              )}
-                              
-                              {canEditQuote(hiring) && hiring.quotedPrice && (
+                                
+                                {canCreateQuote(hiring) && !hiring.quotedPrice && (
+                                  <button
+                                    onClick={() => handleCreateQuotation(hiring)}
+                                    className="flex items-center justify-center w-8 h-8 text-conexia-green hover:text-white hover:bg-conexia-green rounded-md transition-all duration-200 group"
+                                    title="Crear cotización para esta solicitud"
+                                  >
+                                    <Plus size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+                                
+                                {canEditQuote(hiring) && hiring.quotedPrice && (
+                                  <button
+                                    onClick={() => handleEditQuotation(hiring)}
+                                    className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                                    title="Editar cotización existente"
+                                  >
+                                    <Edit size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+                                
                                 <button
-                                  onClick={() => handleEditQuotation(hiring)}
-                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                                  title="Editar cotización"
+                                  onClick={() => router.push(`/profile/userProfile/${hiring.userId}`)}
+                                  className="flex items-center justify-center w-8 h-8 text-gray-600 hover:text-white hover:bg-gray-600 rounded-md transition-all duration-200 group"
+                                  title="Ver perfil del cliente"
                                 >
-                                  <Edit size={16} />
+                                  <User size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
-                              )}
-                              
-                              <button
-                                onClick={() => router.push(`/profile/userProfile/${hiring.userId}`)}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                                title="Ver perfil del cliente"
-                              >
-                                <User size={16} />
-                              </button>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -410,34 +424,44 @@ export default function ServiceRequestsPage({ serviceId }) {
                         </div>
                       )}
                       
-                      <div className="flex gap-2 justify-end">
-                        {canCreateQuote(hiring) && !hiring.quotedPrice && (
+                      <div className="flex justify-end">
+                        <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200">
                           <button
-                            onClick={() => handleCreateQuotation(hiring)}
-                            className="p-2 text-conexia-green hover:text-conexia-green/80 hover:bg-conexia-green/10 rounded"
-                            title="Crear cotización"
+                            onClick={() => setSelectedRequest(hiring)}
+                            className="flex items-center justify-center w-7 h-7 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                            title="Ver detalle"
                           >
-                            <Plus size={16} />
+                            <FaFileInvoiceDollar className="text-[14px] group-hover:scale-110 transition-transform" />
                           </button>
-                        )}
-                        
-                        {canEditQuote(hiring) && hiring.quotedPrice && (
+                          
+                          {canCreateQuote(hiring) && !hiring.quotedPrice && (
+                            <button
+                              onClick={() => handleCreateQuotation(hiring)}
+                              className="flex items-center justify-center w-7 h-7 text-conexia-green hover:text-white hover:bg-conexia-green rounded-md transition-all duration-200 group"
+                              title="Crear cotización"
+                            >
+                              <Plus size={14} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+                          
+                          {canEditQuote(hiring) && hiring.quotedPrice && (
+                            <button
+                              onClick={() => handleEditQuotation(hiring)}
+                              className="flex items-center justify-center w-7 h-7 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                              title="Editar cotización"
+                            >
+                              <Edit size={14} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+                          
                           <button
-                            onClick={() => handleEditQuotation(hiring)}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                            title="Editar cotización"
+                            onClick={() => router.push(`/profile/userProfile/${hiring.userId}`)}
+                            className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-white hover:bg-gray-600 rounded-md transition-all duration-200 group"
+                            title="Ver perfil"
                           >
-                            <Edit size={16} />
+                            <User size={14} className="group-hover:scale-110 transition-transform" />
                           </button>
-                        )}
-                        
-                        <button
-                          onClick={() => router.push(`/profile/userProfile/${hiring.userId}`)}
-                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                          title="Ver perfil del cliente"
-                        >
-                          <User size={16} />
-                        </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -473,6 +497,13 @@ export default function ServiceRequestsPage({ serviceId }) {
         }}
         onSuccess={handleQuotationSuccess}
         onError={handleQuotationError}
+      />
+
+      {/* Modal de detalle de solicitud */}
+      <ProviderRequestDetailModal
+        hiring={selectedRequest}
+        isOpen={!!selectedRequest}
+        onClose={() => setSelectedRequest(null)}
       />
 
       {/* Modales de validación específicos */}

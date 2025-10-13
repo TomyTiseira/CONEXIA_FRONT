@@ -3,7 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { ChevronDown, Eye, FileText, MoreVertical, ArrowLeft, Filter } from 'lucide-react';
+import { ChevronDown, ArrowLeft, FileText, Filter } from 'lucide-react';
+// Nuevos iconos más semánticos desde react-icons
+import { 
+  FaRegEye,      /* Ver detalle */
+  FaFileInvoiceDollar, /* Ver cotización */
+  FaEllipsisH,   /* Más acciones */
+  FaExchangeAlt  /* Posibles acciones de negociación en otros contextos */
+} from 'react-icons/fa';
+import { Briefcase } from 'lucide-react';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { calculateDaysLeft, isExpired } from '@/utils/quotationVigency';
 import Navbar from '@/components/navbar/Navbar';
@@ -11,7 +19,9 @@ import Pagination from '@/components/common/Pagination';
 import QuotationModal from '@/components/services/QuotationModal';
 import ServiceHiringActionsModal from '@/components/services/ServiceHiringActionsModal';
 import ContractServiceButton from '@/components/services/ContractServiceButton';
+import RequestDetailModal from '@/components/services/RequestDetailModal';
 import Toast from '@/components/ui/Toast';
+import Button from '../ui/Button';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -63,6 +73,7 @@ export default function MyServiceHiringsPage() {
   });
   const [showQuotationModal, setShowQuotationModal] = useState(false);
   const [showActionsModal, setShowActionsModal] = useState(false);
+  const [showRequestDetailModal, setShowRequestDetailModal] = useState(false);
   const [selectedHiring, setSelectedHiring] = useState(null);
   const [toast, setToast] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -87,6 +98,11 @@ export default function MyServiceHiringsPage() {
   const handleOpenActions = (hiring) => {
     setSelectedHiring(hiring);
     setShowActionsModal(true);
+  };
+
+  const handleViewRequestDetail = (hiring) => {
+    setSelectedHiring(hiring);
+    setShowRequestDetailModal(true);
   };
 
   const handleActionSuccess = (message) => {
@@ -236,7 +252,7 @@ export default function MyServiceHiringsPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Servicio
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Mi Solicitud
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -251,7 +267,7 @@ export default function MyServiceHiringsPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Vigencia
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
                           Acciones
                         </th>
                       </tr>
@@ -269,8 +285,8 @@ export default function MyServiceHiringsPage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <p className="text-sm text-gray-900 max-w-xs truncate" title={hiring.description}>
+                          <td className="px-4 py-4">
+                            <p className="text-sm text-gray-900 max-w-48 break-words whitespace-pre-line" title={hiring.description}>
                               {hiring.description}
                             </p>
                           </td>
@@ -298,40 +314,60 @@ export default function MyServiceHiringsPage() {
                             {getVigencyDisplay(hiring)}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex gap-2 flex-wrap">
-                              <button
-                                onClick={() => router.push(`/services/${hiring.service.id}`)}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                                title="Ver detalle del servicio"
-                              >
-                                <Eye size={16} />
-                              </button>
-                              
-                              {canViewQuotation(hiring) && (
+                            <div className="flex items-center justify-center">
+                              <div className="flex items-center bg-gray-50 rounded-lg p-1 shadow-sm border">
+                                {/* Botón para ver detalle de solicitud */}
                                 <button
-                                  onClick={() => handleViewQuotation(hiring)}
-                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                                  title="Ver cotización"
+                                  onClick={() => handleViewRequestDetail(hiring)}
+                                  className="flex items-center justify-center w-9 h-9 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                                  title="Ver detalles de mi solicitud"
+                                  aria-label="Ver detalles de mi solicitud"
+                                  data-action="ver-detalle"
                                 >
-                                  <FileText size={16} />
+                                  <FaRegEye className="text-[16px] group-hover:scale-110 transition-transform" />
                                 </button>
-                              )}
-                              
-                              {/* Botón de contratar servicio */}
-                              <ContractServiceButton 
-                                serviceHiring={hiring}
-                                onContractSuccess={handleContractSuccess}
-                              />
-                              
-                              {hasActions(hiring) && (
+                                
+                                {/* Botón para ver servicio */}
                                 <button
-                                  onClick={() => handleOpenActions(hiring)}
-                                  className="p-2 text-conexia-green hover:text-conexia-green/80 hover:bg-conexia-green/10 rounded"
-                                  title="Acciones disponibles"
+                                  onClick={() => router.push(`/services/${hiring.service.id}`)}
+                                  className="flex items-center justify-center w-9 h-9 text-gray-600 hover:text-white hover:bg-gray-600 rounded-md transition-all duration-200 group"
+                                  title="Ver servicio"
+                                  aria-label="Ver servicio"
+                                  data-action="ver-servicio"
                                 >
-                                  <MoreVertical size={16} />
+                                  <Briefcase size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
-                              )}
+                                
+                                {canViewQuotation(hiring) && (
+                                  <button
+                                    onClick={() => handleViewQuotation(hiring)}
+                                    className="flex items-center justify-center w-9 h-9 text-conexia-green hover:text-white hover:bg-conexia-green rounded-md transition-all duration-200 group"
+                                    title="Ver cotización"
+                                    aria-label="Ver cotización"
+                                    data-action="ver-cotizacion"
+                                  >
+                                    <FaFileInvoiceDollar className="text-[18px] group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+                                
+                                {hasActions(hiring) && (
+                                  <button
+                                    onClick={() => handleOpenActions(hiring)}
+                                    className="flex items-center justify-center w-9 h-9 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
+                                    title="Más acciones"
+                                    aria-label="Más acciones"
+                                    data-action="mas-acciones"
+                                  >
+                                    <FaEllipsisH className="text-[18px] group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+                                {/* Botón de contratar servicio destacado */}
+                                <ContractServiceButton 
+                                  serviceHiring={hiring}
+                                  onContractSuccess={handleContractSuccess}
+                                  highlight
+                                />
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -358,7 +394,7 @@ export default function MyServiceHiringsPage() {
                       
                       <div className="mb-3">
                         <p className="text-sm text-gray-600 mb-1">Mi solicitud:</p>
-                        <p className="text-sm text-gray-900">{hiring.description}</p>
+                        <p className="text-sm text-gray-900 break-words whitespace-pre-line">{hiring.description}</p>
                       </div>
                       
                       {!hiring.quotedPrice && (
@@ -391,39 +427,62 @@ export default function MyServiceHiringsPage() {
                           {formatDate(hiring.createdAt)}
                         </span>
                         
-                        <div className="flex gap-2 flex-wrap">
-                          <button
-                            onClick={() => router.push(`/services/${hiring.service.id}`)}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          
-                          {canViewQuotation(hiring) && (
+                        <div className="flex items-center gap-1">
+                          <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200">
                             <button
-                              onClick={() => handleViewQuotation(hiring)}
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-white rounded"
+                              onClick={() => setSelectedRequest(hiring)}
+                              className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                              title="Ver detalles"
+                              aria-label="Ver detalles"
+                              data-action="ver-detalle"
                             >
-                              <FileText size={16} />
+                              <FaRegEye className="text-[15px] group-hover:scale-110 transition-transform" />
                             </button>
-                          )}
-                          
-                          {hasActions(hiring) && (
+                            
                             <button
-                              onClick={() => handleOpenActions(hiring)}
-                              className="p-2 text-conexia-green hover:text-conexia-green/80 hover:bg-white rounded"
+                              onClick={() => router.push(`/services/${hiring.service.id}`)}
+                              className="flex items-center justify-center w-8 h-8 text-gray-600 hover:text-white hover:bg-gray-600 rounded-md transition-all duration-200 group"
+                              title="Ver servicio"
+                              aria-label="Ver servicio"
+                              data-action="ver-servicio"
                             >
-                              <MoreVertical size={16} />
+                              <Briefcase size={15} className="group-hover:scale-110 transition-transform" />
                             </button>
-                          )}
+                            
+                            {canViewQuotation(hiring) && (
+                              <button
+                                onClick={() => handleViewQuotation(hiring)}
+                                className="flex items-center justify-center w-8 h-8 text-conexia-green hover:text-white hover:bg-conexia-green rounded-md transition-all duration-200 group"
+                                title="Ver cotización"
+                                aria-label="Ver cotización"
+                                data-action="ver-cotizacion"
+                              >
+                                <FaFileInvoiceDollar className="text-[16px] group-hover:scale-110 transition-transform" />
+                              </button>
+                            )}
+                            
+                            {hasActions(hiring) && (
+                              <button
+                                onClick={() => handleOpenActions(hiring)}
+                                className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
+                                title="Más acciones"
+                                aria-label="Más acciones"
+                                data-action="mas-acciones"
+                              >
+                                <FaEllipsisH className="text-[16px] group-hover:scale-110 transition-transform" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                       
-                      {/* Botón de contratar servicio para mobile */}
-                      <div className="mt-3 flex justify-center">
+                      {/* Botón de contratar servicio para mobile dentro de acciones */}
+                      <div className="flex gap-2 items-center mt-3">
+                        {/* ...otros botones de acción... */}
                         <ContractServiceButton 
                           serviceHiring={hiring}
                           onContractSuccess={handleContractSuccess}
+                          highlight
                         />
                       </div>
                     </div>
@@ -469,6 +528,15 @@ export default function MyServiceHiringsPage() {
         }}
         onSuccess={handleActionSuccess}
         onError={handleActionError}
+      />
+
+      <RequestDetailModal
+        hiring={selectedHiring}
+        isOpen={showRequestDetailModal}
+        onClose={() => {
+          setShowRequestDetailModal(false);
+          setSelectedHiring(null);
+        }}
       />
 
       {/* Toast */}

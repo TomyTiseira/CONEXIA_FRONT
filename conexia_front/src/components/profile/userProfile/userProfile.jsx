@@ -103,6 +103,27 @@ export default function UserProfile() {
     } catch {}
   }, [authUser, id]);
 
+  // Efecto para mostrar toast de eliminación de proyecto
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const deletion = sessionStorage.getItem('projectDeletionToast');
+      if (deletion) {
+        try {
+          const data = JSON.parse(deletion);
+          setToast({ 
+            type: data.type || 'success', 
+            message: data.message || 'Proyecto eliminado correctamente.',
+            isVisible: true 
+          });
+        } catch {
+          // ignore parse error
+        } finally {
+          sessionStorage.removeItem('projectDeletionToast');
+        }
+      }
+    }
+  }, []);
+
   if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
 
   if (error) {

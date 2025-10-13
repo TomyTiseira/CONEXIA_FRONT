@@ -7,7 +7,8 @@ export default function ServiceImageCarousel({
   images = [], 
   title = '', 
   className = '',
-  size = 'normal' // 'normal' para detalle, 'small' para tarjeta
+  size = 'normal', // 'normal' para detalle, 'small' para tarjeta
+  onImageClick // función opcional para abrir modal de zoom
 }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState({});
@@ -18,7 +19,7 @@ export default function ServiceImageCarousel({
 
   const getImageSrc = (imagePath, index) => {
     if (imageErrors[index] || !imagePath) {
-      return '/default_project.jpeg';
+      return '/default_service.jpg';
     }
     
     if (imagePath.startsWith('http')) {
@@ -47,21 +48,21 @@ export default function ServiceImageCarousel({
   // Si no hay imágenes, mostrar imagen por defecto
   if (!images || images.length === 0) {
     const containerClass = size === 'small' 
-      ? 'relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0' 
-      : 'aspect-video bg-gray-100 rounded-lg overflow-hidden relative w-full h-full';
+      ? 'relative w-52 h-52 sm:w-56 sm:h-56 flex-shrink-0' 
+      : 'relative w-full aspect-[4/3] max-h-[70vh] bg-[#f3f9f8] rounded-lg overflow-hidden';
     
     const imageClass = size === 'small'
       ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm'
-      : 'object-contain w-full h-full bg-gray-50';
+      : 'object-cover w-full h-full';
       
     return (
       <div className={`${containerClass} ${className}`}>
         <Image
-          src="/default_project.jpeg"
+          src="/default_service.jpg"
           alt={title || "Sin imagen"}
           fill
           className={imageClass}
-          sizes={size === 'small' ? '144px' : '100vw'}
+          sizes={size === 'small' ? '224px' : '100vw'}
         />
       </div>
     );
@@ -70,21 +71,24 @@ export default function ServiceImageCarousel({
   // Si solo hay una imagen, mostrar imagen simple
   if (images.length === 1) {
     const containerClass = size === 'small' 
-      ? 'relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0' 
-      : 'aspect-video bg-gray-100 rounded-lg overflow-hidden relative w-full h-full';
+      ? 'relative w-52 h-52 sm:w-56 sm:h-56 flex-shrink-0' 
+      : 'relative w-full aspect-[4/3] max-h-[70vh] bg-[#f3f9f8] rounded-lg overflow-hidden';
     
     const imageClass = size === 'small'
       ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm'
-      : 'object-contain w-full h-full bg-gray-50';
+      : 'object-cover w-full h-full';
       
     return (
-      <div className={`${containerClass} ${className}`}>
+      <div 
+        className={`${containerClass} ${className}`}
+        {...(size === 'normal' && onImageClick ? { onClick: () => onImageClick(0), style: { cursor: 'zoom-in' } } : {})}
+      >
         <Image
           src={getImageSrc(images[0], 0)}
           alt={title || "Imagen del servicio"}
           fill
           className={imageClass}
-          sizes={size === 'small' ? '144px' : '100vw'}
+          sizes={size === 'small' ? '224px' : '100vw'}
           onError={() => handleImageError(0)}
         />
       </div>
@@ -93,29 +97,32 @@ export default function ServiceImageCarousel({
 
   // Carrusel completo para múltiples imágenes
   const containerClass = size === 'small' 
-    ? 'relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0 group' 
-    : 'relative group w-full h-full';
+    ? 'relative w-52 h-52 sm:w-56 sm:h-56 flex-shrink-0 group' 
+    : 'relative group w-full aspect-[4/3] max-h-[70vh] bg-[#f3f9f8] rounded-lg overflow-hidden';
   
   const imageClass = size === 'small'
     ? 'object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm transition-opacity duration-300'
-    : 'object-contain transition-opacity duration-300 w-full h-full bg-gray-50';
+    : 'object-cover transition-opacity duration-300 w-full h-full';
     
-  const buttonSize = size === 'small' ? 'w-5 h-5' : 'w-8 h-8';
-  const iconSize = size === 'small' ? 8 : 12;
+  const buttonSize = size === 'small' ? 'w-6 h-6' : 'w-8 h-8';
+  const iconSize = size === 'small' ? 10 : 12;
   const indicatorSize = size === 'small' ? 'w-1 h-1' : 'w-2 h-2';
   const counterClass = size === 'small' 
-    ? 'absolute top-0.5 right-0.5 bg-black/60 text-white text-[8px] px-1 py-0.5 rounded font-medium'
+    ? 'absolute top-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-medium'
     : 'absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded font-medium';
 
   return (
-    <div className={`${containerClass} ${className} overflow-hidden rounded-lg`}>
+    <div 
+      className={`${containerClass} ${className} overflow-hidden rounded-lg`}
+      {...(size === 'normal' && onImageClick ? { onClick: () => onImageClick(currentImageIndex), style: { cursor: 'zoom-in' } } : {})}
+    >
       {/* Imagen principal */}
       <Image
         src={getImageSrc(images[currentImageIndex], currentImageIndex)}
         alt={title || "Imagen del servicio"}
         fill
         className={imageClass}
-        sizes={size === 'small' ? '144px' : '100vw'}
+        sizes={size === 'small' ? '224px' : '100vw'}
         onError={() => handleImageError(currentImageIndex)}
       />
 

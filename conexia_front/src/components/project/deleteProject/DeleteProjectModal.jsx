@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ROLES } from "@/constants/roles";
 
-export default function DeleteProjectModal({ projectId, onCancel, onProjectDeleted, loading }) {
+export default function DeleteProjectModal({ projectId, onCancel, onProjectDeleted, loading, project, searchParams }) {
   const [motivo, setMotivo] = useState("");
   const [error, setError] = useState("");
   // Eliminamos mensajes inline; usaremos sessionStorage + redirect toast
@@ -42,7 +42,24 @@ export default function DeleteProjectModal({ projectId, onCancel, onProjectDelet
     } finally {
       onProjectDeleted?.();
       onCancel?.();
-      router.push('/project/search');
+      
+      // Lógica de redirección basada en el parámetro 'from'
+      const from = searchParams?.get('from');
+      const fromReportsProjectId = searchParams?.get('fromReportsProjectId');
+      
+      if (from === 'reports-project' && fromReportsProjectId) {
+        router.push(`/reports/project/${fromReportsProjectId}`);
+      } else if (from === 'reports') {
+        router.push('/reports');
+      } else if (from === 'profile' && project && project.ownerId) {
+        router.push(`/profile/userProfile/${project.ownerId}`);
+      } else if (from === 'user-projects' && project && project.ownerId) {
+        router.push(`/projects/user/${project.ownerId}`);
+      } else if (from === 'my-projects' && user && user.id) {
+        router.push(`/projects/user/${user.id}`);
+      } else {
+        router.push('/project/search');
+      }
     }
   };
 
@@ -60,12 +77,13 @@ export default function DeleteProjectModal({ projectId, onCancel, onProjectDelet
             Motivo de baja <span className="text-red-500">*</span>
           </label>
           <textarea
-            className="w-full border rounded p-2 text-sm"
+            className="w-full border rounded p-2 text-sm resize-none overflow-y-auto"
             value={motivo}
             onChange={e => setMotivo(e.target.value)}
             rows={3}
             required
             placeholder="Escribe el motivo de la baja..."
+            style={{ minHeight: '72px', maxHeight: '120px' }}
           />
         </div>
         <div className="min-h-[24px] mb-2 text-center text-sm text-red-600">
