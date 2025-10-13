@@ -1,26 +1,3 @@
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useServiceDetail } from '@/hooks/services';
-import { useAuth } from '@/context/AuthContext';
-import { useUserStore } from '@/store/userStore';
-import { ROLES } from '@/constants/roles';
-import { formatPrice } from '@/utils/formatPrice';
-import { getUnitLabel } from '@/utils/timeUnit';
-import { FaClock, FaUser, FaEdit, FaTrash, FaHandshake, FaComments, FaArrowLeft, FaTag, FaCalendar, FaPaperPlane, FaTimes } from 'react-icons/fa';
-import { IoCheckmarkCircleSharp } from 'react-icons/io5';
-import { config } from '@/config';
-import Button from '@/components/ui/Button';
-import BackButton from '@/components/ui/BackButton';
-import Navbar from '@/components/navbar/Navbar';
-import ServiceImageCarousel from './ServiceImageCarousel';
-import ServiceDeactivateModal from './ServiceDeactivateModal';
-import ServiceDeleteConflictModal from '@/components/ui/ServiceDeleteConflictModal';
-import ServiceEditModal from './ServiceEditModal';
-import ServiceHiringModal from './ServiceHiringModal';
-import ServiceHiringActionsModal from './ServiceHiringActionsModal';
-import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import { useDeleteService } from '@/hooks/services/useDeleteService';
 import { useEditService } from '@/hooks/services/useEditService';
@@ -45,7 +22,10 @@ const ServiceDetail = ({ serviceId }) => {
   const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState(null);
   
-  // Messaging state
+  // Reporte de servicio
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [showAlreadyReportedModal, setShowAlreadyReportedModal] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
@@ -410,11 +390,46 @@ ${messageText.trim()}`;
         }}
         aria-hidden="true"
       ></div>
-      
       {/* Navbar fijo arriba */}
       <div className="fixed top-0 left-0 w-full z-30">
         <Navbar />
       </div>
+
+      {/* Icono de reporte arriba a la derecha */}
+      {user && roleName === ROLES.USER && !isOwner && service?.status === 'active' && service?.isActive !== false && (
+        <div className="absolute top-4 right-6 md:right-8 z-40">
+          <button
+            className="p-2 rounded-full hover:bg-gray-100"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Más opciones"
+            type="button"
+          >
+            <MoreVertical size={22} />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40">
+              <button
+                className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-coral rounded shadow hover:bg-[#fbeaea] transition-colors"
+                style={{ boxShadow: '0 2px 8px 0 rgba(255, 82, 82, 0.08)' }}
+                onClick={() => {
+                  setMenuOpen(false);
+                  setShowReportModal(true);
+                }}
+                type="button"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                  <circle cx="12" cy="16" r="1.2" fill="currentColor" />
+                  <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                </svg>
+                <span>Reportar servicio</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+  // Estado para menú de opciones
+  const [menuOpen, setMenuOpen] = useState(false);
 
       {/* Contenido principal */}
       <main className="flex-1 pt-20 pb-8 relative z-10">
@@ -776,6 +791,66 @@ ${messageText.trim()}`;
         </div>
       )}
 
+      {/* Modal de reporte de servicio */}
+      <ReportServiceModal
+        open={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        loading={reportLoading}
+        onSubmit={async ({ reason, description, otherText }) => {
+          setReportLoading(true);
+          // Mapear motivos al formato esperado por backend
+          let backendReason = reason;
+          if (reason === 'offensive') backendReason = 'Contenido ofensivo';
+          if (reason === 'fraud') backendReason = 'Proyecto engañoso';
+          if (reason === 'false_info') backendReason = 'Información falsa';
+          if (reason === 'other') backendReason = 'Otro';
+          try {
+            await createServiceReport({
+              serviceId: service.id,
+              reason: backendReason,
+              otherReason: backendReason === 'Otro' ? otherText : undefined,
+              description
+            });
+            setShowReportModal(false);
+            setToast({
+              type: 'success',
+              message: 'Tu reporte fue enviado y será revisado por nuestro equipo.'
+            });
+          } catch (err) {
+            // Si ya reportó, mostrar modal informativo
+            if (err?.message?.includes('already been reported by this user')) {
+              setShowReportModal(false);
+              setShowAlreadyReportedModal(true);
+            } else {
+              setToast({
+                type: 'error',
+                message: err.message || 'Error al enviar el reporte.'
+              });
+            }
+          } finally {
+            setReportLoading(false);
+          }
+        }}
+      />
+
+      {/* Modal informativo si ya reportó */}
+      {showAlreadyReportedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowAlreadyReportedModal(false)}
+              aria-label="Cerrar"
+            >
+              <span style={{fontSize: 22}}>&times;</span>
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-red-600">Ya reportaste este servicio</h2>
+            <p className="mb-6 text-gray-700">No puedes reportar el mismo servicio más de una vez. Si tienes dudas, comunícate con soporte.</p>
+            <Button type="button" variant="primary" onClick={() => setShowAlreadyReportedModal(false)} className="w-full">Aceptar</Button>
+          </div>
+        </div>
+      )}
+
       {/* Toast de notificaciones */}
       <Toast
         type={toast?.type || 'info'}
@@ -785,7 +860,9 @@ ${messageText.trim()}`;
         duration={toast?.type === 'success' ? 3000 : 5000}
         position="top-center"
       />
+
     </div> 
   );
 }
+
 export default ServiceDetail;
