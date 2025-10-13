@@ -106,7 +106,7 @@ export default function ConnectionsPage() {
 
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#f3f9f8]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
           <p className="text-conexia-green">Cargando conexiones...</p>
@@ -117,7 +117,7 @@ export default function ConnectionsPage() {
         allowedRoles={[ROLES.USER]}
         fallbackComponent={<NotFound />}
       >
-    <div className="w-full bg-gray-50 min-h-screen" style={{overflowY: 'scroll', minHeight: '1px'}}>
+    <div className="w-full min-h-screen bg-[#f3f9f8] overflow-x-hidden">
           <NavbarCommunity />
           <main className="max-w-7xl mx-auto flex flex-col md:flex-row gap-2 md:gap-6 px-2 md:px-6 mt-2 md:mt-4 pb-16 items-start justify-start">
             {/* Mobile: Panel de conexiones arriba del contenido, Desktop: sidebar a la izquierda */}
