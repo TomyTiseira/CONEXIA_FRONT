@@ -61,8 +61,8 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
     if (cvu && !validateCVU(cvu)) newErrors.cvu = 'El CVU debe tener exactamente 22 dígitos.';
     if (alias && !validateAlias(alias)) newErrors.alias = 'El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).';
     if (cuit && !validateCUIT(cuit)) newErrors.cuit = 'El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.';
-    if (existingAccounts.some(acc => acc.cvu === cvu)) newErrors.cvu = 'Este CVU ya está registrado.';
-    if (existingAccounts.some(acc => acc.alias === alias)) newErrors.alias = 'Este alias ya está registrado.';
+    if (existingAccounts.some(acc => acc.cvu === cvu)) newErrors.cvu = 'Este CVU pertenece a otra cuenta registrada.';
+    if (existingAccounts.some(acc => acc.alias === alias)) newErrors.alias = 'Este alias pertenece a otra cuenta registrada.';
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
     // Enviar datos correctamente al backend

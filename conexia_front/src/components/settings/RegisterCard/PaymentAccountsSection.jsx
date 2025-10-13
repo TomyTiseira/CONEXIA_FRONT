@@ -17,6 +17,7 @@ export default function PaymentAccountsSection() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editAccount, setEditAccount] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [modalType, setModalType] = useState('bank'); // 'bank' o 'digital'
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -120,12 +121,14 @@ export default function PaymentAccountsSection() {
   // Handler para abrir modal de edición
   function handleEditAccount(acc) {
     setEditAccount(acc);
+    setEditError('');
     setEditModalOpen(true);
   }
 
   // Guardar cambios de alias/customName
   async function handleSaveEditAccount({ alias, customName }) {
     setEditLoading(true);
+    setEditError('');
     try {
       await editAccountAliasAndName(editAccount.id, { alias, customName });
       setEditModalOpen(false);
@@ -134,10 +137,12 @@ export default function PaymentAccountsSection() {
       refetch();
     } catch (err) {
       let errorMsg = err?.message || 'Error al actualizar datos';
-      if (errorMsg.toLowerCase().includes('invalid alias format') || errorMsg.toLowerCase().includes('ya tienes otra cuenta con este alias') || errorMsg.toLowerCase().includes('alias already exists')) {
-        errorMsg = 'El alias ingresado ya está en uso por otra cuenta. Por favor, elige uno diferente.';
+      if (errorMsg.toLowerCase().includes('invalid alias format')) {
+        errorMsg = 'El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).';
+      } else if (errorMsg.toLowerCase().includes('already exists') || errorMsg.toLowerCase().includes('alias already exists')) {
+        errorMsg = 'El alias ingresado pertenece a otra cuenta registrada.';
       }
-      setToast({ type: 'error', message: errorMsg, isVisible: true });
+      setEditError(errorMsg);
     } finally {
       setEditLoading(false);
     }
