@@ -6,6 +6,7 @@ import { X, Clock, DollarSign, FileText, AlertCircle, Briefcase } from 'lucide-r
 import { isExpired, getVigencyStatus } from '@/utils/quotationVigency';
 import { getUnitLabel, getUnitLabelPlural } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
+import QuotationDisplay from './QuotationDisplay';
 
 export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onError }) {
   const { 
@@ -170,41 +171,32 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           {/* Título Cotización del Proveedor */}
           {hasQuotation && (
             <>
-              <h4 className="font-medium text-green-700 text-lg mb-2 flex items-center gap-2">
+              <h4 className="font-medium text-green-700 text-lg mb-3 flex items-center gap-2">
                 <DollarSign size={18} className="text-green-700" />
                 Cotización del Proveedor
               </h4>
-              <div className="bg-conexia-green/5 border border-conexia-green/20 rounded-lg p-4 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="bg-white rounded-lg p-3">
-                    <p className="text-sm text-gray-600">Precio Final</p>
-                    <p className="text-2xl font-bold text-conexia-green">
-                      ${hiring.quotedPrice.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3">
-                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <Clock size={14} />
-                      Tiempo Estimado
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {hiring.estimatedHours} {hiring.estimatedTimeUnit ? (hiring.estimatedHours > 1 ? getUnitLabelPlural(hiring.estimatedTimeUnit) : getUnitLabel(hiring.estimatedTimeUnit)) : 'horas'}
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3">
-                    <p className="text-sm text-gray-600">Vigencia</p>
-                    <p className={`text-lg font-bold ${getVigencyStatus(hiring).className}`}>
-                      {getVigencyStatus(hiring).text}
-                    </p>
+              
+              {/* Usar el componente QuotationDisplay que muestra modalidades y entregables */}
+              <QuotationDisplay quotation={hiring} compact={false} />
+
+              {/* Vigencia de la cotización */}
+              {hiring.quotationValidityDays && (
+                <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Vigencia de la cotización</p>
+                      <p className={`text-lg font-bold ${getVigencyStatus(hiring).className}`}>
+                        {getVigencyStatus(hiring).text}
+                      </p>
+                    </div>
+                    {!isExpired(hiring) && (
+                      <div className="text-sm text-gray-500">
+                        Válida por {hiring.quotationValidityDays} {hiring.quotationValidityDays === 1 ? 'día' : 'días'}
+                      </div>
+                    )}
                   </div>
                 </div>
-                {hiring.quotationNotes && (
-                  <div className="bg-white rounded-lg p-3">
-                    <p className="text-sm text-gray-600 mb-2">Notas del Proveedor:</p>
-                    <p className="text-gray-900">{hiring.quotationNotes}</p>
-                  </div>
-                )}
-              </div>
+              )}
             </>
           )}
 
