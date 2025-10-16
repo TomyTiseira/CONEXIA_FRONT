@@ -5,6 +5,7 @@ import { X, CreditCard, Smartphone, Building2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { useContractService } from '@/hooks/service-hirings/useContractService';
 import Toast from '@/components/ui/Toast';
+import { getUnitLabelPlural } from '@/utils/timeUnit';
 
 const PAYMENT_METHODS = [
   {
@@ -136,14 +137,54 @@ export default function ContractServiceModal({
               <p className="text-sm text-gray-600 mb-2 break-words">
                 Por: {serviceHiring.service?.owner?.firstName} {serviceHiring.service?.owner?.lastName}
               </p>
-              <div className="flex justify-between items-center">
-                <p className="text-lg font-semibold text-conexia-green">
-                  ${serviceHiring.quotedPrice?.toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {serviceHiring.estimatedHours}h estimadas
-                </p>
-              </div>
+              
+              {/* Mostrar desglose si es modalidad de pago total */}
+              {serviceHiring.paymentModality?.code === 'full_payment' ? (
+                <>
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-sm text-gray-600">Precio total del servicio:</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      ${serviceHiring.quotedPrice?.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="border-t border-gray-300 pt-3 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Anticipo (25%)</p>
+                        <p className="text-xs text-gray-500">Pagarás ahora</p>
+                      </div>
+                      <p className="text-xl font-bold text-conexia-green">
+                        ${Math.round(serviceHiring.quotedPrice * 0.25).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center text-gray-600">
+                      <div>
+                        <p className="text-sm">Al completar (75%)</p>
+                        <p className="text-xs text-gray-500">Pagarás al finalizar</p>
+                      </div>
+                      <p className="text-sm font-medium">
+                        ${Math.round(serviceHiring.quotedPrice * 0.75).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  {serviceHiring.estimatedHours && serviceHiring.estimatedTimeUnit && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      {serviceHiring.estimatedHours} {getUnitLabelPlural(serviceHiring.estimatedTimeUnit)} estimadas
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <p className="text-lg font-semibold text-conexia-green">
+                    ${serviceHiring.quotedPrice?.toLocaleString()}
+                  </p>
+                  {serviceHiring.estimatedHours && serviceHiring.estimatedTimeUnit && (
+                    <p className="text-sm text-gray-500">
+                      {serviceHiring.estimatedHours} {getUnitLabelPlural(serviceHiring.estimatedTimeUnit)} estimadas
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Selector de método de pago */}

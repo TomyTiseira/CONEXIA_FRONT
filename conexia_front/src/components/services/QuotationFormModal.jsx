@@ -2,17 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { useQuotations } from '@/hooks/service-hirings/useQuotations';
+import { usePaymentModalities } from '@/hooks/service-hirings/usePaymentModalities';
 import { useQuotationErrorHandler } from '@/hooks/service-hirings/useQuotationErrorHandler';
 import { useHiringStatusUpdater } from '@/hooks/service-hirings/useHiringStatusUpdater';
 import { X, DollarSign, Clock, FileText, Calendar, Briefcase, User } from 'lucide-react';
 import { getUnitLabel, getTimeUnitOptions } from '@/utils/timeUnit';
+import { validateQuotationWithModality, prepareQuotationData } from '@/utils/quotationValidation';
 import Button from '@/components/ui/Button';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import PaymentAccountRequiredModal from './PaymentAccountRequiredModal';
 import UserBannedModal from './UserBannedModal';
+import PaymentModalitySelector from './PaymentModalitySelector';
+import DeliverablesGrid from './DeliverablesGrid';
 
 export default function QuotationFormModal({ hiring, isOpen, isEditing = false, onClose, onSuccess, onError, onHiringUpdate }) {
-  const { createQuote, updateQuote, loading } = useQuotations();
+  const { createQuoteWithModality, updateQuoteWithModality, loading } = useQuotations();
+  const { 
+    modalities, 
+    loading: loadingModalities, 
+    loadModalities, 
+    getModalityById,
+    isFullPayment,
+    isByDeliverables 
+  } = usePaymentModalities();
   const {
     showPaymentAccountModal,
     showUserBannedModal,
@@ -23,87 +35,69 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
   const { markAsRejectedDueToBannedUser } = useHiringStatusUpdater();
   
   const [formData, setFormData] = useState({
+    paymentModalityId: null,
     quotedPrice: '',
     estimatedHours: '',
     estimatedTimeUnit: '',
     quotationNotes: '',
-    quotationValidityDays: ''
+    quotationValidityDays: '',
+    deliverables: []
   });
   const [errors, setErrors] = useState({});
 
+  // Cargar modalidades al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      loadModalities();
+    }
+  }, [isOpen]);
+
   // Inicializar formulario cuando cambie el hiring o modo de edición
   useEffect(() => {
-    if (hiring) {
-      setFormData({
+    if (hiring && isOpen) {
+      const initialData = {
+        paymentModalityId: isEditing && hiring.paymentModality?.id ? hiring.paymentModality.id : null,
         quotedPrice: isEditing && hiring.quotedPrice ? hiring.quotedPrice.toString() : '',
         estimatedHours: isEditing && hiring.estimatedHours ? hiring.estimatedHours.toString() : '',
         estimatedTimeUnit: isEditing && hiring.estimatedTimeUnit ? hiring.estimatedTimeUnit : '',
         quotationNotes: isEditing && hiring.quotationNotes ? hiring.quotationNotes : '',
-        quotationValidityDays: isEditing && hiring.quotationValidityDays ? hiring.quotationValidityDays.toString() : ''
-      });
+        quotationValidityDays: isEditing && hiring.quotationValidityDays ? hiring.quotationValidityDays.toString() : '',
+        deliverables: isEditing && hiring.deliverables ? hiring.deliverables.map(d => ({
+          title: d.title,
+          description: d.description,
+          estimatedDeliveryDate: d.estimatedDeliveryDate?.split('T')[0] || '',
+          price: d.price.toString()
+        })) : []
+      };
+      setFormData(initialData);
       setErrors({});
     }
   }, [hiring, isEditing, isOpen]);
 
   if (!isOpen || !hiring) return null;
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Validar precio
-    const price = parseFloat(formData.quotedPrice);
-    if (!formData.quotedPrice || isNaN(price) || price <= 0) {
-      newErrors.quotedPrice = 'El precio es requerido y debe ser mayor a 0';
-    }
-
-    // Validar duración estimada
-    const duration = parseInt(formData.estimatedHours);
-    if (!formData.estimatedHours || isNaN(duration) || duration < 1) {
-      newErrors.estimatedHours = 'La duración estimada es requerida y debe ser al menos 1';
-    }
-
-    // Validar unidad de tiempo
-    if (!formData.estimatedTimeUnit) {
-      newErrors.estimatedTimeUnit = 'La unidad de tiempo es requerida';
-    }
-
-    // Validar vigencia
-    const validity = parseInt(formData.quotationValidityDays);
-    if (!formData.quotationValidityDays || isNaN(validity) || validity < 1) {
-      newErrors.quotationValidityDays = 'La vigencia es requerida y debe ser al menos 1 día';
-    }
-
-    // Validar notas (opcional pero con límite)
-    if (formData.quotationNotes.length > 1000) {
-      newErrors.quotationNotes = 'Las notas no pueden exceder 1000 caracteres';
-    }
-
-    return newErrors;
-  };
+  const selectedModality = getModalityById(formData.paymentModalityId);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validationErrors = validateForm();
+    // Validar formulario según la modalidad
+    const validationErrors = validateQuotationWithModality(formData, selectedModality);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      onError?.('Por favor completa todos los campos requeridos');
       return;
     }
 
     try {
-      const quotationData = {
-        quotedPrice: parseFloat(formData.quotedPrice),
-        estimatedHours: parseInt(formData.estimatedHours),
-        estimatedTimeUnit: formData.estimatedTimeUnit,
-        quotationNotes: formData.quotationNotes.trim() || undefined,
-        quotationValidityDays: parseInt(formData.quotationValidityDays)
-      };
+      // Preparar datos para enviar al API
+      const quotationData = prepareQuotationData(formData, selectedModality);
 
       if (isEditing) {
-        await updateQuote(hiring.id, quotationData);
+        await updateQuoteWithModality(hiring.id, quotationData);
         onSuccess?.('Cotización actualizada exitosamente');
       } else {
-        await createQuote(hiring.id, quotationData);
+        await createQuoteWithModality(hiring.id, quotationData);
         onSuccess?.('Cotización creada exitosamente');
       }
 
@@ -195,140 +189,178 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                 </div>
               </div>
               {/* Formulario de cotización */}
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <h4 className="font-medium text-gray-900">Detalles de la Cotización</h4>
-                {/* Precio */}
-                <div>
-                  <label htmlFor="quotedPrice" className="block text-sm font-medium text-gray-700 mb-2">
-                    <DollarSign size={16} className="inline mr-1" />
-                    Precio Final *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                    <input
-                      type="number"
-                      id="quotedPrice"
-                      step="0.01"
-                      min="0"
-                      value={formData.quotedPrice}
-                      onChange={(e) => handleInputChange('quotedPrice', e.target.value)}
-                      className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                        errors.quotedPrice ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                      placeholder="0.00"
-                      disabled={loading}
-                    />
+                
+                {/* Selector de modalidad de pago */}
+                {loadingModalities ? (
+                  <div className="text-center py-4 text-gray-500">
+                    Cargando modalidades de pago...
                   </div>
-                  {errors.quotedPrice && (
-                    <p className="text-sm text-red-600 mt-1">{errors.quotedPrice}</p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Precio base: ${hiring.service?.price?.toLocaleString()}{hiring.service?.timeUnit ? ` por ${getUnitLabel(hiring.service.timeUnit)}` : ''}
-                  </p>
-                </div>
-                {/* Duración estimada */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Clock size={16} className="inline mr-1" />
-                    Duración aprox. del servicio *
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <input
-                        type="number"
-                        id="estimatedHours"
-                        min="1"
-                        value={formData.estimatedHours}
-                        onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                          errors.estimatedHours ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        placeholder="1"
+                ) : (
+                  <PaymentModalitySelector
+                    modalities={modalities}
+                    selectedId={formData.paymentModalityId}
+                    onChange={(id) => handleInputChange('paymentModalityId', id)}
+                    disabled={loading}
+                  />
+                )}
+                {errors.paymentModalityId && (
+                  <p className="text-sm text-red-600 -mt-2">{errors.paymentModalityId}</p>
+                )}
+
+                {/* Campos condicionales según modalidad */}
+                {formData.paymentModalityId && (
+                  <>
+                    {/* Modalidad: Pago Total al Finalizar */}
+                    {isFullPayment(formData.paymentModalityId) && (
+                      <div>
+                        <label htmlFor="quotedPrice" className="block text-sm font-medium text-gray-700 mb-2">
+                          <DollarSign size={16} className="inline mr-1" />
+                          Precio Total *
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                          <input
+                            type="number"
+                            id="quotedPrice"
+                            step="0.01"
+                            min="0"
+                            value={formData.quotedPrice}
+                            onChange={(e) => handleInputChange('quotedPrice', e.target.value)}
+                            className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                              errors.quotedPrice ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                            placeholder="0.00"
+                            disabled={loading}
+                          />
+                        </div>
+                        {errors.quotedPrice && (
+                          <p className="text-sm text-red-600 mt-1">{errors.quotedPrice}</p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Precio base del servicio: ${hiring.service?.price?.toLocaleString()}{hiring.service?.timeUnit ? ` por ${getUnitLabel(hiring.service.timeUnit)}` : ''}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Modalidad: Pago por Entregables */}
+                    {isByDeliverables(formData.paymentModalityId) && (
+                      <DeliverablesGrid
+                        deliverables={formData.deliverables}
+                        onChange={(deliverables) => handleInputChange('deliverables', deliverables)}
+                        errors={errors}
                         disabled={loading}
                       />
-                    </div>
+                    )}
+
+                    {/* Duración estimada (común para ambas modalidades) */}
                     <div>
-                      <select
-                        id="estimatedTimeUnit"
-                        value={formData.estimatedTimeUnit}
-                        onChange={(e) => handleInputChange('estimatedTimeUnit', e.target.value)}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Clock size={16} className="inline mr-1" />
+                        Duración aprox. del servicio *
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="number"
+                            id="estimatedHours"
+                            min="1"
+                            value={formData.estimatedHours}
+                            onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                              errors.estimatedHours ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                            placeholder="1"
+                            disabled={loading}
+                          />
+                        </div>
+                        <div>
+                          <select
+                            id="estimatedTimeUnit"
+                            value={formData.estimatedTimeUnit}
+                            onChange={(e) => handleInputChange('estimatedTimeUnit', e.target.value)}
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                              errors.estimatedTimeUnit ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                            disabled={loading}
+                          >
+                            <option value="">Seleccionar unidad</option>
+                            {getTimeUnitOptions().map(option => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      {(errors.estimatedHours || errors.estimatedTimeUnit) && (
+                        <div className="mt-1">
+                          {errors.estimatedHours && (
+                            <p className="text-sm text-red-600">{errors.estimatedHours}</p>
+                          )}
+                          {errors.estimatedTimeUnit && (
+                            <p className="text-sm text-red-600">{errors.estimatedTimeUnit}</p>
+                          )}
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Tiempo aproximado que te tomará completar el trabajo
+                      </p>
+                    </div>
+
+                    {/* Vigencia de la cotización */}
+                    <div>
+                      <label htmlFor="quotationValidityDays" className="block text-sm font-medium text-gray-700 mb-2">
+                        <Calendar size={16} className="inline mr-1" />
+                        Vigencia de la cotización (días) *
+                      </label>
+                      <input
+                        type="number"
+                        id="quotationValidityDays"
+                        min="1"
+                        value={formData.quotationValidityDays}
+                        onChange={(e) => handleInputChange('quotationValidityDays', e.target.value)}
                         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                          errors.estimatedTimeUnit ? 'border-red-300' : 'border-gray-300'
+                          errors.quotationValidityDays ? 'border-red-300' : 'border-gray-300'
                         }`}
+                        placeholder="Ej: 7"
                         disabled={loading}
-                      >
-                        <option value="">Seleccionar unidad</option>
-                        {getTimeUnitOptions().map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  {(errors.estimatedHours || errors.estimatedTimeUnit) && (
-                    <div className="mt-1">
-                      {errors.estimatedHours && (
-                        <p className="text-sm text-red-600">{errors.estimatedHours}</p>
+                      />
+                      {errors.quotationValidityDays && (
+                        <p className="text-sm text-red-600 mt-1">{errors.quotationValidityDays}</p>
                       )}
-                      {errors.estimatedTimeUnit && (
-                        <p className="text-sm text-red-600">{errors.estimatedTimeUnit}</p>
-                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        La cotización será válida por este número de días
+                      </p>
                     </div>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Tiempo aproximado que te tomará completar el trabajo
-                  </p>
-                </div>
-                {/* Vigencia de la cotización */}
-                <div>
-                  <label htmlFor="quotationValidityDays" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar size={16} className="inline mr-1" />
-                    Vigencia de la cotización (días) *
-                  </label>
-                  <input
-                    type="number"
-                    id="quotationValidityDays"
-                    min="1"
-                    value={formData.quotationValidityDays}
-                    onChange={(e) => handleInputChange('quotationValidityDays', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                      errors.quotationValidityDays ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Ej: 7"
-                    disabled={loading}
-                  />
-                  {errors.quotationValidityDays && (
-                    <p className="text-sm text-red-600 mt-1">{errors.quotationValidityDays}</p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    La cotización será válida por este número de días
-                  </p>
-                </div>
-                {/* Notas adicionales */}
-                <div>
-                  <label htmlFor="quotationNotes" className="block text-sm font-medium text-gray-700 mb-2">
-                    <FileText size={16} className="inline mr-1" />
-                    Notas Adicionales
-                  </label>
-                  <textarea
-                    id="quotationNotes"
-                    rows={4}
-                    value={formData.quotationNotes}
-                    onChange={(e) => handleInputChange('quotationNotes', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green resize-none ${
-                      errors.quotationNotes ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Incluye detalles adicionales sobre el trabajo, materiales, condiciones, etc..."
-                    disabled={loading}
-                  />
-                  {errors.quotationNotes && (
-                    <p className="text-sm text-red-600 mt-1">{errors.quotationNotes}</p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Opcional - Máximo 1000 caracteres ({formData.quotationNotes.length}/1000)
-                  </p>
-                </div>
+
+                    {/* Notas adicionales */}
+                    <div>
+                      <label htmlFor="quotationNotes" className="block text-sm font-medium text-gray-700 mb-2">
+                        <FileText size={16} className="inline mr-1" />
+                        Notas Adicionales
+                      </label>
+                      <textarea
+                        id="quotationNotes"
+                        rows={4}
+                        value={formData.quotationNotes}
+                        onChange={(e) => handleInputChange('quotationNotes', e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green resize-none ${
+                          errors.quotationNotes ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                        placeholder="Incluye detalles adicionales sobre el trabajo, materiales, condiciones, etc..."
+                        disabled={loading}
+                      />
+                      {errors.quotationNotes && (
+                        <p className="text-sm text-red-600 mt-1">{errors.quotationNotes}</p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Opcional - Máximo 1000 caracteres ({formData.quotationNotes.length}/1000)
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
               {/* Información adicional */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
