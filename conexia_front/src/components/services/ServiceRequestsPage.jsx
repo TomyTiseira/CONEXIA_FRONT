@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { useQuotationErrorHandler } from '@/hooks/service-hirings/useQuotationErrorHandler';
 import { fetchServiceDetail } from '@/service/services/servicesFetch';
-import { ArrowLeft, User, Calendar, DollarSign, Clock, Edit, Plus } from 'lucide-react';
+import { ArrowLeft, User, Calendar, DollarSign, Clock, Edit, Plus, Package } from 'lucide-react';
 import { FaFileInvoiceDollar, FaRegEye} from 'react-icons/fa';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
@@ -341,8 +341,8 @@ export default function ServiceRequestsPage({ serviceId }) {
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center justify-center">
-                              <div className="flex items-center bg-gray-50 rounded-lg p-1 shadow-sm border">
+                            <div className="flex items-center justify-end">
+                              <div className="flex items-center bg-gray-50 rounded-lg p-1 shadow-sm border gap-0.5">
                                 {/* Botón para ver detalle de solicitud */}
                                 <button
                                   onClick={() => setSelectedRequest(hiring)}
@@ -369,6 +369,17 @@ export default function ServiceRequestsPage({ serviceId }) {
                                     title="Editar cotización existente"
                                   >
                                     <Edit size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+
+                                {/* Botón Ver Entregables - Solo para contratos aprobados con by_deliverables */}
+                                {hiring.status?.code === 'approved' && hiring.paymentModality?.code === 'by_deliverables' && (
+                                  <button
+                                    onClick={() => router.push(`/deliveries/${hiring.id}`)}
+                                    className="flex items-center justify-center w-8 h-8 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                                    title="Ver entregables del servicio"
+                                  >
+                                    <Package size={16} className="group-hover:scale-110 transition-transform" />
                                   </button>
                                 )}
                                 
@@ -427,7 +438,7 @@ export default function ServiceRequestsPage({ serviceId }) {
                       )}
                       
                       <div className="flex justify-end">
-                        <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+                        <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200 gap-0.5">
                           <button
                             onClick={() => setSelectedRequest(hiring)}
                             className="flex items-center justify-center w-7 h-7 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
@@ -453,6 +464,17 @@ export default function ServiceRequestsPage({ serviceId }) {
                               title="Editar cotización"
                             >
                               <Edit size={14} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+
+                          {/* Botón Ver Entregables - Solo para contratos aprobados con by_deliverables */}
+                          {hiring.status?.code === 'approved' && hiring.paymentModality?.code === 'by_deliverables' && (
+                            <button
+                              onClick={() => router.push(`/deliveries/${hiring.id}`)}
+                              className="flex items-center justify-center w-7 h-7 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                              title="Ver entregables"
+                            >
+                              <Package size={14} className="group-hover:scale-110 transition-transform" />
                             </button>
                           )}
                           
