@@ -79,7 +79,11 @@ export default function DeliveryModal({
       formData.append('content', content.trim());
 
       if (deliverableId) {
-        formData.append('deliverableId', deliverableId.toString());
+        // Asegurarse de que sea un número antes de agregarlo
+        const numericId = parseInt(deliverableId, 10);
+        if (!isNaN(numericId)) {
+          formData.append('deliverableId', numericId.toString());
+        }
       }
 
       if (attachment) {

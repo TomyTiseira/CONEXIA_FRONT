@@ -7,6 +7,14 @@ import { config } from '@/config';
  * @returns {Promise<Object>} Delivery creado
  */
 export async function createDelivery(hiringId, formData) {
+  // Log para debugging
+  console.log('📤 [API] Creando entrega con:', {
+    hiringId,
+    content: formData.get('content'),
+    deliverableId: formData.get('deliverableId'),
+    hasAttachment: !!formData.get('attachment')
+  });
+
   const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/delivery`, {
     method: 'POST',
     credentials: 'include',
@@ -18,7 +26,8 @@ export async function createDelivery(hiringId, formData) {
   if (!res.ok) {
     console.error('❌ [API] Error al crear entrega:', {
       status: res.status,
-      message: json?.message || 'Sin mensaje'
+      message: json?.message || 'Sin mensaje',
+      details: json
     });
     
     const error = new Error(json?.message || 'Error al crear la entrega');

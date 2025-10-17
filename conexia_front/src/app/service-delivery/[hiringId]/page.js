@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { useHiringWithDeliveries, useDeliveries } from '@/hooks/deliveries';
 import { ArrowLeft, Package, DollarSign, User, Calendar, FileText } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
@@ -14,6 +15,7 @@ export default function ServiceDeliveryPage() {
   const router = useRouter();
   const params = useParams();
   const hiringId = parseInt(params.hiringId);
+  const { user } = useAuth();
 
   const { hiring, loading: hiringLoading, loadHiring } = useHiringWithDeliveries(hiringId);
   const { deliveries, loading: deliveriesLoading, loadDeliveries } = useDeliveries(hiringId);
@@ -35,6 +37,20 @@ export default function ServiceDeliveryPage() {
 
   const isByDeliverables = hiring?.paymentModality?.code === 'by_deliverables';
   const deliverables = hiring?.deliverables || [];
+  
+  // Verificar si el usuario actual es el cliente (quien solicitó el servicio)
+  const isClient = user?.id === hiring?.userId;
+
+  // Debug: Ver qué datos llegan
+  useEffect(() => {
+    if (hiring) {
+      console.log('========== DEBUG HIRING DATA ==========');
+      console.log('Full hiring object:', hiring);
+      console.log('Service:', hiring.service);
+      console.log('Service owner:', hiring.service?.owner);
+      console.log('=====================================');
+    }
+  }, [hiring]);
 
   // Agrupar deliveries por deliverable
   const getDeliveriesByDeliverable = (deliverableId) => {
@@ -96,11 +112,18 @@ export default function ServiceDeliveryPage() {
           {/* Header */}
           <div className="mb-6">
             <button
-              onClick={() => router.push('/requested-services')}
+              onClick={() => {
+                const serviceId = hiring?.service?.id;
+                if (serviceId) {
+                  router.push(`/services/my-services/${serviceId}/requests`);
+                } else {
+                  router.back();
+                }
+              }}
               className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
             >
               <ArrowLeft size={20} className="mr-2" />
-              Volver a Mis Servicios Solicitados
+              Volver
             </button>
             <h1 className="text-3xl font-bold text-gray-900">
               Revisar Entregas
@@ -192,10 +215,17 @@ export default function ServiceDeliveryPage() {
                                 <span className="font-semibold">
                                   Entregable {deliverable.orderIndex}
                                 </span>
-                                {latestDelivery && (
+                                {/* Mostrar estado de la delivery si existe, sino el estado del deliverable */}
+                                {latestDelivery ? (
                                   <StatusBadge 
                                     status={latestDelivery.status} 
                                     type="delivery" 
+                                    className="text-xs"
+                                  />
+                                ) : (
+                                  <StatusBadge 
+                                    status={deliverable.status} 
+                                    type="deliverable" 
                                     className="text-xs"
                                   />
                                 )}
@@ -250,6 +280,7 @@ export default function ServiceDeliveryPage() {
                                 <DeliveryReview
                                   key={delivery.id}
                                   delivery={delivery}
+                                  isClient={isClient}
                                   onReviewSuccess={handleReviewSuccess}
                                 />
                               ))}
@@ -278,6 +309,7 @@ export default function ServiceDeliveryPage() {
                       <DeliveryReview
                         key={delivery.id}
                         delivery={delivery}
+                        isClient={isClient}
                         onReviewSuccess={handleReviewSuccess}
                       />
                     ))

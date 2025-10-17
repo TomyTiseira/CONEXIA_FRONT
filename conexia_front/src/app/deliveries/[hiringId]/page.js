@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useHiringWithDeliveries, useDeliveries } from '@/hooks/deliveries';
-import { ArrowLeft, Package, Calendar, DollarSign, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { useHiringWithDeliveries } from '@/hooks/deliveries';
+import { ArrowLeft, Package, Calendar, DollarSign, CheckCircle, Clock, AlertCircle, Upload, Eye } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import StatusBadge from '@/components/common/StatusBadge';
 import Button from '@/components/ui/Button';
@@ -16,7 +16,6 @@ export default function DeliverablesPage() {
   const hiringId = parseInt(params.hiringId);
 
   const { hiring, loading: hiringLoading, loadHiring } = useHiringWithDeliveries(hiringId);
-  const { deliveries, loadDeliveries } = useDeliveries(hiringId);
 
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [selectedDeliverable, setSelectedDeliverable] = useState(null);
@@ -24,9 +23,8 @@ export default function DeliverablesPage() {
   useEffect(() => {
     if (hiringId) {
       loadHiring();
-      loadDeliveries();
     }
-  }, [hiringId, loadHiring, loadDeliveries]);
+  }, [hiringId, loadHiring]);
 
   const deliverables = hiring?.deliverables || [];
 
@@ -38,14 +36,19 @@ export default function DeliverablesPage() {
   const handleDeliverySuccess = () => {
     // Recargar datos después de entregar
     loadHiring();
-    loadDeliveries();
     setShowDeliveryModal(false);
     setSelectedDeliverable(null);
   };
 
+  const handleViewDelivery = (deliverable) => {
+    // TODO: Implementar modal o navegación para ver detalle de la entrega
+    // Por ahora redirigimos a la página de revisión del cliente
+    router.push(`/service-delivery/${hiringId}`);
+  };
+
   const canDeliverDeliverable = (deliverable) => {
-    // Solo se puede entregar si no está aprobado
-    return deliverable.status !== 'approved';
+    // Solo se puede entregar si está en estado pendiente o si fue rechazado
+    return deliverable.status === 'pending' || deliverable.status === 'revision_requested';
   };
 
   const getDeliverableProgress = () => {
@@ -55,11 +58,15 @@ export default function DeliverablesPage() {
   };
 
   const getTotalDelivered = () => {
-    return deliverables.filter(d => d.status === 'approved').reduce((sum, d) => sum + (d.price || 0), 0);
+    return deliverables
+      .filter(d => d.status === 'approved')
+      .reduce((sum, d) => sum + (parseFloat(d.price) || 0), 0);
   };
 
   const getTotalPending = () => {
-    return deliverables.filter(d => d.status !== 'approved').reduce((sum, d) => sum + (d.price || 0), 0);
+    return deliverables
+      .filter(d => d.status !== 'approved')
+      .reduce((sum, d) => sum + (parseFloat(d.price) || 0), 0);
   };
 
   if (hiringLoading) {
@@ -107,11 +114,18 @@ export default function DeliverablesPage() {
           {/* Header */}
           <div className="mb-6">
             <button
-              onClick={() => router.push('/my-services')}
+              onClick={() => {
+                const serviceId = hiring?.service?.id || hiring?.serviceId;
+                if (serviceId) {
+                  router.push(`/services/my-services/${serviceId}/requests`);
+                } else {
+                  router.back();
+                }
+              }}
               className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
             >
               <ArrowLeft size={20} className="mr-2" />
-              Volver a Mis Servicios
+              Volver
             </button>
             <h1 className="text-3xl font-bold text-gray-900">
               Entregables del Servicio
@@ -134,21 +148,21 @@ export default function DeliverablesPage() {
                 <p className="text-sm text-gray-500 mb-1">Precio Total</p>
                 <p className="font-semibold text-gray-900 flex items-center">
                   <DollarSign size={16} className="mr-1" />
-                  ${hiring.quotedPrice?.toLocaleString()}
+                  ${((parseFloat(hiring.quotedPrice) || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 }))}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Total Entregado</p>
                 <p className="font-semibold text-green-600 flex items-center">
                   <CheckCircle size={16} className="mr-1" />
-                  ${getTotalDelivered().toLocaleString()}
+                  ${(getTotalDelivered()).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Total Pendiente</p>
                 <p className="font-semibold text-orange-600 flex items-center">
                   <Clock size={16} className="mr-1" />
-                  ${getTotalPending().toLocaleString()}
+                  ${(getTotalPending()).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
             </div>
@@ -247,14 +261,29 @@ export default function DeliverablesPage() {
                             <StatusBadge status={deliverable.status} type="deliverable" />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right">
-                            <Button
-                              variant={deliverable.status === 'approved' ? 'secondary' : 'primary'}
-                              size="sm"
-                              onClick={() => handleOpenDeliveryModal(deliverable)}
-                              disabled={!canDeliverDeliverable(deliverable)}
-                            >
-                              {deliverable.status === 'approved' ? 'Entregado' : 'Entregar'}
-                            </Button>
+                            <div className="flex items-center justify-end gap-1">
+                              {canDeliverDeliverable(deliverable) ? (
+                                <button
+                                  onClick={() => handleOpenDeliveryModal(deliverable)}
+                                  className="flex items-center justify-center w-8 h-8 text-conexia-green hover:text-white hover:bg-conexia-green rounded-md transition-all duration-200 group bg-gray-50 border border-gray-200"
+                                  title="Realizar entrega"
+                                >
+                                  <Upload size={16} className="group-hover:scale-110 transition-transform" />
+                                </button>
+                              ) : deliverable.status === 'delivered' ? (
+                                <button
+                                  onClick={() => handleViewDelivery(deliverable)}
+                                  className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group bg-gray-50 border border-gray-200"
+                                  title="Ver detalle de la entrega"
+                                >
+                                  <Eye size={16} className="group-hover:scale-110 transition-transform" />
+                                </button>
+                              ) : deliverable.status === 'approved' ? (
+                                <span className="text-sm text-gray-400 italic">✓ Aprobado</span>
+                              ) : (
+                                <span className="text-sm text-gray-400 italic">-</span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -301,15 +330,27 @@ export default function DeliverablesPage() {
                         </div>
                       </div>
 
-                      <Button
-                        variant={deliverable.status === 'approved' ? 'secondary' : 'primary'}
-                        size="sm"
-                        onClick={() => handleOpenDeliveryModal(deliverable)}
-                        disabled={!canDeliverDeliverable(deliverable)}
-                        className="w-full"
-                      >
-                        {deliverable.status === 'approved' ? 'Entregado ✓' : 'Entregar'}
-                      </Button>
+                      {canDeliverDeliverable(deliverable) ? (
+                        <button
+                          onClick={() => handleOpenDeliveryModal(deliverable)}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-all duration-200"
+                        >
+                          <Upload size={18} />
+                          Entregar
+                        </button>
+                      ) : deliverable.status === 'delivered' ? (
+                        <button
+                          onClick={() => handleViewDelivery(deliverable)}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
+                        >
+                          <Eye size={18} />
+                          Ver Entrega
+                        </button>
+                      ) : (
+                        <div className="w-full text-center py-2 text-gray-400 italic text-sm">
+                          {deliverable.status === 'approved' ? '✓ Aprobado' : 'No disponible'}
+                        </div>
+                      )}
                     </div>
                   ))}
               </div>

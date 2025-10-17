@@ -6,9 +6,9 @@ import StatusBadge from '@/components/common/StatusBadge';
 import Button from '@/components/ui/Button';
 import { useReviewDelivery } from '@/hooks/deliveries';
 import Toast from '@/components/ui/Toast';
-import { mediaUrl } from '@/utils/mediaUrl';
+import { buildMediaUrl } from '@/utils/mediaUrl';
 
-export default function DeliveryReview({ delivery, onReviewSuccess }) {
+export default function DeliveryReview({ delivery, isClient = false, onReviewSuccess }) {
   const { reviewDelivery, loading } = useReviewDelivery();
   const [showRevisionForm, setShowRevisionForm] = useState(false);
   const [revisionNotes, setRevisionNotes] = useState('');
@@ -89,7 +89,7 @@ export default function DeliveryReview({ delivery, onReviewSuccess }) {
 
   const getAttachmentUrl = () => {
     if (delivery.attachmentUrl) {
-      return mediaUrl(delivery.attachmentUrl);
+      return buildMediaUrl(delivery.attachmentUrl);
     }
     return null;
   };
@@ -199,8 +199,8 @@ export default function DeliveryReview({ delivery, onReviewSuccess }) {
             </div>
           )}
 
-          {/* Acciones según estado */}
-          {delivery.status === 'delivered' && !showConfirmApprove && !showRevisionForm && (
+          {/* Acciones según estado - Solo para el cliente */}
+          {isClient && delivery.status === 'delivered' && !showConfirmApprove && !showRevisionForm && (
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="primary"
@@ -220,6 +220,23 @@ export default function DeliveryReview({ delivery, onReviewSuccess }) {
                 <RefreshCw size={18} className="mr-2" />
                 Solicitar Revisión
               </Button>
+            </div>
+          )}
+
+          {/* Mensaje informativo para prestador */}
+          {!isClient && delivery.status === 'delivered' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertCircle size={20} className="text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-1">
+                    Entrega realizada
+                  </h4>
+                  <p className="text-sm text-blue-800">
+                    Esta entrega está esperando la revisión y aprobación del cliente.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
