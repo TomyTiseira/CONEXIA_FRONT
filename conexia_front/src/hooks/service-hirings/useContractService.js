@@ -33,15 +33,11 @@ export function useContractService() {
       
       return response;
     } catch (err) {
-      console.error('❌ [FRONTEND] Error en contratación:', {
-        error: err.message,
-        stack: err.stack,
-        timestamp: new Date().toISOString()
-      });
+      console.error('❌ [FRONTEND] Error en contratación:', err.message || err);
       
       const errorMessage = err.message || 'Error al procesar la contratación';
       setError(errorMessage);
-      throw new Error(errorMessage);
+      throw err; // Lanzar el error original completo
     } finally {
       setLoading(false);
     }

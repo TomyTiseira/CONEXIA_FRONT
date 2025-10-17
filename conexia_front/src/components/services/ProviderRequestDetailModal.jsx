@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, FileText, Calendar, User, DollarSign, Clock } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import QuotationDisplay from '@/components/services/QuotationDisplay';
 import { config } from '@/config';
 
 export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) {
@@ -29,6 +30,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
       cancelled: 'Cancelado',
       negotiating: 'Negociando',
       in_progress: 'En progreso',
+      delivered: 'Entregado',
       completed: 'Completado'
     };
     return statusMap[statusCode] || statusCode;
@@ -44,6 +46,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
       cancelled: 'text-gray-800 bg-gray-100',
       negotiating: 'text-orange-800 bg-orange-100',
       in_progress: 'text-purple-800 bg-purple-100',
+      delivered: 'text-teal-800 bg-teal-100',
       completed: 'text-green-800 bg-green-100'
     };
     return statusMap[statusCode] || 'text-gray-800 bg-gray-100';
@@ -162,39 +165,21 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
                 <DollarSign size={20} className="text-green-600" />
                 Mi Cotización
               </h3>
-              <div className="space-y-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="font-medium text-gray-700">Precio cotizado:</span>
-                    <p className="text-green-600 font-bold text-xl mt-1">
-                      ${parseFloat(hiring.quotedPrice).toLocaleString()} {hiring.service?.currency}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-700">Tiempo estimado:</span>
-                    <p className="text-gray-900 mt-1 flex items-center gap-1">
-                      <Clock size={16} />
-                      {hiring.estimatedHours} horas
-                    </p>
-                  </div>
-                </div>
-                {hiring.quotationDetails?.description && (
-                  <div>
-                    <span className="font-medium text-gray-700">Detalles de mi cotización:</span>
-                    <div className="text-gray-900 mt-1 bg-white p-3 rounded border break-words overflow-wrap-anywhere">
-                      {hiring.quotationDetails.description}
-                    </div>
-                  </div>
-                )}
-                {hiring.quotationDetails?.validUntil && (
-                  <div>
-                    <span className="font-medium text-gray-700">Vigencia:</span>
-                    <p className="text-gray-900 mt-1">
-                      Válida hasta: {formatDate(hiring.quotationDetails.validUntil)}
-                    </p>
-                  </div>
-                )}
+              
+              {/* Usar QuotationDisplay para mostrar modalidad de pago y entregables */}
+              <div className="bg-white rounded-lg p-4">
+                <QuotationDisplay quotation={hiring} compact={false} />
               </div>
+
+              {/* Información de vigencia si existe */}
+              {hiring.quotationDetails?.validUntil && (
+                <div className="mt-3">
+                  <span className="font-medium text-gray-700">Vigencia:</span>
+                  <p className="text-gray-900 mt-1">
+                    Válida hasta: {formatDate(hiring.quotationDetails.validUntil)}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

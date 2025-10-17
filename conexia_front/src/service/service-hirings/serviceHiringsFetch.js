@@ -298,8 +298,8 @@ export async function contractService(hiringId, paymentMethod) {
   if (!res.ok) {
     console.error('❌ [API] HTTP Error:', {
       status: res.status,
-      message: json?.message,
-      fullError: json
+      message: json?.message || 'Sin mensaje',
+      errorType: json?.errorType || 'unknown'
     });
     
     const error = new Error(json?.message || 'Error al contratar el servicio');
@@ -310,9 +310,8 @@ export async function contractService(hiringId, paymentMethod) {
 
   if (!json.success) {
     console.error('❌ [API] Business Logic Error:', {
-      message: json.message,
-      statusCode: json.statusCode,
-      fullError: json
+      message: json.message || 'Sin mensaje',
+      statusCode: json.statusCode || 'Sin código'
     });
     
     const error = new Error(json.message || 'Error en la respuesta del servidor');
@@ -350,6 +349,12 @@ function getContractErrorType(message) {
   if (message.includes('not in accepted status') || 
       message.includes('estado aceptado')) {
     return 'invalid_status';
+  }
+  
+  if (message.includes('pago por entregables') || 
+      message.includes('debe pagar cada entregable') ||
+      message.includes('pay each deliverable individually')) {
+    return 'payment_by_deliverables';
   }
   
   return 'unknown';

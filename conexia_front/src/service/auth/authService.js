@@ -34,16 +34,30 @@ export const refreshToken = async () => {
 
 // Cerrar sesión
 export const logoutUser = async () => {
-  const res = await fetch(`${config.API_URL}/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  });
+  try {
+    const res = await fetch(`${config.API_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
 
-  if (!res.ok) {
-    throw new Error('Error al cerrar sesión');
+    // Si el status es 401 (no autorizado), significa que ya no hay sesión activa
+    // No lanzar error en este caso
+    if (res.status === 401) {
+      console.info('Sesión ya cerrada o expirada');
+      return { success: true, message: 'Sesión cerrada' };
+    }
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'Error al cerrar sesión');
+    }
+
+    return res.json();
+  } catch (error) {
+    // Si falla la conexión o hay error de red, no bloquear el logout
+    console.warn('Error al cerrar sesión en el servidor:', error.message);
+    return { success: true, message: 'Sesión cerrada localmente' };
   }
-
-  return res.json();
 };
 
 export const getProfile = async () => {

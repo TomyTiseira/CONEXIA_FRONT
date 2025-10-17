@@ -46,6 +46,7 @@ const getStatusBadge = (statusCode) => {
     cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
     negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
     in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
+    delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
     completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
   };
   
