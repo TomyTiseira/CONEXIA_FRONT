@@ -74,11 +74,6 @@ export default function ContractServiceModal({
         onSuccess(result);
       }
 
-      // Llamar callback de éxito
-      if (onSuccess) {
-        onSuccess(result);
-      }
-
       // Cerrar modal después de un momento
       setTimeout(() => {
         onClose();
@@ -112,12 +107,10 @@ export default function ContractServiceModal({
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full min-w-[300px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
-          {/* Header */}
-          <div className="flex justify-between items-center p-6 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Contratar Servicio
-            </h3>
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full min-w-[300px] max-h-[90vh] flex flex-col">
+          {/* Header fijo */}
+          <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0 flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-gray-900">Contratar Servicio</h3>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
@@ -127,8 +120,8 @@ export default function ContractServiceModal({
             </button>
           </div>
 
-          {/* Contenido */}
-          <div className="p-6">
+          {/* Contenido con scroll */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Resumen del servicio */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <h4 className="font-medium text-gray-900 mb-2 break-words overflow-wrap-anywhere line-clamp-2 leading-tight max-w-full">
@@ -249,13 +242,14 @@ export default function ContractServiceModal({
                 </a>
               </p>
             </div>
+          </div>
 
-            {/* Botones de acción */}
-            <div className="flex gap-3">
+          {/* Footer fijo */}
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg flex-shrink-0">
+            <div className="flex justify-end gap-3">
               <Button
                 variant="cancel"
                 onClick={handleClose}
-                className="flex-1"
                 disabled={loading}
               >
                 Cancelar
@@ -263,7 +257,6 @@ export default function ContractServiceModal({
               <Button
                 variant="primary"
                 onClick={handleContract}
-                className="flex-1"
                 disabled={loading}
               >
                 {loading ? (

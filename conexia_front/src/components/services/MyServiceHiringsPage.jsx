@@ -286,7 +286,10 @@ export default function MyServiceHiringsPage() {
                             </div>
                           </td>
                           <td className="px-4 py-4">
-                            <p className="text-sm text-gray-900 max-w-48 break-words whitespace-pre-line" title={hiring.description}>
+                            <p
+                              className="text-sm text-gray-900 max-w-48 break-words line-clamp-2"
+                              title={hiring.description}
+                            >
                               {hiring.description}
                             </p>
                           </td>
@@ -430,7 +433,7 @@ export default function MyServiceHiringsPage() {
                         <div className="flex items-center gap-1">
                           <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200">
                             <button
-                              onClick={() => setSelectedRequest(hiring)}
+                              onClick={() => handleViewRequestDetail(hiring)}
                               className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
                               title="Ver detalles"
                               aria-label="Ver detalles"

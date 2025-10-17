@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { X, FileText, Calendar, User, DollarSign, Clock } from 'lucide-react';
+import { X, FileText, Calendar, User, DollarSign, Clock, AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { config } from '@/config';
+import { getUserDisplayName } from '@/utils/formatUserName';
+import QuotationDisplay from '@/components/services/QuotationDisplay';
+import { isExpired, getVigencyStatus } from '@/utils/quotationVigency';
 
-export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) {
+export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, clientName, clientLastName }) {
   if (!isOpen || !hiring) return null;
 
   const formatDate = (dateString) => {
@@ -49,6 +52,30 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
     return statusMap[statusCode] || 'text-gray-800 bg-gray-100';
   };
 
+  // Nombre mostrado del cliente con múltiples respaldos
+  const derivedDisplayName = (() => {
+    // 1) Nombre enviado explícitamente por props desde la página
+    if (clientName || clientLastName) {
+      return getUserDisplayName({ name: clientName, lastName: clientLastName });
+    }
+    // 2) Estructura anidada en hiring.user (si viene)
+    if (hiring.user && (hiring.user.name || hiring.user.lastName)) {
+      return getUserDisplayName(hiring.user);
+    }
+    // 3) Campos planos en el objeto hiring (como se usa en la tabla)
+    if (hiring.name || hiring.lastName) {
+      return getUserDisplayName({ name: hiring.name, lastName: hiring.lastName });
+    }
+    return 'Usuario';
+  })();
+
+  const hasQuotation = Boolean(
+    hiring?.paymentModality ||
+    hiring?.quotedPrice ||
+    (Array.isArray(hiring?.deliverables) && hiring.deliverables.length > 0) ||
+    (hiring?.estimatedHours && hiring?.estimatedTimeUnit)
+  );
+
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center p-4">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -79,7 +106,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
               {hiring.user?.profilePicture ? (
                 <img
                   src={`${config.IMAGE_URL}/${hiring.user.profilePicture}`}
-                  alt={hiring.user.fullName}
+                  alt={derivedDisplayName}
                   className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
@@ -88,8 +115,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
                 </div>
               )}
               <div>
-                <p className="font-medium text-gray-900">{hiring.user?.fullName || 'Cliente'}</p>
-                <p className="text-sm text-gray-500">{hiring.user?.email}</p>
+                <p className="font-medium text-gray-900">{derivedDisplayName}</p>
               </div>
             </div>
           </div>
@@ -155,48 +181,48 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
             </div>
           </div>
 
-          {/* Mi cotización (si existe) */}
-          {hiring.quotedPrice && (
+          {/* Cotización enviada (si existe) */}
+          {hasQuotation && (
             <div className="bg-green-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <DollarSign size={20} className="text-green-600" />
+                <DollarSign size={20} className="text-green-700" />
                 Mi Cotización
               </h3>
-              <div className="space-y-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="font-medium text-gray-700">Precio cotizado:</span>
-                    <p className="text-green-600 font-bold text-xl mt-1">
-                      ${parseFloat(hiring.quotedPrice).toLocaleString()} {hiring.service?.currency}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-700">Tiempo estimado:</span>
-                    <p className="text-gray-900 mt-1 flex items-center gap-1">
-                      <Clock size={16} />
-                      {hiring.estimatedHours} horas
-                    </p>
-                  </div>
-                </div>
-                {hiring.quotationDetails?.description && (
-                  <div>
-                    <span className="font-medium text-gray-700">Detalles de mi cotización:</span>
-                    <div className="text-gray-900 mt-1 bg-white p-3 rounded border break-words overflow-wrap-anywhere">
-                      {hiring.quotationDetails.description}
+              {isExpired(hiring) ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="text-red-600 mt-0.5" size={20} />
+                    <div>
+                      <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
+                      <p className="text-sm text-red-600">
+                        Esta cotización ha expirado y sus detalles ya no están disponibles.
+                      </p>
                     </div>
                   </div>
-                )}
-                {hiring.quotationDetails?.validUntil && (
-                  <div>
-                    <span className="font-medium text-gray-700">Vigencia:</span>
-                    <p className="text-gray-900 mt-1">
-                      Válida hasta: {formatDate(hiring.quotationDetails.validUntil)}
-                    </p>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded border p-3">
+                  <QuotationDisplay quotation={hiring} />
+                  {hiring.quotationValidityDays && (
+                    <div className="mt-4 bg-gray-50 rounded-lg p-3 border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Vigencia de la cotización</p>
+                          <p className={`text-base font-bold ${getVigencyStatus(hiring).className}`}>
+                            {getVigencyStatus(hiring).text}
+                          </p>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Válida por {hiring.quotationValidityDays} {hiring.quotationValidityDays === 1 ? 'día' : 'días'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
+
         </div>
 
         {/* Footer fijo */}

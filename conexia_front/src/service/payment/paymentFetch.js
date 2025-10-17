@@ -86,7 +86,8 @@ export async function addBankAccount({ bankId, bankAccountType, cbu, accountHold
       }
     }
     
-    throw new Error(errorMessage);
+    // No lanzar excepción; devolver objeto con error para que el caller decida cómo mostrarlo
+    return { error: true, message: errorMessage };
   }
   return response.data;
 }
@@ -124,7 +125,8 @@ export async function addDigitalAccount({ digitalPlatformId, cvu, accountHolderN
       }
     }
     
-    throw new Error(errorMessage);
+    // No lanzar excepción; devolver objeto con error para que el caller decida cómo mostrarlo
+    return { error: true, message: errorMessage };
   }
   return response.data;
 }

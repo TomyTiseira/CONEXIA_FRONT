@@ -429,9 +429,9 @@ export default function ServiceRequestsPage({ serviceId }) {
                           <button
                             onClick={() => setSelectedRequest(hiring)}
                             className="flex items-center justify-center w-7 h-7 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
-                            title="Ver detalle"
+                            title="Ver detalles de la solicitud"
                           >
-                            <FaFileInvoiceDollar className="text-[14px] group-hover:scale-110 transition-transform" />
+                            <FaRegEye className="text-[14px] group-hover:scale-110 transition-transform" />
                           </button>
                           
                           {canCreateQuote(hiring) && !hiring.quotedPrice && (
@@ -503,6 +503,8 @@ export default function ServiceRequestsPage({ serviceId }) {
       <ProviderRequestDetailModal
         hiring={selectedRequest}
         isOpen={!!selectedRequest}
+        clientName={selectedRequest?.name}
+        clientLastName={selectedRequest?.lastName}
         onClose={() => setSelectedRequest(null)}
       />
 
