@@ -1,7 +1,8 @@
 'use client';
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useMessagingStore } from '@/store/messagingStore';
 import { getProfile, logoutUser } from '@/service/auth/authService';
+import { setLoggingOut } from '@/service/auth/fetchWithRefresh';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { useUserStore } from '@/store/userStore';
 import { useRole } from '@/hooks/useRole';
@@ -35,11 +36,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isLoggingOut = useRef(false);
   const { setUser: setUserStore, setProfile: setProfileStore, clearUser: clearUserStore, setRoleName } = useUserStore();
   const roleId = user?.roleId || null;
   const { role: roleName, loading: roleLoading } = useRole(roleId);
 
   const validateSession = useCallback(async () => {
+    // No validar sesión si estamos en proceso de logout
+    if (isLoggingOut.current) return;
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -96,12 +101,18 @@ export const AuthProvider = ({ children }) => {
   }, [setUserStore, setProfileStore, clearUserStore, roleName, roleLoading]);
 
   const logout = useCallback(async () => {
+    // Marcar que estamos cerrando sesión para evitar validaciones y refresh
+    isLoggingOut.current = true;
+    setLoggingOut(true);
+    
     try {
-      await logoutUser();
+      // Primero limpiar el estado local para evitar solicitudes subsecuentes
       setUser(null);
       setError(null);
-      clearUserStore(); // Limpiar Zustand al cerrar sesión
-      // Limpieza adicional: UI de mensajería persistida y estado del store
+      setIsLoading(false);
+      clearUserStore();
+      
+      // Limpiar persistencia de mensajería
       try {
         if (typeof window !== 'undefined') {
           Object.keys(window.localStorage || {}).forEach((k) => {
@@ -109,13 +120,23 @@ export const AuthProvider = ({ children }) => {
           });
         }
       } catch {}
-      try { useMessagingStore.getState().disconnect(); } catch {}
+      
+      // Desconectar sockets
+      try { 
+        useMessagingStore.getState().disconnect(); 
+      } catch {}
+      
+      // Luego hacer la llamada al backend
+      await logoutUser();
+      
     } catch (err) {
       console.error('Error al cerrar sesión:', err);
+      // Aunque falle el logout en el backend, asegurar que el frontend esté limpio
       setUser(null);
       setError(null);
+      setIsLoading(false);
       clearUserStore();
-      // También limpiar persistencia/estado en paths de error
+      
       try {
         if (typeof window !== 'undefined') {
           Object.keys(window.localStorage || {}).forEach((k) => {
@@ -123,13 +144,22 @@ export const AuthProvider = ({ children }) => {
           });
         }
       } catch {}
-      try { useMessagingStore.getState().disconnect(); } catch {}
+      
+      try { 
+        useMessagingStore.getState().disconnect(); 
+      } catch {}
+    } finally {
+      // Resetear el flag después de un pequeño delay
+      setTimeout(() => {
+        isLoggingOut.current = false;
+        setLoggingOut(false);
+      }, 1000);
     }
   }, [clearUserStore]);
 
   useEffect(() => {
-    // Solo validar sesión cuando el rol esté definido
-    if (roleLoading) return;
+    // Solo validar sesión cuando el rol esté definido y no estemos cerrando sesión
+    if (roleLoading || isLoggingOut.current) return;
     validateSession();
   }, [validateSession, roleLoading]);
 
