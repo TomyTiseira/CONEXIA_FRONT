@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CreditCard } from 'lucide-react';
 import ContractServiceModal from './ContractServiceModal';
+import { isExpired } from '@/utils/quotationVigency';
 
 export default function ContractServiceButton({ 
   serviceHiring, 
@@ -18,6 +19,11 @@ export default function ContractServiceButton({
   if (!serviceHiring || 
       serviceHiring.status?.code !== 'accepted' ||
       serviceHiring.paymentModality?.code === 'by_deliverables') {
+    return null;
+  }
+
+  // No mostrar el botón si la cotización está vencida
+  if (isExpired(serviceHiring)) {
     return null;
   }
 

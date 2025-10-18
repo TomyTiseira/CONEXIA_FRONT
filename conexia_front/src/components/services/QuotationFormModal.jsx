@@ -85,7 +85,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
     const validationErrors = validateQuotationWithModality(formData, selectedModality);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      onError?.('Por favor completa todos los campos requeridos');
+      // No disparar Toast aquí: solo mostrar errores debajo de los campos
       return;
     }
 

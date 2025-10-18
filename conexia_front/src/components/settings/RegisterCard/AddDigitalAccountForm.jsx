@@ -12,14 +12,19 @@ function validateAlias(value) {
   return /^[a-zA-Z0-9.-]{6,20}$/.test(value);
 }
 function validateCUIT(value) {
-  // Valida formato XX-XXXXXXXX-X y que los dígitos sean válidos
+  // Validación con formato y dígito verificador
   if (!/^\d{2}-\d{7,8}-\d{1}$/.test(value)) return false;
-  const parts = value.split('-');
-  if (parts.length !== 3) return false;
-  if (parts[0].length !== 2 || !/\d{2}/.test(parts[0])) return false;
-  if (parts[1].length < 7 || parts[1].length > 8 || !/\d{7,8}/.test(parts[1])) return false;
-  if (parts[2].length !== 1 || !/\d{1}/.test(parts[2])) return false;
-  return true;
+  const digits = value.replace(/-/g, '');
+  if (!/^\d{11}$/.test(digits)) return false;
+  const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+  const nums = digits.split('').map(d => parseInt(d, 10));
+  const checkDigit = nums[10];
+  const sum = weights.reduce((acc, w, i) => acc + w * nums[i], 0);
+  const mod = sum % 11;
+  let computed = 11 - mod;
+  if (computed === 11) computed = 0;
+  if (computed === 10) computed = 9;
+  return computed === checkDigit;
 }
 
 export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAccounts = [] }) {
@@ -60,7 +65,14 @@ export default function AddDigitalAccountForm({ onSubmit, onCancel, existingAcco
     if (!cuit) newErrors.cuit = 'Este campo es obligatorio.';
     if (cvu && !validateCVU(cvu)) newErrors.cvu = 'El CVU debe tener exactamente 22 dígitos.';
     if (alias && !validateAlias(alias)) newErrors.alias = 'El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).';
-    if (cuit && !validateCUIT(cuit)) newErrors.cuit = 'El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.';
+    if (cuit) {
+      const hasValidFormat = /^\d{2}-\d{7,8}-\d{1}$/.test(cuit);
+      if (!hasValidFormat) {
+        newErrors.cuit = 'El CUIT/CUIL debe tener formato XX-XXXXXXXX-X.';
+      } else if (!validateCUIT(cuit)) {
+        newErrors.cuit = 'CUIT/CUIL inválido';
+      }
+    }
     if (existingAccounts.some(acc => acc.cvu === cvu)) newErrors.cvu = 'Este CVU pertenece a otra cuenta registrada.';
     if (existingAccounts.some(acc => acc.alias === alias)) newErrors.alias = 'Este alias pertenece a otra cuenta registrada.';
     setErrors(newErrors);

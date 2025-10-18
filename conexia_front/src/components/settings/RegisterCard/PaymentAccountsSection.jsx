@@ -98,7 +98,15 @@ export default function PaymentAccountsSection() {
           customName: accountData.customName
         });
       }
-
+      // Manejo de error en respuesta sin lanzar excepción
+      if (response && response.error) {
+        setToast({ 
+          type: 'error', 
+          message: response.message || 'Error al agregar la cuenta', 
+          isVisible: true 
+        });
+        return;
+      }
       setAddModalOpen(false);
       refetch();
       setToast({ 

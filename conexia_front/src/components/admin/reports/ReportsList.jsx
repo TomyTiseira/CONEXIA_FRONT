@@ -1,17 +1,19 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { fetchReportedProjects } from '@/service/reports/reportsFetch';
 import { fetchReportedPublications } from '@/service/reports/publicationReportsFetch';
+import { fetchReportedServices } from '@/service/reports/fetchReportedServices';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import Pagination from '@/components/common/Pagination';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const FILTERS = [
   { label: 'Proyectos', value: 'projects' },
   { label: 'Publicaciones', value: 'publications' },
   { label: 'Comentarios', value: 'comments', disabled: true },
-  { label: 'Servicios', value: 'services', disabled: true },
+  { label: 'Servicios', value: 'services'},
 ];
 
 const ORDER_OPTIONS = [
@@ -20,6 +22,8 @@ const ORDER_OPTIONS = [
 ];
 
 export default function ReportsList() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [filter, setFilter] = useState('projects');
   const [order, setOrder] = useState('reportCount');
   const [projects, setProjects] = useState([]);
@@ -27,9 +31,33 @@ export default function ReportsList() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [services, setServices] = useState([]);
+  const [initialized, setInitialized] = useState(false);
+
+  const validFilters = useMemo(() => new Set(FILTERS.filter(f => !f.disabled).map(f => f.value)), []);
+  const validOrders = useMemo(() => new Set(ORDER_OPTIONS.map(o => o.value)), []);
+
+  // Initialize state from URL on first render
+  useEffect(() => {
+    if (!searchParams) return;
+    const qFilter = searchParams.get('filter');
+    const qOrder = searchParams.get('order');
+    const qPageRaw = searchParams.get('page');
+    const qPage = qPageRaw ? parseInt(qPageRaw, 10) : 1;
+    if (qFilter && validFilters.has(qFilter)) setFilter(qFilter);
+    if (qOrder && validOrders.has(qOrder)) setOrder(qOrder);
+    if (!Number.isNaN(qPage) && qPage > 0) setPage(qPage);
+    setInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
+    if (!initialized) return;
     setLoading(true);
+    // Clear stale pagination while loading a different dataset
+    setPagination(null);
+    // Optional: clear lists for non-active filters to avoid flicker
+    // (We keep the active list so table content doesn't jump unnecessarily.)
     if (filter === 'projects') {
       fetchReportedProjects({ page, orderBy: order, pageSize: 15 })
         .then(data => {
@@ -44,10 +72,35 @@ export default function ReportsList() {
           setPagination(data?.data?.pagination || null);
           setLoading(false);
         });
+    } else if (filter === 'services') {
+      fetchReportedServices({ page, orderBy: order })
+        .then(data => {
+          setServices(data?.services || []);
+          setPagination(data?.pagination || null);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
     } else {
       setLoading(false);
     }
-  }, [filter, order, page]);
+  }, [filter, order, page, initialized]);
+
+  // Sync current selection to URL for better back-navigation
+  useEffect(() => {
+    if (!initialized) return; // avoid overwriting URL before initial read
+    const params = new URLSearchParams();
+    params.set('filter', filter);
+    params.set('order', order);
+    params.set('page', String(page));
+    router.replace(`/reports?${params.toString()}`, { scroll: false });
+  }, [filter, order, page, router, initialized]);
+
+  // Reset page when filter changes via UI to start from first page of each dataset
+  useEffect(() => {
+    if (!initialized) return;
+    // When user switches filter, go to page 1 for the new dataset
+    setPage(1);
+  }, [filter]);
 
   return (
     <div className="max-w-6xl mx-auto pt-8 pb-4">
@@ -100,7 +153,7 @@ export default function ReportsList() {
             </colgroup>
             <thead>
               <tr className="text-left border-b">
-                <th className="p-4 min-w-[140px] md:min-w-[180px]">{filter === 'projects' ? 'Proyecto' : 'Publicación'}</th>
+                <th className="p-4 min-w-[140px] md:min-w-[180px]">{filter === 'projects' ? 'Proyecto' : filter === 'services' ? 'Servicio' : 'Publicación'}</th>
                 <th className="p-4 min-w-[90px] max-w-[120px] text-center">Cantidad de reportes</th>
                 <th className="p-4 min-w-[120px] max-w-[180px] text-center">Fecha de último reporte</th>
                 <th className="p-4 min-w-[110px] max-w-[140px] text-center">Acciones</th>
@@ -149,7 +202,7 @@ export default function ReportsList() {
                     </tr>
                   ))
                 )
-              ) : (
+              ) : filter === 'publications' ? (
                 publications.length === 0 ? (
                   <tr>
                     <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron publicaciones reportadas.</td>
@@ -187,15 +240,55 @@ export default function ReportsList() {
                     </tr>
                   ))
                 )
+              ) : (
+                services.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron servicios reportados.</td>
+                  </tr>
+                ) : (
+                  services.map(s => (
+                    <tr key={s.serviceId} className="border-b hover:bg-gray-50 h-auto align-top">
+                      <td className="p-4 align-top max-w-[300px]">
+                          <Link href={`/services/${s.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`} className="text-conexia-green font-semibold hover:underline block">
+                          <div className="line-clamp-2 break-words overflow-hidden text-ellipsis" title={s.serviceTitle}>
+                            {s.serviceTitle}
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="p-4 text-center align-middle">{s.reportCount}</td>
+                      <td className="p-4 text-center align-middle">{new Date(s.lastReportDate).toLocaleString()}</td>
+                      <td className="p-4 text-center align-middle">
+                        <div className="flex justify-center gap-x-2">
+                          <Button
+                            variant="add"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => window.location.href = `/reports/service/${s.serviceId}`}
+                          >
+                            Ver reportes
+                          </Button>
+                          <Button
+                            variant="edit"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => window.location.href = `/services/${s.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`}
+                          >
+                            Ver servicio
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )
               )}
             </tbody>
           </table>
           {pagination && (
             <div className="pt-4 pb-6 flex justify-center">
               <Pagination
-                page={pagination.currentPage}
-                hasNextPage={pagination.hasNextPage}
-                hasPreviousPage={pagination.hasPreviousPage}
+                page={(pagination?.currentPage ?? pagination?.page) || page}
+                currentPage={pagination?.currentPage ?? pagination?.page}
+                hasNextPage={pagination?.hasNextPage ?? pagination?.hasNext}
+                hasPreviousPage={pagination?.hasPreviousPage ?? pagination?.hasPrev}
+                totalPages={pagination?.totalPages}
                 onPageChange={setPage}
               />
             </div>

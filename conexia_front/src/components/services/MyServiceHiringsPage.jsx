@@ -296,7 +296,10 @@ export default function MyServiceHiringsPage() {
                             </div>
                           </td>
                           <td className="px-4 py-4">
-                            <p className="text-sm text-gray-900 max-w-48 break-words whitespace-pre-line" title={hiring.description}>
+                            <p
+                              className="text-sm text-gray-900 max-w-48 break-words line-clamp-2"
+                              title={hiring.description}
+                            >
                               {hiring.description}
                             </p>
                           </td>
@@ -476,7 +479,7 @@ export default function MyServiceHiringsPage() {
                         <div className="flex items-center gap-1">
                           <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200">
                             <button
-                              onClick={() => setSelectedRequest(hiring)}
+                              onClick={() => handleViewRequestDetail(hiring)}
                               className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
                               title="Ver detalles"
                               aria-label="Ver detalles"
@@ -534,6 +537,14 @@ export default function MyServiceHiringsPage() {
                                 <Package size={16} className="group-hover:scale-110 transition-transform" />
                               </button>
                             )}
+
+                            {/* Botón de pago/contratar dentro de la misma caja de acciones (solo si aplica) */}
+                            <ContractServiceButton 
+                              serviceHiring={hiring}
+                              onContractSuccess={handleContractSuccess}
+                              highlight
+                              size="sm"
+                            />
                             
                             {hasActions(hiring) && (
                               <button
@@ -548,16 +559,6 @@ export default function MyServiceHiringsPage() {
                             )}
                           </div>
                         </div>
-                      </div>
-                      
-                      {/* Botón de contratar servicio para mobile dentro de acciones */}
-                      <div className="flex gap-2 items-center mt-3">
-                        {/* ...otros botones de acción... */}
-                        <ContractServiceButton 
-                          serviceHiring={hiring}
-                          onContractSuccess={handleContractSuccess}
-                          highlight
-                        />
                       </div>
                     </div>
                   ))}

@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { X, Clock, DollarSign, FileText, AlertCircle, Briefcase } from 'lucide-react';
+import { X, Clock, DollarSign, FileText, AlertCircle, Briefcase, User } from 'lucide-react';
 import { isExpired, getVigencyStatus } from '@/utils/quotationVigency';
 import { getUnitLabel, getUnitLabelPlural } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
 import QuotationDisplay from './QuotationDisplay';
+import { config } from '@/config';
+import { getUserDisplayName } from '@/utils/formatUserName';
 
 export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onError }) {
   const { 
@@ -96,6 +98,23 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
   const hasQuotation = hiring.quotedPrice && hiring.estimatedHours;
   const availableActions = hiring.availableActions || [];
 
+  // Derivar información del dueño del servicio para mostrar en el encabezado de servicio
+  const ownerRaw = hiring.owner || hiring.service?.owner || hiring.service?.user || null;
+  const ownerNameFromFull = (fullName) => {
+    const parts = (fullName || '').trim().split(/\s+/);
+    return {
+      name: parts[0] || '',
+      lastName: parts[1] || ''
+    };
+  };
+  const ownerNameFields = ownerRaw?.fullName
+    ? ownerNameFromFull(ownerRaw.fullName)
+    : { name: ownerRaw?.firstName ?? ownerRaw?.name ?? '', lastName: ownerRaw?.lastName ?? '' };
+  const ownerDisplayName = ownerRaw
+    ? getUserDisplayName({ name: ownerNameFields.name, lastName: ownerNameFields.lastName })
+    : 'Usuario';
+  const ownerImage = ownerRaw?.profileImage || ownerRaw?.profilePicture || null;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] flex flex-col">
@@ -145,9 +164,20 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
               </div>
               <div>
                 <p className="text-sm text-gray-600">Proveedor</p>
-                <p className="font-medium text-gray-900">
-                  {hiring.service?.owner?.firstName} {hiring.service?.owner?.lastName}
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  {ownerImage ? (
+                    <img
+                      src={`${config.IMAGE_URL}/${ownerImage}`}
+                      alt={ownerDisplayName}
+                      className="w-7 h-7 rounded-full object-cover border"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                      <User size={14} className="text-gray-500" />
+                    </div>
+                  )}
+                  <p className="font-medium text-gray-900">{ownerDisplayName}</p>
+                </div>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Estado</p>
@@ -177,47 +207,43 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                 <DollarSign size={18} className="text-green-700" />
                 Cotización del Proveedor
               </h4>
-              
-              {/* Usar el componente QuotationDisplay que muestra modalidades y entregables */}
-              <QuotationDisplay quotation={hiring} compact={false} />
-
-              {/* Vigencia de la cotización */}
-              {hiring.quotationValidityDays && (
-                <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between">
+              {isExpired(hiring) ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="text-red-600 mt-0.5" size={20} />
                     <div>
-                      <p className="text-sm text-gray-600">Vigencia de la cotización</p>
-                      <p className={`text-lg font-bold ${getVigencyStatus(hiring).className}`}>
-                        {getVigencyStatus(hiring).text}
+                      <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
+                      <p className="text-sm text-red-600">
+                        Esta cotización ha expirado y sus detalles ya no están disponibles.
                       </p>
                     </div>
-                    {!isExpired(hiring) && (
-                      <div className="text-sm text-gray-500">
-                        Válida por {hiring.quotationValidityDays} {hiring.quotationValidityDays === 1 ? 'día' : 'días'}
-                      </div>
-                    )}
                   </div>
                 </div>
+              ) : (
+                <>
+                  <QuotationDisplay quotation={hiring} compact={false} />
+                  {hiring.quotationValidityDays && (
+                    <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Vigencia de la cotización</p>
+                          <p className={`text-lg font-bold ${getVigencyStatus(hiring).className}`}>
+                            {getVigencyStatus(hiring).text}
+                          </p>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Válida por {hiring.quotationValidityDays} {hiring.quotationValidityDays === 1 ? 'día' : 'días'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
 
           {/* Acciones disponibles */}
-          {isExpired(hiring) ? (
-            <div className="border-t border-gray-200 pt-6">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="text-red-600 mt-0.5" size={20} />
-                  <div>
-                    <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
-                    <p className="text-sm text-red-600">
-                      Esta cotización ha expirado y no se pueden realizar más acciones.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : availableActions.length > 0 && (
+          {isExpired(hiring) ? null : availableActions.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
               <h4 className="font-medium text-gray-900 mb-4">Acciones Disponibles</h4>
               <div className="flex flex-wrap gap-3">

@@ -24,7 +24,20 @@ function validateAlias(value) {
 }
 
 function validateCUIT(value) {
-  return /^\d{2}-\d{7,8}-\d{1}$/.test(value);
+  // Aceptar con o sin guiones, luego validar formato y dígito verificador
+  if (!/^\d{2}-\d{7,8}-\d{1}$/.test(value)) return false;
+  const digits = value.replace(/-/g, '');
+  if (!/^\d{11}$/.test(digits)) return false;
+  // Algoritmo de validación CUIT/CUIL
+  const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+  const nums = digits.split('').map(d => parseInt(d, 10));
+  const checkDigit = nums[10];
+  const sum = weights.reduce((acc, w, i) => acc + w * nums[i], 0);
+  const mod = sum % 11;
+  let computed = 11 - mod;
+  if (computed === 11) computed = 0;
+  if (computed === 10) computed = 9; // regla especial
+  return computed === checkDigit;
 }
 
 export default function AddAccountModal({ open, onClose, onSubmit, existingAccounts = [], initialType = 'bank' }) {
@@ -107,8 +120,13 @@ export default function AddAccountModal({ open, onClose, onSubmit, existingAccou
       newErrors.alias = 'El alias debe tener entre 6 y 20 caracteres (letras, números, puntos y guiones)';
     }
 
-    if (formData.cuit && !validateCUIT(formData.cuit)) {
-      newErrors.cuit = 'El CUIT/CUIL debe tener el formato XX-XXXXXXXX-X';
+    if (formData.cuit) {
+      const hasValidFormat = /^\d{2}-\d{7,8}-\d{1}$/.test(formData.cuit);
+      if (!hasValidFormat) {
+        newErrors.cuit = 'El CUIT/CUIL debe tener el formato XX-XXXXXXXX-X';
+      } else if (!validateCUIT(formData.cuit)) {
+        newErrors.cuit = 'CUIT/CUIL inválido';
+      }
     }
 
     if (accountType === 'bank' && formData.cbu && !validateCBU(formData.cbu)) {
