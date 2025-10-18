@@ -26,12 +26,16 @@ export default function NavbarModerator() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
-      await logout();
-      router.push('/');
+      // Llamar logout sin await para que sea síncrono y bloquear inmediatamente
+      logout();
+      // Redirigir inmediatamente sin esperar a que termine el logout
+      window.location.href = '/';
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
+      // En caso de error, también redirigir
+      window.location.href = '/';
     }
   };
 

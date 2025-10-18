@@ -42,7 +42,11 @@ const ERROR_MESSAGES = {
   'user_banned':
     'Tu cuenta está suspendida. Contacta al soporte.',
   'invalid_status':
-    'Solo puedes contratar servicios con cotización aceptada.'
+    'Solo puedes contratar servicios con cotización aceptada.',
+  'payment_by_deliverables':
+    'Este servicio utiliza pago por entregables. Debes pagar cada entregable individualmente según se vayan completando.',
+  'Para servicios con pago por entregables, debe pagar cada entregable individualmente':
+    'Este servicio utiliza pago por entregables. Debes pagar cada entregable individualmente según se vayan completando.'
 };
 
 export default function ContractServiceModal({

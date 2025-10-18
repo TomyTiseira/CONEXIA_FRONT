@@ -13,10 +13,13 @@ export const formatUserName = (name, lastName) => {
 
 /**
  * Obtiene el nombre formateado desde un objeto user/client
- * @param {Object} user - Objeto usuario con propiedades name y lastName
+ * @param {Object} user - Objeto usuario con propiedades name/firstName y lastName
  * @returns {string} Primer nombre y primer apellido
  */
 export const getUserDisplayName = (user) => {
   if (!user) return 'Usuario';
-  return formatUserName(user.name, user.lastName);
+  // Soportar tanto 'name' como 'firstName'
+  const name = user.name || user.firstName || '';
+  const lastName = user.lastName || '';
+  return formatUserName(name, lastName);
 };

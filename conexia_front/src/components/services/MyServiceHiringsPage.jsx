@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { ChevronDown, ArrowLeft, FileText, Filter } from 'lucide-react';
+import { ChevronDown, ArrowLeft, FileText, Filter, Package, Clock } from 'lucide-react';
 // Nuevos iconos más semánticos desde react-icons
 import { 
   FaRegEye,      /* Ver detalle */
@@ -46,6 +46,7 @@ const getStatusBadge = (statusCode) => {
     cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
     negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
     in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
+    delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
     completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
   };
   
@@ -155,6 +156,12 @@ export default function MyServiceHiringsPage() {
 
   const getVigencyDisplay = (hiring) => {
     if (!canViewQuotation(hiring)) return "N/A";
+    
+    // Si ya fue aceptada o está en estados posteriores, la vigencia ya no aplica
+    const postAcceptanceStates = ['accepted', 'in_progress', 'delivered', 'completed'];
+    if (postAcceptanceStates.includes(hiring.status?.code)) {
+      return "N/A";
+    }
     
     if (isExpired(hiring)) {
       return <span className="text-red-600 font-medium">Vencida</span>;
@@ -301,12 +308,18 @@ export default function MyServiceHiringsPage() {
                           </td>
                           <td className="px-6 py-4">
                             {hiring.quotedPrice ? (
-                              <div className="flex flex-col">
-                                <span className="font-medium text-conexia-green">
-                                  ${parseFloat(hiring.quotedPrice).toLocaleString()}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                  por {hiring.service?.timeUnit ? getUnitLabel(hiring.service.timeUnit) : 'unidad'}
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-medium text-conexia-green">
+                                    ${parseFloat(hiring.quotedPrice).toLocaleString()}
+                                  </span>
+                                  <span className="text-sm text-gray-500 flex items-center gap-1">
+                                    <Clock size={12} />
+                                    {hiring.estimatedHours}h
+                                  </span>
+                                </div>
+                                <span className="text-xs text-gray-500">
+                                  {hiring.paymentModality?.name || 'Pago completo'}
                                 </span>
                               </div>
                             ) : (
@@ -352,6 +365,34 @@ export default function MyServiceHiringsPage() {
                                     <FaFileInvoiceDollar className="text-[18px] group-hover:scale-110 transition-transform" />
                                   </button>
                                 )}
+
+                                {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
+                                {(['approved', 'in_progress', 'delivered', 'completed'].includes(hiring.status?.code)) && 
+                                 hiring.paymentModality?.code === 'by_deliverables' && (
+                                  <button
+                                    onClick={() => router.push(`/service-delivery/${hiring.id}`)}
+                                    className="flex items-center justify-center w-9 h-9 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                                    title="Ver entregables del servicio"
+                                    aria-label="Ver entregables"
+                                    data-action="ver-entregables"
+                                  >
+                                    <Package size={18} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+
+                                {/* Botón Ver Entrega - Para contratos entregados con full_payment */}
+                                {(['in_progress', 'delivered', 'completed'].includes(hiring.status?.code)) && 
+                                 hiring.paymentModality?.code === 'full_payment' && (
+                                  <button
+                                    onClick={() => router.push(`/service-delivery/${hiring.id}`)}
+                                    className="flex items-center justify-center w-9 h-9 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                                    title="Ver entrega del servicio"
+                                    aria-label="Ver entrega"
+                                    data-action="ver-entrega"
+                                  >
+                                    <Package size={18} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
                                 
                                 {hasActions(hiring) && (
                                   <button
@@ -383,16 +424,18 @@ export default function MyServiceHiringsPage() {
                 <div className="md:hidden space-y-4 p-4">
                   {hirings.map((hiring) => (
                     <div key={hiring.id} className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 mb-1">
+                      <div className="flex justify-between items-start gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-900 mb-1 break-words">
                             {hiring.service?.title}
                           </h3>
                           <p className="text-sm text-conexia-green font-medium">
                             ${hiring.service?.price?.toLocaleString()}
                           </p>
                         </div>
-                        {getStatusBadge(hiring.status?.code)}
+                        <div className="flex-shrink-0">
+                          {getStatusBadge(hiring.status?.code)}
+                        </div>
                       </div>
                       
                       <div className="mb-3">
@@ -461,6 +504,34 @@ export default function MyServiceHiringsPage() {
                                 data-action="ver-cotizacion"
                               >
                                 <FaFileInvoiceDollar className="text-[16px] group-hover:scale-110 transition-transform" />
+                              </button>
+                            )}
+
+                            {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
+                            {(['approved', 'in_progress', 'delivered', 'completed'].includes(hiring.status?.code)) && 
+                             hiring.paymentModality?.code === 'by_deliverables' && (
+                              <button
+                                onClick={() => router.push(`/service-delivery/${hiring.id}`)}
+                                className="flex items-center justify-center w-8 h-8 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                                title="Ver entregables"
+                                aria-label="Ver entregables"
+                                data-action="ver-entregables"
+                              >
+                                <Package size={16} className="group-hover:scale-110 transition-transform" />
+                              </button>
+                            )}
+
+                            {/* Botón Ver Entrega - Para contratos entregados con full_payment */}
+                            {(['in_progress', 'delivered', 'completed'].includes(hiring.status?.code)) && 
+                             hiring.paymentModality?.code === 'full_payment' && (
+                              <button
+                                onClick={() => router.push(`/service-delivery/${hiring.id}`)}
+                                className="flex items-center justify-center w-8 h-8 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                                title="Ver entrega"
+                                aria-label="Ver entrega"
+                                data-action="ver-entrega"
+                              >
+                                <Package size={16} className="group-hover:scale-110 transition-transform" />
                               </button>
                             )}
 

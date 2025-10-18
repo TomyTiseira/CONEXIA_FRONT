@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { useQuotationErrorHandler } from '@/hooks/service-hirings/useQuotationErrorHandler';
 import { fetchServiceDetail } from '@/service/services/servicesFetch';
-import { ArrowLeft, User, Calendar, DollarSign, Clock, Edit, Plus } from 'lucide-react';
+import { ArrowLeft, User, Calendar, DollarSign, Clock, Edit, Plus, Package, Upload, Eye } from 'lucide-react';
 import { FaFileInvoiceDollar, FaRegEye} from 'react-icons/fa';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
@@ -13,6 +13,7 @@ import QuotationFormModal from '@/components/services/QuotationFormModal';
 import PaymentAccountRequiredModal from '@/components/services/PaymentAccountRequiredModal';
 import UserBannedModal from '@/components/services/UserBannedModal';
 import ProviderRequestDetailModal from '@/components/services/ProviderRequestDetailModal';
+import DeliveryModal from '@/components/deliveries/DeliveryModal';
 import Toast from '@/components/ui/Toast';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabel } from '@/utils/timeUnit';
@@ -22,6 +23,7 @@ const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pendiente' },
   { value: 'quoted', label: 'Cotizado' },
   { value: 'accepted', label: 'Aceptado' },
+  { value: 'approved', label: 'Aprobado' },
   { value: 'rejected', label: 'Rechazado' },
   { value: 'cancelled', label: 'Cancelado' },
   { value: 'negotiating', label: 'Negociando' },
@@ -34,10 +36,12 @@ const getStatusBadge = (statusCode) => {
     pending: { label: 'Pendiente', className: 'bg-yellow-100 text-yellow-800' },
     quoted: { label: 'Cotizado', className: 'bg-blue-100 text-blue-800' },
     accepted: { label: 'Aceptado', className: 'bg-green-100 text-green-800' },
+    approved: { label: 'Aprobado', className: 'bg-conexia-green/10 text-conexia-green' },
     rejected: { label: 'Rechazado', className: 'bg-red-100 text-red-800' },
     cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
     negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
     in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
+    delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
     completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
   };
   
@@ -78,6 +82,8 @@ export default function ServiceRequestsPage({ serviceId }) {
   const [selectedHiring, setSelectedHiring] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [selectedHiringForDelivery, setSelectedHiringForDelivery] = useState(null);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -166,6 +172,24 @@ export default function ServiceRequestsPage({ serviceId }) {
            (hiring.quotedPrice && ['quoted', 'negotiating'].includes(hiring.status?.code));
   };
 
+  const handleDeliveryClick = (hiring) => {
+    setSelectedHiringForDelivery(hiring);
+    setShowDeliveryModal(true);
+  };
+
+  const handleDeliverySuccess = () => {
+    setShowDeliveryModal(false);
+    setSelectedHiringForDelivery(null);
+    setToast({
+      type: 'success',
+      message: 'Entrega realizada exitosamente',
+      isVisible: true
+    });
+    // Recargar las solicitudes para reflejar el cambio
+    loadMyServiceRequests(filters);
+  };
+
+
   if (serviceLoading) {
     return (
       <>
@@ -200,8 +224,10 @@ export default function ServiceRequestsPage({ serviceId }) {
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="flex items-center gap-3">
-                  <div>
-                    <h3 className="font-medium text-gray-900">{service.title}</h3>
+                  <div className="max-w-xs">
+                    <h3 className="font-medium text-gray-900 truncate" title={service.title}>
+                      {service.title}
+                    </h3>
                     <p className="text-sm text-gray-500">{service.category?.name}</p>
                   </div>
                 </div>
@@ -325,13 +351,18 @@ export default function ServiceRequestsPage({ serviceId }) {
                           </td>
                           <td className="px-6 py-4">
                             {hiring.quotedPrice ? (
-                              <div className="flex flex-col">
-                                <span className="font-medium text-conexia-green">
-                                  ${hiring.quotedPrice.toLocaleString()}
-                                </span>
-                                <span className="text-sm text-gray-500 flex items-center gap-1">
-                                  <Clock size={12} />
-                                  {hiring.estimatedHours}h
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-medium text-conexia-green">
+                                    ${hiring.quotedPrice.toLocaleString()}
+                                  </span>
+                                  <span className="text-sm text-gray-500 flex items-center gap-1">
+                                    <Clock size={12} />
+                                    {hiring.estimatedHours}h
+                                  </span>
+                                </div>
+                                <span className="text-xs text-gray-500">
+                                  {hiring.paymentModality?.name || 'Pago completo'}
                                 </span>
                               </div>
                             ) : (
@@ -339,8 +370,8 @@ export default function ServiceRequestsPage({ serviceId }) {
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center justify-center">
-                              <div className="flex items-center bg-gray-50 rounded-lg p-1 shadow-sm border">
+                            <div className="flex items-center justify-end">
+                              <div className="flex items-center bg-gray-50 rounded-lg p-1 shadow-sm border gap-0.5">
                                 {/* Botón para ver detalle de solicitud */}
                                 <button
                                   onClick={() => setSelectedRequest(hiring)}
@@ -367,6 +398,40 @@ export default function ServiceRequestsPage({ serviceId }) {
                                     title="Editar cotización existente"
                                   >
                                     <Edit size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+
+                                {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
+                                {(hiring.status?.code === 'approved' || hiring.status?.code === 'delivered') && 
+                                 hiring.paymentModality?.code === 'by_deliverables' && (
+                                  <button
+                                    onClick={() => router.push(`/deliveries/${hiring.id}`)}
+                                    className="flex items-center justify-center w-8 h-8 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                                    title="Ver entregables del servicio"
+                                  >
+                                    <Package size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+
+                                {/* Botón Realizar entrega - Solo para contratos aprobados con full_payment */}
+                                {hiring.status?.code === 'approved' && hiring.paymentModality?.code === 'full_payment' && (
+                                  <button
+                                    onClick={() => handleDeliveryClick(hiring)}
+                                    className="flex items-center justify-center w-8 h-8 text-green-600 hover:text-white hover:bg-green-600 rounded-md transition-all duration-200 group"
+                                    title="Realizar entrega del servicio"
+                                  >
+                                    <Upload size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+
+                                {/* Botón Ver Entrega - Para contratos entregados con full_payment */}
+                                {hiring.status?.code === 'delivered' && hiring.paymentModality?.code === 'full_payment' && (
+                                  <button
+                                    onClick={() => router.push(`/service-delivery/${hiring.id}`)}
+                                    className="flex items-center justify-center w-8 h-8 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                                    title="Ver entrega del servicio"
+                                  >
+                                    <Package size={16} className="group-hover:scale-110 transition-transform" />
                                   </button>
                                 )}
                                 
@@ -412,20 +477,27 @@ export default function ServiceRequestsPage({ serviceId }) {
                       {hiring.quotedPrice && (
                         <div className="mb-3 p-3 bg-white rounded border">
                           <p className="text-sm text-gray-600 mb-1">Mi cotización:</p>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-conexia-green">
-                              ${hiring.quotedPrice.toLocaleString()}
-                            </span>
-                            <span className="text-sm text-gray-500 flex items-center gap-1">
-                              <Clock size={12} />
-                              {hiring.estimatedHours}h
-                            </span>
+                          <div className="flex justify-between items-start">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-3">
+                                <span className="font-medium text-conexia-green">
+                                  ${hiring.quotedPrice.toLocaleString()}
+                                </span>
+                                <span className="text-sm text-gray-500 flex items-center gap-1">
+                                  <Clock size={12} />
+                                  {hiring.estimatedHours}h
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                {hiring.paymentModality?.name || 'Pago completo'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       )}
                       
                       <div className="flex justify-end">
-                        <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+                        <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200 gap-0.5">
                           <button
                             onClick={() => setSelectedRequest(hiring)}
                             className="flex items-center justify-center w-7 h-7 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
@@ -451,6 +523,40 @@ export default function ServiceRequestsPage({ serviceId }) {
                               title="Editar cotización"
                             >
                               <Edit size={14} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+
+                          {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
+                          {(hiring.status?.code === 'approved' || hiring.status?.code === 'delivered') && 
+                           hiring.paymentModality?.code === 'by_deliverables' && (
+                            <button
+                              onClick={() => router.push(`/deliveries/${hiring.id}`)}
+                              className="flex items-center justify-center w-7 h-7 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                              title="Ver entregables"
+                            >
+                              <Package size={14} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+
+                          {/* Botón Realizar entrega - Solo para contratos aprobados con full_payment */}
+                          {hiring.status?.code === 'approved' && hiring.paymentModality?.code === 'full_payment' && (
+                            <button
+                              onClick={() => handleDeliveryClick(hiring)}
+                              className="flex items-center justify-center w-7 h-7 text-green-600 hover:text-white hover:bg-green-600 rounded-md transition-all duration-200 group"
+                              title="Realizar entrega"
+                            >
+                              <Upload size={14} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+
+                          {/* Botón Ver Entrega - Para contratos entregados con full_payment */}
+                          {hiring.status?.code === 'delivered' && hiring.paymentModality?.code === 'full_payment' && (
+                            <button
+                              onClick={() => router.push(`/service-delivery/${hiring.id}`)}
+                              className="flex items-center justify-center w-7 h-7 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
+                              title="Ver entrega"
+                            >
+                              <Package size={14} className="group-hover:scale-110 transition-transform" />
                             </button>
                           )}
                           
@@ -506,6 +612,18 @@ export default function ServiceRequestsPage({ serviceId }) {
         clientName={selectedRequest?.name}
         clientLastName={selectedRequest?.lastName}
         onClose={() => setSelectedRequest(null)}
+      />
+
+      {/* Modal de entrega para servicios de pago total */}
+      <DeliveryModal
+        isOpen={showDeliveryModal}
+        onClose={() => {
+          setShowDeliveryModal(false);
+          setSelectedHiringForDelivery(null);
+        }}
+        hiringId={selectedHiringForDelivery?.id}
+        totalPrice={selectedHiringForDelivery?.quotedPrice}
+        onSuccess={handleDeliverySuccess}
       />
 
       {/* Modales de validación específicos */}

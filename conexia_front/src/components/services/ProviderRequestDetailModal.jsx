@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, FileText, Calendar, User, DollarSign, Clock, AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import QuotationDisplay from '@/components/services/QuotationDisplay';
 import { config } from '@/config';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import QuotationDisplay from '@/components/services/QuotationDisplay';
@@ -32,6 +33,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
       cancelled: 'Cancelado',
       negotiating: 'Negociando',
       in_progress: 'En progreso',
+      delivered: 'Entregado',
       completed: 'Completado'
     };
     return statusMap[statusCode] || statusCode;
@@ -47,6 +49,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
       cancelled: 'text-gray-800 bg-gray-100',
       negotiating: 'text-orange-800 bg-orange-100',
       in_progress: 'text-purple-800 bg-purple-100',
+      delivered: 'text-teal-800 bg-teal-100',
       completed: 'text-green-800 bg-green-100'
     };
     return statusMap[statusCode] || 'text-gray-800 bg-gray-100';

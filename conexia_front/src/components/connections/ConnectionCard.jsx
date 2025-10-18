@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { UserPlus, Check } from 'lucide-react';
 import { config } from '@/config';
 
 /**
@@ -34,21 +35,23 @@ export function ConnectionCard({ user, onConnect, onViewProfile, mini = false })
     const [pending, setPending] = useState(false);
     return (
       <div 
-        className="flex items-center gap-2 py-2 px-1 hover:bg-gray-50 rounded transition cursor-pointer"
+        className="flex items-center gap-3 py-2 px-2 hover:bg-gray-50 rounded-lg transition cursor-pointer group"
         onClick={onViewProfile}
       >
-        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200">
+        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
           <Image 
             src={profilePhoto} 
             alt="Perfil" 
             fill 
-            sizes="40px"
+            sizes="48px"
             className="object-cover" 
           />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm truncate">{displayName}</div>
-          <div className="text-xs text-gray-500 truncate max-w-[140px]">{profession}</div>
+          <div className="font-semibold text-sm truncate group-hover:text-conexia-green transition-colors">
+            {displayName}
+          </div>
+          <div className="text-xs text-gray-500 truncate">{profession}</div>
         </div>
         <button 
           onClick={(e) => {
@@ -58,10 +61,15 @@ export function ConnectionCard({ user, onConnect, onViewProfile, mini = false })
               onConnect();
             }
           }}
-          className={`ml-2 border px-3 py-1 rounded-full font-semibold text-xs transition-colors ${pending ? 'border-gray-400 text-gray-400 bg-gray-100 cursor-not-allowed' : 'border-conexia-green text-conexia-green hover:bg-conexia-green hover:text-white'}`}
+          className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+            pending 
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+              : 'bg-conexia-green/10 text-conexia-green hover:bg-conexia-green hover:text-white hover:scale-110'
+          }`}
           disabled={pending}
+          title={pending ? 'Solicitud enviada' : 'Conectar'}
         >
-          {pending ? 'Pendiente' : 'Conectar'}
+          {pending ? <Check size={18} /> : <UserPlus size={18} />}
         </button>
       </div>
     );

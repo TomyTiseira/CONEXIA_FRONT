@@ -13,8 +13,12 @@ export default function ContractServiceButton({
 }) {
   const [showModal, setShowModal] = useState(false);
 
-  // Solo mostrar el botón si el service hiring está en estado 'accepted'
-  if (!serviceHiring || serviceHiring.status?.code !== 'accepted') {
+  // Solo mostrar el botón si:
+  // 1. El service hiring está en estado 'accepted'
+  // 2. La modalidad de pago NO es 'by_deliverables' (esos se pagan individualmente)
+  if (!serviceHiring || 
+      serviceHiring.status?.code !== 'accepted' ||
+      serviceHiring.paymentModality?.code === 'by_deliverables') {
     return null;
   }
 

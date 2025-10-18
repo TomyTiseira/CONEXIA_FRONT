@@ -69,7 +69,7 @@ export function MiniRecommendations({ recommendations = [], onConnect, loading =
       </div>
       {recommendations.length > 0 && (
         <button
-          className="mt-2 bg-white border border-conexia-green text-conexia-green px-3 py-1 rounded-full font-semibold self-center hover:bg-conexia-green hover:text-white transition-colors text-xs"
+          className="mt-2 bg-conexia-green/10 text-conexia-green px-3 py-1.5 rounded-full font-semibold self-center hover:bg-conexia-green hover:text-white transition-all hover:scale-105 text-xs"
           style={{ minWidth: 0, width: 'auto' }}
           onClick={handleViewAll}
         >
