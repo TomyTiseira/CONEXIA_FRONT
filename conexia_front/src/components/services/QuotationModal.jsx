@@ -31,6 +31,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
       negotiating: 'Negociando',
       in_progress: 'En progreso',
       delivered: 'Entregado',
+      revision_requested: 'Revisión solicitada',
       completed: 'Completado'
     };
     return statusMap[statusCode] || statusCode;

@@ -102,11 +102,17 @@ export default function ServiceDeliveryPage() {
           <div className="mb-6">
             <button
               onClick={() => {
-                const serviceId = hiring?.service?.id;
-                if (serviceId) {
-                  router.push(`/services/my-services/${serviceId}/requests`);
+                // Si es cliente, redirigir a "Mis Solicitudes"
+                if (isClient) {
+                  router.push('/services/my-hirings');
                 } else {
-                  router.back();
+                  // Si es prestador, redirigir a solicitudes del servicio o historial
+                  const serviceId = hiring?.service?.id;
+                  if (serviceId) {
+                    router.push(`/services/my-services/${serviceId}/requests`);
+                  } else {
+                    router.back();
+                  }
                 }
               }}
               className="flex items-center text-gray-600 hover:text-gray-900 mb-4"

@@ -33,6 +33,8 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelado' },
   { value: 'negotiating', label: 'Negociando' },
   { value: 'in_progress', label: 'En progreso' },
+  { value: 'delivered', label: 'Entregado' },
+  { value: 'revision_requested', label: 'Revisión solicitada' },
   { value: 'completed', label: 'Completado' }
 ];
 
@@ -47,6 +49,7 @@ const getStatusBadge = (statusCode) => {
     negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
     in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
     delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
+    revision_requested: { label: 'Revisión solicitada', className: 'bg-orange-100 text-orange-800' },
     completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
   };
   
@@ -364,7 +367,7 @@ export default function MyServiceHiringsPage() {
                                 )}
 
                                 {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
-                                {(['approved', 'in_progress', 'delivered', 'completed'].includes(hiring.status?.code)) && 
+                                {(['approved', 'in_progress', 'delivered', 'revision_requested', 'completed'].includes(hiring.status?.code)) && 
                                  hiring.paymentModality?.code === 'by_deliverables' && (
                                   <button
                                     onClick={() => router.push(`/service-delivery/${hiring.id}`)}

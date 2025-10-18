@@ -20,6 +20,10 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       label: 'Entregado',
       className: 'bg-yellow-200 text-yellow-800'
     },
+    pending_payment: {
+      label: 'Pendiente de Pago',
+      className: 'bg-amber-200 text-amber-800'
+    },
     approved: {
       label: 'Aprobado',
       className: 'bg-green-200 text-green-800'
@@ -95,6 +99,10 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
     delivered: {
       label: 'Entregado',
       className: 'bg-teal-200 text-teal-800'
+    },
+    revision_requested: {
+      label: 'Revisión Solicitada',
+      className: 'bg-orange-200 text-orange-800'
     },
     completed: {
       label: 'Completado',

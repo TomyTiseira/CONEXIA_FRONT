@@ -14,6 +14,7 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
   const [revisionNotes, setRevisionNotes] = useState('');
   const [toast, setToast] = useState(null);
   const [showConfirmApprove, setShowConfirmApprove] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   if (!delivery) {
     return (
@@ -107,6 +108,43 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
       return delivery.attachmentPath.split('/').pop() || 'archivo';
     }
     return 'archivo';
+  };
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const url = getAttachmentUrl();
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Error al descargar el archivo');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = getAttachmentFileName();
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      setToast({
+        type: 'success',
+        message: 'Archivo descargado correctamente',
+        isVisible: true
+      });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      setToast({
+        type: 'error',
+        message: 'Error al descargar el archivo. Intenta nuevamente.',
+        isVisible: true
+      });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -214,24 +252,27 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
                   </div>
                 </div>
               ) : (
-                /* Link de descarga - Para prestador siempre, para cliente solo si está pagado */
-                <a
-                  href={getAttachmentUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors group"
+                /* Botón de descarga - Para prestador siempre, para cliente solo si está pagado */
+                <button
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="w-full flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FileText size={32} className="text-blue-500" />
-                  <div className="flex-1">
+                  <div className="flex-1 text-left">
                     <p className="font-medium text-blue-900 group-hover:text-blue-700">
                       {getAttachmentFileName()}
                     </p>
                     <p className="text-sm text-blue-600">
-                      Click para descargar
+                      {downloading ? 'Descargando...' : 'Click para descargar'}
                     </p>
                   </div>
-                  <Download size={20} className="text-blue-500" />
-                </a>
+                  {downloading ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                  ) : (
+                    <Download size={20} className="text-blue-500" />
+                  )}
+                </button>
               )}
             </div>
           )}
@@ -279,6 +320,44 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
               >
                 <RefreshCw size={18} className="mr-2" />
                 Solicitar Revisión
+              </Button>
+            </div>
+          )}
+
+          {/* Botón de pago para entregas pendientes de pago */}
+          {isClient && delivery.status === 'pending_payment' && (
+            <div className="space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <AlertCircle size={20} className="text-amber-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-amber-900 mb-1">
+                      Pago pendiente
+                    </h4>
+                    <p className="text-sm text-amber-800">
+                      Esta entrega ha sido aprobada pero el pago aún no se ha completado. 
+                      Haz clic en el botón de abajo para procesar el pago en MercadoPago.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <Button
+                variant="primary"
+                onClick={handleApprove}
+                className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Procesando...
+                  </div>
+                ) : (
+                  <>
+                    <DollarSign size={18} className="mr-2" />
+                    Realizar pago
+                  </>
+                )}
               </Button>
             </div>
           )}
