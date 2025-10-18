@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 
-export default function EditAccountModal({ open, onClose, account, onSave, loading }) {
+export default function EditAccountModal({ open, onClose, account, onSave, loading, error: externalError }) {
   const [alias, setAlias] = useState(account?.alias || '');
   const [customName, setCustomName] = useState(account?.customName || '');
   const [error, setError] = useState('');
@@ -24,7 +24,7 @@ export default function EditAccountModal({ open, onClose, account, onSave, loadi
     }
     // Validación de alias existente
     if (alias && existingAliases.includes(alias)) {
-      setError('El alias ingresado ya está en uso por otra cuenta. Por favor, elige uno diferente.');
+      setError('El alias ingresado pertenece a otra cuenta registrada.');
       return;
     }
     onSave({ alias, customName });
@@ -59,9 +59,9 @@ export default function EditAccountModal({ open, onClose, account, onSave, loadi
               maxLength={40}
             />
           </div>
-          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {(error || externalError) && <div className="text-red-600 text-sm">{error || externalError}</div>}
           <div className="flex gap-2 justify-end mt-2">
-            <Button type="button" variant="neutral" onClick={onClose} disabled={loading}>Cancelar</Button>
+            <Button type="button" variant="cancel" onClick={onClose} disabled={loading}>Cancelar</Button>
             <Button type="submit" variant="primary" {...(loading ? { loading: true } : {})}>Guardar</Button>
           </div>
         </form>

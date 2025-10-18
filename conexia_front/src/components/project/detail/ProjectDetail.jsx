@@ -464,6 +464,8 @@ ${messageText.trim()}`;
         {showDeleteModal && (
           <DeleteProjectModal
             projectId={projectId}
+            project={project}
+            searchParams={searchParams}
             onCancel={() => setShowDeleteModal(false)}
             onProjectDeleted={() => {
               setShowDeleteModal(false);

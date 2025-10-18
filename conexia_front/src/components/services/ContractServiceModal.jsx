@@ -5,6 +5,7 @@ import { X, CreditCard, Smartphone, Building2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { useContractService } from '@/hooks/service-hirings/useContractService';
 import Toast from '@/components/ui/Toast';
+import { getUnitLabelPlural } from '@/utils/timeUnit';
 
 const PAYMENT_METHODS = [
   {
@@ -73,11 +74,6 @@ export default function ContractServiceModal({
         onSuccess(result);
       }
 
-      // Llamar callback de éxito
-      if (onSuccess) {
-        onSuccess(result);
-      }
-
       // Cerrar modal después de un momento
       setTimeout(() => {
         onClose();
@@ -111,12 +107,10 @@ export default function ContractServiceModal({
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full min-w-[300px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
-          {/* Header */}
-          <div className="flex justify-between items-center p-6 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Contratar Servicio
-            </h3>
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full min-w-[300px] max-h-[90vh] flex flex-col">
+          {/* Header fijo */}
+          <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0 flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-gray-900">Contratar Servicio</h3>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
@@ -126,8 +120,8 @@ export default function ContractServiceModal({
             </button>
           </div>
 
-          {/* Contenido */}
-          <div className="p-6">
+          {/* Contenido con scroll */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Resumen del servicio */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <h4 className="font-medium text-gray-900 mb-2 break-words overflow-wrap-anywhere line-clamp-2 leading-tight max-w-full">
@@ -136,14 +130,54 @@ export default function ContractServiceModal({
               <p className="text-sm text-gray-600 mb-2 break-words">
                 Por: {serviceHiring.service?.owner?.firstName} {serviceHiring.service?.owner?.lastName}
               </p>
-              <div className="flex justify-between items-center">
-                <p className="text-lg font-semibold text-conexia-green">
-                  ${serviceHiring.quotedPrice?.toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {serviceHiring.estimatedHours}h estimadas
-                </p>
-              </div>
+              
+              {/* Mostrar desglose si es modalidad de pago total */}
+              {serviceHiring.paymentModality?.code === 'full_payment' ? (
+                <>
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-sm text-gray-600">Precio total del servicio:</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      ${serviceHiring.quotedPrice?.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="border-t border-gray-300 pt-3 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Anticipo (25%)</p>
+                        <p className="text-xs text-gray-500">Pagarás ahora</p>
+                      </div>
+                      <p className="text-xl font-bold text-conexia-green">
+                        ${Math.round(serviceHiring.quotedPrice * 0.25).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center text-gray-600">
+                      <div>
+                        <p className="text-sm">Al completar (75%)</p>
+                        <p className="text-xs text-gray-500">Pagarás al finalizar</p>
+                      </div>
+                      <p className="text-sm font-medium">
+                        ${Math.round(serviceHiring.quotedPrice * 0.75).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  {serviceHiring.estimatedHours && serviceHiring.estimatedTimeUnit && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      {serviceHiring.estimatedHours} {getUnitLabelPlural(serviceHiring.estimatedTimeUnit)} estimadas
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <p className="text-lg font-semibold text-conexia-green">
+                    ${serviceHiring.quotedPrice?.toLocaleString()}
+                  </p>
+                  {serviceHiring.estimatedHours && serviceHiring.estimatedTimeUnit && (
+                    <p className="text-sm text-gray-500">
+                      {serviceHiring.estimatedHours} {getUnitLabelPlural(serviceHiring.estimatedTimeUnit)} estimadas
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Selector de método de pago */}
@@ -208,13 +242,14 @@ export default function ContractServiceModal({
                 </a>
               </p>
             </div>
+          </div>
 
-            {/* Botones de acción */}
-            <div className="flex gap-3">
+          {/* Footer fijo */}
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg flex-shrink-0">
+            <div className="flex justify-end gap-3">
               <Button
                 variant="cancel"
                 onClick={handleClose}
-                className="flex-1"
                 disabled={loading}
               >
                 Cancelar
@@ -222,7 +257,6 @@ export default function ContractServiceModal({
               <Button
                 variant="primary"
                 onClick={handleContract}
-                className="flex-1"
                 disabled={loading}
               >
                 {loading ? (

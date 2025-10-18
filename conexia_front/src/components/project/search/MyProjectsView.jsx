@@ -6,6 +6,7 @@ import NavbarCommunity from '@/components/navbar/NavbarCommunity';
 import NavbarAdmin from '@/components/navbar/NavbarAdmin';
 import NavbarModerator from '@/components/navbar/NavbarModerator';
 import ProjectList from './ProjectList';
+import Toast from '@/components/ui/Toast';
 
 import { useAuth } from '@/context/AuthContext';
 import { ROLES } from '@/constants/roles';
@@ -23,9 +24,27 @@ export default function MyProjectsView({ userId }) {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const pageSize = 12;
+  const [toast, setToast] = useState({ isVisible: false, type: 'success', message: '' });
 
   // Determinar si el usuario autenticado es el dueño de los proyectos que se están viendo
   const isOwner = authUser && userId && String(authUser.id) === String(userId);
+
+  // Leer sessionStorage para toast de eliminación de proyecto
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const deletion = sessionStorage.getItem('projectDeletionToast');
+      if (deletion) {
+        try {
+          const data = JSON.parse(deletion);
+          setToast({ isVisible: true, type: data.type || 'success', message: data.message || 'Proyecto eliminado correctamente.' });
+        } catch {
+          // ignore parse error
+        } finally {
+          sessionStorage.removeItem('projectDeletionToast');
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!userId && !authUser) return;
@@ -64,120 +83,134 @@ export default function MyProjectsView({ userId }) {
   return (
     <>
       {renderNavbar()}
-      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-2 md:px-40 pb-20 md:pb-8 flex flex-col items-center">
-        <div className="w-full max-w-5xl flex flex-col gap-6">
-          {/* Título y opciones */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2 w-full px-2 md:px-0">
-            <div className="w-full flex justify-center md:justify-start">
-              <div className="w-full md:w-[480px] flex justify-center md:justify-start">
-                <h1
-                  className="font-bold text-conexia-green bg-white rounded-lg px-6 py-3 shadow-sm text-center md:text-left whitespace-nowrap"
-                  style={{
-                    fontSize: 'clamp(1.15rem, 2.7vw, 1.7rem)',
-                    lineHeight: 1.2,
-                    minWidth: '120px',
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'clip',
-                    display: 'block',
-                  }}
-                  title={isOwner ? 'Mis Proyectos Colaborativos' : 'Proyectos Colaborativos'}
-                >
-                  {isOwner ? 'Mis Proyectos Colaborativos' : 'Proyectos Colaborativos'}
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 pb-20 md:pb-8">
+        <div className="container mx-auto px-4 py-4">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight">
+                  {isOwner ? 'Mis Proyectos' : 'Proyectos del Usuario'}
                 </h1>
+                <p className="text-conexia-green-dark mt-2 text-base md:text-lg">
+                  {isOwner 
+                    ? 'Gestiona y visualiza todos tus proyectos colaborativos' 
+                    : 'Explora los proyectos colaborativos de este usuario'
+                  }
+                </p>
               </div>
+              
+              {/* Filtros (solo para el propietario) */}
+              {isOwner && (
+                <div className="flex items-center justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
+                  <label className="flex items-center gap-2 cursor-pointer bg-white rounded-lg shadow-sm border p-3">
+                    <input
+                      type="checkbox"
+                      checked={showInactive}
+                      onChange={e => setShowInactive(e.target.checked)}
+                      className="rounded border-gray-300 text-conexia-green focus:ring-conexia-green"
+                      disabled={loading}
+                    />
+                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                      Ver también proyectos inactivos
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
-            {isOwner && (
-              <div className="w-full flex justify-center md:justify-end">
-                <label className="flex items-center gap-2 mt-4 md:mt-0 text-conexia-green font-medium cursor-pointer whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={showInactive}
-                    onChange={e => setShowInactive(e.target.checked)}
-                    className="accent-conexia-green"
-                  />
-                  Ver también proyectos inactivos
-                </label>
-              </div>
+          </div>
+          {/* Resultados */}
+          <div className="mb-6">
+            {!loading && projects.length > 0 && (
+              <p className="text-gray-600 text-sm">
+                Mostrando {projects.length} de {pagination.totalItems} proyecto{pagination.totalItems !== 1 ? 's' : ''}
+              </p>
             )}
           </div>
-          <section className="flex-1 min-w-0">
-            {loading ? (
-              <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
-            ) : (
-              <>
-                <ProjectList 
-                  projects={projects} 
-                  showFinished={true} 
-                  showInactive={showInactive} 
-                  origin={isOwner ? 'my-projects' : 'user-projects'}
-                />
-                
-                {/* Botón Atrás y Paginado */}
-                <div className="mt-6">
-                  {/* En móvil: botón atrás a la izquierda y paginado centrado en la misma línea */}
-                  <div className="flex items-center md:hidden px-6 sm:px-0">
-                    <BackButton
-                      text={isOwner ? 'Volver a mi perfil' : 'Atrás'}
-                      onClick={() => {
-                        if (isOwner) {
-                          router.push(`/profile/userProfile/${userId}`);
-                        } else {
-                          router.back();
-                        }
-                      }}
-                      className="h-[38px] whitespace-nowrap text-sm"
-                    />
-                    <div className="flex-1 flex justify-center items-center">
-                      <div className="flex items-center -mt-6">
-                        <Pagination
-                          page={pagination.currentPage}
-                          origin={isOwner ? 'my-projects' : 'user-projects'}
-                          hasPreviousPage={pagination.hasPreviousPage}
-                          hasNextPage={pagination.hasNextPage}
-                          totalPages={pagination.totalPages}
-                          onPageChange={setPage}
-                        />
-                      </div>
+
+          {/* Lista de proyectos */}
+          {loading ? (
+            <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
+          ) : (
+            <>
+              <ProjectList 
+                projects={projects} 
+                showFinished={true} 
+                showInactive={showInactive} 
+                origin={isOwner ? 'my-projects' : 'user-projects'}
+              />
+              
+              {/* Botón Atrás y Paginado */}
+              <div className="mt-6">
+                {/* En móvil: botón atrás a la izquierda y paginado centrado en la misma línea */}
+                <div className="flex items-center md:hidden">
+                  <BackButton
+                    text={isOwner ? 'Volver a mi perfil' : 'Atrás'}
+                    onClick={() => {
+                      if (isOwner) {
+                        router.push(`/profile/userProfile/${userId}`);
+                      } else {
+                        router.back();
+                      }
+                    }}
+                    className="h-[38px] whitespace-nowrap text-sm"
+                  />
+                  {/* Siempre mostrar paginado en móvil */}
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="flex items-center -mt-6">
+                      <Pagination
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        onPageChange={setPage}
+                      />
                     </div>
-                  </div>
-                  
-                  {/* En desktop: botón atrás a la izquierda, paginado centrado */}
-                  <div className="hidden md:flex md:items-center px-6 sm:px-0">
-                    <BackButton
-                      text={isOwner ? 'Volver a mi perfil' : 'Atrás'}
-                      onClick={() => {
-                        if (isOwner) {
-                          router.push(`/profile/userProfile/${userId}`);
-                        } else {
-                          router.back();
-                        }
-                      }}
-                      className="h-[38px] whitespace-nowrap text-sm"
-                    />
-                    <div className="flex-1 flex justify-center items-center">
-                      <div className="flex items-center -mt-6">
-                        <Pagination
-                          page={pagination.currentPage}
-                          hasPreviousPage={pagination.hasPreviousPage}
-                          hasNextPage={pagination.hasNextPage}
-                          totalPages={pagination.totalPages}
-                          onPageChange={setPage}
-                        />
-                      </div>
-                    </div>
-                    {/* Espaciador invisible para mantener el centrado */}
-                    <div className="w-[72px] flex items-center"></div>
                   </div>
                 </div>
-              </>
-            )}
-          </section>
+                
+                {/* En desktop: botón atrás a la izquierda, paginado centrado */}
+                <div className="hidden md:flex md:items-center">
+                  <BackButton
+                    text={isOwner ? 'Volver a mi perfil' : 'Atrás'}
+                    onClick={() => {
+                      if (isOwner) {
+                        router.push(`/profile/userProfile/${userId}`);
+                      } else {
+                        router.back();
+                      }
+                    }}
+                    className="h-[38px] whitespace-nowrap text-sm"
+                  />
+                  {/* Siempre mostrar paginado en desktop */}
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="flex items-center -mt-6">
+                      <Pagination
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        onPageChange={setPage}
+                      />
+                    </div>
+                  </div>
+                  {/* Espaciador invisible para mantener el centrado */}
+                  <div className="w-[72px] flex items-center"></div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* Widget de mensajería (igual que en ClientCommunity) */}
       <MessagingWidget avatar={avatar} />
+
+      {/* Toast para eliminación de proyecto */}
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+        position="top-center"
+        duration={4000}
+      />
     </>
   );
 }

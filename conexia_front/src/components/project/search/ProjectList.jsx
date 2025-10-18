@@ -36,16 +36,16 @@ export default function ProjectList({ projects, showFinished = false, showInacti
 
   return (
     <div className={`${reserveGridSpace ? 'min-h-[800px] flex flex-col' : ''}`}>
-      <div className={`grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch mt-0 w-full px-6 sm:px-0 ${reserveGridSpace ? 'flex-1' : ''}`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${reserveGridSpace ? 'flex-1' : ''}`}>
         {filteredProjects.map(project => {
           const projectFinished = isProjectFinished(project);
           return (
             <div
               key={project.id}
-              className="bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col h-full items-stretch w-full hover:shadow-lg transition relative"
+              className="bg-white rounded-2xl shadow-md p-2.5 sm:p-3 flex flex-col h-full items-stretch w-full hover:shadow-lg transition relative"
             >
               {/* Etiquetas arriba de la imagen */}
-              <div className="flex flex-row gap-2 mb-2 w-full justify-between items-center px-2" style={{ minHeight: '28px' }}>
+              <div className="flex flex-row gap-2 mb-0.5 w-full justify-between items-center px-1.5" style={{ minHeight: (!project.isActive || project.deletedAt || projectFinished) ? '20px' : '8px' }}>
                 {(!project.isActive || project.deletedAt) && (
                   <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[12px] font-semibold border border-gray-300 shadow select-none whitespace-nowrap" style={{ lineHeight: '1.1' }}>⏸ Inactivo</span>
                 )}
@@ -56,15 +56,15 @@ export default function ProjectList({ projects, showFinished = false, showInacti
               </div>
 
               {/* Imagen */}
-              <div className="flex justify-center items-center mb-3 w-full">
-                <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0">
+              <div className="flex justify-center items-center mb-2.5 w-full">
+                <div className="relative w-52 h-52 sm:w-56 sm:h-56 flex-shrink-0">
                   {project.image ? (
                     <Image
                       src={`${config.IMAGE_URL}/${project.image}`}
                       alt={project.title}
                       fill
                       className="object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm"
-                      sizes="144px"
+                      sizes="224px"
                     />
                   ) : (
                     <Image
@@ -72,30 +72,33 @@ export default function ProjectList({ projects, showFinished = false, showInacti
                       alt="Imagen por defecto"
                       fill
                       className="object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm"
-                      sizes="144px"
+                      sizes="224px"
                     />
                   )}
                 </div>
               </div>
 
               {/* Título y dueño */}
-              <div className="mb-2 flex flex-col items-center w-full">
-                <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2 w-full">
-                  {project.title}
-                </h3>
+              <div className="mb-1.5 flex flex-col items-center w-full">
+                <div className="h-10 sm:h-12 flex items-center justify-center w-full overflow-hidden">
+                  <h3 className="font-bold text-conexia-green text-sm sm:text-base leading-tight break-words text-center line-clamp-2 w-full">
+                    {project.title}
+                  </h3>
+                </div>
+                
                 <div
-                  className="flex items-center gap-2 mt-1 min-w-0 px-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                  className="flex items-center gap-2 mt-0.5 min-w-0 px-1.5 cursor-pointer hover:bg-gray-50 rounded-lg p-1.5 transition-colors"
                   onClick={() => router.push(`/profile/userProfile/${project.ownerId}`)}
                   style={{ maxWidth: '100%' }}
                 >
-                  <div className="relative w-7 h-7">
+                  <div className="relative w-6 h-6">
                     {project.ownerImage ? (
                       <Image
                         src={`${config.IMAGE_URL}/${project.ownerImage}`}
                         alt={project.owner || 'Usuario'}
                         fill
                         className="object-cover rounded-full border bg-[#f3f9f8]"
-                        sizes="28px"
+                        sizes="24px"
                       />
                     ) : (
                       <Image
@@ -103,27 +106,27 @@ export default function ProjectList({ projects, showFinished = false, showInacti
                         alt="Sin imagen"
                         fill
                         className="object-contain rounded-full border bg-[#f3f9f8]"
-                        sizes="28px"
+                        sizes="24px"
                       />
                     )}
                   </div>
-                  <span className="text-conexia-green font-semibold text-sm whitespace-pre-line break-words truncate hover:underline max-w-[120px] md:max-w-[180px] lg:max-w-[220px]">
+                  <span className="text-conexia-green font-semibold text-xs sm:text-sm whitespace-pre-line break-words truncate hover:underline max-w-[120px] md:max-w-[180px] lg:max-w-[220px]">
                     {getShortName(project.owner)}
                   </span>
                 </div>
               </div>
 
               {/* Badges */}
-              <div className="flex flex-col gap-1 mb-4 w-full px-2 min-h-[56px]">
-                <div className="gap-1" style={{ minHeight: '16px' }} />
+              <div className="flex flex-col gap-1.5 mb-3 w-full px-1.5 min-h-[48px]">
+                <div className="gap-0.5" style={{ minHeight: '8px' }} />
                 <div className="flex gap-1 w-full">
                   {project.category && (
-                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium truncate flex-1 min-w-0 text-center">
+                    <span className="bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded text-xs font-medium truncate flex-1 min-w-0 text-center">
                       {project.category}
                     </span>
                   )}
                   {project.contractType && (
-                    <span className="bg-conexia-green/10 text-conexia-green px-2 py-1 rounded text-xs font-medium truncate flex-1 min-w-0 text-center">
+                    <span className="bg-conexia-green/10 text-conexia-green px-2.5 py-1.5 rounded text-xs font-medium truncate flex-1 min-w-0 text-center">
                       {project.contractType}
                     </span>
                   )}
@@ -138,25 +141,23 @@ export default function ProjectList({ projects, showFinished = false, showInacti
               </div>
 
               {/* Botón */}
-              <div className="w-full mt-auto px-2">
-                <div className="flex w-full">
-                  <button
-                    className="bg-conexia-green/90 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-conexia-green transition w-full"
-                    onClick={() => {
-                      let url = `/project/${project.id}`;
-                      if (origin === 'my-projects') {
-                        url += '?from=my-projects';
-                      } else if (origin === 'user-projects') {
-                        url += '?from=user-projects';
-                      } else if (origin === 'my-projects-preview' || origin === 'user-projects-preview') {
-                        url += '?from=profile';
-                      }
-                      router.push(url);
-                    }}
-                  >
-                    Ver detalle
-                  </button>
-                </div>
+              <div className="w-full mt-auto px-1.5 mb-2.5">
+                <button
+                  className="bg-conexia-green hover:bg-conexia-green/90 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition w-full"
+                  onClick={() => {
+                    let url = `/project/${project.id}`;
+                    if (origin === 'my-projects') {
+                      url += '?from=my-projects';
+                    } else if (origin === 'user-projects') {
+                      url += '?from=user-projects';
+                    } else if (origin === 'my-projects-preview' || origin === 'user-projects-preview') {
+                      url += '?from=profile';
+                    }
+                    router.push(url);
+                  }}
+                >
+                  Ver detalle
+                </button>
               </div>
             </div>
           );

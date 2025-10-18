@@ -375,3 +375,92 @@ function getErrorType(message) {
   
   return 'unknown';
 }
+
+/**
+ * Obtener modalidades de pago disponibles
+ * @returns {Promise<Array>} Lista de modalidades de pago
+ */
+export async function fetchPaymentModalities() {
+  const res = await fetch(`${config.API_URL}/service-hirings/payment-modalities`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json?.message || 'Error al obtener modalidades de pago');
+  }
+
+  if (!json.success) {
+    throw new Error(json.message || 'Error en la respuesta del servidor');
+  }
+
+  return json.data;
+}
+
+/**
+ * Crear cotización con modalidad de pago (soporta entregables)
+ * @param {number} hiringId - ID de la contratación
+ * @param {Object} data - Datos de la cotización con modalidad
+ * @returns {Promise<Object>} Respuesta de la cotización creada
+ */
+export async function createQuotationWithDeliverables(hiringId, data) {
+  const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/quotation-with-deliverables`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    const error = new Error(json?.message || 'Error al crear la cotización');
+    error.statusCode = res.status;
+    error.errorType = getErrorType(json?.message);
+    throw error;
+  }
+
+  if (!json.success) {
+    const error = new Error(json.message || 'Error en la respuesta del servidor');
+    error.statusCode = json.statusCode || 400;
+    error.errorType = getErrorType(json.message);
+    throw error;
+  }
+
+  return json.data;
+}
+
+/**
+ * Editar cotización con modalidad de pago (soporta entregables)
+ * @param {number} hiringId - ID de la contratación
+ * @param {Object} data - Datos de la cotización con modalidad
+ * @returns {Promise<Object>} Respuesta de la cotización actualizada
+ */
+export async function updateQuotationWithDeliverables(hiringId, data) {
+  const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/quotation-with-deliverables`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    const error = new Error(json?.message || 'Error al actualizar la cotización');
+    error.statusCode = res.status;
+    error.errorType = getErrorType(json?.message);
+    throw error;
+  }
+
+  if (!json.success) {
+    const error = new Error(json.message || 'Error en la respuesta del servidor');
+    error.statusCode = json.statusCode || 400;
+    error.errorType = getErrorType(json.message);
+    throw error;
+  }
+
+  return json.data;
+}

@@ -61,7 +61,7 @@ export default function UserServicesPage({ userId }) {
         <div className="container mx-auto px-4 py-4">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight">
                   {isOwner ? 'Mis Servicios' : 'Servicios del Usuario'}
@@ -74,9 +74,9 @@ export default function UserServicesPage({ userId }) {
                 </p>
               </div>
               
-              {/* Filtros (solo para el propietario) - Alineado a la derecha */}
+              {/* Filtros (solo para el propietario) */}
               {isOwner && (
-                <div className="flex items-center justify-end mt-4 sm:mt-0">
+                <div className="flex items-center justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
                   <label className="flex items-center gap-2 cursor-pointer bg-white rounded-lg shadow-sm border p-3">
                     <input
                       type="checkbox"
@@ -162,17 +162,16 @@ export default function UserServicesPage({ userId }) {
                 }}
                 className="h-[38px] whitespace-nowrap text-sm"
               />
-              {pagination.totalPages > 1 && (
-                <div className="flex-1 flex justify-center items-center">
-                  <div className="flex items-center -mt-6">
-                    <Pagination
-                      currentPage={pagination.page}
-                      totalPages={pagination.totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
+              {/* Siempre mostrar paginado en móvil */}
+              <div className="flex-1 flex justify-center items-center">
+                <div className="flex items-center -mt-6">
+                  <Pagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
-              )}
+              </div>
             </div>
             
             {/* En desktop: botón atrás a la izquierda, paginado centrado */}
@@ -188,15 +187,16 @@ export default function UserServicesPage({ userId }) {
                 }}
                 className="h-[38px] whitespace-nowrap text-sm"
               />
-                <div className="flex-1 flex justify-center items-center">
-                  <div className="flex items-center -mt-6">
-                    <Pagination
-                      currentPage={pagination.page}
-                      totalPages={pagination.totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
+              {/* Siempre mostrar paginado en desktop */}
+              <div className="flex-1 flex justify-center items-center">
+                <div className="flex items-center -mt-6">
+                  <Pagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
+              </div>
               {/* Espaciador invisible para mantener el centrado */}
               <div className="w-[72px] flex items-center"></div>
             </div>

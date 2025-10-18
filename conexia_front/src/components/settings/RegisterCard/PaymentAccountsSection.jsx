@@ -4,11 +4,10 @@
 import React, { useState } from 'react';
 import { useRoleValidation } from '@/hooks/useRoleValidation';
 import Toast from '@/components/ui/Toast';
-import AddBankAccountForm from './AddBankAccountForm';
-import AddDigitalAccountForm from './AddDigitalAccountForm';
+import AddAccountModal from './AddAccountModal';
 import Button from '@/components/ui/Button';
 import { useFetch } from '@/hooks/useFetch';
-import { fetchPaymentAccounts, deleteBankAccount, fetchBankAccountById, editAccountAliasAndName } from '@/service/payment/paymentFetch';
+import { fetchPaymentAccounts, deleteBankAccount, fetchBankAccountById, editAccountAliasAndName, addBankAccount, addDigitalAccount } from '@/service/payment/paymentFetch';
 import EditAccountModal from './EditAccountModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 
@@ -18,8 +17,9 @@ export default function PaymentAccountsSection() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editAccount, setEditAccount] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
-  const [showBankForm, setShowBankForm] = useState(false);
-  const [showDigitalForm, setShowDigitalForm] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [modalType, setModalType] = useState('bank'); // 'bank' o 'digital'
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAccount, setDeleteAccount] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -66,42 +66,77 @@ export default function PaymentAccountsSection() {
     ? accounts.filter(acc => acc.type === 'digital_account')
     : [];
 
-  // Cuando se agrega una cuenta, refrescar la lista
-  const handleAddBank = (msg) => {
-    setShowBankForm(false);
-    refetch();
-    if (msg) {
-      setToast({ type: 'success', message: msg, isVisible: true });
+  // Manejar la adición de cuentas desde el modal
+  const handleAddAccount = async (accountData, errorMessage = null) => {
+    if (errorMessage) {
+      // Mostrar toast de error por duplicado
+      setToast({ type: 'error', message: errorMessage, isVisible: true });
+      return;
     }
-  };
-  const handleAddDigital = (msg) => {
-    setShowDigitalForm(false);
-    refetch();
-    if (typeof msg === 'string') {
-      setToast({ type: 'success', message: msg, isVisible: true });
-    } else if (msg && typeof msg.message === 'string') {
-      setToast({ type: 'success', message: msg.message, isVisible: true });
-    } else {
-      setToast({ type: 'success', message: 'Cuenta digital registrada correctamente', isVisible: true });
-    }
-  };
 
-  // Botón tipo radio para seleccionar formulario activo
-  const activeType = showBankForm ? 'bank' : showDigitalForm ? 'digital' : null;
-  const handleSelectType = (type) => {
-    setShowBankForm(type === 'bank');
-    setShowDigitalForm(type === 'digital');
+    if (!accountData) return;
+
+    try {
+      let response;
+      if (accountData.type === 'bank_account') {
+        response = await addBankAccount({
+          bankId: accountData.bankId,
+          bankAccountType: accountData.accountType,
+          cbu: accountData.cbu,
+          accountHolderName: accountData.holder,
+          cuilCuit: accountData.cuit,
+          alias: accountData.alias,
+          customName: accountData.customName
+        });
+      } else {
+        response = await addDigitalAccount({
+          digitalPlatformId: accountData.digitalPlatformId,
+          cvu: accountData.cvu,
+          accountHolderName: accountData.holder,
+          cuilCuit: accountData.cuit,
+          alias: accountData.alias,
+          customName: accountData.customName
+        });
+      }
+      // Manejo de error en respuesta sin lanzar excepción
+      if (response && response.error) {
+        setToast({ 
+          type: 'error', 
+          message: response.message || 'Error al agregar la cuenta', 
+          isVisible: true 
+        });
+        return;
+      }
+      setAddModalOpen(false);
+      refetch();
+      setToast({ 
+        type: 'success', 
+        message: accountData.type === 'bank_account' 
+          ? 'Cuenta bancaria agregada correctamente' 
+          : 'Cuenta digital agregada correctamente', 
+        isVisible: true 
+      });
+    } catch (error) {
+      console.error('Error al agregar cuenta:', error);
+      setToast({ 
+        type: 'error', 
+        message: error.message || 'Error al agregar la cuenta', 
+        isVisible: true 
+      });
+    }
   };
 
   // Handler para abrir modal de edición
   function handleEditAccount(acc) {
     setEditAccount(acc);
+    setEditError('');
     setEditModalOpen(true);
   }
 
   // Guardar cambios de alias/customName
   async function handleSaveEditAccount({ alias, customName }) {
     setEditLoading(true);
+    setEditError('');
     try {
       await editAccountAliasAndName(editAccount.id, { alias, customName });
       setEditModalOpen(false);
@@ -110,10 +145,12 @@ export default function PaymentAccountsSection() {
       refetch();
     } catch (err) {
       let errorMsg = err?.message || 'Error al actualizar datos';
-      if (errorMsg.toLowerCase().includes('invalid alias format') || errorMsg.toLowerCase().includes('ya tienes otra cuenta con este alias') || errorMsg.toLowerCase().includes('alias already exists')) {
-        errorMsg = 'El alias ingresado ya está en uso por otra cuenta. Por favor, elige uno diferente.';
+      if (errorMsg.toLowerCase().includes('invalid alias format')) {
+        errorMsg = 'El alias debe tener entre 6 y 20 caracteres (letras, números, guiones y puntos).';
+      } else if (errorMsg.toLowerCase().includes('already exists') || errorMsg.toLowerCase().includes('alias already exists')) {
+        errorMsg = 'El alias ingresado pertenece a otra cuenta registrada.';
       }
-      setToast({ type: 'error', message: errorMsg, isVisible: true });
+      setEditError(errorMsg);
     } finally {
       setEditLoading(false);
     }
@@ -122,23 +159,22 @@ export default function PaymentAccountsSection() {
   return (
     <section>
       <h2 className="text-2xl font-bold text-conexia-green mb-6">Datos de cobro</h2>
+      
       <div className="border rounded-lg overflow-hidden bg-white shadow-sm mb-8">
         <div className="p-6">
-          <h2 className="text-lg font-bold text-conexia-green mb-4">Cuentas bancarias</h2>
-          <Button
-            variant={showBankForm ? 'primary' : 'neutral'}
-            onClick={() => handleSelectType('bank')}
-            className="mb-4"
-          >
-            + Agregar cuenta bancaria
-          </Button>
-          {showBankForm && (
-            <AddBankAccountForm
-              onSubmit={handleAddBank}
-              onCancel={() => handleSelectType(null)}
-              existingAccounts={bankAccounts}
-            />
-          )}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-conexia-green">Cuentas bancarias</h2>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setModalType('bank');
+                setAddModalOpen(true);
+              }}
+              className="bg-conexia-green hover:bg-conexia-green/90 text-white px-4 py-2 rounded-lg text-sm"
+            >
+              + Agregar cuenta bancaria
+            </Button>
+          </div>
           <div className="mt-4">
             {isLoading ? (
               <div className="text-gray-500">Cargando cuentas bancarias...</div>
@@ -194,21 +230,19 @@ export default function PaymentAccountsSection() {
       </div>
       <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
         <div className="p-6">
-          <h2 className="text-lg font-bold text-conexia-green mb-4">Cuentas digitales</h2>
-          <Button
-            variant={showDigitalForm ? 'primary' : 'neutral'}
-            onClick={() => handleSelectType('digital')}
-            className="mb-4"
-          >
-            + Agregar cuenta digital
-          </Button>
-          {showDigitalForm && (
-            <AddDigitalAccountForm
-              onSubmit={handleAddDigital}
-              onCancel={() => handleSelectType(null)}
-              existingAccounts={digitalAccounts}
-            />
-          )}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-conexia-green">Cuentas digitales</h2>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setModalType('digital');
+                setAddModalOpen(true);
+              }}
+              className="bg-conexia-green hover:bg-conexia-green/90 text-white px-4 py-2 rounded-lg text-sm"
+            >
+              + Agregar cuenta digital
+            </Button>
+          </div>
           <div className="mt-4">
             {isLoading ? (
               <div className="text-gray-500">Cargando cuentas digitales...</div>
@@ -263,25 +297,23 @@ export default function PaymentAccountsSection() {
           </div>
         </div>
       </div>
-      {/* Modal de confirmación de eliminación (solo una vez, fuera de los map) */}
+      {/* Modal para agregar cuenta */}
+      <AddAccountModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSubmit={handleAddAccount}
+        existingAccounts={accounts || []}
+        initialType={modalType}
+      />
+
+      {/* Modal de confirmación de eliminación */}
       <ConfirmDeleteModal
         open={deleteModalOpen}
         onClose={() => { setDeleteModalOpen(false); setDeleteAccount(null); }}
         onConfirm={handleConfirmDelete}
         loading={deleteLoading}
       />
-      {/* Toast para notificaciones */}
-      {toast?.isVisible && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          isVisible={toast.isVisible}
-          onClose={() => setToast(null)}
-          position="top-center"
-          // z-index alto para que quede por delante del modal
-          style={{ zIndex: 9999 }}
-        />
-      )}
+
       {/* Modal edición alias/customName */}
       <EditAccountModal
         open={editModalOpen}
@@ -290,6 +322,18 @@ export default function PaymentAccountsSection() {
         onSave={handleSaveEditAccount}
         loading={editLoading}
       />
+
+      {/* Toast para notificaciones */}
+      {toast?.isVisible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={5000}
+        />
+      )}
     </section>
   );
 }

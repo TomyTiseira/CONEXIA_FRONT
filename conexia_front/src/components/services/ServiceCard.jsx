@@ -65,9 +65,9 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col h-full items-stretch w-full hover:shadow-lg transition relative">
+    <div className="bg-white rounded-2xl shadow-md p-2.5 sm:p-3 flex flex-col h-full items-stretch w-full hover:shadow-lg transition relative">
       {/* Etiquetas arriba de la imagen */}
-      <div className="flex flex-row gap-2 mb-2 w-full justify-between items-center px-2" style={{ minHeight: '28px' }}>
+      <div className="flex flex-row gap-2 mb-0.5 w-full justify-between items-center px-1.5" style={{ minHeight: isInactive ? '20px' : '8px' }}>
         {showInactiveLabel && isInactive && (
           <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[12px] font-semibold border border-gray-300 shadow select-none whitespace-nowrap" style={{lineHeight:'1.1'}}>
             ⏸ Inactivo
@@ -77,7 +77,7 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
       </div>
 
       {/* Imagen del servicio */}
-      <div className="flex justify-center items-center mb-3 w-full">
+      <div className="flex justify-center items-center mb-2.5 w-full">
         <ServiceImageCarousel
           images={service.images || []}
           title={service.title}
@@ -86,42 +86,42 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
       </div>
 
       {/* Título y dueño del servicio */}
-      <div className="mb-2 flex flex-col items-center w-full">
-        <div className="h-12 sm:h-14 flex items-center justify-center w-full overflow-hidden">
-          <h3 className="font-bold text-conexia-green text-base sm:text-lg leading-tight break-words text-center line-clamp-2 w-full">
+      <div className="mb-1.5 flex flex-col items-center w-full">
+        <div className="h-10 sm:h-12 flex items-center justify-center w-full overflow-hidden">
+          <h3 className="font-bold text-conexia-green text-sm sm:text-base leading-tight break-words text-center line-clamp-2 w-full">
             {service.title}
           </h3>
         </div>
         
         {/* Dueño del servicio */}
         <div 
-          className="flex items-center gap-2 mt-1 min-w-0 px-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+          className="flex items-center gap-2 mt-0.5 min-w-0 px-1.5 cursor-pointer hover:bg-gray-50 rounded-lg p-1.5 transition-colors"
           onClick={() => router.push(`/profile/userProfile/${service.owner?.id}`)}
           style={{ maxWidth: '100%' }}
         >
-          <div className="relative w-7 h-7">
+          <div className="relative w-6 h-6">
             <Image
               src={getProfileImageSrc()}
               alt={service.owner ? `${service.owner.firstName} ${service.owner.lastName}` : 'Usuario'}
               fill
               className="object-cover rounded-full border bg-[#f3f9f8]"
-              sizes="28px"
+              sizes="24px"
             />
           </div>
-          <span className="text-conexia-green font-semibold text-sm whitespace-pre-line break-words truncate hover:underline max-w-[120px] md:max-w-[180px] lg:max-w-[220px]">
+          <span className="text-conexia-green font-semibold text-xs sm:text-sm whitespace-pre-line break-words truncate hover:underline max-w-[120px] md:max-w-[180px] lg:max-w-[220px]">
             {getShortName(`${service.owner?.firstName || ''} ${service.owner?.lastName || ''}`)}
           </span>
         </div>
       </div>
 
       {/* Badges - Categoría y precio */}
-      <div className="flex flex-col gap-2 mb-4 w-full px-2 min-h-[56px]">
-        <div className="gap-1" style={{minHeight:'16px'}} />
+      <div className="flex flex-col gap-1.5 mb-3 w-full px-1.5 min-h-[48px]">
+        <div className="gap-0.5" style={{minHeight:'8px'}} />
         
         {/* Categoría completa */}
         {service.category?.name && (
           <div className="flex w-full">
-            <span className="bg-blue-100 text-blue-700 px-3 py-2 rounded text-xs font-medium truncate w-full text-center">
+            <span className="bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded text-xs font-medium truncate w-full text-center">
               {service.category.name}
             </span>
           </div>
@@ -137,9 +137,9 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
       </div>
 
       {/* Botón de acción */}
-      <div className="w-full mt-auto px-2">
+      <div className="w-full mt-auto px-1.5 mb-2.5">
         <button
-          className="bg-conexia-green hover:bg-conexia-green/90 text-white px-4 py-2 rounded-md text-sm font-semibold transition w-full"
+          className="bg-conexia-green hover:bg-conexia-green/90 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition w-full"
           onClick={() => router.push(`/services/${service.id}`)}
         >
           Ver detalle
