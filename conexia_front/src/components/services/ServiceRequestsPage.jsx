@@ -28,6 +28,8 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelado' },
   { value: 'negotiating', label: 'Negociando' },
   { value: 'in_progress', label: 'En progreso' },
+  { value: 'delivered', label: 'Entregado' },
+  { value: 'revision_requested', label: 'Revisión solicitada' },
   { value: 'completed', label: 'Completado' }
 ];
 
@@ -42,6 +44,7 @@ const getStatusBadge = (statusCode) => {
     negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
     in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
     delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
+    revision_requested: { label: 'Revisión solicitada', className: 'bg-orange-100 text-orange-800' },
     completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
   };
   
@@ -401,8 +404,8 @@ export default function ServiceRequestsPage({ serviceId }) {
                                   </button>
                                 )}
 
-                                {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
-                                {(hiring.status?.code === 'approved' || hiring.status?.code === 'delivered') && 
+                                {/* Botón Ver Entregables - Para contratos aprobados, entregados o en revisión con by_deliverables */}
+                                {(['approved', 'in_progress', 'delivered', 'revision_requested'].includes(hiring.status?.code)) && 
                                  hiring.paymentModality?.code === 'by_deliverables' && (
                                   <button
                                     onClick={() => router.push(`/deliveries/${hiring.id}`)}
@@ -413,19 +416,19 @@ export default function ServiceRequestsPage({ serviceId }) {
                                   </button>
                                 )}
 
-                                {/* Botón Realizar entrega - Solo para contratos aprobados con full_payment */}
-                                {hiring.status?.code === 'approved' && hiring.paymentModality?.code === 'full_payment' && (
+                                {/* Botón Realizar entrega - Para contratos aprobados o en revisión con full_payment */}
+                                {(['approved', 'in_progress', 'revision_requested'].includes(hiring.status?.code)) && hiring.paymentModality?.code === 'full_payment' && (
                                   <button
                                     onClick={() => handleDeliveryClick(hiring)}
                                     className="flex items-center justify-center w-8 h-8 text-green-600 hover:text-white hover:bg-green-600 rounded-md transition-all duration-200 group"
-                                    title="Realizar entrega del servicio"
+                                    title={hiring.status?.code === 'revision_requested' ? 'Re-subir entrega corregida' : 'Realizar entrega del servicio'}
                                   >
                                     <Upload size={16} className="group-hover:scale-110 transition-transform" />
                                   </button>
                                 )}
 
-                                {/* Botón Ver Entrega - Para contratos entregados con full_payment */}
-                                {hiring.status?.code === 'delivered' && hiring.paymentModality?.code === 'full_payment' && (
+                                {/* Botón Ver Entrega - Para contratos entregados o en revisión con full_payment */}
+                                {(['in_progress', 'delivered', 'revision_requested'].includes(hiring.status?.code)) && hiring.paymentModality?.code === 'full_payment' && (
                                   <button
                                     onClick={() => router.push(`/service-delivery/${hiring.id}`)}
                                     className="flex items-center justify-center w-8 h-8 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
@@ -526,8 +529,8 @@ export default function ServiceRequestsPage({ serviceId }) {
                             </button>
                           )}
 
-                          {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
-                          {(hiring.status?.code === 'approved' || hiring.status?.code === 'delivered') && 
+                          {/* Botón Ver Entregables - Para contratos aprobados, entregados o en revisión con by_deliverables */}
+                          {(['approved', 'in_progress', 'delivered', 'revision_requested'].includes(hiring.status?.code)) && 
                            hiring.paymentModality?.code === 'by_deliverables' && (
                             <button
                               onClick={() => router.push(`/deliveries/${hiring.id}`)}
@@ -538,19 +541,19 @@ export default function ServiceRequestsPage({ serviceId }) {
                             </button>
                           )}
 
-                          {/* Botón Realizar entrega - Solo para contratos aprobados con full_payment */}
-                          {hiring.status?.code === 'approved' && hiring.paymentModality?.code === 'full_payment' && (
+                          {/* Botón Realizar entrega - Para contratos aprobados o en revisión con full_payment */}
+                          {(['approved', 'in_progress', 'revision_requested'].includes(hiring.status?.code)) && hiring.paymentModality?.code === 'full_payment' && (
                             <button
                               onClick={() => handleDeliveryClick(hiring)}
                               className="flex items-center justify-center w-7 h-7 text-green-600 hover:text-white hover:bg-green-600 rounded-md transition-all duration-200 group"
-                              title="Realizar entrega"
+                              title={hiring.status?.code === 'revision_requested' ? 'Re-subir entrega' : 'Realizar entrega'}
                             >
                               <Upload size={14} className="group-hover:scale-110 transition-transform" />
                             </button>
                           )}
 
-                          {/* Botón Ver Entrega - Para contratos entregados con full_payment */}
-                          {hiring.status?.code === 'delivered' && hiring.paymentModality?.code === 'full_payment' && (
+                          {/* Botón Ver Entrega - Para contratos entregados o en revisión con full_payment */}
+                          {(['in_progress', 'delivered', 'revision_requested'].includes(hiring.status?.code)) && hiring.paymentModality?.code === 'full_payment' && (
                             <button
                               onClick={() => router.push(`/service-delivery/${hiring.id}`)}
                               className="flex items-center justify-center w-7 h-7 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"

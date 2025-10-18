@@ -14,7 +14,9 @@ import { getUnitLabelPlural } from '@/utils/timeUnit';
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
   { value: 'approved', label: 'Aprobados' },
-  { value: 'in_progress', label: 'En entrega' },
+  { value: 'in_progress', label: 'En progreso' },
+  { value: 'delivered', label: 'Entregados' },
+  { value: 'revision_requested', label: 'Revisión solicitada' },
   { value: 'completed', label: 'Completados' }
 ];
 
@@ -25,7 +27,7 @@ export default function RequestedServicesPage() {
     pagination,
     loading,
     error,
-    loadMyServiceHirings // Hook que trae servicios donde soy cliente
+    loadMyHirings // Hook que trae servicios donde soy cliente
   } = useServiceHirings();
 
   const [filters, setFilters] = useState({
@@ -34,8 +36,8 @@ export default function RequestedServicesPage() {
   });
 
   useEffect(() => {
-    loadMyServiceHirings(filters);
-  }, [filters, loadMyServiceHirings]);
+    loadMyHirings(filters);
+  }, [filters, loadMyHirings]);
 
   const handlePageChange = (newPage) => {
     setFilters(prev => ({ ...prev, page: newPage }));

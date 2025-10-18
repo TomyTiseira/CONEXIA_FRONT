@@ -31,6 +31,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
       negotiating: 'Negociando',
       in_progress: 'En progreso',
       delivered: 'Entregado',
+      revision_requested: 'Revisión solicitada',
       completed: 'Completado'
     };
     return statusMap[statusCode] || statusCode;
@@ -47,6 +48,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose }) 
       negotiating: 'text-orange-800 bg-orange-100',
       in_progress: 'text-purple-800 bg-purple-100',
       delivered: 'text-teal-800 bg-teal-100',
+      revision_requested: 'text-orange-800 bg-orange-100',
       completed: 'text-green-800 bg-green-100'
     };
     return statusMap[statusCode] || 'text-gray-800 bg-gray-100';

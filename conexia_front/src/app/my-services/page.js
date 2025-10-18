@@ -16,6 +16,8 @@ const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
   { value: 'approved', label: 'Aprobados (listos para entregar)' },
   { value: 'in_progress', label: 'En progreso' },
+  { value: 'delivered', label: 'Entregados' },
+  { value: 'revision_requested', label: 'Revisión solicitada' },
   { value: 'completed', label: 'Completados' }
 ];
 
