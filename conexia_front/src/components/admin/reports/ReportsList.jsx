@@ -249,7 +249,7 @@ export default function ReportsList() {
                   services.map(s => (
                     <tr key={s.serviceId} className="border-b hover:bg-gray-50 h-auto align-top">
                       <td className="p-4 align-top max-w-[300px]">
-                          <Link href={`/services/${s.serviceId}?from=reports`} className="text-conexia-green font-semibold hover:underline block">
+                          <Link href={`/services/${s.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`} className="text-conexia-green font-semibold hover:underline block">
                           <div className="line-clamp-2 break-words overflow-hidden text-ellipsis" title={s.serviceTitle}>
                             {s.serviceTitle}
                           </div>
@@ -268,8 +268,8 @@ export default function ReportsList() {
                           </Button>
                           <Button
                             variant="edit"
-                              onClick={() => window.location.href = `/services/${s.serviceId}?from=reports`}
-                            onClick={() => window.location.href = `/services/${s.serviceId}?from=reports`}
+                            className="px-3 py-1 text-xs"
+                            onClick={() => window.location.href = `/services/${s.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`}
                           >
                             Ver servicio
                           </Button>

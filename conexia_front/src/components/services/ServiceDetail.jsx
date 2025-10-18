@@ -840,7 +840,15 @@ ${messageText.trim()}`;
                         if (from === 'reports-service' && fromReportsServiceId) {
                           router.push(`/reports/service/${fromReportsServiceId}`);
                         } else if (from === 'reports') {
-                          router.push('/reports');
+                          const f = searchParams.get('filter');
+                          const o = searchParams.get('order');
+                          const p = searchParams.get('page');
+                          const qs = new URLSearchParams();
+                          if (f) qs.set('filter', f);
+                          if (o) qs.set('order', o);
+                          if (p) qs.set('page', p);
+                          const suffix = qs.toString();
+                          router.push(`/reports${suffix ? `?${suffix}` : ''}`);
                         } else {
                           router.back();
                         }
