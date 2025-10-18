@@ -26,20 +26,28 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
 
   const handleApprove = async () => {
     try {
-      await reviewDelivery(delivery.id, { action: 'approve' });
+      const response = await reviewDelivery(delivery.id, { action: 'approve' });
       
       setToast({
         type: 'success',
-        message: 'Entrega aprobada exitosamente',
+        message: 'Entrega aprobada! Redirigiendo a Mercado Pago...',
         isVisible: true
       });
 
-      setTimeout(() => {
-        if (onReviewSuccess) {
-          onReviewSuccess();
-        }
-        setShowConfirmApprove(false);
-      }, 1500);
+      // Si hay URL de pago, redirigir a MercadoPago
+      if (response.paymentUrl) {
+        setTimeout(() => {
+          window.location.href = response.paymentUrl;
+        }, 1500);
+      } else {
+        // Si no hay URL, solo cerrar y refrescar
+        setTimeout(() => {
+          if (onReviewSuccess) {
+            onReviewSuccess();
+          }
+          setShowConfirmApprove(false);
+        }, 1500);
+      }
     } catch (error) {
       setToast({
         type: 'error',
@@ -149,30 +157,82 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
             </div>
           </div>
 
-          {/* Archivo adjunto */}
+          {/* Archivo adjunto con marca de agua si no está pagado */}
           {delivery.attachmentUrl && (
             <div className="mb-6">
               <label className="flex items-center font-semibold text-gray-900 mb-2">
                 <Download size={18} className="mr-2" />
                 Archivo Adjunto
+                {isClient && delivery.needsWatermark && (
+                  <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                    Pendiente de pago
+                  </span>
+                )}
               </label>
-              <a
-                href={getAttachmentUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors group"
-              >
-                <FileText size={32} className="text-blue-500" />
-                <div className="flex-1">
-                  <p className="font-medium text-blue-900 group-hover:text-blue-700">
-                    {getAttachmentFileName()}
-                  </p>
-                  <p className="text-sm text-blue-600">
-                    Click para descargar
-                  </p>
+              
+              {/* Preview con marca de agua para imágenes - Solo para cliente */}
+              {delivery.attachmentPath && /\.(jpg|jpeg|png|gif|webp)$/i.test(delivery.attachmentPath) && (
+                <div className="relative mb-3 rounded-lg overflow-hidden border border-gray-200">
+                  <img
+                    src={getAttachmentUrl()}
+                    alt="Vista previa"
+                    className="w-full max-h-96 object-contain bg-gray-50"
+                  />
+                  {isClient && delivery.needsWatermark && (
+                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
+                      <div className="transform -rotate-30 select-none">
+                        <div className="text-6xl md:text-8xl font-bold text-white/30 drop-shadow-lg">
+                          NO PAGADO
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <Download size={20} className="text-blue-500" />
-              </a>
+              )}
+              
+              {/* Mensaje de bloqueo para archivos no pagados - Solo para cliente */}
+              {isClient && delivery.needsWatermark ? (
+                <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center">
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-3">
+                      <FileText size={32} className="text-yellow-600" />
+                    </div>
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Archivo bloqueado
+                    </h4>
+                    <p className="text-sm text-gray-700 mb-1">
+                      {getAttachmentFileName()}
+                    </p>
+                    <p className="text-xs text-gray-600 max-w-md mb-3">
+                      Este archivo estará disponible para descargar una vez que apruebes y completes el pago de esta entrega.
+                    </p>
+                    {delivery.attachmentPath && /\.(jpg|jpeg|png|gif|webp)$/i.test(delivery.attachmentPath) && (
+                      <p className="text-xs text-blue-600">
+                        Vista previa disponible arriba (con marca de agua)
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Link de descarga - Para prestador siempre, para cliente solo si está pagado */
+                <a
+                  href={getAttachmentUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors group"
+                >
+                  <FileText size={32} className="text-blue-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-blue-900 group-hover:text-blue-700">
+                      {getAttachmentFileName()}
+                    </p>
+                    <p className="text-sm text-blue-600">
+                      Click para descargar
+                    </p>
+                  </div>
+                  <Download size={20} className="text-blue-500" />
+                </a>
+              )}
             </div>
           )}
 
@@ -205,7 +265,7 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
               <Button
                 variant="primary"
                 onClick={() => setShowConfirmApprove(true)}
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-green-600 hover:bg-green-700 flex items-center justify-center"
                 disabled={loading}
               >
                 <CheckCircle size={18} className="mr-2" />
@@ -214,7 +274,7 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
               <Button
                 variant="secondary"
                 onClick={() => setShowRevisionForm(true)}
-                className="flex-1"
+                className="flex-1 flex items-center justify-center"
                 disabled={loading}
               >
                 <RefreshCw size={18} className="mr-2" />

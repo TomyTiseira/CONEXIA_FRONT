@@ -7,7 +7,16 @@ export function setLoggingOut(value) {
   isLoggingOut = value;
 }
 
+export function getLoggingOutStatus() {
+  return isLoggingOut;
+}
+
 export async function fetchWithRefresh(url, options = {}, retries = 1) {
+  // Si estamos cerrando sesión, rechazar TODAS las peticiones inmediatamente
+  if (isLoggingOut) {
+    return new Response(null, { status: 401, statusText: 'Logging out' });
+  }
+  
   try {
     const res = await fetch(url, {
       ...options,

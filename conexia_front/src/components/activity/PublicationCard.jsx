@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
 import { config } from '@/config';
-import { MoreVertical, AlertCircle, Trash2, Pencil, Check, Flag } from 'lucide-react';
+import { MoreVertical, AlertCircle, Trash2, Pencil, Check, Flag, UserPlus } from 'lucide-react';
 import { HiOutlinePlus } from 'react-icons/hi';
 import { BsEmojiSmile } from 'react-icons/bs';
 import { useSendConnectionRequest } from '@/hooks/connections/useSendConnectionRequest';
@@ -1045,35 +1045,28 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
             </span>
           </div>
         </div>
-        {/* Botones en la esquina superior derecha: Seguir y menú */}
-        <div className="absolute top-3 right-5 z-30 flex flex-row items-center">
-          <div className="flex flex-row items-center w-full">
+        {/* Botones en la esquina superior derecha: Conectar y menú */}
+        <div className="absolute top-3 right-5 z-30 flex flex-row items-center gap-2">
+          <div className="flex flex-row items-center gap-2">
             {( !publication.isContact && publication.connectionStatus == null && !isOwner && !isAdmin && !isModerator) && (
-              (connectSuccess || connectLoading) ? (
-                <button
-                  className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-lg border border-[#e0f0f0] w-8 h-8 sm:w-auto sm:h-auto sm:px-2 sm:py-0.5 gap-1 mr-0 sm:mr-2 cursor-default"
-                  type="button"
-                  disabled
-                >
-                  <Check className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-conexia-green" />
-                  <span className="hidden sm:inline text-xs sm:text-sm">Conectando</span>
-                </button>
-              ) : (
-                <button
-                  className="flex items-center justify-center bg-[#367d7d] text-white font-semibold rounded-lg border border-[#e0f0f0] hover:bg-[#285c5c] transition-colors focus:outline-none shadow-sm w-8 h-8 sm:w-auto sm:h-auto sm:px-2 sm:py-0.5 gap-0 sm:gap-1 mr-0 sm:mr-2"
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await sendRequest(publication.owner?.id);
-                    } catch {}
-                  }}
-                >
-                  <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-white bg-transparent">
-                    <HiOutlinePlus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white stroke-[3]" />
-                  </span>
-                  <span className="hidden sm:inline text-xs sm:text-sm">Conectar</span>
-                </button>
-              )
+              <button
+                onClick={async () => {
+                  if (connectSuccess || connectLoading) return;
+                  try {
+                    await sendRequest(publication.owner?.id);
+                  } catch {}
+                }}
+                className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  (connectSuccess || connectLoading)
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-conexia-green/10 text-conexia-green hover:bg-conexia-green hover:text-white hover:scale-110'
+                }`}
+                disabled={connectSuccess || connectLoading}
+                title={(connectSuccess || connectLoading) ? 'Solicitud enviada' : 'Conectar'}
+                type="button"
+              >
+                {(connectSuccess || connectLoading) ? <Check size={18} /> : <UserPlus size={18} />}
+              </button>
             )}
             <button className="p-1 rounded-full focus:outline-none" style={{background: 'transparent'}} onClick={() => setMenuOpen((v) => !v)}>
               <MoreVertical size={22} className="text-conexia-green" />

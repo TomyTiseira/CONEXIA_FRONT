@@ -270,7 +270,7 @@ export default function DeliverablesPage() {
                                 >
                                   <Upload size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
-                              ) : deliverable.status === 'delivered' ? (
+                              ) : (deliverable.status === 'delivered' || deliverable.status === 'approved') ? (
                                 <button
                                   onClick={() => handleViewDelivery(deliverable)}
                                   className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group bg-gray-50 border border-gray-200"
@@ -278,8 +278,6 @@ export default function DeliverablesPage() {
                                 >
                                   <Eye size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
-                              ) : deliverable.status === 'approved' ? (
-                                <span className="text-sm text-gray-400 italic">✓ Aprobado</span>
                               ) : (
                                 <span className="text-sm text-gray-400 italic">-</span>
                               )}
@@ -338,7 +336,7 @@ export default function DeliverablesPage() {
                           <Upload size={18} />
                           Entregar
                         </button>
-                      ) : deliverable.status === 'delivered' ? (
+                      ) : (deliverable.status === 'delivered' || deliverable.status === 'approved') ? (
                         <button
                           onClick={() => handleViewDelivery(deliverable)}
                           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
@@ -348,7 +346,7 @@ export default function DeliverablesPage() {
                         </button>
                       ) : (
                         <div className="w-full text-center py-2 text-gray-400 italic text-sm">
-                          {deliverable.status === 'approved' ? '✓ Aprobado' : 'No disponible'}
+                          No disponible
                         </div>
                       )}
                     </div>

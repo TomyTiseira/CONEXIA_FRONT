@@ -41,17 +41,6 @@ export default function ServiceDeliveryPage() {
   // Verificar si el usuario actual es el cliente (quien solicitó el servicio)
   const isClient = user?.id === hiring?.userId;
 
-  // Debug: Ver qué datos llegan
-  useEffect(() => {
-    if (hiring) {
-      console.log('========== DEBUG HIRING DATA ==========');
-      console.log('Full hiring object:', hiring);
-      console.log('Service:', hiring.service);
-      console.log('Service owner:', hiring.service?.owner);
-      console.log('=====================================');
-    }
-  }, [hiring]);
-
   // Agrupar deliveries por deliverable
   const getDeliveriesByDeliverable = (deliverableId) => {
     return deliveries.filter(d => d.deliverableId === deliverableId);
@@ -134,7 +123,7 @@ export default function ServiceDeliveryPage() {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
               <div className="flex-1">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2 break-words">
                   {hiring.service?.title}
                 </h2>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
@@ -167,12 +156,30 @@ export default function ServiceDeliveryPage() {
             </div>
 
             <div className="border-t border-gray-200 pt-4">
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-sm mb-2">
                 <span className="text-gray-600">Modalidad de pago:</span>
                 <span className="font-semibold text-gray-900">
                   {hiring.paymentModality?.name || 'No especificada'}
                 </span>
               </div>
+              
+              {/* Información de pago para clientes con pago total */}
+              {isClient && hiring.paymentModality?.code === 'full_payment' && hiring.status?.code === 'delivered' && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <DollarSign size={18} className="text-blue-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-blue-900 mb-1">
+                        Pago pendiente
+                      </p>
+                      <p className="text-xs text-blue-800">
+                        Al aprobar esta entrega, deberás pagar el 75% restante (${(hiring.quotedPrice * 0.75).toLocaleString()}) 
+                        del total del servicio. Ya pagaste el 25% inicial (${(hiring.quotedPrice * 0.25).toLocaleString()}).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

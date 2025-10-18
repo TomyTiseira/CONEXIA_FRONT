@@ -92,6 +92,10 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       label: 'En Progreso',
       className: 'bg-purple-200 text-purple-800'
     },
+    delivered: {
+      label: 'Entregado',
+      className: 'bg-teal-200 text-teal-800'
+    },
     completed: {
       label: 'Completado',
       className: 'bg-green-200 text-green-800'
