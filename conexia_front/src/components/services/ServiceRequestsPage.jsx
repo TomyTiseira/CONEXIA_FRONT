@@ -224,8 +224,10 @@ export default function ServiceRequestsPage({ serviceId }) {
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="flex items-center gap-3">
-                  <div>
-                    <h3 className="font-medium text-gray-900">{service.title}</h3>
+                  <div className="max-w-xs">
+                    <h3 className="font-medium text-gray-900 truncate" title={service.title}>
+                      {service.title}
+                    </h3>
                     <p className="text-sm text-gray-500">{service.category?.name}</p>
                   </div>
                 </div>

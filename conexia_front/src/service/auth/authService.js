@@ -1,5 +1,5 @@
 import { config } from '../../config';
-import { fetchWithRefresh } from "./fetchWithRefresh";
+import { fetchWithRefresh, getLoggingOutStatus } from "./fetchWithRefresh";
 
 // Iniciar sesión
 export const loginUser = async ({ email, password }) => {
@@ -20,6 +20,11 @@ export const loginUser = async ({ email, password }) => {
 
 // Refrescar token (cuando accessToken expiró)
 export const refreshToken = async () => {
+  // No intentar refrescar token si estamos cerrando sesión
+  if (getLoggingOutStatus()) {
+    throw new Error('Logging out');
+  }
+  
   const res = await fetch(`${config.API_URL}/auth/refresh`, {
     method: 'GET',
     credentials: 'include', // cookies necesarias
@@ -61,6 +66,11 @@ export const logoutUser = async () => {
 };
 
 export const getProfile = async () => {
+  // No intentar obtener perfil si estamos cerrando sesión
+  if (getLoggingOutStatus()) {
+    throw new Error('Logging out');
+  }
+  
   const res = await fetchWithRefresh(`${config.API_URL}/auth/me`, {
     method: "GET",
     credentials: "include",

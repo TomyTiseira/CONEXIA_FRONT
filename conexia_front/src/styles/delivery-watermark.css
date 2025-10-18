@@ -1,0 +1,61 @@
+/* Estilos para marca de agua en archivos no pagados */
+
+.watermark-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.watermark-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.watermark-text {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.3);
+  transform: rotate(-30deg);
+  user-select: none;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.1em;
+}
+
+/* Animación para el estado de carga del pago */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.payment-pending-icon {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Estilos para las páginas de resultado de pago */
+.payment-success-gradient {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.payment-failure-gradient {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.payment-pending-gradient {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+/* Responsive para marca de agua */
+@media (max-width: 640px) {
+  .watermark-text {
+    font-size: 3rem;
+  }
+}
