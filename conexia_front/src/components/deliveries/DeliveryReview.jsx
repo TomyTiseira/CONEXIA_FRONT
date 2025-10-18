@@ -8,7 +8,7 @@ import { useReviewDelivery } from '@/hooks/deliveries';
 import Toast from '@/components/ui/Toast';
 import { buildMediaUrl } from '@/utils/mediaUrl';
 
-export default function DeliveryReview({ delivery, isClient = false, onReviewSuccess }) {
+export default function DeliveryReview({ delivery, isClient = false, onReviewSuccess, hasActiveClaim = false }) {
   const { reviewDelivery, loading } = useReviewDelivery();
   const [showRevisionForm, setShowRevisionForm] = useState(false);
   const [revisionNotes, setRevisionNotes] = useState('');
@@ -307,7 +307,8 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
                 variant="primary"
                 onClick={() => setShowConfirmApprove(true)}
                 className="flex-1 bg-green-600 hover:bg-green-700 flex items-center justify-center"
-                disabled={loading}
+                disabled={loading || hasActiveClaim}
+                title={hasActiveClaim ? 'No se puede aprobar mientras hay un reclamo activo' : ''}
               >
                 <CheckCircle size={18} className="mr-2" />
                 Aceptar Entrega
@@ -316,7 +317,8 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
                 variant="secondary"
                 onClick={() => setShowRevisionForm(true)}
                 className="flex-1 flex items-center justify-center"
-                disabled={loading}
+                disabled={loading || hasActiveClaim}
+                title={hasActiveClaim ? 'No se puede solicitar revisión mientras hay un reclamo activo' : ''}
               >
                 <RefreshCw size={18} className="mr-2" />
                 Solicitar Revisión
@@ -345,7 +347,8 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
                 variant="primary"
                 onClick={handleApprove}
                 className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
-                disabled={loading}
+                disabled={loading || hasActiveClaim}
+                title={hasActiveClaim ? 'No se puede realizar el pago mientras hay un reclamo activo' : ''}
               >
                 {loading ? (
                   <div className="flex items-center gap-2">

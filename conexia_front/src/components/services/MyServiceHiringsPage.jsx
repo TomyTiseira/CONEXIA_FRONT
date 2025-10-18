@@ -22,6 +22,10 @@ import ContractServiceButton from '@/components/services/ContractServiceButton';
 import RequestDetailModal from '@/components/services/RequestDetailModal';
 import Toast from '@/components/ui/Toast';
 import Button from '../ui/Button';
+import { useClaimPermissions } from '@/hooks/claims';
+import { useUserStore } from '@/store/userStore';
+import { ClaimModal } from '@/components/claims/ClaimModal';
+import { AlertCircle } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -33,6 +37,7 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelado' },
   { value: 'negotiating', label: 'Negociando' },
   { value: 'in_progress', label: 'En progreso' },
+  { value: 'in_claim', label: 'En reclamo' },
   { value: 'delivered', label: 'Entregado' },
   { value: 'revision_requested', label: 'Revisión solicitada' },
   { value: 'completed', label: 'Completado' }
@@ -48,6 +53,7 @@ const getStatusBadge = (statusCode) => {
     cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
     negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
     in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
+    in_claim: { label: 'En reclamo', className: 'bg-red-100 text-red-800' },
     delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
     revision_requested: { label: 'Revisión solicitada', className: 'bg-orange-100 text-orange-800' },
     completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
@@ -63,6 +69,7 @@ const getStatusBadge = (statusCode) => {
 
 export default function MyServiceHiringsPage() {
   const router = useRouter();
+  const { user, token } = useUserStore();
   const { 
     hirings, 
     pagination, 
@@ -81,6 +88,8 @@ export default function MyServiceHiringsPage() {
   const [selectedHiring, setSelectedHiring] = useState(null);
   const [toast, setToast] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [claimHiring, setClaimHiring] = useState(null);
 
   useEffect(() => {
     loadMyHirings(filters);
@@ -143,6 +152,23 @@ export default function MyServiceHiringsPage() {
     setToast(null);
   };
 
+  const handleOpenClaimModal = (hiring) => {
+    setClaimHiring(hiring);
+    setIsClaimModalOpen(true);
+  };
+
+  const handleClaimSuccess = () => {
+    setToast({
+      type: 'success',
+      message: 'Reclamo creado exitosamente',
+      isVisible: true
+    });
+    setIsClaimModalOpen(false);
+    setClaimHiring(null);
+    // Recargar datos
+    loadMyHirings(filters);
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       day: '2-digit',
@@ -176,8 +202,24 @@ export default function MyServiceHiringsPage() {
     return `${daysLeft} días`;
   };
 
+  // Función para verificar si tiene acciones disponibles (basado en availableActions)
   const hasActions = (hiring) => {
-    return hiring.availableActions && hiring.availableActions.length > 0;
+    const hasAvailableActions = hiring.availableActions && hiring.availableActions.length > 0;
+    return hasAvailableActions;
+  };
+
+  // Función para verificar si puede crear claim
+  const canCreateClaim = (hiring) => {
+    const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered'];
+    const isInClaimAllowedState = ALLOWED_CLAIM_STATES.includes(hiring.status?.code);
+    
+    if (!isInClaimAllowedState) return false;
+    
+    // Verificar si el usuario es parte de la contratación
+    const isClient = !!(hiring.requestedBy?.id === user?.id || hiring.clientId === user?.id || hiring.client?.id === user?.id);
+    const isProvider = !!(hiring.service?.owner?.id === user?.id || hiring.service?.ownerId === user?.id || hiring.providerId === user?.id);
+    
+    return isClient || isProvider;
   };
 
   return (
@@ -356,6 +398,19 @@ export default function MyServiceHiringsPage() {
                                 >
                                   <Briefcase size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
+
+                                {/* Botón Realizar Reclamo */}
+                                {canCreateClaim(hiring) && (
+                                  <button
+                                    onClick={() => handleOpenClaimModal(hiring)}
+                                    className="flex items-center justify-center w-9 h-9 text-yellow-600 hover:text-white hover:bg-yellow-600 rounded-md transition-all duration-200 group"
+                                    title="Realizar reclamo"
+                                    aria-label="Realizar reclamo"
+                                    data-action="realizar-reclamo"
+                                  >
+                                    <AlertCircle size={18} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
                                 
                                 {canViewQuotation(hiring) && (
                                   <button
@@ -497,6 +552,19 @@ export default function MyServiceHiringsPage() {
                             >
                               <Briefcase size={15} className="group-hover:scale-110 transition-transform" />
                             </button>
+
+                            {/* Botón Realizar Reclamo Mobile */}
+                            {canCreateClaim(hiring) && (
+                              <button
+                                onClick={() => handleOpenClaimModal(hiring)}
+                                className="flex items-center justify-center w-8 h-8 text-yellow-600 hover:text-white hover:bg-yellow-600 rounded-md transition-all duration-200 group"
+                                title="Realizar reclamo"
+                                aria-label="Realizar reclamo"
+                                data-action="realizar-reclamo"
+                              >
+                                <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />
+                              </button>
+                            )}
                             
                             {canViewQuotation(hiring) && (
                               <button
@@ -613,6 +681,21 @@ export default function MyServiceHiringsPage() {
           setSelectedHiring(null);
         }}
       />
+
+      {/* Modal de Claims */}
+      {claimHiring && (
+        <ClaimModal
+          isOpen={isClaimModalOpen}
+          onClose={() => {
+            setIsClaimModalOpen(false);
+            setClaimHiring(null);
+          }}
+          hiringId={claimHiring.id}
+          isClient={true}
+          token={token}
+          onSuccess={handleClaimSuccess}
+        />
+      )}
 
       {/* Toast */}
       {toast && (

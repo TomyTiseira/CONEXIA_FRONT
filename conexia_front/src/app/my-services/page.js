@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { ArrowLeft, Package, Calendar, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, Package, Calendar, DollarSign, FileText, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import StatusBadge from '@/components/common/StatusBadge';
@@ -11,6 +11,8 @@ import Button from '@/components/ui/Button';
 import DeliveryModal from '@/components/deliveries/DeliveryModal';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabelPlural } from '@/utils/timeUnit';
+import { ClaimModal } from '@/components/claims/ClaimModal';
+import { useUserStore } from '@/store/userStore';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -23,6 +25,7 @@ const STATUS_OPTIONS = [
 
 export default function MyServicesPage() {
   const router = useRouter();
+  const { user, token } = useUserStore();
   const {
     hirings,
     pagination,
@@ -38,6 +41,8 @@ export default function MyServicesPage() {
 
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [selectedHiring, setSelectedHiring] = useState(null);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [claimHiring, setClaimHiring] = useState(null);
 
   useEffect(() => {
     loadMyServiceRequests(filters);
@@ -67,8 +72,31 @@ export default function MyServicesPage() {
     setSelectedHiring(null);
   };
 
+  const handleOpenClaimModal = (hiring) => {
+    setClaimHiring(hiring);
+    setIsClaimModalOpen(true);
+  };
+
+  const handleClaimSuccess = () => {
+    loadMyServiceRequests(filters);
+    setIsClaimModalOpen(false);
+    setClaimHiring(null);
+  };
+
   const canDeliver = (hiring) => {
     return hiring.status?.code === 'approved';
+  };
+
+  const canCreateClaim = (hiring) => {
+    const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered'];
+    const isInClaimAllowedState = ALLOWED_CLAIM_STATES.includes(hiring.status?.code);
+    
+    if (!isInClaimAllowedState) return false;
+    
+    // Como proveedor, verificar si el usuario es owner del servicio
+    const isProvider = !!(hiring.service?.owner?.id === user?.id || hiring.service?.ownerId === user?.id || hiring.providerId === user?.id);
+    
+    return isProvider;
   };
 
   const getDeliveryButton = (hiring) => {
@@ -253,7 +281,20 @@ export default function MyServicesPage() {
                           <StatusBadge status={hiring.status?.code} type="hiring" />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
-                          {getDeliveryButton(hiring)}
+                          <div className="flex items-center justify-end gap-2">
+                            {canCreateClaim(hiring) && (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleOpenClaimModal(hiring)}
+                                className="whitespace-nowrap"
+                              >
+                                <AlertCircle size={16} className="mr-1" />
+                                Realizar Reclamo
+                              </Button>
+                            )}
+                            {getDeliveryButton(hiring)}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -328,6 +369,21 @@ export default function MyServicesPage() {
         totalPrice={selectedHiring?.quotedPrice}
         onSuccess={handleDeliverySuccess}
       />
+
+      {/* Modal de Claims */}
+      {claimHiring && (
+        <ClaimModal
+          isOpen={isClaimModalOpen}
+          onClose={() => {
+            setIsClaimModalOpen(false);
+            setClaimHiring(null);
+          }}
+          hiringId={claimHiring.id}
+          isClient={false}
+          token={token}
+          onSuccess={handleClaimSuccess}
+        />
+      )}
     </>
   );
 }

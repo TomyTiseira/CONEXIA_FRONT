@@ -9,6 +9,7 @@ import { useUserStore } from '@/store/userStore';
 import {
   MessageCircle,
   AlertTriangle,
+  AlertCircle,
   Bell,
   Home,
   Briefcase,
@@ -44,6 +45,7 @@ export default function NavbarAdmin() {
   { label: 'Servicios', href: '/services', icon: Briefcase },
   { label: 'Proyectos', href: '/project/search', icon: Layers },
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },
+  { label: 'Reclamos', href: '/admin/claims', icon: AlertCircle },
   { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
   ];
 

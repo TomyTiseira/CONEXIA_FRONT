@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useHiringWithDeliveries, useDeliveries } from '@/hooks/deliveries';
+import { useClaims } from '@/hooks/claims';
 import { ArrowLeft, Package, DollarSign, User, Calendar, FileText } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import DeliveryReview from '@/components/deliveries/DeliveryReview';
 import StatusBadge from '@/components/common/StatusBadge';
+import { ClaimAlert, ClaimModal } from '@/components/claims';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabelPlural } from '@/utils/timeUnit';
 
@@ -15,12 +17,14 @@ export default function ServiceDeliveryPage() {
   const router = useRouter();
   const params = useParams();
   const hiringId = parseInt(params.hiringId);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const { hiring, loading: hiringLoading, loadHiring } = useHiringWithDeliveries(hiringId);
   const { deliveries, loading: deliveriesLoading, loadDeliveries } = useDeliveries(hiringId);
+  const { activeClaim, hasActiveClaim, refetch: refetchClaims } = useClaims(hiringId, token);
 
   const [selectedDeliveryIndex, setSelectedDeliveryIndex] = useState(0);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
 
   useEffect(() => {
     if (hiringId) {
@@ -33,6 +37,13 @@ export default function ServiceDeliveryPage() {
     // Recargar datos después de revisar
     loadHiring();
     loadDeliveries();
+  };
+
+  const handleClaimSuccess = () => {
+    // Recargar datos después de crear reclamo
+    loadHiring();
+    loadDeliveries();
+    refetchClaims();
   };
 
   const isByDeliverables = hiring?.paymentModality?.code === 'by_deliverables';
@@ -189,6 +200,9 @@ export default function ServiceDeliveryPage() {
             </div>
           </div>
 
+          {/* Alerta de Reclamo Activo */}
+          {hasActiveClaim && <ClaimAlert claim={activeClaim} />}
+
           {/* Contenido principal */}
           {deliveries.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -295,6 +309,7 @@ export default function ServiceDeliveryPage() {
                                   delivery={delivery}
                                   isClient={isClient}
                                   onReviewSuccess={handleReviewSuccess}
+                                  hasActiveClaim={hasActiveClaim}
                                 />
                               ))}
                             </div>
@@ -324,6 +339,7 @@ export default function ServiceDeliveryPage() {
                         delivery={delivery}
                         isClient={isClient}
                         onReviewSuccess={handleReviewSuccess}
+                        hasActiveClaim={hasActiveClaim}
                       />
                     ))
                   )}
@@ -333,6 +349,18 @@ export default function ServiceDeliveryPage() {
           )}
         </div>
       </div>
+
+      {/* Modal de Crear Reclamo */}
+      {hiring && (
+        <ClaimModal
+          isOpen={isClaimModalOpen}
+          onClose={() => setIsClaimModalOpen(false)}
+          hiringId={hiringId}
+          isClient={isClient}
+          token={token}
+          onSuccess={handleClaimSuccess}
+        />
+      )}
     </>
   );
 }

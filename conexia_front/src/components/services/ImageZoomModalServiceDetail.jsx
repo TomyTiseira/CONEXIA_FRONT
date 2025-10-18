@@ -25,7 +25,6 @@ export default function ImageZoomModal({ open, onClose, images, initialIndex = 0
     // Usar config.IMAGE_URL como en otros componentes
     const cleanPath = imagePath.startsWith('/uploads/') ? imagePath.substring(9) : imagePath;
     const finalUrl = `${config.IMAGE_URL}/${cleanPath}`;
-    console.log('Imagen en modal:', finalUrl); // Debug
     return finalUrl;
   };
 

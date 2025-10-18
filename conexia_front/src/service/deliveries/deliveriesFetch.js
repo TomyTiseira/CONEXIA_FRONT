@@ -7,13 +7,6 @@ import { config } from '@/config';
  * @returns {Promise<Object>} Delivery creado
  */
 export async function createDelivery(hiringId, formData) {
-  // Log para debugging
-  console.log('📤 [API] Creando entrega con:', {
-    hiringId,
-    content: formData.get('content'),
-    deliverableId: formData.get('deliverableId'),
-    hasAttachment: !!formData.get('attachment')
-  });
 
   const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/delivery`, {
     method: 'POST',
