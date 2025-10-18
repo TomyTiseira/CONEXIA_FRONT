@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import React, { use } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { NotFound } from '@/components/ui';
 import { ROLES } from '@/constants/roles';
@@ -9,9 +9,20 @@ import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
 import MessagingWidget from '@/components/messaging/MessagingWidget';
 
-export default function ServiceDetailPage({ params }) {
+export default function ServiceDetailPage({ params, searchParams }) {
   const resolvedParams = use(params);
-  
+  const resolvedSearchParams = use(searchParams);
+
+  // Detectar si viene de reportes
+  const from = resolvedSearchParams?.from || '';
+  const isFromReports =
+    from === 'reports' ||
+    from === 'reports-service' ||
+    resolvedSearchParams?.fromReportsServiceId;
+  const allowedRoles = isFromReports
+    ? [ROLES.ADMIN, ROLES.MODERATOR]
+    : [ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR];
+
   // Avatar como en ClientCommunity
   const { profile } = useUserStore();
   const avatar = profile?.profilePicture
@@ -20,7 +31,7 @@ export default function ServiceDetailPage({ params }) {
 
   return (
     <ProtectedRoute
-      allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR]}
+      allowedRoles={allowedRoles}
       fallbackComponent={<NotFound />}
     >
       <>

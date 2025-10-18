@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useServiceDetail } from '@/hooks/services';
 import { useAuth } from '@/context/AuthContext';
@@ -10,6 +11,7 @@ import { formatPrice } from '@/utils/formatPrice';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { FaClock, FaUser, FaEdit, FaTrash, FaHandshake, FaComments, FaArrowLeft, FaTag, FaCalendar, FaPaperPlane, FaTimes } from 'react-icons/fa';
 import { IoCheckmarkCircleSharp } from 'react-icons/io5';
+import { MoreVertical } from 'lucide-react';
 import { config } from '@/config';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
@@ -21,6 +23,7 @@ import ServiceDeleteConflictModal from '@/components/ui/ServiceDeleteConflictMod
 import ServiceEditModal from './ServiceEditModal';
 import ServiceHiringModal from './ServiceHiringModal';
 import ServiceHiringActionsModal from './ServiceHiringActionsModal';
+import ReportServiceModal from './ReportServiceModal';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import { useDeleteService } from '@/hooks/services/useDeleteService';
@@ -28,6 +31,7 @@ import { useEditService } from '@/hooks/services/useEditService';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import Toast from '@/components/ui/Toast';
 import EmojiPicker from 'emoji-picker-react';
+import { createServiceReport, fetchServiceReports } from '@/service/reports/serviceReportsFetch';
 
 const ServiceDetail = ({ serviceId }) => {
   const router = useRouter();
@@ -45,10 +49,17 @@ const ServiceDetail = ({ serviceId }) => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState(null);
+  // Report/overflow menu state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  // Estado de ya reportado (para ocultar el botón y mostrar toast en su lugar)
+  const [alreadyReportedService, setAlreadyReportedService] = useState(false);
   // Modal de zoom de imagen
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(0);
 
+  const searchParams = useSearchParams();
   const handleShowImageZoom = (index = 0) => {
     setZoomIndex(index);
     setShowImageZoom(true);
@@ -96,6 +107,23 @@ const ServiceDetail = ({ serviceId }) => {
     // Usar config.IMAGE_URL como en proyectos
     return `${config.IMAGE_URL}/${imagePath}`;
   };
+
+  // Consultar si el usuario ya reportó este servicio (para ocultar la acción de reportar)
+  useEffect(() => {
+    const checkAlreadyReported = async () => {
+      try {
+        if (user && serviceId) {
+          const data = await fetchServiceReports(serviceId, 1, 50);
+          const reports = data?.data?.reports || data?.reports || [];
+          const found = reports.find(r => String(r.userId) === String(user.id));
+          if (found) setAlreadyReportedService(true);
+        }
+      } catch (_) {
+        // Ignorar silenciosamente
+      }
+    };
+    checkAlreadyReported();
+  }, [user, serviceId]);
 
   const isOwner = service?.isOwner;
   const canEdit = isOwner && roleName === ROLES.USER && service?.status === 'active' && service?.isActive !== false;
@@ -429,41 +457,8 @@ ${messageText.trim()}`;
         <Navbar />
       </div>
 
-      {/* Icono de reporte arriba a la derecha */}
-      {user && roleName === ROLES.USER && !isOwner && service?.status === 'active' && service?.isActive !== false && (
-        <div className="absolute top-4 right-6 md:right-8 z-40">
-          <button
-            className="p-2 rounded-full hover:bg-gray-100"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Más opciones"
-            type="button"
-          >
-            <MoreVertical size={22} />
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40">
-              <button
-                className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-coral rounded shadow hover:bg-[#fbeaea] transition-colors"
-                style={{ boxShadow: '0 2px 8px 0 rgba(255, 82, 82, 0.08)' }}
-                onClick={() => {
-                  setMenuOpen(false);
-                  setShowReportModal(true);
-                }}
-                type="button"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
-                  <circle cx="12" cy="16" r="1.2" fill="currentColor" />
-                  <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
-                </svg>
-                <span>Reportar servicio</span>
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-  // Estado para menú de opciones
-  const [menuOpen, setMenuOpen] = useState(false);
+      {/* El botón de reporte se renderiza dentro de la tarjeta más abajo */}
+  
 
       {/* Contenido principal */}
       <main className="flex-1 pt-20 pb-8 relative z-10">
@@ -480,8 +475,79 @@ ${messageText.trim()}`;
           </div>
 
           {/* Contenido del servicio */}
-          <div className="bg-white rounded-2xl shadow-lg border overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-lg border overflow-hidden relative">
             <div className="p-6 lg:p-8">
+              {/* Botón de más opciones - Desktop: esquina del card; Mobile: junto al título */}
+              {user && roleName === ROLES.USER && !isOwner && service?.status === 'active' && service?.isActive !== false && (
+                <>
+                  {/* Desktop */}
+                  <div className="absolute top-4 right-6 md:right-8 z-30 hidden md:block">
+                    <button
+                      className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      aria-label="Más opciones"
+                      type="button"
+                    >
+                      <MoreVertical size={22} />
+                    </button>
+                    {menuOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40">
+                        <button
+                          className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                          style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            setShowReportModal(true);
+                          }}
+                          type="button"
+                        >
+                          <span className="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                              <circle cx="12" cy="16" r="1.2" fill="currentColor" />
+                              <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                            </svg>
+                            <span>Reportar servicio</span>
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+              {/* Menú de admins/moderadores: Ver reportes */}
+              {user && (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
+                <div className="absolute top-4 right-6 md:right-8 z-30 hidden md:block">
+                  <button
+                    className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    aria-label="Más opciones"
+                    type="button"
+                  >
+                    <MoreVertical size={22} />
+                  </button>
+                  {menuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40">
+                      <button
+                        className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                        style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          router.push(`/reports/service/${serviceId}`);
+                        }}
+                        type="button"
+                      >
+                        <span className="flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Ver reportes</span>
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[420px] lg:min-h-[480px]">
                 {/* Galería de imágenes */}
                 <div className="flex flex-col h-full justify-stretch">
@@ -499,9 +565,79 @@ ${messageText.trim()}`;
                 <div className="space-y-4 flex flex-col h-full">
                   {/* Título y categoría */}
                   <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2 break-words overflow-wrap-anywhere leading-tight">
-                      {service.title}
-                    </h1>
+                    <div className="flex items-start justify-between gap-2">
+                      <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2 break-words overflow-wrap-anywhere leading-tight flex-1 min-w-0">
+                        {service.title}
+                      </h1>
+                      {/* Mobile three-dots next to title to avoid overlapping the image */}
+                      {user && roleName === ROLES.USER && !isOwner && service?.status === 'active' && service?.isActive !== false && (
+                        <div className="relative md:hidden ml-2 flex-shrink-0">
+                          <button
+                            className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            aria-label="Más opciones"
+                            type="button"
+                          >
+                            <MoreVertical size={22} />
+                          </button>
+                          {menuOpen && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40 md:hidden">
+                              <button
+                                className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                                style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
+                                onClick={() => {
+                                  setMenuOpen(false);
+                                  setShowReportModal(true);
+                                }}
+                                type="button"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                                    <circle cx="12" cy="16" r="1.2" fill="currentColor" />
+                                    <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                                  </svg>
+                                  <span>Reportar servicio</span>
+                                </span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* Mobile admin/moderator menu */}
+                      {user && (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
+                        <div className="relative md:hidden ml-2 flex-shrink-0">
+                          <button
+                            className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            aria-label="Más opciones"
+                            type="button"
+                          >
+                            <MoreVertical size={22} />
+                          </button>
+                          {menuOpen && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-40 md:hidden">
+                              <button
+                                className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                                style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
+                                onClick={() => {
+                                  setMenuOpen(false);
+                                  router.push(`/reports/service/${serviceId}`);
+                                }}
+                                type="button"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <span>Ver reportes</span>
+                                </span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="bg-gradient-to-r from-blue-500/10 to-blue-400/10 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-200 inline-flex items-center gap-1.5">
                         <FaTag size={12} />
@@ -698,7 +834,17 @@ ${messageText.trim()}`;
                   {/* Botón volver a la izquierda */}
                   <div className="flex-shrink-0">
                     <BackButton
-                      onClick={() => router.back()}
+                      onClick={() => {
+                        const from = searchParams.get('from');
+                        const fromReportsServiceId = searchParams.get('fromReportsServiceId');
+                        if (from === 'reports-service' && fromReportsServiceId) {
+                          router.push(`/reports/service/${fromReportsServiceId}`);
+                        } else if (from === 'reports') {
+                          router.push('/reports');
+                        } else {
+                          router.back();
+                        }
+                      }}
                       text="Volver"
                     />
                   </div>
@@ -844,34 +990,25 @@ ${messageText.trim()}`;
         loading={reportLoading}
         onSubmit={async ({ reason, description, otherText }) => {
           setReportLoading(true);
-          // Mapear motivos al formato esperado por backend
-          let backendReason = reason;
-          if (reason === 'offensive') backendReason = 'Contenido ofensivo';
-          if (reason === 'fraud') backendReason = 'Proyecto engañoso';
-          if (reason === 'false_info') backendReason = 'Información falsa';
-          if (reason === 'other') backendReason = 'Otro';
+          // Cerrar modal inmediatamente (como en proyecto)
+          setShowReportModal(false);
           try {
             await createServiceReport({
               serviceId: service.id,
-              reason: backendReason,
-              otherReason: backendReason === 'Otro' ? otherText : undefined,
+              reason, // Ya coincide con backend
+              otherReason: reason === 'Otro' ? otherText : undefined,
               description
             });
-            setShowReportModal(false);
-            setToast({
-              type: 'success',
-              message: 'Tu reporte fue enviado y será revisado por nuestro equipo.'
-            });
+            setToast({ type: 'success', message: 'Servicio reportado con éxito.', isVisible: true });
+            setAlreadyReportedService(true);
           } catch (err) {
-            // Si ya reportó, mostrar modal informativo
-            if (err?.message?.includes('already been reported by this user')) {
-              setShowReportModal(false);
-              setShowAlreadyReportedModal(true);
+            const msg = err?.message || '';
+            const alreadyRegex = /already\s+been\s+reported|conflict|ya\s+reportado/i;
+            if (alreadyRegex.test(msg)) {
+              setToast({ type: 'warning', message: 'Ya has reportado este servicio.', isVisible: true });
+              setAlreadyReportedService(true);
             } else {
-              setToast({
-                type: 'error',
-                message: err.message || 'Error al enviar el reporte.'
-              });
+              setToast({ type: 'error', message: 'Error al reportar el servicio. Inténtalo más tarde.', isVisible: true });
             }
           } finally {
             setReportLoading(false);
@@ -879,23 +1016,7 @@ ${messageText.trim()}`;
         }}
       />
 
-      {/* Modal informativo si ya reportó */}
-      {showAlreadyReportedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
-            <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowAlreadyReportedModal(false)}
-              aria-label="Cerrar"
-            >
-              <span style={{fontSize: 22}}>&times;</span>
-            </button>
-            <h2 className="text-xl font-bold mb-4 text-red-600">Ya reportaste este servicio</h2>
-            <p className="mb-6 text-gray-700">No puedes reportar el mismo servicio más de una vez. Si tienes dudas, comunícate con soporte.</p>
-            <Button type="button" variant="primary" onClick={() => setShowAlreadyReportedModal(false)} className="w-full">Aceptar</Button>
-          </div>
-        </div>
-      )}
+      {/* Sin modal adicional para 'ya reportado': se usa toast y se oculta la acción */}
 
       {/* Toast de notificaciones */}
       <Toast

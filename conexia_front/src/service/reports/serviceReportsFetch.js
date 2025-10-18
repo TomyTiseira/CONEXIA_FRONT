@@ -1,5 +1,5 @@
 import { config } from '@/config';
-import { fetchWithRefresh } from '@/service/fetchWithRefresh';
+import { fetchWithRefresh } from '@/service/auth/fetchWithRefresh';
 
 // Crear reporte de servicio
 export async function createServiceReport({ serviceId, reason, otherReason, description }) {

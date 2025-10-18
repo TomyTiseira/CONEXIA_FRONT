@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { fetchReportedServices } from '@/service/reports/fetchReportedServices';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import Pagination from '@/components/common/Pagination';
 
 export default function ServiceReportsGrid() {
   const [services, setServices] = useState([]);
@@ -25,7 +27,7 @@ export default function ServiceReportsGrid() {
   }, [page, orderBy]);
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+  <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-conexia-green mb-4">Servicios reportados</h2>
       <div className="flex items-center gap-4 mb-4">
         <label className="font-medium">Ordenar por:</label>
@@ -59,15 +61,23 @@ export default function ServiceReportsGrid() {
                 <td className="p-3">{s.reportCount}</td>
                 <td className="p-3">{new Date(s.lastReportDate).toLocaleString()}</td>
                 <td className="p-3">{s.status === 'active' ? 'Activo' : 'Baja'}</td>
+                <td className="p-3">
+                  <Link href={`/admin/reports/service/${s.serviceId}`} className="text-conexia-green underline">Ver reportes</Link>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
-      <div className="flex justify-between items-center mt-6">
-        <Button disabled={!pagination.hasPrev} onClick={() => setPage(p => Math.max(1, p - 1))} variant="outline">Anterior</Button>
-        <span>Página {pagination.page} de {pagination.totalPages}</span>
-        <Button disabled={!pagination.hasNext} onClick={() => setPage(p => p + 1)} variant="outline">Siguiente</Button>
+      <div className="pt-4 pb-2 flex justify-center">
+        <Pagination
+          page={(pagination?.page ?? pagination?.currentPage) || page}
+          currentPage={pagination?.page ?? pagination?.currentPage}
+          hasNextPage={pagination?.hasNextPage ?? pagination?.hasNext}
+          hasPreviousPage={pagination?.hasPreviousPage ?? pagination?.hasPrev}
+          totalPages={pagination?.totalPages}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );
