@@ -6,7 +6,6 @@ import Button from '@/components/ui/Button';
 import QuotationDisplay from '@/components/services/QuotationDisplay';
 import { config } from '@/config';
 import { getUserDisplayName } from '@/utils/formatUserName';
-import QuotationDisplay from '@/components/services/QuotationDisplay';
 import { isExpired, getVigencyStatus } from '@/utils/quotationVigency';
 
 export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, clientName, clientLastName }) {
