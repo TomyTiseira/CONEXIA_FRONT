@@ -267,6 +267,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 </div>
               </div>
             )}
+            
             </div>
           )}
           

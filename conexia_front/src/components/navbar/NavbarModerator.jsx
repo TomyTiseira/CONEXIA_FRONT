@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Bell,
   AlertTriangle,
+  AlertCircle,
   Home,
   Briefcase,
   Layers,
@@ -44,6 +45,7 @@ export default function NavbarModerator() {
   { label: 'Servicios', href: '/services', icon: Briefcase },
   { label: 'Proyectos', href: '/project/search', icon: Layers },
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },
+  { label: 'Reclamos', href: '/admin/claims', icon: AlertCircle },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';

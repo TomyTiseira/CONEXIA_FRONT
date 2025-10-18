@@ -21,3 +21,9 @@ export * from './service-hirings/useQuotations';
 export * from './service-hirings/useQuotationErrorHandler';
 export * from './service-hirings/useHiringStatusUpdater';
 export * from './service-hirings/useContractService';
+
+// Hooks de claims/reclamos
+export * from './claims/useClaimPermissions';
+export * from './claims/useClaimForm';
+export * from './claims/useEvidenceUpload';
+export * from './claims/useClaims';

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { useQuotationErrorHandler } from '@/hooks/service-hirings/useQuotationErrorHandler';
 import { fetchServiceDetail } from '@/service/services/servicesFetch';
-import { ArrowLeft, User, Calendar, DollarSign, Clock, Edit, Plus, Package, Upload, Eye } from 'lucide-react';
+import { ArrowLeft, User, Calendar, DollarSign, Clock, Edit, Plus, Package, Upload, Eye, AlertCircle } from 'lucide-react';
 import { FaFileInvoiceDollar, FaRegEye} from 'react-icons/fa';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
@@ -14,9 +14,11 @@ import PaymentAccountRequiredModal from '@/components/services/PaymentAccountReq
 import UserBannedModal from '@/components/services/UserBannedModal';
 import ProviderRequestDetailModal from '@/components/services/ProviderRequestDetailModal';
 import DeliveryModal from '@/components/deliveries/DeliveryModal';
+import ClaimModal from '@/components/claims/ClaimModal';
 import Toast from '@/components/ui/Toast';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabel } from '@/utils/timeUnit';
+import { useUserStore } from '@/store/userStore';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -28,6 +30,7 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelado' },
   { value: 'negotiating', label: 'Negociando' },
   { value: 'in_progress', label: 'En progreso' },
+  { value: 'in_claim', label: 'En reclamo' },
   { value: 'delivered', label: 'Entregado' },
   { value: 'revision_requested', label: 'Revisión solicitada' },
   { value: 'completed', label: 'Completado' }
@@ -43,6 +46,7 @@ const getStatusBadge = (statusCode) => {
     cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
     negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
     in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
+    in_claim: { label: 'En reclamo', className: 'bg-red-100 text-red-800' },
     delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
     revision_requested: { label: 'Revisión solicitada', className: 'bg-orange-100 text-orange-800' },
     completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
@@ -58,6 +62,7 @@ const getStatusBadge = (statusCode) => {
 
 export default function ServiceRequestsPage({ serviceId }) {
   const router = useRouter();
+  const { user, token } = useUserStore();
   const { 
     hirings, 
     pagination, 
@@ -88,6 +93,8 @@ export default function ServiceRequestsPage({ serviceId }) {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [selectedHiringForDelivery, setSelectedHiringForDelivery] = useState(null);
   const [toast, setToast] = useState(null);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [claimHiring, setClaimHiring] = useState(null);
 
   useEffect(() => {
     loadServiceDetail();
@@ -190,6 +197,46 @@ export default function ServiceRequestsPage({ serviceId }) {
     });
     // Recargar las solicitudes para reflejar el cambio
     loadMyServiceRequests(filters);
+  };
+
+  const handleOpenClaimModal = (hiring) => {
+    setClaimHiring(hiring);
+    setIsClaimModalOpen(true);
+  };
+
+  const handleClaimSuccess = () => {
+    setToast({
+      type: 'success',
+      message: 'Reclamo creado exitosamente',
+      isVisible: true
+    });
+    setIsClaimModalOpen(false);
+    setClaimHiring(null);
+    // Recargar datos
+    loadMyServiceRequests(filters);
+  };
+
+  // Función para verificar si puede crear claim (como proveedor)
+  const canCreateClaim = (hiring) => {
+    const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered'];
+    const isInClaimAllowedState = ALLOWED_CLAIM_STATES.includes(hiring.status?.code);
+    
+    if (!isInClaimAllowedState) {
+      return false;
+    }
+    
+    // Como proveedor, el userId del user actual debe coincidir con el serviceId owner
+    // En ServiceRequestsPage, si estamos viendo las solicitudes de un servicio,
+    // significa que YA somos el dueño del servicio (service.owner.id === user.id)
+    // Entonces simplemente verificamos que el service pertenece al usuario actual
+    
+    const userId = user?.id;
+    
+    // En esta página, service es el servicio cargado al inicio
+    // y todos los hirings son de ESTE servicio que nos pertenece
+    const serviceOwnerId = service?.owner?.id;
+    
+    return serviceOwnerId === userId;
   };
 
 
@@ -384,6 +431,19 @@ export default function ServiceRequestsPage({ serviceId }) {
                                   <FaRegEye className="text-[16px] group-hover:scale-110 transition-transform" />
                                 </button>
                                 
+                                {/* Botón Claims */}
+                                {canCreateClaim(hiring) && (
+                                  <button
+                                    onClick={() => handleOpenClaimModal(hiring)}
+                                    className="flex items-center justify-center w-8 h-8 text-yellow-600 hover:text-white hover:bg-yellow-600 rounded-md transition-all duration-200 group"
+                                    title="Realizar reclamo"
+                                    aria-label="Realizar reclamo"
+                                    data-action="realizar-reclamo"
+                                  >
+                                    <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+                                
                                 {canCreateQuote(hiring) && !hiring.quotedPrice && (
                                   <button
                                     onClick={() => handleCreateQuotation(hiring)}
@@ -508,6 +568,19 @@ export default function ServiceRequestsPage({ serviceId }) {
                           >
                             <FaRegEye className="text-[14px] group-hover:scale-110 transition-transform" />
                           </button>
+                          
+                          {/* Botón Claims Mobile */}
+                          {canCreateClaim(hiring) && (
+                            <button
+                              onClick={() => handleOpenClaimModal(hiring)}
+                              className="flex items-center justify-center w-7 h-7 text-yellow-600 hover:text-white hover:bg-yellow-600 rounded-md transition-all duration-200 group"
+                              title="Realizar reclamo"
+                              aria-label="Realizar reclamo"
+                              data-action="realizar-reclamo"
+                            >
+                              <AlertCircle size={14} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
                           
                           {canCreateQuote(hiring) && !hiring.quotedPrice && (
                             <button
@@ -643,6 +716,21 @@ export default function ServiceRequestsPage({ serviceId }) {
           // por lo que no necesitamos actualizar estado específico
         }}
       />
+
+      {/* Modal de Reclamos */}
+      {claimHiring && (
+        <ClaimModal
+          isOpen={isClaimModalOpen}
+          onClose={() => {
+            setIsClaimModalOpen(false);
+            setClaimHiring(null);
+          }}
+          hiringId={claimHiring.id}
+          isClient={false}
+          token={token}
+          onSuccess={handleClaimSuccess}
+        />
+      )}
 
       {/* Toast */}
       {toast && (
