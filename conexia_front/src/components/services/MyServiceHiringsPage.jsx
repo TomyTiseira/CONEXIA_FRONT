@@ -463,6 +463,14 @@ export default function MyServiceHiringsPage() {
                                 <FaFileInvoiceDollar className="text-[16px] group-hover:scale-110 transition-transform" />
                               </button>
                             )}
+
+                            {/* Botón de pago/contratar dentro de la misma caja de acciones (solo si aplica) */}
+                            <ContractServiceButton 
+                              serviceHiring={hiring}
+                              onContractSuccess={handleContractSuccess}
+                              highlight
+                              size="sm"
+                            />
                             
                             {hasActions(hiring) && (
                               <button
@@ -477,16 +485,6 @@ export default function MyServiceHiringsPage() {
                             )}
                           </div>
                         </div>
-                      </div>
-                      
-                      {/* Botón de contratar servicio para mobile dentro de acciones */}
-                      <div className="flex gap-2 items-center mt-3">
-                        {/* ...otros botones de acción... */}
-                        <ContractServiceButton 
-                          serviceHiring={hiring}
-                          onContractSuccess={handleContractSuccess}
-                          highlight
-                        />
                       </div>
                     </div>
                   ))}
