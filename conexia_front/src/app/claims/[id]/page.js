@@ -7,11 +7,14 @@
 
 import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowLeft, Calendar, User, AlertCircle, Loader2, Clock } from 'lucide-react';
 import { getClaimById, markAsInReview } from '@/service/claims';
 import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
 import { ClaimEvidenceViewer } from '@/components/claims/ClaimEvidenceViewer';
 import { ClaimResolutionModal } from '@/components/claims/ClaimResolutionModal';
+import { AddObservationsModal } from '@/components/claims/AddObservationsModal';
+import { SubsanarClaimModal } from '@/components/claims/SubsanarClaimModal';
 import {
   CLIENT_CLAIM_TYPE_LABELS,
   PROVIDER_CLAIM_TYPE_LABELS,
@@ -31,6 +34,8 @@ export default function ClaimDetailPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isResolutionModalOpen, setIsResolutionModalOpen] = useState(false);
+  const [isObservationsModalOpen, setIsObservationsModalOpen] = useState(false);
+  const [isSubsanarModalOpen, setIsSubsanarModalOpen] = useState(false);
   const [processingReview, setProcessingReview] = useState(false);
   const [toast, setToast] = useState({ isVisible: false, type: '', message: '' });
 
@@ -77,6 +82,27 @@ export default function ClaimDetailPage({ params }) {
   // Success de resolución
   const handleResolutionSuccess = (resolvedClaim) => {
     setClaim(resolvedClaim);
+  };
+
+  // Success de observaciones
+  const handleObservationsSuccess = (updatedClaim) => {
+    setClaim(updatedClaim);
+  };
+
+  // Success de subsanación
+  const handleSubsanarSuccess = async () => {
+    // Recargar el reclamo para ver el nuevo estado
+    try {
+      const updatedClaim = await getClaimById(claim.id);
+      setClaim(updatedClaim);
+    } catch (err) {
+      console.error('Error refreshing claim:', err);
+    }
+  };
+
+  // Mostrar toast
+  const showToast = (type, message) => {
+    setToast({ isVisible: true, type, message });
   };
 
   // Loading
@@ -132,6 +158,10 @@ export default function ClaimDetailPage({ params }) {
 
   const isResolved = claim.status === CLAIM_STATUS.RESOLVED || claim.status === CLAIM_STATUS.REJECTED;
   const canTakeAction = permissions.canResolve && claim.status !== CLAIM_STATUS.RESOLVED && claim.status !== CLAIM_STATUS.REJECTED;
+  
+  // Verificar si el usuario es el denunciante y el reclamo está pendiente de subsanación
+  const isClaimant = user?.id === claim.claimantUserId;
+  const canSubsanar = isClaimant && claim.status === CLAIM_STATUS.PENDING_CLARIFICATION;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -157,7 +187,18 @@ export default function ClaimDetailPage({ params }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500 mb-1">Servicio</p>
-            <p className="font-medium text-gray-900">{claim.hiring?.service?.title || claim.hiring?.serviceTitle || 'N/A'}</p>
+            {claim.hiring?.service?.id ? (
+              <Link 
+                href={`/services/${claim.hiring.service.id}`}
+                className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                {claim.hiring?.service?.title || claim.hiring?.serviceTitle || 'N/A'}
+              </Link>
+            ) : (
+              <p className="font-medium text-gray-900">
+                {claim.hiring?.service?.title || claim.hiring?.serviceTitle || 'N/A'}
+              </p>
+            )}
           </div>
           <div>
             <p className="text-sm text-gray-500 mb-1">Reclamante</p>
@@ -195,6 +236,46 @@ export default function ClaimDetailPage({ params }) {
         <ClaimEvidenceViewer evidenceUrls={claim.evidenceUrls} />
       </div>
 
+      {/* Observaciones del Moderador (si existen) */}
+      {claim.observations && (
+        <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-200 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <AlertCircle size={20} className="text-blue-600" />
+            Observaciones del Moderador
+          </h2>
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Fecha</p>
+              <p className="font-medium text-gray-900 flex items-center gap-1">
+                <Calendar size={16} />
+                {new Date(claim.observationsAt).toLocaleString('es-AR')}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Observaciones</p>
+              <p className="text-gray-700 whitespace-pre-wrap bg-white p-4 rounded border border-gray-200">
+                {claim.observations}
+              </p>
+            </div>
+          </div>
+
+          {/* Botón Subsanar (solo para el denunciante y solo si está pending_clarification) */}
+          {canSubsanar && (
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <button
+                onClick={() => setIsSubsanarModalOpen(true)}
+                className="w-full sm:w-auto px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold shadow-md hover:shadow-lg"
+              >
+                Subsanar Reclamo
+              </button>
+              <p className="text-sm text-gray-600 mt-2">
+                Proporciona la información adicional solicitada por el moderador
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Acciones de Moderación (Admin/Moderador) */}
       {canTakeAction && (
         <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-200 p-6 mb-6">
@@ -214,6 +295,16 @@ export default function ClaimDetailPage({ params }) {
                 Marcar como &quot;En Revisión&quot;
               </button>
             )}
+            
+            {(claim.status === CLAIM_STATUS.OPEN || claim.status === CLAIM_STATUS.IN_REVIEW) && (
+              <button
+                onClick={() => setIsObservationsModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+              >
+                Agregar Observaciones
+              </button>
+            )}
+
             <button
               onClick={() => setIsResolutionModalOpen(true)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
@@ -264,8 +355,30 @@ export default function ClaimDetailPage({ params }) {
           isOpen={isResolutionModalOpen}
           onClose={() => setIsResolutionModalOpen(false)}
           claim={claim}
-          token={token}
           onSuccess={handleResolutionSuccess}
+          showToast={showToast}
+        />
+      )}
+
+      {/* Modal de observaciones */}
+      {isObservationsModalOpen && (
+        <AddObservationsModal
+          isOpen={isObservationsModalOpen}
+          onClose={() => setIsObservationsModalOpen(false)}
+          claim={claim}
+          onSuccess={handleObservationsSuccess}
+          showToast={showToast}
+        />
+      )}
+
+      {/* Modal de subsanación */}
+      {isSubsanarModalOpen && (
+        <SubsanarClaimModal
+          isOpen={isSubsanarModalOpen}
+          onClose={() => setIsSubsanarModalOpen(false)}
+          claim={claim}
+          onSuccess={handleSubsanarSuccess}
+          showToast={showToast}
         />
       )}
 

@@ -20,7 +20,11 @@ const STATUS_OPTIONS = [
   { value: 'in_progress', label: 'En progreso' },
   { value: 'delivered', label: 'Entregados' },
   { value: 'revision_requested', label: 'Revisión solicitada' },
-  { value: 'completed', label: 'Completados' }
+  { value: 'completed', label: 'Completados' },
+  { value: 'in_claim', label: 'En reclamo' },
+  { value: 'cancelled_by_claim', label: 'Cancelados por reclamo' },
+  { value: 'completed_by_claim', label: 'Finalizados por reclamo' },
+  { value: 'completed_with_agreement', label: 'Finalizados con acuerdo' }
 ];
 
 export default function MyServicesPage() {

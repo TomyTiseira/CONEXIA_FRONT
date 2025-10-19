@@ -200,6 +200,67 @@ export const markAsInReview = async (claimId) => {
   }
 };
 
+/**
+ * Agrega observaciones a un reclamo (admin/moderador)
+ * Cambia el estado a "Pendiente subsanación"
+ * @param {string} claimId - ID del reclamo
+ * @param {Object} observationsData - Datos de las observaciones
+ * @param {string} observationsData.observations - Texto de las observaciones (20-2000 chars)
+ * @returns {Promise<Object>} - Reclamo actualizado
+ */
+export const addObservations = async (claimId, observationsData) => {
+  try {
+    const response = await fetch(`${API_URL}/${claimId}/observations`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(observationsData),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al agregar observaciones');
+    }
+
+    return result.data || result;
+  } catch (error) {
+    console.error('Error in addObservations:', error);
+    throw error;
+  }
+};
+
+/**
+ * Subsana un reclamo (actualiza descripción y/o agrega evidencias)
+ * Solo puede hacerlo el denunciante cuando el reclamo está en estado "pending_clarification"
+ * @param {string} claimId - ID del reclamo
+ * @param {FormData} formData - FormData con description (opcional) y/o evidence (archivos, opcional)
+ * @returns {Promise<Object>} - Reclamo actualizado con estado "open"
+ */
+export const updateClaim = async (claimId, formData) => {
+  try {
+    const response = await fetch(`${API_URL}/${claimId}/update`, {
+      method: 'PATCH',
+      credentials: 'include',
+      body: formData,
+      // No incluir Content-Type header, el browser lo agrega automáticamente con el boundary
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al subsanar el reclamo');
+    }
+
+    return result.data || result;
+  } catch (error) {
+    console.error('Error in updateClaim:', error);
+    throw error;
+  }
+};
+
 const claimsService = {
   createClaim,
   getClaims,
@@ -207,6 +268,8 @@ const claimsService = {
   getClaimById,
   resolveClaim,
   markAsInReview,
+  addObservations,
+  updateClaim,
 };
 
 export default claimsService;

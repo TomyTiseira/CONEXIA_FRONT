@@ -107,6 +107,22 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
     completed: {
       label: 'Completado',
       className: 'bg-green-200 text-green-800'
+    },
+    in_claim: {
+      label: 'En Reclamo',
+      className: 'bg-red-100 text-red-700'
+    },
+    cancelled_by_claim: {
+      label: 'Cancelado por Reclamo',
+      className: 'bg-red-200 text-red-800'
+    },
+    completed_by_claim: {
+      label: 'Finalizado por Reclamo',
+      className: 'bg-purple-200 text-purple-800'
+    },
+    completed_with_agreement: {
+      label: 'Finalizado con Acuerdo',
+      className: 'bg-teal-200 text-teal-800'
     }
   };
 

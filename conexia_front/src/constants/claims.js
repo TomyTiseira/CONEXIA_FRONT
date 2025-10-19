@@ -7,6 +7,7 @@
 export const CLAIM_STATUS = {
   OPEN: 'open',
   IN_REVIEW: 'in_review',
+  PENDING_CLARIFICATION: 'pending_clarification',
   RESOLVED: 'resolved',
   REJECTED: 'rejected',
 };
@@ -43,6 +44,7 @@ export const PROVIDER_CLAIM_TYPE_LABELS = {
 export const CLAIM_STATUS_LABELS = {
   [CLAIM_STATUS.OPEN]: 'Abierto',
   [CLAIM_STATUS.IN_REVIEW]: 'En Revisión',
+  [CLAIM_STATUS.PENDING_CLARIFICATION]: 'Pendiente subsanación',
   [CLAIM_STATUS.RESOLVED]: 'Resuelto',
   [CLAIM_STATUS.REJECTED]: 'Rechazado',
 };
@@ -60,6 +62,12 @@ export const CLAIM_STATUS_CONFIG = {
     label: 'En Revisión',
     color: 'text-blue-700',
     bg: 'bg-blue-100',
+  },
+  [CLAIM_STATUS.PENDING_CLARIFICATION]: {
+    variant: 'warning',
+    label: 'Pendiente subsanación',
+    color: 'text-orange-700',
+    bg: 'bg-orange-100',
   },
   [CLAIM_STATUS.RESOLVED]: {
     variant: 'success',
@@ -83,12 +91,41 @@ export const ALLOWED_CLAIM_STATES = [
   'delivered',
 ];
 
+// Tipos de resolución
+export const CLAIM_RESOLUTION_TYPES = {
+  CLIENT_FAVOR: 'client_favor',
+  PROVIDER_FAVOR: 'provider_favor',
+  PARTIAL_AGREEMENT: 'partial_agreement',
+};
+
+// Labels y descripciones para tipos de resolución
+export const CLAIM_RESOLUTION_CONFIG = {
+  [CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR]: {
+    label: 'A favor del cliente',
+    description: 'La contratación se cancelará y el cliente no realizará el pago',
+    hiringStatusLabel: 'Cancelado por reclamo',
+  },
+  [CLAIM_RESOLUTION_TYPES.PROVIDER_FAVOR]: {
+    label: 'A favor del proveedor',
+    description: 'La contratación se marcará como finalizada y el proveedor recibirá el pago completo',
+    hiringStatusLabel: 'Finalizado por reclamo',
+  },
+  [CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT]: {
+    label: 'Acuerdo parcial',
+    description: 'Ambas partes llegaron a un acuerdo. Puede incluir pago parcial u otros términos',
+    hiringStatusLabel: 'Finalizado con acuerdo',
+  },
+};
+
 // Validaciones
 export const CLAIM_VALIDATION = {
   DESCRIPTION_MIN_LENGTH: 50,
   DESCRIPTION_MAX_LENGTH: 2000,
+  OBSERVATIONS_MIN_LENGTH: 20,
+  OBSERVATIONS_MAX_LENGTH: 2000,
   RESOLUTION_MIN_LENGTH: 20,
   RESOLUTION_MAX_LENGTH: 2000,
+  PARTIAL_AGREEMENT_MAX_LENGTH: 500,
   MAX_EVIDENCE_FILES: 10,
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10 MB
   ALLOWED_FILE_TYPES: [
@@ -117,7 +154,7 @@ export const CLAIM_ERROR_MESSAGES = {
   UPLOAD_ERROR: 'Error al subir archivo. Intenta nuevamente',
 };
 
-export default {
+const claimsConstants = {
   CLAIM_STATUS,
   CLIENT_CLAIM_TYPES,
   PROVIDER_CLAIM_TYPES,
@@ -125,7 +162,11 @@ export default {
   PROVIDER_CLAIM_TYPE_LABELS,
   CLAIM_STATUS_LABELS,
   CLAIM_STATUS_CONFIG,
+  CLAIM_RESOLUTION_TYPES,
+  CLAIM_RESOLUTION_CONFIG,
   ALLOWED_CLAIM_STATES,
   CLAIM_VALIDATION,
   CLAIM_ERROR_MESSAGES,
 };
+
+export default claimsConstants;

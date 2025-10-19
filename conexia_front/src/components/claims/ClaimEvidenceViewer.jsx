@@ -6,8 +6,26 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileText, Image, Film, File, ExternalLink, Download, X } from 'lucide-react';
+import { FileText, Image, Film, File, ExternalLink, Download, X, Loader2 } from 'lucide-react';
 import { getFileType, getFileNameFromUrl } from '@/utils/claimValidation';
+import { config } from '@/config/env';
+
+/**
+ * Convierte una ruta relativa en URL absoluta
+ */
+const getAbsoluteUrl = (url) => {
+  if (!url) return '';
+  
+  // Si ya es una URL completa, devolverla tal cual
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Si es una ruta relativa, construir URL completa
+  // Remover el slash inicial si existe para evitar doble slash
+  const path = url.startsWith('/') ? url.substring(1) : url;
+  return `${config.DOCUMENT_URL}/${path}`;
+};
 
 /**
  * Obtiene el ícono según el tipo de archivo
@@ -51,6 +69,7 @@ const ImagePreviewModal = ({ url, onClose }) => {
 
 export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [downloading, setDownloading] = useState(null); // índice del archivo que se está descargando
 
   if (!evidenceUrls || evidenceUrls.length === 0) {
     return (
@@ -62,12 +81,40 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
   }
 
   const handlePreview = (url) => {
+    const absoluteUrl = getAbsoluteUrl(url);
     const type = getFileType(url);
     if (type === 'image') {
-      setPreviewUrl(url);
+      setPreviewUrl(absoluteUrl);
     } else {
       // Para otros archivos, abrir en nueva pestaña
-      window.open(url, '_blank');
+      window.open(absoluteUrl, '_blank');
+    }
+  };
+
+  const handleDownload = async (url, fileName, index) => {
+    setDownloading(index);
+    try {
+      const absoluteUrl = getAbsoluteUrl(url);
+      const response = await fetch(absoluteUrl);
+      
+      if (!response.ok) {
+        throw new Error('Error al descargar el archivo');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Error al descargar el archivo. Por favor, intenta nuevamente.');
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -75,6 +122,7 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
     <>
       <div className="space-y-3">
         {evidenceUrls.map((url, index) => {
+          const absoluteUrl = getAbsoluteUrl(url);
           const fileName = getFileNameFromUrl(url);
           const fileType = getFileType(url);
 
@@ -99,16 +147,18 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
                 </button>
 
                 {/* Botón de descarga */}
-                <a
-                  href={url}
-                  download={fileName}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                <button
+                  onClick={() => handleDownload(url, fileName, index)}
+                  disabled={downloading === index}
+                  className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Descargar"
                 >
-                  <Download size={18} />
-                </a>
+                  {downloading === index ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Download size={18} />
+                  )}
+                </button>
               </div>
             </div>
           );

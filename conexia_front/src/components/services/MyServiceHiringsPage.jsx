@@ -56,7 +56,10 @@ const getStatusBadge = (statusCode) => {
     in_claim: { label: 'En reclamo', className: 'bg-red-100 text-red-800' },
     delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
     revision_requested: { label: 'Revisión solicitada', className: 'bg-orange-100 text-orange-800' },
-    completed: { label: 'Completado', className: 'bg-green-100 text-green-800' }
+    completed: { label: 'Completado', className: 'bg-green-100 text-green-800' },
+    cancelled_by_claim: { label: 'Cancelado por reclamo', className: 'bg-red-100 text-red-800' },
+    completed_by_claim: { label: 'Finalizado por reclamo', className: 'bg-purple-100 text-purple-800' },
+    completed_with_agreement: { label: 'Finalizado con acuerdo', className: 'bg-teal-100 text-teal-800' }
   };
   
   const status = statusMap[statusCode] || { label: statusCode, className: 'bg-gray-100 text-gray-800' };
@@ -216,7 +219,7 @@ export default function MyServiceHiringsPage() {
     if (!isInClaimAllowedState) return false;
     
     // Verificar si el usuario es parte de la contratación
-    const isClient = !!(hiring.requestedBy?.id === user?.id || hiring.clientId === user?.id || hiring.client?.id === user?.id);
+    const isClient = !!(hiring.requestedBy?.id === user?.id || hiring.clientId === user?.id || hiring.client?.id === user?.id || hiring.userId === user?.id);
     const isProvider = !!(hiring.service?.owner?.id === user?.id || hiring.service?.ownerId === user?.id || hiring.providerId === user?.id);
     
     return isClient || isProvider;
@@ -411,6 +414,19 @@ export default function MyServiceHiringsPage() {
                                     <AlertCircle size={18} className="group-hover:scale-110 transition-transform" />
                                   </button>
                                 )}
+
+                                {/* Botón Ver Reclamo - Cuando está en estado in_claim */}
+                                {hiring.status?.code === 'in_claim' && hiring.claimId && (
+                                  <button
+                                    onClick={() => router.push(`/claims/${hiring.claimId}`)}
+                                    className="flex items-center justify-center w-9 h-9 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
+                                    title="Ver reclamo activo"
+                                    aria-label="Ver reclamo"
+                                    data-action="ver-reclamo"
+                                  >
+                                    <AlertCircle size={18} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
                                 
                                 {canViewQuotation(hiring) && (
                                   <button
@@ -561,6 +577,19 @@ export default function MyServiceHiringsPage() {
                                 title="Realizar reclamo"
                                 aria-label="Realizar reclamo"
                                 data-action="realizar-reclamo"
+                              >
+                                <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />
+                              </button>
+                            )}
+
+                            {/* Botón Ver Reclamo Mobile - Cuando está en estado in_claim */}
+                            {hiring.status?.code === 'in_claim' && hiring.claimId && (
+                              <button
+                                onClick={() => router.push(`/claims/${hiring.claimId}`)}
+                                className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
+                                title="Ver reclamo activo"
+                                aria-label="Ver reclamo"
+                                data-action="ver-reclamo"
                               >
                                 <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />
                               </button>

@@ -1,245 +1,410 @@
-/**
+﻿/**
  * ClaimResolutionModal Component
- * Modal para que admin/moderador resuelva un reclamo
+ * Modal para que admin/moderador resuelva o rechace un reclamo
+ * Incluye 3 tipos de resolución: A favor del cliente, A favor del proveedor, Acuerdo parcial
  */
 
 'use client';
 
 import React, { useState } from 'react';
-import { X, CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { validateResolution } from '@/utils/claimValidation';
+import { X, CheckCircle, XCircle, Loader2, User, Briefcase, HandshakeIcon } from 'lucide-react';
 import { resolveClaim } from '@/service/claims';
-import { CLAIM_STATUS } from '@/constants/claims';
-import Toast from '@/components/ui/Toast';
+import { CLAIM_VALIDATION, CLAIM_RESOLUTION_TYPES, CLAIM_RESOLUTION_CONFIG } from '@/constants/claims';
 
-export const ClaimResolutionModal = ({ isOpen, onClose, claim, token, onSuccess }) => {
-  const [decision, setDecision] = useState('resolved'); // 'resolved' o 'rejected'
+export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showToast }) => {
+  const [action, setAction] = useState('resolve');
+  const [resolutionType, setResolutionType] = useState(CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR);
   const [resolution, setResolution] = useState('');
+  const [partialAgreementDetails, setPartialAgreementDetails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [toast, setToast] = useState({ isVisible: false, type: '', message: '' });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const trimmedResolution = resolution.trim();
 
-    // Validar resolución
-    const validationError = validateResolution(resolution);
-    if (validationError) {
-      setError(validationError);
+    if (trimmedResolution.length < CLAIM_VALIDATION.RESOLUTION_MIN_LENGTH) {
+      setError(`La resolución debe tener al menos ${CLAIM_VALIDATION.RESOLUTION_MIN_LENGTH} caracteres`);
+      return;
+    }
+
+    if (trimmedResolution.length > CLAIM_VALIDATION.RESOLUTION_MAX_LENGTH) {
+      setError(`La resolución no puede exceder ${CLAIM_VALIDATION.RESOLUTION_MAX_LENGTH} caracteres`);
+      return;
+    }
+
+    if (
+      action === 'resolve' &&
+      resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT &&
+      partialAgreementDetails.trim().length > CLAIM_VALIDATION.PARTIAL_AGREEMENT_MAX_LENGTH
+    ) {
+      setError(`Los detalles del acuerdo no pueden exceder ${CLAIM_VALIDATION.PARTIAL_AGREEMENT_MAX_LENGTH} caracteres`);
       return;
     }
 
     setIsSubmitting(true);
+    setError(null);
 
     try {
       const resolutionData = {
-        status: decision,
-        resolution: resolution.trim(),
+        status: action === 'resolve' ? 'resolved' : 'rejected',
+        resolutionType: action === 'resolve' ? resolutionType : CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR,
+        resolution: trimmedResolution,
       };
 
-      const resolvedClaim = await resolveClaim(claim.id, resolutionData, token);
-
-      // Éxito
-      const message =
-        decision === 'resolved'
-          ? 'Reclamo resuelto exitosamente. Se ha notificado a ambas partes.'
-          : 'Reclamo rechazado. Se ha notificado a ambas partes.';
-
-      setToast({ isVisible: true, type: 'success', message });
-
-      if (onSuccess) {
-        onSuccess(resolvedClaim);
+      if (action === 'resolve' && resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT && partialAgreementDetails.trim()) {
+        resolutionData.partialAgreementDetails = partialAgreementDetails.trim();
       }
 
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (error) {
-      console.error('Error resolving claim:', error);
-      setToast({ isVisible: true, type: 'error', message: error.message || 'Error al procesar la resolución' });
+      const updatedClaim = await resolveClaim(claim.id, resolutionData);
+
+      // Cerrar modal inmediatamente
+      handleClose();
+
+      // Mostrar toast en la página padre
+      const message =
+        action === 'resolve'
+          ? 'Reclamo resuelto exitosamente. Las partes serán notificadas.'
+          : 'Reclamo rechazado. La contratación vuelve a su estado anterior.';
+
+      if (showToast) {
+        showToast('success', message);
+      }
+
+      // Actualizar claim en el padre
+      if (onSuccess) {
+        onSuccess(updatedClaim);
+      }
+    } catch (err) {
+      console.error('Error resolving claim:', err);
+      
+      // Mostrar error en la página padre
+      if (showToast) {
+        showToast('error', err.message || 'Error al procesar la resolución. Por favor, intenta nuevamente.');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleClose = () => {
+    if (!isSubmitting) {
+      onClose();
+      setAction('resolve');
+      setResolutionType(CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR);
+      setResolution('');
+      setPartialAgreementDetails('');
+      setError(null);
+    }
+  };
+
   const characterCount = resolution.trim().length;
-  const minLength = 20;
-  const maxLength = 2000;
+  const minLength = CLAIM_VALIDATION.RESOLUTION_MIN_LENGTH;
+  const maxLength = CLAIM_VALIDATION.RESOLUTION_MAX_LENGTH;
   const isValid = characterCount >= minLength && characterCount <= maxLength;
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
-
-      {/* Modal */}
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={handleClose} />
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full">
-          {/* Header */}
-          <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Resolver Reclamo</h2>
+        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {action === 'resolve' ? 'Resolver Reclamo' : 'Rechazar Reclamo'}
+            </h2>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
             >
               <X size={24} />
             </button>
           </div>
-
-          {/* Content */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Info del reclamo */}
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
               <p className="text-sm text-gray-600">
-                <span className="font-medium">Reclamo:</span> {claim.claimType}
+                <span className="font-medium">Reclamo:</span> {claim.claimTypeLabel || claim.claimType}
               </p>
               <p className="text-sm text-gray-600 mt-1">
-                <span className="font-medium">Reclamante:</span> {claim.claimantRole}
+                <span className="font-medium">Reclamante:</span>{' '}
+                {claim.claimantFirstName && claim.claimantLastName
+                  ? `${claim.claimantFirstName} ${claim.claimantLastName}`
+                  : claim.claimantName || 'N/A'}{' '}
+                ({claim.claimantRole === 'client' ? 'Cliente' : 'Proveedor'})
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-medium">Servicio:</span>{' '}
+                {claim.hiring?.service?.title || 'N/A'}
               </p>
             </div>
-
-            {/* Decisión */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Decisión <span className="text-red-500">*</span>
+                Acción <span className="text-red-500">*</span>
               </label>
-              <div className="space-y-3">
-                {/* Resolver */}
-                <label
-                  className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    decision === 'resolved'
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setAction('resolve')}
+                  disabled={isSubmitting}
+                  className={`p-4 border-2 rounded-lg text-left transition-all ${
+                    action === 'resolve'
                       ? 'border-green-500 bg-green-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <input
-                    type="radio"
-                    name="decision"
-                    value="resolved"
-                    checked={decision === 'resolved'}
-                    onChange={(e) => setDecision(e.target.value)}
-                    className="mt-1"
-                    disabled={isSubmitting}
-                  />
-                  <div className="ml-3">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle size={20} className="text-green-600" />
-                      <span className="font-semibold text-gray-900">
-                        Resolver a favor del reclamante
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">El reclamo es válido</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle size={20} className="text-green-600" />
+                    <span className="font-semibold text-gray-900">Resolver</span>
                   </div>
-                </label>
-
-                {/* Rechazar */}
-                <label
-                  className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    decision === 'rejected'
+                  <p className="text-xs text-gray-600">Reclamo es válido</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAction('reject')}
+                  disabled={isSubmitting}
+                  className={`p-4 border-2 rounded-lg text-left transition-all ${
+                    action === 'reject'
                       ? 'border-red-500 bg-red-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <input
-                    type="radio"
-                    name="decision"
-                    value="rejected"
-                    checked={decision === 'rejected'}
-                    onChange={(e) => setDecision(e.target.value)}
-                    className="mt-1"
-                    disabled={isSubmitting}
-                  />
-                  <div className="ml-3">
-                    <div className="flex items-center gap-2">
-                      <XCircle size={20} className="text-red-600" />
-                      <span className="font-semibold text-gray-900">Rechazar el reclamo</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">El reclamo no es válido</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <XCircle size={20} className="text-red-600" />
+                    <span className="font-semibold text-gray-900">Rechazar</span>
                   </div>
-                </label>
+                  <p className="text-xs text-gray-600">Reclamo no es válido</p>
+                </button>
               </div>
             </div>
 
-            {/* Resolución */}
+            {/* Tipo de resolución (solo si se resuelve) */}
+            {action === 'resolve' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Tipo de resolución <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-3">
+                  {/* A favor del cliente */}
+                  <label
+                    className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      resolutionType === CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="resolutionType"
+                      value={CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR}
+                      checked={resolutionType === CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR}
+                      onChange={(e) => setResolutionType(e.target.value)}
+                      disabled={isSubmitting}
+                      className="mt-1"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <User size={18} className="text-blue-600" />
+                        <span className="font-semibold text-gray-900">
+                          {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR].label}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR].description}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        → Estado de la solicitud: {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR].hiringStatusLabel}
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* A favor del proveedor */}
+                  <label
+                    className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      resolutionType === CLAIM_RESOLUTION_TYPES.PROVIDER_FAVOR
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="resolutionType"
+                      value={CLAIM_RESOLUTION_TYPES.PROVIDER_FAVOR}
+                      checked={resolutionType === CLAIM_RESOLUTION_TYPES.PROVIDER_FAVOR}
+                      onChange={(e) => setResolutionType(e.target.value)}
+                      disabled={isSubmitting}
+                      className="mt-1"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Briefcase size={18} className="text-purple-600" />
+                        <span className="font-semibold text-gray-900">
+                          {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.PROVIDER_FAVOR].label}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.PROVIDER_FAVOR].description}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        → Estado de la solicitud {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.PROVIDER_FAVOR].hiringStatusLabel}
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Acuerdo parcial */}
+                  <label
+                    className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="resolutionType"
+                      value={CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT}
+                      checked={resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT}
+                      onChange={(e) => setResolutionType(e.target.value)}
+                      disabled={isSubmitting}
+                      className="mt-1"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <HandshakeIcon size={18} className="text-green-600" />
+                        <span className="font-semibold text-gray-900">
+                          {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT].label}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT].description}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        → Estado de la solicitud: {CLAIM_RESOLUTION_CONFIG[CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT].hiringStatusLabel}
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Campo adicional para acuerdo parcial */}
+                {resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT && (
+                  <div className="mt-4 ml-8">
+                    <label htmlFor="partialAgreementDetails" className="block text-sm font-medium text-gray-700 mb-2">
+                      Detalles del acuerdo (opcional)
+                    </label>
+                    <textarea
+                      id="partialAgreementDetails"
+                      value={partialAgreementDetails}
+                      onChange={(e) => setPartialAgreementDetails(e.target.value)}
+                      placeholder="Ej: El cliente pagará el 70% del monto acordado, el proveedor realizará ajustes menores..."
+                      rows={3}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                      disabled={isSubmitting}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {partialAgreementDetails.trim().length} / {CLAIM_VALIDATION.PARTIAL_AGREEMENT_MAX_LENGTH} caracteres
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Advertencia para rechazos */}
+            {action === 'reject' && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800 font-medium">⚠️ Al rechazar el reclamo:</p>
+                <ul className="text-sm text-red-700 mt-2 space-y-1 list-disc list-inside">
+                  <li>El reclamo se marcará como &quot;Rechazado&quot;</li>
+                  <li>La contratación volverá a su estado anterior</li>
+                  <li>Ambas partes recibirán un email con el motivo del rechazo</li>
+                </ul>
+              </div>
+            )}
+
+            {/* Campo de resolución/explicación */}
             <div>
               <label htmlFor="resolution" className="block text-sm font-medium text-gray-700 mb-2">
-                Explicación de la decisión <span className="text-red-500">*</span>
+                {action === 'resolve' ? 'Resolución / Explicación' : 'Motivo del rechazo'}{' '}
+                <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="resolution"
-                rows={6}
                 value={resolution}
                 onChange={(e) => {
                   setResolution(e.target.value);
                   setError(null);
                 }}
-                placeholder="Explica la decisión tomada y las acciones a seguir..."
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${
+                placeholder={
+                  action === 'resolve'
+                    ? 'Explica detalladamente la resolución del reclamo, qué se decidió y por qué...'
+                    : 'Explica por qué se rechaza el reclamo. Sé específico y profesional...'
+                }
+                rows={8}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
                   error ? 'border-red-500' : 'border-gray-300'
                 }`}
                 disabled={isSubmitting}
               />
 
-              {/* Character Counter */}
-              <div className="mt-1 flex items-center justify-between">
-                <span
+              {/* Contador de caracteres */}
+              <div className="flex items-center justify-between mt-2">
+                <p
                   className={`text-sm ${
-                    isValid
-                      ? 'text-green-600'
-                      : characterCount < minLength
-                      ? 'text-red-600'
-                      : 'text-orange-600'
+                    characterCount < minLength
+                      ? 'text-gray-500'
+                      : characterCount > maxLength
+                      ? 'text-red-600 font-medium'
+                      : 'text-green-600'
                   }`}
                 >
-                  {characterCount}/{maxLength} caracteres
-                  {characterCount < minLength && ` (faltan ${minLength - characterCount})`}
-                </span>
+                  {characterCount} / {maxLength} caracteres
+                  {characterCount < minLength && ` (mínimo ${minLength})`}
+                </p>
               </div>
 
-              {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+            </div>
+
+            {/* Botones */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={isSubmitting}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={!isValid || isSubmitting}
+                className={`px-6 py-2 rounded-lg text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium ${
+                  action === 'resolve'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Procesando...
+                  </>
+                ) : action === 'resolve' ? (
+                  <>
+                    <CheckCircle size={18} />
+                    Resolver reclamo
+                  </>
+                ) : (
+                  <>
+                    <XCircle size={18} />
+                    Rechazar reclamo
+                  </>
+                )}
+              </button>
             </div>
           </form>
-
-          {/* Footer */}
-          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              disabled={isSubmitting || !isValid}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Procesando...
-                </>
-              ) : (
-                'Confirmar Resolución'
-              )}
-            </button>
-          </div>
         </div>
       </div>
-
-      {/* Toast */}
-      <Toast
-        type={toast.type}
-        message={toast.message}
-        isVisible={toast.isVisible}
-        onClose={() => setToast({ ...toast, isVisible: false })}
-        position="top-center"
-      />
     </div>
   );
 };
