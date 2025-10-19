@@ -5,12 +5,29 @@
 
 'use client';
 
-import React from 'react';
-import { Filter, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Filter, X, Search } from 'lucide-react';
 import { CLAIM_STATUS, CLAIM_STATUS_LABELS } from '@/constants/claims';
 
 export const ClaimsFilters = ({ filters, onFilterChange, onClearFilters }) => {
-  const hasActiveFilters = filters.status || filters.claimantRole;
+  const [searchInput, setSearchInput] = useState(filters.search || '');
+  const hasActiveFilters = filters.status || filters.claimantRole || filters.search;
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onFilterChange('search', searchInput || null);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Reset search input when filters are cleared
+  useEffect(() => {
+    if (!filters.search) {
+      setSearchInput('');
+    }
+  }, [filters.search]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -28,6 +45,26 @@ export const ClaimsFilters = ({ filters, onFilterChange, onClearFilters }) => {
             Limpiar filtros
           </button>
         )}
+      </div>
+
+      {/* Búsqueda */}
+      <div className="mb-4">
+        <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
+          Buscar
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={18} className="text-gray-400" />
+          </div>
+          <input
+            id="search-filter"
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Buscar por descripción, ID, nombre del reclamante..."
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

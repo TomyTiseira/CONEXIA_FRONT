@@ -3,13 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { ArrowLeft, Package, Calendar, DollarSign, FileText, Bell } from 'lucide-react';
+import { ArrowLeft, Package, Calendar, DollarSign, FileText, Bell, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import StatusBadge from '@/components/common/StatusBadge';
 import Button from '@/components/ui/Button';
+import { ClaimModal } from '@/components/claims';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabelPlural } from '@/utils/timeUnit';
+import { useUserStore } from '@/store/userStore';
+import Toast from '@/components/ui/Toast';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -17,11 +20,16 @@ const STATUS_OPTIONS = [
   { value: 'in_progress', label: 'En progreso' },
   { value: 'delivered', label: 'Entregados' },
   { value: 'revision_requested', label: 'Revisión solicitada' },
-  { value: 'completed', label: 'Completados' }
+  { value: 'completed', label: 'Completados' },
+  { value: 'in_claim', label: 'En reclamo' },
+  { value: 'cancelled_by_claim', label: 'Cancelados por reclamo' },
+  { value: 'completed_by_claim', label: 'Finalizados por reclamo' },
+  { value: 'completed_with_agreement', label: 'Finalizados con acuerdo' }
 ];
 
 export default function RequestedServicesPage() {
   const router = useRouter();
+  const { user } = useUserStore();
   const {
     hirings,
     pagination,
@@ -34,6 +42,10 @@ export default function RequestedServicesPage() {
     status: '',
     page: 1
   });
+
+  const [selectedHiring, setSelectedHiring] = useState(null);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [toast, setToast] = useState({ isVisible: false, type: '', message: '' });
 
   useEffect(() => {
     loadMyHirings(filters);
@@ -69,6 +81,35 @@ export default function RequestedServicesPage() {
 
   const getTotalDeliverables = (hiring) => {
     return hiring.deliverables?.length || 0;
+  };
+
+  // Función para verificar si puede crear claim
+  const canCreateClaim = (hiring) => {
+    const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered'];
+    const isInClaimAllowedState = ALLOWED_CLAIM_STATES.includes(hiring.status?.code);
+    
+    if (!isInClaimAllowedState) return false;
+    
+    // Verificar si el usuario es parte de la contratación (en este caso, es el cliente)
+    const isClient = !!(hiring.requestedBy?.id === user?.id || hiring.clientId === user?.id || hiring.client?.id === user?.id || hiring.userId === user?.id);
+    const isProvider = !!(hiring.service?.owner?.id === user?.id || hiring.service?.ownerId === user?.id || hiring.providerId === user?.id);
+    
+    return isClient || isProvider;
+  };
+
+  // Manejar apertura del modal de reclamo
+  const handleOpenClaimModal = (hiring) => {
+    setSelectedHiring(hiring);
+    setIsClaimModalOpen(true);
+  };
+
+  // Manejar éxito de creación de reclamo
+  const handleClaimSuccess = () => {
+    setIsClaimModalOpen(false);
+    setSelectedHiring(null);
+    setToast({ isVisible: true, type: 'success', message: 'Reclamo creado exitosamente' });
+    // Recargar los hirings
+    loadMyHirings(filters);
   };
 
   return (
@@ -246,17 +287,38 @@ export default function RequestedServicesPage() {
                             <StatusBadge status={hiring.status?.code} type="hiring" />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right">
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewDeliveries(hiring.id);
-                              }}
-                            >
-                              <FileText size={16} className="mr-1" />
-                              Ver Entregas
-                            </Button>
+                            <div className="flex items-center justify-end">
+                              <div className="flex items-center bg-gray-50 rounded-lg p-1 shadow-sm border gap-0.5">
+                                {/* Botón Realizar Reclamo */}
+                                {canCreateClaim(hiring) && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenClaimModal(hiring);
+                                    }}
+                                    className="flex items-center justify-center w-8 h-8 text-yellow-600 hover:text-white hover:bg-yellow-600 rounded-md transition-all duration-200 group"
+                                    title="Realizar reclamo"
+                                    aria-label="Realizar reclamo"
+                                    data-action="realizar-reclamo"
+                                  >
+                                    <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+                                
+                                {/* Botón Ver Entregas */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewDeliveries(hiring.id);
+                                  }}
+                                  className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                                  title="Ver entregas"
+                                  aria-label="Ver entregas"
+                                >
+                                  <FileText size={16} className="group-hover:scale-110 transition-transform" />
+                                </button>
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -327,18 +389,36 @@ export default function RequestedServicesPage() {
                         </div>
                       )}
 
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDeliveries(hiring.id);
-                        }}
-                        className="w-full"
-                      >
-                        <FileText size={16} className="mr-1" />
-                        Ver Entregas
-                      </Button>
+                      <div className="flex gap-2">
+                        {/* Botón Realizar Reclamo Mobile */}
+                        {canCreateClaim(hiring) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenClaimModal(hiring);
+                            }}
+                            className="flex items-center justify-center px-3 py-2 text-yellow-600 border border-yellow-600 hover:text-white hover:bg-yellow-600 rounded-md transition-all duration-200"
+                            title="Realizar reclamo"
+                            aria-label="Realizar reclamo"
+                          >
+                            <AlertCircle size={16} className="mr-1" />
+                            Reclamo
+                          </button>
+                        )}
+
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDeliveries(hiring.id);
+                          }}
+                          className="flex-1"
+                        >
+                          <FileText size={16} className="mr-1" />
+                          Ver Entregas
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
@@ -358,6 +438,28 @@ export default function RequestedServicesPage() {
           )}
         </div>
       </div>
+
+      {/* Modal de Reclamo */}
+      {selectedHiring && (
+        <ClaimModal
+          isOpen={isClaimModalOpen}
+          onClose={() => {
+            setIsClaimModalOpen(false);
+            setSelectedHiring(null);
+          }}
+          hiring={selectedHiring}
+          onSuccess={handleClaimSuccess}
+        />
+      )}
+
+      {/* Toast */}
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+        position="top-center"
+      />
     </>
   );
 }
