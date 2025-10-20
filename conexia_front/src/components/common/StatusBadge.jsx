@@ -56,6 +56,10 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       label: 'Aprobado',
       className: 'bg-green-100 text-green-700'
     },
+    revision_requested: {
+      label: 'Revisión Solicitada',
+      className: 'bg-orange-100 text-orange-700'
+    },
     rejected: {
       label: 'Rechazado',
       className: 'bg-red-100 text-red-700'

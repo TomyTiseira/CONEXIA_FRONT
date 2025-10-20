@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useMessagingStore } from '@/store/messagingStore';
-import { getProfile, logoutUser } from '@/service/auth/authService';
+import { getProfile, getProfileSimple, logoutUser } from '@/service/auth/authService';
 import { setLoggingOut } from '@/service/auth/fetchWithRefresh';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { useUserStore } from '@/store/userStore';
@@ -48,7 +48,8 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const userData = await getProfile();
+      // Usar getProfileSimple para validación inicial - NO intenta refresh en 401
+      const userData = await getProfileSimple();
   setUser(userData);
   // Siempre setear usuario y rol en el store, aunque no haya perfil extendido
   setUserStore(userData, roleName);

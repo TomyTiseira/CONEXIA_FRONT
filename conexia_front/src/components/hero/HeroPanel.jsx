@@ -8,6 +8,7 @@ export default function HeroPanel({ title, subtitle }) {
         alt="Fondo"
         fill
         priority
+        sizes="(max-width: 768px) 0vw, 60vw"
         className="object-cover object-[65%] -z-10"
       />
       <div className="z-10">

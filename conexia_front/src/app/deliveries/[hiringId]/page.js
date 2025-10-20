@@ -266,7 +266,7 @@ export default function DeliverablesPage() {
                                 <button
                                   onClick={() => handleOpenDeliveryModal(deliverable)}
                                   className="flex items-center justify-center w-8 h-8 text-conexia-green hover:text-white hover:bg-conexia-green rounded-md transition-all duration-200 group bg-gray-50 border border-gray-200"
-                                  title="Realizar entrega"
+                                  title={deliverable.status === 'revision_requested' ? 'Re-subir entrega corregida' : 'Realizar entrega'}
                                 >
                                   <Upload size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
@@ -334,7 +334,7 @@ export default function DeliverablesPage() {
                           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-all duration-200"
                         >
                           <Upload size={18} />
-                          Entregar
+                          {deliverable.status === 'revision_requested' ? 'Re-entregar' : 'Entregar'}
                         </button>
                       ) : (deliverable.status === 'delivered' || deliverable.status === 'approved') ? (
                         <button

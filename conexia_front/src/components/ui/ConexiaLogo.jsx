@@ -13,7 +13,8 @@ export default function ConexiaLogo({
         src="/logo.png" 
         alt="Logo" 
         width={width} 
-        height={height} 
+        height={height}
+        style={{ width: 'auto', height: 'auto' }}
       />
       {showText && (
         <span className={textClassName}>
