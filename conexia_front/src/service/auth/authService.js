@@ -65,6 +65,27 @@ export const logoutUser = async () => {
   }
 };
 
+// Versión simple de getProfile para validación inicial - NO intenta refresh
+export const getProfileSimple = async () => {
+  // No intentar obtener perfil si estamos cerrando sesión
+  if (getLoggingOutStatus()) {
+    throw new Error('Logging out');
+  }
+  
+  const res = await fetch(`${config.API_URL}/auth/me`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error("No se pudo obtener el perfil del usuario");
+  }
+
+  const data = await res.json();
+  return data.data.user;
+};
+
+// Versión con refresh para uso en la aplicación
 export const getProfile = async () => {
   // No intentar obtener perfil si estamos cerrando sesión
   if (getLoggingOutStatus()) {
