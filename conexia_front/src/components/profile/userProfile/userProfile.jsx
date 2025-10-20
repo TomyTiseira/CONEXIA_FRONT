@@ -26,6 +26,7 @@ import UserActivity from "./UserActivity";
 import ProfileConnectionButtons from "./ProfileConnectionButtons";
 import UserConnections from "./UserConnections"
 import MessagingWidget from "@/components/messaging/MessagingWidget";
+import ReviewsSection from '@/components/reviews/ReviewsSection';
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
@@ -672,6 +673,10 @@ export default function UserProfile() {
         <UserCollaborativeProjects userId={id} />
         {/* Rectángulo de servicios */}
         <UserServices userId={id} />
+        {/* Reseñas: sección integrada para pruebas */}
+        <div className="mt-6">
+          <ReviewsSection profileUserId={id} />
+        </div>
         {/* Rectángulo de actividad */}
         <UserActivity userId={id} isOwner={isOwner} />
       </div>
