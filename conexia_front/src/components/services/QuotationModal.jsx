@@ -54,9 +54,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           message = 'Cotización aceptada exitosamente';
           break;
         case 'reject':
-          if (!hiring.quotedPrice) {
-            throw new Error('No hay cotización para rechazar');
-          }
+          // Permitir rechazar incluso si no hay precio (seguridad extra)
           result = await rejectHiring(hiring.id);
           message = 'Cotización rechazada';
           break;
@@ -65,13 +63,10 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           message = 'Solicitud cancelada exitosamente';
           break;
         case 'negotiate':
-          if (!hiring.quotedPrice) {
-            throw new Error('No hay cotización para negociar');
-          }
-          // Para negociar, necesitamos abrir un modal específico de negociación
-          // Por ahora solo marcamos que se puede negociar
-          onError?.('La funcionalidad de negociación requiere datos específicos. Use el modal de negociación.');
-          return;
+          // Iniciar negociación directamente desde este modal
+          result = await negotiateHiring(hiring.id, {});
+          message = 'Negociación iniciada exitosamente';
+          break;
         default:
           throw new Error('Acción no válida');
       }
@@ -97,6 +92,15 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
 
   const hasQuotation = hiring.quotedPrice && hiring.estimatedHours;
   const availableActions = hiring.availableActions || [];
+  const statusCode = hiring.status?.code;
+  const defaultByStatus = {
+    quoted: ['accept', 'reject', 'negotiate', 'cancel'],
+    negotiating: ['accept', 'reject', 'cancel'],
+    pending: ['cancel']
+  };
+  const actions = Array.from(new Set([...(availableActions || []), ...((defaultByStatus[statusCode]) || [])]));
+  // Regla: si está vencida pero fue aceptada o rechazada, se debe poder ver el detalle igual
+  const showExpiredBlock = isExpired(hiring) && !['accepted', 'rejected'].includes(hiring.status?.code);
 
   // Derivar información del dueño del servicio para mostrar en el encabezado de servicio
   const ownerRaw = hiring.owner || hiring.service?.owner || hiring.service?.user || null;
@@ -207,15 +211,24 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                 <DollarSign size={18} className="text-green-700" />
                 Cotización del Proveedor
               </h4>
-              {isExpired(hiring) ? (
+              {showExpiredBlock ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="text-red-600 mt-0.5" size={20} />
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
                       <p className="text-sm text-red-600">
-                        Esta cotización ha expirado y sus detalles ya no están disponibles.
+                        Esta cotización ha expirado. Debes cancelar la solicitud para poder volver a pedir una nueva cotización.
                       </p>
+                      <div className="mt-4">
+                        <Button
+                          onClick={() => handleAction('cancel')}
+                          className="bg-gray-600 hover:bg-gray-700 text-white"
+                          disabled={actionLoading}
+                        >
+                          {actionLoading ? 'Procesando...' : 'Cancelar Solicitud'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -243,11 +256,11 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           )}
 
           {/* Acciones disponibles */}
-          {isExpired(hiring) ? null : availableActions.length > 0 && (
+          {showExpiredBlock ? null : actions.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
               <h4 className="font-medium text-gray-900 mb-4">Acciones Disponibles</h4>
               <div className="flex flex-wrap gap-3">
-                {availableActions.includes('accept') && (
+                {actions.includes('accept') && (
                   <Button
                     onClick={() => handleAction('accept')}
                     className="bg-green-600 hover:bg-green-700 text-white"
@@ -257,7 +270,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                   </Button>
                 )}
                 
-                {availableActions.includes('reject') && (
+                {actions.includes('reject') && (
                   <Button
                     onClick={() => handleAction('reject')}
                     className="bg-red-600 hover:bg-red-700 text-white"
@@ -267,7 +280,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                   </Button>
                 )}
                 
-                {availableActions.includes('negotiate') && (
+                {actions.includes('negotiate') && (
                   <Button
                     onClick={() => handleAction('negotiate')}
                     className="bg-orange-600 hover:bg-orange-700 text-white"
@@ -277,7 +290,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                   </Button>
                 )}
                 
-                {availableActions.includes('cancel') && (
+                {actions.includes('cancel') && (
                   <Button
                     onClick={() => handleAction('cancel')}
                     className="bg-gray-600 hover:bg-gray-700 text-white"

@@ -24,6 +24,7 @@ import ServiceEditModal from './ServiceEditModal';
 import ServiceHiringModal from './ServiceHiringModal';
 import ServiceHiringActionsModal from './ServiceHiringActionsModal';
 import ReportServiceModal from './ReportServiceModal';
+import QuotationModal from './QuotationModal';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import { useDeleteService } from '@/hooks/services/useDeleteService';
@@ -46,6 +47,9 @@ const ServiceDetail = ({ serviceId }) => {
   const [showHiringModal, setShowHiringModal] = useState(false);
   const [showActionsModal, setShowActionsModal] = useState(false);
   const [pendingHiring, setPendingHiring] = useState(null);
+  // Modal de cotización detallada
+  const [showQuotationModal, setShowQuotationModal] = useState(false);
+  const [quotationHiring, setQuotationHiring] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState(null);
@@ -131,6 +135,11 @@ const ServiceDetail = ({ serviceId }) => {
   const canContract = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canViewOnly = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
+
+  // Derivados para manejo de cotización activa con decisión (aceptada/rechazada/cancelada)
+  const activeHiring = service?.serviceHiring;
+  const isPostDecision = ['accepted', 'rejected', 'cancelled'].includes(activeHiring?.status?.code);
+  const showReQuote = Boolean(service?.hasActiveQuotation && isPostDecision);
 
 
 
@@ -219,8 +228,16 @@ const ServiceDetail = ({ serviceId }) => {
       // Cancelar solicitud existente
       handleCancelQuotation();
     } else if (service?.hasActiveQuotation) {
-      // Abrir modal de acciones para cotización activa
-      handleActiveQuotation();
+      // Si la cotización activa ya tiene una decisión (aceptada/rechazada/cancelada),
+      // no mostrar el modal de cotización; permitir re-cotizar directamente
+      const active = service?.serviceHiring;
+      const postDecision = ['accepted', 'rejected', 'cancelled'].includes(active?.status?.code);
+      if (postDecision) {
+        setShowHiringModal(true);
+      } else {
+        // Abrir detalle de la cotización activa
+        handleActiveQuotation();
+      }
     } else {
       // Crear nueva cotización/solicitud
       setShowHiringModal(true);
@@ -256,28 +273,65 @@ const ServiceDetail = ({ serviceId }) => {
 
   const handleActiveQuotation = async () => {
     try {
-      // Verificar que existe el ID de la cotización activa
-      if (service?.activeQuotationId) {
-        // Crear objeto con la información necesaria para el modal
-        const activeHiring = {
+      // Usar los datos de service.serviceHiring si están presentes para mostrar el detalle completo
+      const sh = service?.serviceHiring;
+      if (sh && service?.activeQuotationId === sh.id) {
+        // Enriquecer el hiring con el service y owner para el modal
+        const enriched = {
+          ...sh,
+          service: sh.service ? { ...sh.service } : { id: service.id, title: service.title, description: service.description, price: service.price, timeUnit: service.timeUnit, images: service.images },
+          owner: service.owner,
+        };
+        // Si la modalidad de pago es por entregables y el backend devolvió los entregables
+        // (vienen en el detalle del servicio como propiedad de nivel superior),
+        // agregarlos al objeto que consume el modal y normalizar tipos numéricos.
+        if (
+          enriched?.paymentModality?.code === 'by_deliverables' &&
+          Array.isArray(service?.deliverables) &&
+          service.deliverables.length > 0
+        ) {
+          enriched.deliverables = service.deliverables.map((d, idx) => ({
+            ...d,
+            // Normalizar el precio a número para que toLocaleString funcione correctamente
+            price: typeof d.price === 'string' ? parseFloat(d.price) : d.price,
+            // Asegurar un orderIndex consistente si no viene
+            orderIndex: typeof d.orderIndex === 'number' ? d.orderIndex : idx + 1,
+          }));
+        }
+        // Acciones por defecto según estado (el modal ocultará si está vencida)
+        const code = enriched.status?.code;
+        if (!enriched.availableActions) {
+          if (code === 'quoted') {
+            enriched.availableActions = ['accept', 'reject', 'negotiate', 'cancel'];
+          } else if (code === 'negotiating') {
+            // En negociación: permitir aceptar, rechazar y cancelar
+            enriched.availableActions = ['accept', 'reject', 'cancel'];
+          } else if (code === 'accepted') {
+            enriched.availableActions = ['cancel'];
+          } else if (code === 'pending') {
+            enriched.availableActions = ['cancel'];
+          } else {
+            enriched.availableActions = [];
+          }
+        }
+        setQuotationHiring(enriched);
+        setShowQuotationModal(true);
+      } else if (service?.activeQuotationId) {
+        // Fallback mínimo si no vino serviceHiring completo
+        const minimal = {
           id: service.activeQuotationId,
-          service: service,
+          service: { id: service.id, title: service.title, description: service.description, price: service.price, timeUnit: service.timeUnit, images: service.images },
+          owner: service.owner,
           status: { code: 'quoted', name: 'Cotizado' },
           availableActions: ['accept', 'reject', 'negotiate', 'cancel']
         };
-        setPendingHiring(activeHiring);
-        setShowActionsModal(true);
+        setQuotationHiring(minimal);
+        setShowQuotationModal(true);
       } else {
-        setToast({
-          type: 'error',
-          message: 'No se encontró una cotización activa'
-        });
+        setToast({ type: 'error', message: 'No se encontró una cotización activa' });
       }
     } catch (error) {
-      setToast({
-        type: 'error',
-        message: 'Error al abrir las opciones de la cotización'
-      });
+      setToast({ type: 'error', message: 'Error al abrir el detalle de la cotización' });
     }
   };
 
@@ -880,18 +934,23 @@ ${messageText.trim()}`;
                     )}
                     {canContract && (
                       <Button
-                        variant={service?.hasPendingQuotation ? "danger" : service?.hasActiveQuotation ? "primary" : "neutral"}
+                        variant={
+                          service?.hasPendingQuotation
+                            ? 'danger'
+                            : service?.hasActiveQuotation
+                              ? (showReQuote ? 'neutral' : 'primary')
+                              : 'neutral'
+                        }
                         onClick={handleQuote}
                         disabled={false}
                         className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
                       >
                         <FaHandshake size={14} />
-                        {service?.hasPendingQuotation 
-                          ? 'Cancelar Solicitud' 
-                          : service?.hasActiveQuotation 
-                            ? 'Ver Cotización' 
-                            : 'Cotizar'
-                        }
+                        {service?.hasPendingQuotation
+                          ? 'Cancelar Solicitud'
+                          : service?.hasActiveQuotation
+                            ? (showReQuote ? 'Cotizar' : 'Ver Cotización')
+                            : 'Cotizar'}
                       </Button>
                     )}
                   </div>
@@ -933,6 +992,15 @@ ${messageText.trim()}`;
         isOpen={showHiringModal}
         onClose={() => setShowHiringModal(false)}
         onSuccess={handleHiringSuccess}
+      />
+
+      {/* Modal de detalle de cotización (para cotización activa o vencida) */}
+      <QuotationModal
+        hiring={quotationHiring}
+        isOpen={showQuotationModal}
+        onClose={() => setShowQuotationModal(false)}
+        onSuccess={handleHiringSuccess}
+        onError={(msg) => setToast({ type: 'error', message: msg || 'Ocurrió un error' })}
       />
 
       {/* Modal de acciones de contratación (cancelar solicitud) */}

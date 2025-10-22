@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, DollarSign, FileText, Download, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import StatusBadge from '@/components/common/StatusBadge';
 import Button from '@/components/ui/Button';
@@ -15,6 +15,7 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
   const [toast, setToast] = useState(null);
   const [showConfirmApprove, setShowConfirmApprove] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState(null);
 
   if (!delivery) {
     return (
@@ -147,6 +148,122 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
     }
   };
 
+  // Generar una vista previa watermark en canvas para ocultar la URL real en el DOM cuando corresponde
+  useEffect(() => {
+    const isImage = (path) => /(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/i.test(path || '');
+    const needWatermark = Boolean(isClient && delivery?.needsWatermark && isImage(delivery?.attachmentPath));
+
+    // Si no hace falta o no hay URL, resetear
+    if (!needWatermark) {
+      if (previewSrc) {
+        URL.revokeObjectURL(previewSrc);
+        setPreviewSrc(null);
+      }
+      return;
+    }
+
+    let revoked = false;
+    let objectUrl;
+    const controller = new AbortController();
+
+    const generate = async () => {
+      try {
+        const url = getAttachmentUrl();
+        if (!url) return;
+
+        // Descargar como blob (el request puede seguir viéndose en Network, pero el src en el DOM será blob:)
+        const res = await fetch(url, { signal: controller.signal, credentials: 'include' });
+        const blob = await res.blob();
+        const imgUrl = URL.createObjectURL(blob);
+
+        // Cargar imagen en memoria
+        const img = new Image();
+        img.src = imgUrl;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+
+        // Escalar para evitar canvases gigantes
+        const maxDim = 1600;
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        const ratio = Math.min(1, maxDim / Math.max(w, h));
+        w = Math.max(1, Math.round(w * ratio));
+        h = Math.max(1, Math.round(h * ratio));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+
+        // Dibujo base
+        ctx.drawImage(img, 0, 0, w, h);
+
+  // Velo sutil (ligeramente más claro para no tapar tanto la imagen)
+  ctx.fillStyle = 'rgba(0,0,0,0.10)';
+        ctx.fillRect(0, 0, w, h);
+
+        // Patrón diagonal de "CONEXIA" repetido
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+        ctx.rotate(-Math.PI / 6); // -30°
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const patternFontSize = Math.max(14, Math.round(w * 0.03));
+        ctx.font = `700 ${patternFontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = Math.max(1, Math.round(patternFontSize * 0.06));
+        const stepX = Math.round(patternFontSize * 8);
+        const stepY = Math.round(patternFontSize * 6);
+        for (let y = -h; y <= h; y += stepY) {
+          for (let x = -w; x <= w; x += stepX) {
+            ctx.strokeText('CONEXIA', x, y);
+            ctx.fillText('CONEXIA', x, y);
+          }
+        }
+        ctx.restore();
+
+  // Texto central: NO PAGADO (centrado, un poco más chico y gris translúcido)
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; // gris translúcido, un poco más oscuro que el patrón
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; // sutil borde claro para legibilidad
+  const centerFontSize = Math.max(22, Math.round(w * 0.06));
+  ctx.font = `900 ${centerFontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+  ctx.lineWidth = Math.max(1, Math.round(centerFontSize * 0.06));
+  const cx = Math.round(w / 2);
+  const cy = Math.round(h / 2);
+  ctx.strokeText('NO PAGADO', cx, cy);
+  ctx.fillText('NO PAGADO', cx, cy);
+        ctx.restore();
+
+        const outBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.9));
+        objectUrl = URL.createObjectURL(outBlob);
+        if (!revoked) setPreviewSrc(objectUrl);
+
+        // Limpiar
+        URL.revokeObjectURL(imgUrl);
+      } catch (e) {
+        // Si falla (CORS, etc.), dejamos que el overlay CSS haga el trabajo visual
+        if (previewSrc) {
+          URL.revokeObjectURL(previewSrc);
+          setPreviewSrc(null);
+        }
+      }
+    };
+
+    generate();
+    return () => {
+      revoked = true;
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClient, delivery?.needsWatermark, delivery?.attachmentPath, delivery?.attachmentUrl]);
+
   return (
     <>
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -210,20 +327,53 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
               
               {/* Preview con marca de agua para imágenes - Solo para cliente */}
               {delivery.attachmentPath && /\.(jpg|jpeg|png|gif|webp)$/i.test(delivery.attachmentPath) && (
-                <div className="relative mb-3 rounded-lg overflow-hidden border border-gray-200">
+                <div
+                  className="relative mb-3 rounded-lg overflow-hidden border border-gray-200 select-none"
+                  onContextMenu={(e) => {
+                    if (isClient && delivery.needsWatermark) e.preventDefault();
+                  }}
+                  onMouseDown={(e) => {
+                    if (isClient && delivery.needsWatermark) e.preventDefault();
+                  }}
+                  onDragStart={(e) => {
+                    if (isClient && delivery.needsWatermark) e.preventDefault();
+                  }}
+                >
                   <img
-                    src={getAttachmentUrl()}
+                    src={(isClient && delivery.needsWatermark && previewSrc) ? previewSrc : getAttachmentUrl()}
                     alt="Vista previa"
-                    className="w-full max-h-96 object-contain bg-gray-50"
+                    className="w-full max-h-96 object-contain bg-gray-50 pointer-events-none"
+                    draggable={false}
                   />
                   {isClient && delivery.needsWatermark && (
-                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
-                      <div className="transform -rotate-30 select-none">
-                        <div className="text-6xl md:text-8xl font-bold text-white/30 drop-shadow-lg">
-                          NO PAGADO
+                    // Si tenemos previewSrc (canvas), no agregamos textos por CSS para evitar duplicado.
+                    previewSrc ? (
+                      <div
+                        className="absolute inset-0 cursor-not-allowed"
+                        title="Descarga bloqueada hasta realizar el pago"
+                        aria-label="Descarga bloqueada"
+                      />
+                    ) : (
+                      <>
+                        {/* Fallback CSS si no pudimos generar canvas */}
+                        <div
+                          className="absolute inset-0 cursor-not-allowed"
+                          title="Descarga bloqueada hasta realizar el pago"
+                          aria-label="Descarga bloqueada"
+                        />
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 select-none">
+                          <div className="text-4xl md:text-6xl font-extrabold tracking-widest text-white/70 drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)] whitespace-nowrap">
+                            NO PAGADO
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                        <div className="absolute inset-0 bg-black/15" />
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 select-none">
+                          <div className="text-base md:text-xl font-semibold tracking-wider text-white/80 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                            CONEXIA
+                          </div>
+                        </div>
+                      </>
+                    )
                   )}
                 </div>
               )}
