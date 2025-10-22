@@ -95,15 +95,15 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50">
       {/* Overlay */}
       <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+          {/* Header (estático) */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-semibold text-gray-900">Realizar Reclamo</h2>
             <button
               onClick={onClose}
@@ -114,8 +114,8 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
             </button>
           </div>
 
-          {/* Content */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Content (solo esta sección hace scroll) */}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Advertencia */}
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r">
               <div className="flex items-start">
@@ -162,38 +162,27 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                 Descripción detallada del problema <span className="text-red-500">*</span>
               </label>
-              <textarea
-                id="description"
-                rows={6}
-                value={formData.description}
-                onChange={(e) => setField('description', e.target.value)}
-                onBlur={() => setFieldTouched('description')}
-                placeholder="Explica con detalle la situación. Mínimo 50 caracteres..."
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${
-                  touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
-                }`}
-                disabled={isSubmitting}
-              />
-              
-              {/* Character Counter */}
-              <div className="mt-1 flex items-center justify-between">
-                <span
-                  className={`text-sm ${
-                    characterCount.isValid
-                      ? 'text-green-600'
-                      : characterCount.isTooShort
-                      ? 'text-red-600'
-                      : 'text-orange-600'
+              <div className="relative">
+                <textarea
+                  id="description"
+                  rows={6}
+                  value={formData.description}
+                  onChange={(e) => setField('description', e.target.value)}
+                  onBlur={() => setFieldTouched('description')}
+                  placeholder="Explica con detalle la situación. Mínimo 50 caracteres..."
+                  className={`w-full pr-16 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${
+                    touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
                   }`}
-                >
-                  {characterCount.current}/{characterCount.max} caracteres
-                  {characterCount.isTooShort &&
-                    ` (faltan ${characterCount.min - characterCount.current})`}
+                  disabled={isSubmitting}
+                />
+                {/* Contador de caracteres en la esquina inferior derecha */}
+                <span className="pointer-events-none absolute bottom-2 right-2 text-xs text-gray-500 bg-gray-100/80 rounded px-3 py-0.5">
+                  {characterCount.current}/{characterCount.max}
                 </span>
               </div>
 
               {touched.description && errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+                <p className="mt-2 text-xs text-red-600">{errors.description}</p>
               )}
             </div>
 
@@ -215,8 +204,8 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
             </div>
           </form>
 
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+          {/* Footer (estático) */}
+          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
             <button
               type="button"
               onClick={onClose}
