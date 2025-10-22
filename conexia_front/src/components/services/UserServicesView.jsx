@@ -11,6 +11,7 @@ import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import ServiceList from './ServiceList';
 import ServiceCard from './ServiceCard';
+import RequireVerification from '@/components/common/RequireVerification';
 
 const UserServicesView = ({ userId }) => {
   const router = useRouter();
@@ -155,12 +156,14 @@ const UserServicesView = ({ userId }) => {
             </div>
 
             {canCreateService && (
-              <Link href="/services/create">
-                <Button variant="primary" className="flex items-center gap-2">
-                  <FaTools size={16} />
-                  Publicar servicio
-                </Button>
-              </Link>
+              <RequireVerification action="publicar un servicio">
+                <Link href="/services/create">
+                  <Button variant="primary" className="flex items-center gap-2">
+                    <FaTools size={16} />
+                    Publicar servicio
+                  </Button>
+                </Link>
+              </RequireVerification>
             )}
           </div>
 

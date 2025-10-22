@@ -15,6 +15,7 @@ import DateRangePicker from '@/components/form/DateRangePicker';
 import RubroSkillsSelector from '@/components/skills/RubroSkillsSelector';
 import Button from '@/components/ui/Button';
 import LocalitySelector from '@/components/localities/LocalitySelector';
+import RequireVerification from '@/components/common/RequireVerification';
 
 export default function CreateProjectForm() {
   // Handler para el selector de provincia
@@ -412,9 +413,11 @@ export default function CreateProjectForm() {
         <Button type="button" variant="cancel" onClick={() => router.push('/project/search')}>
           Cancelar
         </Button>
-        <Button type="submit" variant="primary" disabled={loading}>
-          {loading ? 'Publicando...' : 'Publicar proyecto'}
-        </Button>
+        <RequireVerification action="publicar un proyecto">
+          <Button type="submit" variant="primary" disabled={loading}>
+            {loading ? 'Publicando...' : 'Publicar proyecto'}
+          </Button>
+        </RequireVerification>
       </div>
 
       {/* Toast de error (success se muestra tras redirect) */}
