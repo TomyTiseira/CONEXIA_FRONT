@@ -6,6 +6,7 @@ import { usePostulation } from '@/hooks/postulations';
 import { ROLES } from '@/constants/roles';
 import PostulationModal from './PostulationModal';
 import Toast from '@/components/ui/Toast';
+import RequireVerification from '@/components/common/RequireVerification';
 
 export default function PostulationButton({ 
   projectId, 
@@ -156,13 +157,15 @@ export default function PostulationButton({
   return (
     <>
       {/* Botón principal */}
-      <button
-        onClick={buttonConfig.onClick}
-        disabled={buttonConfig.disabled}
-        className={buttonConfig.className}
-      >
-        {buttonConfig.content}
-      </button>
+      <RequireVerification action="postularte a este proyecto">
+        <button
+          onClick={buttonConfig.onClick}
+          disabled={buttonConfig.disabled}
+          className={buttonConfig.className}
+        >
+          {buttonConfig.content}
+        </button>
+      </RequireVerification>
 
       {/* Modal de postulación */}
       {/* Solo mostrar el modal si el cupo NO está lleno */}

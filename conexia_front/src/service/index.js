@@ -6,3 +6,4 @@ export * from './skills';
 export * from './postulations';
 export * from './messaging';
 export * from './publications';
+export * from './verification';

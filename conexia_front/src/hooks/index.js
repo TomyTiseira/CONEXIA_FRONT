@@ -3,6 +3,7 @@ export * from './useValidateSession';
 export * from './useRole';
 export * from './useRoleValidation';
 export * from './useSkills';
+export * from './useVerificationStatus';
 export * from './project/useRecommendations';
 
 // Hooks de conexiones
