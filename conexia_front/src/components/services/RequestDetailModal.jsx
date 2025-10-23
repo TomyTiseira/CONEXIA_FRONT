@@ -34,7 +34,12 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
       in_progress: 'En progreso',
       delivered: 'Entregado',
       revision_requested: 'Revisión solicitada',
-      completed: 'Completado'
+      completed: 'Completado',
+      expired: 'Vencida',
+      in_claim: 'En Reclamo',
+      cancelled_by_claim: 'Cancelado por reclamo',
+      completed_by_claim: 'Finalizado por reclamo',
+      completed_with_agreement: 'Finalizado con acuerdo'
     };
     return statusMap[statusCode] || statusCode;
   };
@@ -188,15 +193,15 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
                 <DollarSign size={20} className="text-green-700" />
                 Cotización del Proveedor
               </h3>
-              {/* Regla: si está vencida pero aceptada/rechazada, mostrar detalle igualmente */}
-              {isExpired(hiring) && !['accepted','rejected'].includes(hiring.status?.code) ? (
+              {/* Regla: solo mostrar "Cotización Vencida" cuando el estado es 'quoted' Y está vencida */}
+              {isExpired(hiring) && hiring.status?.code === 'quoted' ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="text-red-600 mt-0.5" size={20} />
                     <div>
                       <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
                       <p className="text-sm text-red-600">
-                        Esta cotización ha expirado y sus detalles ya no están disponibles.
+                        Esta cotización ha expirado. La única acción disponible es cancelar la solicitud para poder volver a cotizar este servicio.
                       </p>
                     </div>
                   </div>
