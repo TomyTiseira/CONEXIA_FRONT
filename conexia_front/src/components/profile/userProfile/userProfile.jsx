@@ -24,9 +24,12 @@ import UserCollaborativeProjects from "./UserCollaborativeProjects";
 import UserServices from "./UserServices";
 import UserActivity from "./UserActivity";
 import ProfileConnectionButtons from "./ProfileConnectionButtons";
-import UserConnections from "./UserConnections"
+import UserConnections from "./UserConnections";
 import MessagingWidget from "@/components/messaging/MessagingWidget";
-import ReviewsSection from '@/components/reviews/ReviewsSection';`nimport VerificationSection from "@/components/profile/VerificationSection";`nimport { useVerificationStatus } from "@/hooks";`nimport { CheckCircle } from 'lucide-react';
+import ReviewsSection from '@/components/reviews/ReviewsSection';
+import VerificationSection from "@/components/profile/VerificationSection";
+import { useVerificationStatus } from "@/hooks";
+import { CheckCircle } from 'lucide-react';
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);

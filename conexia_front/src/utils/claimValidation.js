@@ -161,7 +161,7 @@ export const formatFileSize = (bytes) => {
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 };
 
-export default {
+const claimValidation = {
   validateFile,
   validateFiles,
   validateDescription,
@@ -170,3 +170,5 @@ export default {
   getFileType,
   formatFileSize,
 };
+
+export default claimValidation;
