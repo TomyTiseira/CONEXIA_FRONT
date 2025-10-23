@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Image from 'next/image';
 import { FaLinkedin, FaCertificate, FaUniversity, FaBriefcase, FaBirthdayCake, FaMapMarkerAlt } from 'react-icons/fa';
+import { CheckCircle } from 'lucide-react';
 import { config } from '@/config';
 
 
@@ -72,15 +73,25 @@ export default function ProfileSidebar({ profile, userId}) {
         style={{ minHeight: 120 }}
         tabIndex={0}
       >
-        <h2
-          className={
-            `font-bold text-conexia-green text-left leading-tight mb-1 ` +
-            (displayName.length > 18 ? 'text-base' : 'text-lg')
-          }
-          style={displayName.length > 24 ? { fontSize: '1rem' } : {}}
-        >
-          {displayName}
-        </h2>
+        <div className="flex items-center gap-2 mb-1">
+          <h2
+            className={
+              `font-bold text-conexia-green text-left leading-tight ` +
+              (displayName.length > 18 ? 'text-base' : 'text-lg')
+            }
+            style={displayName.length > 24 ? { fontSize: '1rem' } : {}}
+          >
+            {displayName}
+          </h2>
+          {profile.verified && (
+            <div 
+              className="flex-shrink-0 bg-green-100 rounded-full p-0.5" 
+              title="Identidad verificada"
+            >
+              <CheckCircle className="text-green-600" size={16} />
+            </div>
+          )}
+        </div>
         {profile.profession && (
           <div
             className="text-[0.95rem] text-conexia-green/80 text-left mb-1"
@@ -99,15 +110,25 @@ export default function ProfileSidebar({ profile, userId}) {
         className="hidden md:flex flex-col items-start w-full px-6 pb-4 pt-14 no-underline"
         tabIndex={0}
       >
-        <h2
-          className={
-            `font-bold text-conexia-green text-left leading-tight mb-2 ` +
-            (displayName.length > 18 ? 'text-base' : 'text-lg')
-          }
-          style={displayName.length > 24 ? { fontSize: '1rem' } : {}}
-        >
-          {displayName}
-        </h2>
+        <div className="flex items-center gap-2 mb-2">
+          <h2
+            className={
+              `font-bold text-conexia-green text-left leading-tight ` +
+              (displayName.length > 18 ? 'text-base' : 'text-lg')
+            }
+            style={displayName.length > 24 ? { fontSize: '1rem' } : {}}
+          >
+            {displayName}
+          </h2>
+          {profile.verified && (
+            <div 
+              className="flex-shrink-0 bg-green-100 rounded-full p-0.5" 
+              title="Identidad verificada"
+            >
+              <CheckCircle className="text-green-600" size={16} />
+            </div>
+          )}
+        </div>
         {profile.profession && (
           <div
             className="text-[0.85rem] text-conexia-green/80 text-left mb-2"
