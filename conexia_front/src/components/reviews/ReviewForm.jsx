@@ -5,21 +5,21 @@ import Button from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 
 export default function ReviewForm({ initial = null, reviewedUserId, onClose, onSaved }) {
-  const [relation, setRelation] = useState(initial?.relation || '');
+  const [relationship, setRelationship] = useState(initial?.relationship || '');
   const [description, setDescription] = useState(initial?.description || '');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    setRelation(initial?.relation || '');
+    setRelationship(initial?.relationship || '');
     setDescription(initial?.description || '');
   }, [initial]);
 
   const validate = () => {
     const e = {};
-    if (!relation || relation.trim() === '') e.relation = 'Indica la relación (máx 30 caracteres)';
-    if (relation && relation.length > 30) e.relation = 'Máx 30 caracteres';
+    if (!relationship || relationship.trim() === '') e.relationship = 'Indica la relación (máx 30 caracteres)';
+    if (relationship && relationship.length > 30) e.relationship = 'Máx 30 caracteres';
     if (!description || description.trim() === '') e.description = 'Ingresa la reseña';
     return e;
   };
@@ -31,9 +31,9 @@ export default function ReviewForm({ initial = null, reviewedUserId, onClose, on
     setLoading(true);
     try {
       if (initial?.id) {
-        await editReview(initial.id, { relation: relation.trim(), description: description.trim() });
+        await editReview(initial.id, { relationship: relationship.trim(), description: description.trim() });
       } else {
-        await createReview({ reviewedUserId, relation: relation.trim(), description: description.trim() });
+        await createReview({ reviewedUserId, relationship: relationship.trim(), description: description.trim() });
       }
       onSaved();
     } catch (err) {
@@ -50,8 +50,8 @@ export default function ReviewForm({ initial = null, reviewedUserId, onClose, on
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium">Relación <span className="text-sm text-gray-500">(Indique la relación laboral que tuvieron)</span></label>
-            <input value={relation} onChange={e => setRelation(e.target.value)} maxLength={30} className="w-full border rounded px-3 py-2" />
-            {errors.relation && <p className="text-red-500 text-sm mt-1">{errors.relation}</p>}
+            <input value={relationship} onChange={e => setRelationship(e.target.value)} maxLength={30} className="w-full border rounded px-3 py-2" />
+            {errors.relationship && <p className="text-red-500 text-sm mt-1">{errors.relationship}</p>}
           </div>
           <div>
             <label className="block font-medium">Descripción</label>
@@ -65,7 +65,7 @@ export default function ReviewForm({ initial = null, reviewedUserId, onClose, on
           </div>
         </form>
 
-        {toast && <Toast type={toast.type} message={toast.message} isVisible onClose={() => setToast(null)} />}
+        {toast && <Toast type={toast.type} message={toast.message} isVisible onClose={() => setToast(null)} position="top-center" />}
       </div>
     </div>
   );

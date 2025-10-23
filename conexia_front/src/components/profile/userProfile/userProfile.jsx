@@ -673,12 +673,12 @@ export default function UserProfile() {
         <UserCollaborativeProjects userId={id} />
         {/* Rectángulo de servicios */}
         <UserServices userId={id} />
-        {/* Reseñas: sección integrada para pruebas */}
+        {/* Rectángulo de actividad */}
+        <UserActivity userId={id} isOwner={isOwner} />
+        {/* Reseñas: sección integrada al final */}
         <div className="mt-6">
           <ReviewsSection profileUserId={id} />
         </div>
-        {/* Rectángulo de actividad */}
-        <UserActivity userId={id} isOwner={isOwner} />
       </div>
       {/* Margen inferior verde */}
       <div className="bg-conexia-soft w-full" style={{ height: 65 }} />

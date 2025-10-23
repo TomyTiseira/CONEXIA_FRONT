@@ -27,7 +27,31 @@ export default function ReviewsSection({ profileUserId }) {
         if (!mounted) return;
         setReviewsData(data);
       } catch (err) {
+        // Si falla la API, cargar datos mock para poder probar la UI
         setToast({ type: 'error', message: err.message });
+        if (mounted) {
+          setReviewsData({
+            reviews: [
+              {
+                id: 'mock-1',
+                relationship: 'Compañero de proyecto',
+                description: 'Gran colaboración, entregó todo a tiempo y con buena calidad.',
+                reporterId: 10,
+                reporter: { email: 'juan.perez@example.com' },
+                createdAt: new Date().toISOString()
+              },
+              {
+                id: 'mock-2',
+                relationship: 'Mentor',
+                description: 'Aportó ideas valiosas y ayudó a mejorar la arquitectura.',
+                reporterId: 11,
+                reporter: { email: 'maria.lopez@example.com' },
+                createdAt: new Date().toISOString()
+              }
+            ],
+            pagination: { page: 1, totalPages: 1 }
+          });
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -81,9 +105,22 @@ export default function ReviewsSection({ profileUserId }) {
         )}
       </div>
 
-      <div className="mt-4">
-        <Link href={`/profile/${profileUserId}/reviews`} className="text-conexia-green">Ver más</Link>
-      </div>
+      {/* Botón ver más */}
+      {reviewsData.reviews && reviewsData.reviews.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
+          <a
+            href={`/profile/${profileUserId}/reviews`}
+            className="w-full sm:w-auto flex items-center gap-1.5 px-5 py-2 rounded-lg font-semibold shadow bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] text-base border border-[#c6e3e4] justify-center text-center"
+            style={{ minHeight: '40px' }}
+          >
+            <svg className="w-7 h-7 hidden sm:inline" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" style={{ verticalAlign: 'middle' }}>
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.2" fill="none"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m4-4H8" />
+            </svg>
+            <span className="w-full text-center">Ver más…</span>
+          </a>
+        </div>
+      )}
 
       {formOpen && (
         <ReviewForm
@@ -94,7 +131,7 @@ export default function ReviewsSection({ profileUserId }) {
         />
       )}
 
-      {toast && <Toast type={toast.type} message={toast.message} isVisible onClose={() => setToast(null)} />}
+      {toast && <Toast type={toast.type} message={toast.message} isVisible onClose={() => setToast(null)} position="top-center" />}
     </div>
   );
 }
