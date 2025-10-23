@@ -20,6 +20,7 @@ import Toast from '@/components/ui/Toast';
 export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState({ isVisible: false, type: '', message: '' });
+  const [otherReason, setOtherReason] = useState('');
 
   const {
     formData,
@@ -45,6 +46,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
     if (isOpen) {
       resetForm();
       resetUpload();
+      setOtherReason('');
     }
   }, [isOpen, resetForm, resetUpload]);
 
@@ -58,6 +60,13 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
       return;
     }
 
+    // Validar campo "Otro" si corresponde
+    const isOther = formData.claimType === 'client_other' || formData.claimType === 'provider_other';
+    if (isOther && !otherReason.trim()) {
+      setToast({ isVisible: true, type: 'error', message: 'Debes especificar el motivo cuando seleccionas "Otro"' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -68,6 +77,11 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
         description: formData.description.trim(),
         files: files, // Enviar archivos directamente
       };
+
+      // Agregar otherReason como campo separado si es necesario
+      if (isOther && otherReason.trim()) {
+        claimData.otherReason = otherReason.trim();
+      }
 
       const createdClaim = await createClaim(claimData);
 
@@ -91,19 +105,23 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
 
   const characterCount = getCharacterCount();
   const claimTypeLabels = isClient ? CLIENT_CLAIM_TYPE_LABELS : PROVIDER_CLAIM_TYPE_LABELS;
+  const isOtherSelected = formData.claimType === 'client_other' || formData.claimType === 'provider_other';
+  
+  // Validar si el formulario está completo para habilitar el botón
+  const isFormValid = characterCount.isValid && (!isOtherSelected || otherReason.trim().length > 0);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50">
       {/* Overlay */}
       <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+          {/* Header (estático) */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-semibold text-gray-900">Realizar Reclamo</h2>
             <button
               onClick={onClose}
@@ -114,8 +132,8 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
             </button>
           </div>
 
-          {/* Content */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Content (solo esta sección hace scroll) */}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Advertencia */}
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r">
               <div className="flex items-start">
@@ -140,7 +158,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
                 value={formData.claimType}
                 onChange={(e) => setField('claimType', e.target.value)}
                 onBlur={() => setFieldTouched('claimType')}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors ${
                   touched.claimType && errors.claimType ? 'border-red-500' : 'border-gray-300'
                 }`}
                 disabled={isSubmitting}
@@ -157,43 +175,57 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
               )}
             </div>
 
+            {/* Campo "Otro motivo" cuando se selecciona "Otro" */}
+            {isOtherSelected && (
+              <div>
+                <label htmlFor="otherReason" className="block text-sm font-medium text-gray-700 mb-2">
+                  Especifica el motivo <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="otherReason"
+                  value={otherReason}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 30) {
+                      setOtherReason(e.target.value);
+                    }
+                  }}
+                  placeholder="Escribe el motivo... (máx. 30 caracteres)"
+                  maxLength={30}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors"
+                  disabled={isSubmitting}
+                />
+                <div className="mt-2 text-xs text-gray-600">
+                  Máximo 30 caracteres. {otherReason.length}/30
+                </div>
+              </div>
+            )}
+
             {/* Descripción */}
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                 Descripción detallada del problema <span className="text-red-500">*</span>
               </label>
-              <textarea
-                id="description"
-                rows={6}
-                value={formData.description}
-                onChange={(e) => setField('description', e.target.value)}
-                onBlur={() => setFieldTouched('description')}
-                placeholder="Explica con detalle la situación. Mínimo 50 caracteres..."
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${
-                  touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
-                }`}
-                disabled={isSubmitting}
-              />
-              
-              {/* Character Counter */}
-              <div className="mt-1 flex items-center justify-between">
-                <span
-                  className={`text-sm ${
-                    characterCount.isValid
-                      ? 'text-green-600'
-                      : characterCount.isTooShort
-                      ? 'text-red-600'
-                      : 'text-orange-600'
+              <div className="relative">
+                <textarea
+                  id="description"
+                  rows={6}
+                  value={formData.description}
+                  onChange={(e) => setField('description', e.target.value)}
+                  onBlur={() => setFieldTouched('description')}
+                  placeholder="Explica con detalle la situación. Mínimo 50 caracteres..."
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors resize-none ${
+                    touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
                   }`}
-                >
-                  {characterCount.current}/{characterCount.max} caracteres
-                  {characterCount.isTooShort &&
-                    ` (faltan ${characterCount.min - characterCount.current})`}
-                </span>
+                  disabled={isSubmitting}
+                />
               </div>
-
+              {/* Contador y guía de caracteres debajo del campo */}
+              <div className="mt-2 text-xs text-gray-600">
+                Mínimo {characterCount.min} caracteres. {characterCount.current}/{characterCount.max}
+              </div>
               {touched.description && errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+                <p className="mt-1 text-xs text-red-600">{errors.description}</p>
               )}
             </div>
 
@@ -215,8 +247,8 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
             </div>
           </form>
 
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+          {/* Footer (estático) */}
+          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -228,7 +260,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
             <button
               type="submit"
               onClick={handleSubmit}
-              disabled={isSubmitting || !characterCount.isValid}
+              disabled={isSubmitting || !isFormValid}
               className="px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
             >
               {isSubmitting ? (

@@ -32,22 +32,6 @@ export default function ReviewsSection({ profileUserId }) {
         if (mounted) {
           setReviewsData({
             reviews: [
-              {
-                id: 'mock-1',
-                relationship: 'Compañero de proyecto',
-                description: 'Gran colaboración, entregó todo a tiempo y con buena calidad.',
-                reporterId: 10,
-                reporter: { email: 'juan.perez@example.com' },
-                createdAt: new Date().toISOString()
-              },
-              {
-                id: 'mock-2',
-                relationship: 'Mentor',
-                description: 'Aportó ideas valiosas y ayudó a mejorar la arquitectura.',
-                reporterId: 11,
-                reporter: { email: 'maria.lopez@example.com' },
-                createdAt: new Date().toISOString()
-              }
             ],
             pagination: { page: 1, totalPages: 1 }
           });

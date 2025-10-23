@@ -96,6 +96,20 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
   };
 
   const availableActions = hiring.availableActions || [];
+  // Unificar con reglas por estado para no depender completamente de availableActions
+  const statusCode = hiring.status?.code;
+  const defaultByStatus = {
+    quoted: ['accept', 'reject', 'negotiate', 'cancel'],
+    negotiating: ['accept', 'reject', 'cancel'],
+    pending: ['cancel']
+  };
+  const normalizedActions = Array.from(new Set([...(availableActions || []), ...((defaultByStatus[statusCode]) || [])]));
+  const isPostDecision = ['accepted', 'rejected'].includes(hiring?.status?.code);
+  const showExpiredBlock = isExpired(hiring) && !isPostDecision;
+  // Filtrar acciones para no permitir cancelar cuando ya fue aceptada o rechazada
+  const actions = isPostDecision
+    ? normalizedActions.filter(a => a !== 'cancel')
+    : normalizedActions;
 
   // Mostrar confirmación
   if (confirmAction) {
@@ -183,21 +197,33 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
             </p>
           </div>
           
-          {isExpired(hiring) ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="text-red-600 mt-0.5" size={20} />
-                <div>
-                  <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
-                  <p className="text-sm text-red-600">
-                    Esta cotización ha expirado y no se pueden realizar más acciones.
-                  </p>
+          {showExpiredBlock ? (
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="text-red-600 mt-0.5" size={20} />
+                  <div>
+                    <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
+                    <p className="text-sm text-red-600">
+                      Esta cotización ha expirado. Cancela la solicitud para poder volver a cotizar este servicio.
+                    </p>
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={() => setConfirmAction('cancel')}
+                className="w-full flex items-center gap-3 p-4 border border-gray-200 bg-gray-500 rounded-lg hover:bg-gray-600 transition text-left"
+              >
+                <span className="text-2xl">🗑️</span>
+                <div>
+                  <p className="font-medium text-white">Cancelar Solicitud</p>
+                  <p className="text-sm text-gray-100">Eliminar esta solicitud vencida</p>
+                </div>
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
-            {availableActions.includes('accept') && (
+            {actions.includes('accept') && (
               <button
                 onClick={() => setConfirmAction('accept')}
                 className="w-full flex items-center gap-3 p-4 border border-green-200 rounded-lg hover:bg-green-50 transition text-left"
@@ -210,7 +236,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               </button>
             )}
             
-            {availableActions.includes('negotiate') && (
+            {actions.includes('negotiate') && (
               <button
                 onClick={() => setConfirmAction('negotiate')}
                 className="w-full flex items-center gap-3 p-4 border border-orange-200 rounded-lg hover:bg-orange-50 transition text-left"
@@ -223,7 +249,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               </button>
             )}
             
-            {availableActions.includes('reject') && (
+            {actions.includes('reject') && (
               <button
                 onClick={() => setConfirmAction('reject')}
                 className="w-full flex items-center gap-3 p-4 border border-red-200 bg-red-500 rounded-lg hover:bg-red-600 transition text-left"
@@ -236,7 +262,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               </button>
             )}
             
-            {availableActions.includes('cancel') && (
+            {actions.includes('cancel') && (
               <button
                 onClick={() => setConfirmAction('cancel')}
                 className="w-full flex items-center gap-3 p-4 border border-gray-200 bg-gray-500 rounded-lg hover:bg-gray-600 transition text-left"
@@ -249,29 +275,12 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               </button>
             )}
             
-            {/* Botón de contratar servicio si está en estado accepted */}
-            {hiring.status?.code === 'accepted' && (
-              <div className="border border-conexia-green/20 rounded-lg p-4 bg-conexia-green/5">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">💳</span>
-                  <div>
-                    <p className="font-medium text-conexia-green">Contratar Servicio</p>
-                    <p className="text-sm text-conexia-green/80">Proceder al pago con MercadoPago</p>
-                  </div>
-                </div>
-                <div className="flex justify-center">
-                  <ContractServiceButton 
-                    serviceHiring={hiring}
-                    onContractSuccess={handleContractSuccess}
-                  />
-                </div>
-              </div>
-            )}
+
             
             </div>
           )}
           
-          {!isExpired(hiring) && availableActions.length === 0 && (
+          {!showExpiredBlock && actions.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">No hay acciones disponibles para esta solicitud.</p>
             </div>

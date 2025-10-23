@@ -188,8 +188,8 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
                 <DollarSign size={20} className="text-green-700" />
                 Cotización del Proveedor
               </h3>
-              {/* Si está vencida, mostrar solo aviso y no el detalle */}
-              {isExpired(hiring) ? (
+              {/* Regla: si está vencida pero aceptada/rechazada, mostrar detalle igualmente */}
+              {isExpired(hiring) && !['accepted','rejected'].includes(hiring.status?.code) ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="text-red-600 mt-0.5" size={20} />

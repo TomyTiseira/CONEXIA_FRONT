@@ -21,6 +21,11 @@ export const ClaimsListItem = ({ claim }) => {
     ? CLIENT_CLAIM_TYPE_LABELS[claim.claimType] || claim.claimType
     : PROVIDER_CLAIM_TYPE_LABELS[claim.claimType] || claim.claimType;
 
+  // Si existe otherReason, reemplazar "(especificar)" con el motivo especificado
+  const displayLabel = claim.otherReason 
+    ? claimTypeLabel.replace('(especificar)', `(${claim.otherReason})`)
+    : claimTypeLabel;
+
   const handleClick = () => {
     router.push(`/claims/${claim.id}`);
   };
@@ -60,7 +65,7 @@ export const ClaimsListItem = ({ claim }) => {
 
         <div className="flex items-center text-gray-600">
           <FileText size={14} className="mr-2 flex-shrink-0" />
-          <span className="truncate">{claimTypeLabel}</span>
+          <span className="truncate">{displayLabel}</span>
         </div>
 
         <div className="flex items-center text-gray-600">

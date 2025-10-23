@@ -64,6 +64,12 @@ const getStatusBadge = (statusCode) => {
 };
 
 export default function ServiceRequestsPage({ serviceId }) {
+  // Abreviaturas para las unidades de tiempo (horas, días, semanas, meses)
+  const getUnitAbbr = (timeUnit) => {
+    const map = { hours: 'h', days: 'd', weeks: 's', months: 'm' };
+    return map[timeUnit] || 'h';
+  };
+
   const router = useRouter();
   const { user, token } = useUserStore();
   const { 
@@ -411,7 +417,7 @@ export default function ServiceRequestsPage({ serviceId }) {
                                   </span>
                                   <span className="text-sm text-gray-500 flex items-center gap-1">
                                     <Clock size={12} />
-                                    {hiring.estimatedHours}h
+                                    {hiring.estimatedHours}{getUnitAbbr(hiring.estimatedTimeUnit)}
                                   </span>
                                 </div>
                                 <span className="text-xs text-gray-500">
@@ -564,7 +570,7 @@ export default function ServiceRequestsPage({ serviceId }) {
                                 </span>
                                 <span className="text-sm text-gray-500 flex items-center gap-1">
                                   <Clock size={12} />
-                                  {hiring.estimatedHours}h
+                                  {hiring.estimatedHours}{getUnitAbbr(hiring.estimatedTimeUnit)}
                                 </span>
                               </div>
                               <span className="text-xs text-gray-500">

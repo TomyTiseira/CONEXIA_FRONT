@@ -210,7 +210,12 @@ export default function ClaimDetailPage({ params }) {
           </div>
           <div>
             <p className="text-sm text-gray-500 mb-1">Motivo</p>
-            <p className="font-medium text-gray-900">{claimTypeLabel}</p>
+            <p className="font-medium text-gray-900">
+              {claim.otherReason 
+                ? claimTypeLabel.replace('(especificar)', `(${claim.otherReason})`)
+                : claimTypeLabel
+              }
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-500 mb-1">Fecha de creación</p>
