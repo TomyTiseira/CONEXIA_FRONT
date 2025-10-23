@@ -41,22 +41,17 @@ export default function AnalysisDetailsModal({
         <div className="p-6 space-y-6">
           {/* Información del Usuario */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
               <User className="w-5 h-5 text-conexia-green" />
               Usuario Reportado
             </h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">ID del Usuario:</span>
-                <Link 
-                  href={`/profile/${analysis.userId}`}
-                  className="text-conexia-green hover:underline font-semibold"
-                  target="_blank"
-                >
-                  {analysis.userId}
-                </Link>
-              </div>
-            </div>
+            <Link 
+              href={`/profile/${analysis.userId}`}
+              className="text-conexia-green hover:underline font-semibold text-lg block mt-2"
+              target="_blank"
+            >
+              {analysis.firstName} {analysis.lastName}
+            </Link>
           </div>
 
           {/* Clasificación y Estadísticas */}

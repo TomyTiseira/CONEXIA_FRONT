@@ -40,14 +40,12 @@ export async function analyzeReports() {
 export async function getModerationResults(params = {}) {
   try {
     const queryParams = new URLSearchParams();
-    
     if (params.page) queryParams.append('page', params.page);
     if (params.limit) queryParams.append('limit', params.limit);
     if (params.resolved !== undefined) queryParams.append('resolved', params.resolved);
     if (params.classification) queryParams.append('classification', params.classification);
 
     const url = `${API_URL}/moderation/results${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-    
     const response = await fetchWithRefresh(url, {
       method: 'GET',
       headers: {
@@ -60,7 +58,16 @@ export async function getModerationResults(params = {}) {
       throw new Error(errorData.message || 'Error al obtener resultados');
     }
 
-    return await response.json();
+    const json = await response.json();
+    // Adaptar a la estructura esperada por el frontend
+    if (json?.data?.data && json?.data?.meta) {
+      return { data: json.data.data, meta: json.data.meta };
+    }
+    // Fallback para otras estructuras
+    if (json?.data && json?.meta) {
+      return { data: json.data, meta: json.meta };
+    }
+    return json;
   } catch (error) {
     console.error('Error en getModerationResults:', error);
     throw error;

@@ -113,7 +113,7 @@ export default function ModerationTable({ results, onViewDetails, loading }) {
                     href={`/profile/${analysis.userId}`}
                     className="text-conexia-green hover:underline font-medium"
                   >
-                    ID: {analysis.userId}
+                    {analysis.firstName?.split(' ')[0] || ''} {analysis.lastName?.split(' ')[0] || ''}
                   </Link>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -166,7 +166,7 @@ export default function ModerationTable({ results, onViewDetails, loading }) {
                 href={`/profile/${analysis.userId}`}
                 className="text-conexia-green hover:underline font-semibold text-lg"
               >
-                Usuario ID: {analysis.userId}
+                {analysis.firstName?.split(' ')[0] || ''} {analysis.lastName?.split(' ')[0] || ''}
               </Link>
               <ResolutionBadge resolved={analysis.resolved} />
             </div>
