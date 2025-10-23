@@ -210,7 +210,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
                     <div>
                       <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
                       <p className="text-sm text-red-600">
-                        Esta cotización ha expirado. La única acción disponible es cancelar la solicitud para poder volver a cotizar este servicio.
+                        Esta cotización ha expirado.
                       </p>
                     </div>
                   </div>
