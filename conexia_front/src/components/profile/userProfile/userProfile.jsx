@@ -24,8 +24,9 @@ import UserCollaborativeProjects from "./UserCollaborativeProjects";
 import UserServices from "./UserServices";
 import UserActivity from "./UserActivity";
 import ProfileConnectionButtons from "./ProfileConnectionButtons";
-import UserConnections from "./UserConnections"
+import UserConnections from "./UserConnections";
 import MessagingWidget from "@/components/messaging/MessagingWidget";
+import ReviewsSection from '@/components/reviews/ReviewsSection';
 import VerificationSection from "@/components/profile/VerificationSection";
 import { useVerificationStatus } from "@/hooks";
 import { CheckCircle } from 'lucide-react';
@@ -717,6 +718,10 @@ export default function UserProfile() {
         <UserServices userId={id} />
         {/* Rectángulo de actividad */}
         <UserActivity userId={id} isOwner={isOwner} />
+        {/* Reseñas: sección integrada al final */}
+        <div className="mt-6">
+          <ReviewsSection profileUserId={id} />
+        </div>
       </div>
       {/* Margen inferior verde */}
       <div className="bg-conexia-soft w-full" style={{ height: 65 }} />
