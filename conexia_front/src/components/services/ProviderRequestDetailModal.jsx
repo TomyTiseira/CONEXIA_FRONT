@@ -27,14 +27,19 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
       pending: 'Pendiente',
       quoted: 'Cotizado',
       accepted: 'Aceptado',
-      approved: 'Aprobado',
+      approved: 'Aprobada',
       rejected: 'Rechazado',
       cancelled: 'Cancelado',
       negotiating: 'Negociando',
-      in_progress: 'En progreso',
+      in_progress: 'En Progreso',
       delivered: 'Entregado',
-      revision_requested: 'Revisión solicitada',
-      completed: 'Completado'
+      revision_requested: 'Revisión Solicitada',
+      completed: 'Completado',
+      expired: 'Vencida',
+      in_claim: 'En Reclamo',
+      cancelled_by_claim: 'Cancelado por reclamo',
+      completed_by_claim: 'Finalizado por reclamo',
+      completed_with_agreement: 'Finalizado con acuerdo'
     };
     return statusMap[statusCode] || statusCode;
   };
@@ -51,7 +56,12 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
       in_progress: 'text-purple-800 bg-purple-100',
       delivered: 'text-teal-800 bg-teal-100',
       revision_requested: 'text-orange-800 bg-orange-100',
-      completed: 'text-green-800 bg-green-100'
+      completed: 'text-green-800 bg-green-100',
+      expired: 'text-red-800 bg-red-100',
+      in_claim: 'text-red-800 bg-red-100',
+      cancelled_by_claim: 'text-gray-800 bg-gray-100',
+      completed_by_claim: 'text-green-800 bg-green-100',
+      completed_with_agreement: 'text-blue-800 bg-blue-100'
     };
     return statusMap[statusCode] || 'text-gray-800 bg-gray-100';
   };
@@ -192,14 +202,15 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
                 <DollarSign size={20} className="text-green-700" />
                 Mi Cotización
               </h3>
-              {isExpired(hiring) ? (
+              {/* Regla: solo mostrar "Cotización Vencida" cuando el estado es 'quoted' Y está vencida */}
+              {isExpired(hiring) && hiring.status?.code === 'quoted' ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="text-red-600 mt-0.5" size={20} />
                     <div>
                       <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
                       <p className="text-sm text-red-600">
-                        Esta cotización ha expirado y sus detalles ya no están disponibles.
+                        Esta cotización ha expirado.
                       </p>
                     </div>
                   </div>
