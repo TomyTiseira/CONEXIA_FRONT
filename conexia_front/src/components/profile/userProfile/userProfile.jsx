@@ -26,6 +26,9 @@ import UserActivity from "./UserActivity";
 import ProfileConnectionButtons from "./ProfileConnectionButtons";
 import UserConnections from "./UserConnections"
 import MessagingWidget from "@/components/messaging/MessagingWidget";
+import VerificationSection from "@/components/profile/VerificationSection";
+import { useVerificationStatus } from "@/hooks";
+import { CheckCircle } from 'lucide-react';
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
@@ -45,6 +48,9 @@ export default function UserProfile() {
   const [editing, setEditing] = useState(false);
   const [showMyProjects, setShowMyProjects] = useState(false);
   const [toast, setToast] = useState(null); // Toast de feedback de actualización de perfil
+  
+  // Hook de verificación (solo para el dueño del perfil)
+  const { isVerified: isUserVerified, loading: verificationLoading } = useVerificationStatus();
 
   // Detección robusta de roles (igual que en Navbar)
   // Se toma de useUserStore y se chequea tanto roleName como user?.role
@@ -87,6 +93,25 @@ export default function UserProfile() {
     fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, searchParams, authUser, roleName]);
+
+  // Efecto para refrescar el perfil cuando cambie el estado de verificación
+  useEffect(() => {
+    const refreshProfileOnVerification = async () => {
+      if (isOwner && isUserVerified && profile && !profile.profile?.verified) {
+        try {
+          const data = await getProfileById(id);
+          setProfile(data.data);
+          // También actualizar el store para que se refleje en el sidebar
+          if (data.data?.profile) {
+            setProfileStore(data.data.profile);
+          }
+        } catch (err) {
+          console.error('Error al refrescar perfil después de verificación:', err);
+        }
+      }
+    };
+    refreshProfileOnVerification();
+  }, [isUserVerified, isOwner, id, profile, setProfileStore]);
 
   // Efecto para mostrar toast después de actualizar el perfil (solo dueño, clave escopada)
   useEffect(() => {
@@ -462,9 +487,19 @@ export default function UserProfile() {
                 </div>
               </div>
               <div className="sm:ml-8 flex flex-col justify-center h-full text-center sm:text-left">
-                <h2 className="text-2xl font-bold text-conexia-green">
-                  {user.name} {user.lastName}
-                </h2>
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <h2 className="text-2xl font-bold text-conexia-green">
+                    {user.name} {user.lastName}
+                  </h2>
+                  {user.verified && (
+                    <div 
+                      className="flex-shrink-0 bg-green-100 rounded-full p-1" 
+                      title="Identidad verificada"
+                    >
+                      <CheckCircle className="text-green-600" size={20} />
+                    </div>
+                  )}
+                </div>
                 {user.profession && (
                   <p className="text-conexia-coral font-medium text-lg mt-1">
                     {user.profession}
@@ -666,6 +701,14 @@ export default function UserProfile() {
             )}
           </div>
         </div>
+
+        {/* Sección de Verificación de Identidad (solo visible para el dueño) */}
+        {isOwner && (
+          <div className="mt-6">
+            <VerificationSection />
+          </div>
+        )}
+
   {/* Apartado de conexiones del usuario */}
   <UserConnections userId={id} profile={profile} isOwner={isOwner} />
         {/* Rectángulo de proyectos colaborativos */}
