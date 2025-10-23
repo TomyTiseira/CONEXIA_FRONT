@@ -7,7 +7,8 @@ export function middleware(request) {
 
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith('/community') ||
-    request.nextUrl.pathname.startsWith('/settings');
+    request.nextUrl.pathname.startsWith('/settings') ||
+    request.nextUrl.pathname.startsWith('/admin');
 
   if (isProtectedRoute && !accessToken && !refreshToken) {
     const loginUrl = new URL('/login', request.url);
@@ -19,5 +20,12 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/community', '/community/(.*)', '/settings', '/settings/(.*)'],
+  matcher: [
+    '/community', 
+    '/community/(.*)', 
+    '/settings', 
+    '/settings/(.*)',
+    '/admin',
+    '/admin/(.*)'
+  ],
 };

@@ -28,3 +28,7 @@ export * from './claims/useClaimPermissions';
 export * from './claims/useClaimForm';
 export * from './claims/useEvidenceUpload';
 export * from './claims/useClaims';
+
+// Hooks de moderación
+export * from './moderation/useModerationAnalysis';
+export * from './moderation/useModerationActions';
