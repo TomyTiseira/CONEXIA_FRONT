@@ -136,11 +136,10 @@ const ServiceDetail = ({ serviceId }) => {
   const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canViewOnly = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
 
-  // Derivados para manejo de cotización activa con decisión (aceptada/rechazada/cancelada)
+  // Determinar si se debe mostrar "Ver Cotización" (solo cuando está en estado 'quoted')
   const activeHiring = service?.serviceHiring;
-  const isPostDecision = ['accepted', 'rejected', 'cancelled'].includes(activeHiring?.status?.code);
-  const showReQuote = Boolean(service?.hasActiveQuotation && isPostDecision);
-
+  const isQuotedStatus = activeHiring?.status?.code === 'quoted';
+  const showViewQuotation = Boolean(service?.hasActiveQuotation && isQuotedStatus);
 
 
   const handleEdit = () => {
@@ -227,19 +226,12 @@ const ServiceDetail = ({ serviceId }) => {
     if (service?.hasPendingQuotation) {
       // Cancelar solicitud existente
       handleCancelQuotation();
-    } else if (service?.hasActiveQuotation) {
-      // Si la cotización activa ya tiene una decisión (aceptada/rechazada/cancelada),
-      // no mostrar el modal de cotización; permitir re-cotizar directamente
-      const active = service?.serviceHiring;
-      const postDecision = ['accepted', 'rejected', 'cancelled'].includes(active?.status?.code);
-      if (postDecision) {
-        setShowHiringModal(true);
-      } else {
-        // Abrir detalle de la cotización activa
-        handleActiveQuotation();
-      }
+    } else if (showViewQuotation) {
+      // Solo abrir detalle si está en estado 'quoted'
+      handleActiveQuotation();
     } else {
-      // Crear nueva cotización/solicitud
+      // En todos los demás casos: crear nueva cotización/solicitud
+      // Esto incluye: sin cotización, en reclamo, aceptada, rechazada, cancelada, negotiating, etc.
       setShowHiringModal(true);
     }
   };
@@ -937,8 +929,8 @@ ${messageText.trim()}`;
                         variant={
                           service?.hasPendingQuotation
                             ? 'danger'
-                            : service?.hasActiveQuotation
-                              ? (showReQuote ? 'neutral' : 'primary')
+                            : showViewQuotation
+                              ? 'primary'
                               : 'neutral'
                         }
                         onClick={handleQuote}
@@ -948,9 +940,9 @@ ${messageText.trim()}`;
                         <FaHandshake size={14} />
                         {service?.hasPendingQuotation
                           ? 'Cancelar Solicitud'
-                          : service?.hasActiveQuotation
-                            ? (showReQuote ? 'Cotizar' : 'Ver Cotización')
-                            : 'Cotizar'}
+                          : showViewQuotation
+                            ? 'Ver Cotización'
+                            : 'Solicitar Cotización'}
                       </Button>
                     )}
                   </div>
