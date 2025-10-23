@@ -8,6 +8,8 @@ import { fetchReportedServices } from '@/service/reports/fetchReportedServices';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import Pagination from '@/components/common/Pagination';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 
 const FILTERS = [
   { label: 'Proyectos', value: 'projects' },
@@ -24,6 +26,8 @@ const ORDER_OPTIONS = [
 export default function ReportsList() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Obtener rol actual del usuario desde el store
+  const { roleName } = useUserStore();
   const [filter, setFilter] = useState('projects');
   const [order, setOrder] = useState('reportCount');
   const [projects, setProjects] = useState([]);
@@ -103,10 +107,22 @@ export default function ReportsList() {
   }, [filter]);
 
   return (
-    <div className="max-w-6xl mx-auto pt-8 pb-4">
-  <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative mb-6 mx-4 md:mx-0">
-        <h1 className="text-2xl font-bold text-conexia-green text-center">Reportes</h1>
-      </div>
+      <div className="max-w-6xl mx-auto pt-8 pb-4">
+        <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative mb-6 mx-4 md:mx-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold text-conexia-green text-center sm:text-left">Reportes</h1>
+            {/* Botón acceso a moderación IA */}
+            {(roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
+              <Button
+                variant="primary"
+                className="px-5 py-2 text-sm font-semibold"
+                onClick={() => router.push('/admin/moderation')}
+              >
+                Panel de Moderación IA
+              </Button>
+            )}
+          </div>
+        </div>
   <div className="bg-white p-4 rounded-xl shadow-sm border mb-8 mx-4 md:mx-0">
         <div className="flex flex-col md:flex-row md:items-center gap-4 flex-wrap">
           {/* Filtro tipo de reporte */}
