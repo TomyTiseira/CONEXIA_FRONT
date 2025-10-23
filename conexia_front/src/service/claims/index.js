@@ -13,6 +13,7 @@ const API_URL = `${config.API_URL}/claims`;
  * @param {number} claimData.hiringId - ID de la contratación
  * @param {string} claimData.claimType - Tipo de reclamo
  * @param {string} claimData.description - Descripción del reclamo
+ * @param {string} claimData.otherReason - Motivo especificado cuando claimType es "Otro" (opcional, máx 30 chars)
  * @param {File[]} claimData.files - Archivos de evidencia (opcional, máximo 10)
  * @returns {Promise<Object>} - Reclamo creado con URLs de evidencia
  */
@@ -24,6 +25,11 @@ export const createClaim = async (claimData) => {
     formData.append('hiringId', claimData.hiringId.toString());
     formData.append('claimType', claimData.claimType);
     formData.append('description', claimData.description);
+    
+    // Agregar otherReason si está presente (cuando claimType es client_other o provider_other)
+    if (claimData.otherReason) {
+      formData.append('otherReason', claimData.otherReason);
+    }
     
     // Agregar archivos de evidencia (si hay)
     if (claimData.files && claimData.files.length > 0) {

@@ -20,6 +20,7 @@ import Toast from '@/components/ui/Toast';
 export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState({ isVisible: false, type: '', message: '' });
+  const [otherReason, setOtherReason] = useState('');
 
   const {
     formData,
@@ -45,6 +46,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
     if (isOpen) {
       resetForm();
       resetUpload();
+      setOtherReason('');
     }
   }, [isOpen, resetForm, resetUpload]);
 
@@ -58,6 +60,13 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
       return;
     }
 
+    // Validar campo "Otro" si corresponde
+    const isOther = formData.claimType === 'client_other' || formData.claimType === 'provider_other';
+    if (isOther && !otherReason.trim()) {
+      setToast({ isVisible: true, type: 'error', message: 'Debes especificar el motivo cuando seleccionas "Otro"' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -68,6 +77,11 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
         description: formData.description.trim(),
         files: files, // Enviar archivos directamente
       };
+
+      // Agregar otherReason como campo separado si es necesario
+      if (isOther && otherReason.trim()) {
+        claimData.otherReason = otherReason.trim();
+      }
 
       const createdClaim = await createClaim(claimData);
 
@@ -91,6 +105,10 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
 
   const characterCount = getCharacterCount();
   const claimTypeLabels = isClient ? CLIENT_CLAIM_TYPE_LABELS : PROVIDER_CLAIM_TYPE_LABELS;
+  const isOtherSelected = formData.claimType === 'client_other' || formData.claimType === 'provider_other';
+  
+  // Validar si el formulario está completo para habilitar el botón
+  const isFormValid = characterCount.isValid && (!isOtherSelected || otherReason.trim().length > 0);
 
   if (!isOpen) return null;
 
@@ -140,7 +158,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
                 value={formData.claimType}
                 onChange={(e) => setField('claimType', e.target.value)}
                 onBlur={() => setFieldTouched('claimType')}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors ${
                   touched.claimType && errors.claimType ? 'border-red-500' : 'border-gray-300'
                 }`}
                 disabled={isSubmitting}
@@ -157,6 +175,32 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
               )}
             </div>
 
+            {/* Campo "Otro motivo" cuando se selecciona "Otro" */}
+            {isOtherSelected && (
+              <div>
+                <label htmlFor="otherReason" className="block text-sm font-medium text-gray-700 mb-2">
+                  Especifica el motivo <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="otherReason"
+                  value={otherReason}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 30) {
+                      setOtherReason(e.target.value);
+                    }
+                  }}
+                  placeholder="Escribe el motivo... (máx. 30 caracteres)"
+                  maxLength={30}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors"
+                  disabled={isSubmitting}
+                />
+                <div className="mt-2 text-xs text-gray-600">
+                  Máximo 30 caracteres. {otherReason.length}/30
+                </div>
+              </div>
+            )}
+
             {/* Descripción */}
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
@@ -170,19 +214,18 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
                   onChange={(e) => setField('description', e.target.value)}
                   onBlur={() => setFieldTouched('description')}
                   placeholder="Explica con detalle la situación. Mínimo 50 caracteres..."
-                  className={`w-full pr-16 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors resize-none ${
                     touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
                   }`}
                   disabled={isSubmitting}
                 />
-                {/* Contador de caracteres en la esquina inferior derecha */}
-                <span className="pointer-events-none absolute bottom-2 right-2 text-xs text-gray-500 bg-gray-100/80 rounded px-3 py-0.5">
-                  {characterCount.current}/{characterCount.max}
-                </span>
               </div>
-
+              {/* Contador y guía de caracteres debajo del campo */}
+              <div className="mt-2 text-xs text-gray-600">
+                Mínimo {characterCount.min} caracteres. {characterCount.current}/{characterCount.max}
+              </div>
               {touched.description && errors.description && (
-                <p className="mt-2 text-xs text-red-600">{errors.description}</p>
+                <p className="mt-1 text-xs text-red-600">{errors.description}</p>
               )}
             </div>
 
@@ -217,7 +260,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
             <button
               type="submit"
               onClick={handleSubmit}
-              disabled={isSubmitting || !characterCount.isValid}
+              disabled={isSubmitting || !isFormValid}
               className="px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
             >
               {isSubmitting ? (
