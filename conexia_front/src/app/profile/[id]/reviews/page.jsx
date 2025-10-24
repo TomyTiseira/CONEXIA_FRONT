@@ -72,7 +72,17 @@ export default function ReviewsPage(/* { params } */) {
       ) : reviewsData.reviews && reviewsData.reviews.length > 0 ? (
         <div className="space-y-4">
           {reviewsData.reviews.map(r => (
-            <ReviewItem key={r.id} review={r} onDeleted={async () => { setToast({ type: 'success', message: 'Reseña eliminada' }); }} />
+            <ReviewItem 
+              key={r.id} 
+              review={r} 
+              onDeleted={async () => { 
+                setToast({ type: 'success', message: 'Reseña eliminada' }); 
+                // Recargar reseñas
+                const data = await fetchAllUserReviews(id, page);
+                setReviewsData(data);
+              }}
+              profileOwnerId={Number(id)}
+            />
           ))}
         </div>
       ) : (
