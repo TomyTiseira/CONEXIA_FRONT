@@ -28,4 +28,6 @@ export { default as ContractServiceButton } from './ContractServiceButton';
 export { default as ContractServiceModal } from './ContractServiceModal';
 export { default as PaymentSuccessPage } from './PaymentSuccessPage';
 export { default as PaymentFailedPage } from './PaymentFailedPage';
-export { default as PaymentPendingPage } from './PaymentPendingPage';
+export { default as PaymentPendingPage } from './PaymentPendingPage';export { default as ServiceReviewModal } from './ServiceReviewModal';
+export { default as ServiceReviewsSection } from './ServiceReviewsSection';
+export { default as AllReviewsModal } from './AllReviewsModal';

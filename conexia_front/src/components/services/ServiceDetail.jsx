@@ -11,7 +11,7 @@ import { formatPrice } from '@/utils/formatPrice';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { FaClock, FaUser, FaEdit, FaTrash, FaHandshake, FaComments, FaArrowLeft, FaTag, FaCalendar, FaPaperPlane, FaTimes } from 'react-icons/fa';
 import { IoCheckmarkCircleSharp } from 'react-icons/io5';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Star } from 'lucide-react';
 import { config } from '@/config';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
@@ -25,6 +25,8 @@ import ServiceHiringModal from './ServiceHiringModal';
 import ServiceHiringActionsModal from './ServiceHiringActionsModal';
 import ReportServiceModal from './ReportServiceModal';
 import QuotationModal from './QuotationModal';
+import ServiceReviewsSection from './ServiceReviewsSection';
+import { getServiceReviews } from '@/service/serviceReviews';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import { useDeleteService } from '@/hooks/services/useDeleteService';
@@ -62,6 +64,8 @@ const ServiceDetail = ({ serviceId }) => {
   // Modal de zoom de imagen
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(0);
+  // Estado para estadísticas de reseñas
+  const [reviewsStats, setReviewsStats] = useState(null);
 
   const searchParams = useSearchParams();
   const handleShowImageZoom = (index = 0) => {
@@ -128,6 +132,25 @@ const ServiceDetail = ({ serviceId }) => {
     };
     checkAlreadyReported();
   }, [user, serviceId]);
+
+  // Cargar estadísticas de reseñas
+  useEffect(() => {
+    const loadReviewsStats = async () => {
+      try {
+        if (serviceId) {
+          const data = await getServiceReviews(serviceId, 1, 1); // Solo necesitamos las estadísticas
+          setReviewsStats({
+            total: data.total,
+            averageRating: data.averageRating,
+            ratingDistribution: data.ratingDistribution,
+          });
+        }
+      } catch (err) {
+        console.error('Error loading reviews stats:', err);
+      }
+    };
+    loadReviewsStats();
+  }, [serviceId]);
 
   const isOwner = service?.isOwner;
   const canEdit = isOwner && roleName === ROLES.USER && service?.status === 'active' && service?.isActive !== false;
@@ -596,8 +619,8 @@ ${messageText.trim()}`;
               )}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[420px] lg:min-h-[480px]">
                 {/* Galería de imágenes */}
-                <div className="flex flex-col h-full justify-stretch">
-                  <div className="flex-1 flex flex-col justify-center">
+                <div className="flex flex-col h-full">
+                  <div className="flex-1 flex flex-col">
                     <ServiceImageCarousel 
                       images={service.images} 
                       title={service.title} 
@@ -615,7 +638,46 @@ ${messageText.trim()}`;
                       <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2 break-words overflow-wrap-anywhere leading-tight flex-1 min-w-0">
                         {service.title}
                       </h1>
-                      {/* Mobile three-dots next to title to avoid overlapping the image */}
+                      {/* Mobile three-dots - para dueño del servicio */}
+                      {canEdit && (
+                        <div className="relative ml-2 flex-shrink-0">
+                          <button
+                            className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            aria-label="Más opciones"
+                            type="button"
+                          >
+                            <MoreVertical size={22} />
+                          </button>
+                          {menuOpen && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-40">
+                              <button
+                                className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3 border-b font-semibold text-conexia-green"
+                                onClick={() => {
+                                  setMenuOpen(false);
+                                  handleEdit();
+                                }}
+                                type="button"
+                              >
+                                <FaEdit size={16} className="text-conexia-green" />
+                                <span>Editar</span>
+                              </button>
+                              <button
+                                className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3 font-semibold text-red-600"
+                                onClick={() => {
+                                  setMenuOpen(false);
+                                  handleDelete();
+                                }}
+                                type="button"
+                              >
+                                <FaTrash size={16} className="text-red-600" />
+                                <span>Eliminar</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* Mobile three-dots next to title - para usuarios que pueden reportar */}
                       {user && roleName === ROLES.USER && !isOwner && service?.status === 'active' && service?.isActive !== false && (
                         <div className="relative md:hidden ml-2 flex-shrink-0">
                           <button
@@ -684,12 +746,44 @@ ${messageText.trim()}`;
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <span className="bg-gradient-to-r from-blue-500/10 to-blue-400/10 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-200 inline-flex items-center gap-1.5">
                         <FaTag size={12} />
                         {service.category?.name}
                       </span>
                     </div>
+                    {/* Mostrar calificación y número de reseñas debajo de la categoría */}
+                    {reviewsStats && reviewsStats.total > 0 && (
+                      <button
+                        onClick={() => {
+                          const reviewsSection = document.getElementById('reviews-section');
+                          if (reviewsSection) {
+                            reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }}
+                        className="flex items-center gap-1 mt-2 hover:opacity-80 transition-opacity cursor-pointer"
+                      >
+                        <span className="text-sm font-semibold text-gray-900">
+                          {reviewsStats.averageRating.toFixed(1)}
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={16}
+                              className={
+                                star <= Math.round(reviewsStats.averageRating)
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-600">
+                          ({reviewsStats.total})
+                        </span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Precio */}
@@ -711,7 +805,7 @@ ${messageText.trim()}`;
                       <FaUser size={14} className="text-conexia-green" />
                       Publicado por
                     </h3>
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white shadow-sm">
                         <Image
                           src={getProfileImageSrc()}
@@ -731,22 +825,6 @@ ${messageText.trim()}`;
                         </Link>
                       </div>
                     </div>
-                    
-                    {/* Fechas de publicación - aparecen aquí cuando no hay mensajería */}
-                    {!canSendMessage && (
-                      <div className="text-sm text-gray-500 space-y-1 mt-4">
-                        <div className="flex items-center gap-2">
-                          <FaCalendar size={12} />
-                          <span>Publicado: {formatDate(service.createdAt)}</span>
-                        </div>
-                        {service.updatedAt !== service.createdAt && (
-                          <div className="flex items-center gap-2">
-                            <FaCalendar size={12} />
-                            <span>Actualizado: {formatDate(service.updatedAt)}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
                     
                     {/* Interfaz de mensajería */}
                     {canSendMessage && (
@@ -836,19 +914,40 @@ ${messageText.trim()}`;
                     )}
                   </div>
 
-                  {/* Fechas de publicación - solo cuando hay mensajería */}
-                  {canSendMessage && (
-                    <div className="text-sm text-gray-500 space-y-1 mb-4">
+                  {/* Fechas de publicación */}
+                  <div className="text-sm text-gray-500 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <FaCalendar size={12} />
+                      <span>Publicado: {formatDate(service.createdAt)}</span>
+                    </div>
+                    {service.updatedAt !== service.createdAt && (
                       <div className="flex items-center gap-2">
                         <FaCalendar size={12} />
-                        <span>Publicado: {formatDate(service.createdAt)}</span>
+                        <span>Actualizado: {formatDate(service.updatedAt)}</span>
                       </div>
-                      {service.updatedAt !== service.createdAt && (
-                        <div className="flex items-center gap-2">
-                          <FaCalendar size={12} />
-                          <span>Actualizado: {formatDate(service.updatedAt)}</span>
-                        </div>
-                      )}
+                    )}
+                  </div>
+
+                  {/* Botón de cotización - extremo derecho en desktop, centrado en mobile */}
+                  {canContract && (
+                    <div className="flex justify-end md:justify-end justify-center w-full md:w-auto">
+                      <Button
+                        variant={
+                          service?.hasPendingQuotation
+                            ? 'danger'
+                            : 'primary'
+                        }
+                        onClick={handleQuote}
+                        disabled={false}
+                        className="flex items-center justify-center gap-2 !px-6 !py-3 w-full md:w-auto"
+                      >
+                        <FaHandshake size={16} />
+                        {service?.hasPendingQuotation
+                          ? 'Cancelar Solicitud'
+                          : showViewQuotation
+                            ? 'Ver Cotización'
+                            : 'Solicitar Cotización'}
+                      </Button>
                     </div>
                   )}
 
@@ -874,9 +973,14 @@ ${messageText.trim()}`;
                 </div>
               </div>
 
+              {/* Sección de reseñas */}
+              <div id="reviews-section" className="mt-8 pt-8 border-t scroll-mt-20">
+                <ServiceReviewsSection serviceId={serviceId} />
+              </div>
+
               {/* Navegación y Acciones */}
               <div className="mt-8 pt-8 border-t">
-                <div className="flex flex-row items-center justify-between w-full gap-2">
+                <div className="flex flex-row items-center justify-start w-full gap-2">
                   {/* Botón volver a la izquierda */}
                   <div className="flex-shrink-0">
                     <BackButton
@@ -901,50 +1005,6 @@ ${messageText.trim()}`;
                       }}
                       text="Volver"
                     />
-                  </div>
-                  {/* Botones de acción alineados a la derecha */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {canEdit && (
-                      <>
-                        <Button
-                          variant="primary"
-                          onClick={handleEdit}
-                          className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
-                        >
-                          <FaEdit size={14} />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={handleDelete}
-                          className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
-                        >
-                          <FaTrash size={14} />
-                          Eliminar
-                        </Button>
-                      </>
-                    )}
-                    {canContract && (
-                      <Button
-                        variant={
-                          service?.hasPendingQuotation
-                            ? 'danger'
-                            : showViewQuotation
-                              ? 'primary'
-                              : 'neutral'
-                        }
-                        onClick={handleQuote}
-                        disabled={false}
-                        className="flex items-center gap-2 !px-4 !py-2.5 !text-sm !h-10"
-                      >
-                        <FaHandshake size={14} />
-                        {service?.hasPendingQuotation
-                          ? 'Cancelar Solicitud'
-                          : showViewQuotation
-                            ? 'Ver Cotización'
-                            : 'Solicitar Cotización'}
-                      </Button>
-                    )}
                   </div>
                 </div>
               </div>

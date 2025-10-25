@@ -7,6 +7,7 @@ import { ROLES } from '@/constants/roles';
 import { formatPrice } from '@/utils/formatPrice';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { FaClock } from 'react-icons/fa';
+import { Star } from 'lucide-react';
 import { config } from '@/config';
 import ServiceImageCarousel from './ServiceImageCarousel';
 import ServiceHiringModal from './ServiceHiringModal';
@@ -91,6 +92,29 @@ const ServiceCard = ({ service, showInactiveLabel = false, onServiceUpdated = nu
           <h3 className="font-bold text-conexia-green text-sm sm:text-base leading-tight break-words text-center line-clamp-2 w-full">
             {service.title}
           </h3>
+        </div>
+        
+        {/* Calificación y reseñas */}
+        <div className="flex items-center gap-1 mt-1">
+          <span className="text-sm font-semibold text-gray-900">
+            {(service.reviews?.averageRating || 0).toFixed(1)}
+          </span>
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                size={14}
+                className={
+                  star <= Math.round(service.reviews?.averageRating || 0)
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-gray-300'
+                }
+              />
+            ))}
+          </div>
+          <span className="text-xs text-gray-600">
+            ({service.reviews?.totalReviews || 0})
+          </span>
         </div>
         
         {/* Dueño del servicio */}

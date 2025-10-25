@@ -9,7 +9,8 @@ import {
   FaRegEye,      /* Ver detalle */
   FaFileInvoiceDollar, /* Ver cotización */
   FaEllipsisH,   /* Más acciones */
-  FaExchangeAlt  /* Posibles acciones de negociación en otros contextos */
+  FaExchangeAlt, /* Posibles acciones de negociación en otros contextos */
+  FaStar         /* Realizar reseña */
 } from 'react-icons/fa';
 import { Briefcase } from 'lucide-react';
 import { getUnitLabel } from '@/utils/timeUnit';
@@ -20,6 +21,7 @@ import QuotationModal from '@/components/services/QuotationModal';
 import ServiceHiringActionsModal from '@/components/services/ServiceHiringActionsModal';
 import ContractServiceButton from '@/components/services/ContractServiceButton';
 import RequestDetailModal from '@/components/services/RequestDetailModal';
+import ServiceReviewModal from '@/components/services/ServiceReviewModal';
 import Toast from '@/components/ui/Toast';
 import Button from '../ui/Button';
 import { useClaimPermissions } from '@/hooks/claims';
@@ -99,6 +101,8 @@ export default function MyServiceHiringsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [claimHiring, setClaimHiring] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewHiring, setReviewHiring] = useState(null);
 
   useEffect(() => {
     loadMyHirings(filters);
@@ -178,6 +182,31 @@ export default function MyServiceHiringsPage() {
     loadMyHirings(filters);
   };
 
+  const handleOpenReviewModal = (hiring) => {
+    setReviewHiring(hiring);
+    setShowReviewModal(true);
+  };
+
+  const handleReviewSuccess = () => {
+    setToast({
+      type: 'success',
+      message: 'Reseña enviada exitosamente',
+      isVisible: true
+    });
+    setShowReviewModal(false);
+    setReviewHiring(null);
+    // Recargar datos
+    loadMyHirings(filters);
+  };
+
+  const handleReviewError = (message) => {
+    setToast({
+      type: 'error',
+      message: message || 'Error al enviar la reseña',
+      isVisible: true
+    });
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       day: '2-digit',
@@ -229,6 +258,13 @@ export default function MyServiceHiringsPage() {
     const isProvider = !!(hiring.service?.owner?.id === user?.id || hiring.service?.ownerId === user?.id || hiring.providerId === user?.id);
     
     return isClient || isProvider;
+  };
+
+  // Función para verificar si puede hacer reseña
+  const canReview = (hiring) => {
+    const REVIEWABLE_STATES = ['completed', 'completed_by_claim', 'completed_with_agreement'];
+    // Solo puede hacer reseña si el estado es reviewable Y no ha hecho reseña aún
+    return REVIEWABLE_STATES.includes(hiring.status?.code) && !hiring.hasReview;
   };
 
   return (
@@ -421,6 +457,19 @@ export default function MyServiceHiringsPage() {
                                   </button>
                                 )}
 
+                                {/* Botón Realizar Reseña */}
+                                {canReview(hiring) && (
+                                  <button
+                                    onClick={() => handleOpenReviewModal(hiring)}
+                                    className="flex items-center justify-center w-9 h-9 text-amber-500 hover:text-white hover:bg-amber-500 rounded-md transition-all duration-200 group"
+                                    title="Realizar reseña del servicio"
+                                    aria-label="Realizar reseña"
+                                    data-action="realizar-resena"
+                                  >
+                                    <FaStar className="text-[18px] group-hover:scale-110 transition-transform" />
+                                  </button>
+                                )}
+
                                 {/* Botón Ver Reclamo - Cuando está en estado in_claim */}
                                 {hiring.status?.code === 'in_claim' && hiring.claimId && (
                                   <button
@@ -588,6 +637,19 @@ export default function MyServiceHiringsPage() {
                               </button>
                             )}
 
+                            {/* Botón Realizar Reseña Mobile */}
+                            {canReview(hiring) && (
+                              <button
+                                onClick={() => handleOpenReviewModal(hiring)}
+                                className="flex items-center justify-center w-8 h-8 text-amber-500 hover:text-white hover:bg-amber-500 rounded-md transition-all duration-200 group"
+                                title="Realizar reseña del servicio"
+                                aria-label="Realizar reseña"
+                                data-action="realizar-resena"
+                              >
+                                <FaStar className="text-[16px] group-hover:scale-110 transition-transform" />
+                              </button>
+                            )}
+
                             {/* Botón Ver Reclamo Mobile - Cuando está en estado in_claim */}
                             {hiring.status?.code === 'in_claim' && hiring.claimId && (
                               <button
@@ -729,6 +791,20 @@ export default function MyServiceHiringsPage() {
           isClient={true}
           token={token}
           onSuccess={handleClaimSuccess}
+        />
+      )}
+
+      {/* Modal de Reseña */}
+      {reviewHiring && (
+        <ServiceReviewModal
+          hiring={reviewHiring}
+          isOpen={showReviewModal}
+          onClose={() => {
+            setShowReviewModal(false);
+            setReviewHiring(null);
+          }}
+          onSuccess={handleReviewSuccess}
+          onError={handleReviewError}
         />
       )}
 
