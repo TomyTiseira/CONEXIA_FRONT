@@ -5,6 +5,7 @@ import Button from '@/components/ui/Button';
 import { fetchReportedProjects } from '@/service/reports/reportsFetch';
 import { fetchReportedPublications } from '@/service/reports/publicationReportsFetch';
 import { fetchReportedServices } from '@/service/reports/fetchReportedServices';
+import { fetchReportedReviews } from '@/service/reports/reviewReportsFetch';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import Pagination from '@/components/common/Pagination';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,6 +17,7 @@ const FILTERS = [
   { label: 'Publicaciones', value: 'publications' },
   { label: 'Comentarios', value: 'comments', disabled: true },
   { label: 'Servicios', value: 'services'},
+  { label: 'Reseñas', value: 'reviews'},
 ];
 
 const ORDER_OPTIONS = [
@@ -32,10 +34,11 @@ export default function ReportsList() {
   const [order, setOrder] = useState('reportCount');
   const [projects, setProjects] = useState([]);
   const [publications, setPublications] = useState([]);
+  const [services, setServices] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
-  const [services, setServices] = useState([]);
   const [initialized, setInitialized] = useState(false);
 
   const validFilters = useMemo(() => new Set(FILTERS.filter(f => !f.disabled).map(f => f.value)), []);
@@ -81,6 +84,14 @@ export default function ReportsList() {
         .then(data => {
           setServices(data?.services || []);
           setPagination(data?.pagination || null);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    } else if (filter === 'reviews') {
+      fetchReportedReviews({ page, orderBy: order })
+        .then(data => {
+          setReviews(data?.data?.userReviews || []);
+          setPagination(data?.data?.pagination || null);
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -169,7 +180,9 @@ export default function ReportsList() {
             </colgroup>
             <thead>
               <tr className="text-left border-b">
-                <th className="p-4 min-w-[140px] md:min-w-[180px]">{filter === 'projects' ? 'Proyecto' : filter === 'services' ? 'Servicio' : 'Publicación'}</th>
+                <th className="p-4 min-w-[140px] md:min-w-[180px]">
+                  {filter === 'projects' ? 'Proyecto' : filter === 'services' ? 'Servicio' : filter === 'reviews' ? 'Reseña' : 'Publicación'}
+                </th>
                 <th className="p-4 min-w-[90px] max-w-[120px] text-center">Cantidad de reportes</th>
                 <th className="p-4 min-w-[120px] max-w-[180px] text-center">Fecha de último reporte</th>
                 <th className="p-4 min-w-[110px] max-w-[140px] text-center">Acciones</th>
@@ -177,12 +190,12 @@ export default function ReportsList() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
+                <tr key="loading">
                   <td colSpan="4" className="p-6 text-center text-conexia-green">Cargando reportes...</td>
                 </tr>
               ) : filter === 'projects' ? (
                 projects.length === 0 ? (
-                  <tr>
+                  <tr key="no-projects">
                     <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron proyectos reportados.</td>
                   </tr>
                 ) : (
@@ -220,7 +233,7 @@ export default function ReportsList() {
                 )
               ) : filter === 'publications' ? (
                 publications.length === 0 ? (
-                  <tr>
+                  <tr key="no-publications">
                     <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron publicaciones reportadas.</td>
                   </tr>
                 ) : (
@@ -256,9 +269,9 @@ export default function ReportsList() {
                     </tr>
                   ))
                 )
-              ) : (
+              ) : filter === 'services' ? (
                 services.length === 0 ? (
-                  <tr>
+                  <tr key="no-services">
                     <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron servicios reportados.</td>
                   </tr>
                 ) : (
@@ -294,6 +307,46 @@ export default function ReportsList() {
                     </tr>
                   ))
                 )
+              ) : filter === 'reviews' ? (
+                reviews.length === 0 ? (
+                  <tr key="no-reviews">
+                    <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron reseñas reportadas.</td>
+                  </tr>
+                ) : (
+                  reviews.map(review => {
+                    console.log('Review object:', review);
+                    return (
+                    <tr key={`review-${review.id || review.userReviewId}`} className="border-b hover:bg-gray-50 h-auto align-top">
+                      <td className="p-4 align-top max-w-[300px]">
+                        <div className="text-conexia-green font-semibold">
+                          <div className="text-xs text-gray-500 mb-1">
+                            {review.reviewerUser?.firstName} {review.reviewerUser?.lastName} → {review.reviewedUser?.firstName} {review.reviewedUser?.lastName}
+                          </div>
+                          <div className="line-clamp-2 break-words overflow-hidden text-ellipsis text-sm" title={review.description}>
+                            {review.description}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center align-middle">{review.reportCount}</td>
+                      <td className="p-4 text-center align-middle">{new Date(review.lastReportDate).toLocaleString()}</td>
+                      <td className="p-4 text-center align-middle">
+                        <div className="flex justify-center gap-x-2">
+                          <Button
+                            variant="add"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => router.push(`/reports/review?reviewId=${review.id || review.userReviewId}`)}
+                          >
+                            Ver reportes
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )})
+                )
+              ) : (
+                <tr key="no-filter-selected">
+                  <td colSpan="4" className="p-6 text-center text-gray-500 italic">Selecciona un tipo de reporte.</td>
+                </tr>
               )}
             </tbody>
           </table>
