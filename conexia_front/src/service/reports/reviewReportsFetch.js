@@ -4,16 +4,22 @@ import { fetchWithRefresh } from '@/service/auth/fetchWithRefresh';
 /**
  * Crear reporte de reseña
  * @param {Object} params - Parámetros del reporte
- * @param {number} params.reviewId - ID de la reseña a reportar
+ * @param {number} params.userReviewId - ID de la reseña a reportar
  * @param {string} params.reason - Motivo del reporte
+ * @param {string} params.otherReason - Razón adicional cuando reason es 'Otro'
  * @param {string} params.description - Descripción detallada del reporte
  * @returns {Promise<Object>} Respuesta del servidor
  */
-export async function createReviewReport({ reviewId, reason, description }) {
-  const res = await fetchWithRefresh(`${config.API_URL}/review-reports`, {
+export async function createReviewReport({ userReviewId, reason, otherReason, description }) {
+  const body = { userReviewId, reason, description };
+  if (reason === 'Otro' && otherReason) {
+    body.otherReason = otherReason;
+  }
+  
+  const res = await fetchWithRefresh(`${config.API_URL}/reports/user-review`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reviewId, reason, description })
+    body: JSON.stringify(body)
   });
   const response = await res.json();
   if (!res.ok) {
@@ -23,99 +29,38 @@ export async function createReviewReport({ reviewId, reason, description }) {
 }
 
 /**
- * Verificar si el usuario ya reportó una reseña
- * @param {number} reviewId - ID de la reseña
- * @returns {Promise<Object>} { hasReported: boolean, report: Object | null }
- */
-export async function checkReviewReport(reviewId) {
-  const res = await fetchWithRefresh(`${config.API_URL}/review-reports/check/${reviewId}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' }
-  });
-  const response = await res.json();
-  if (!res.ok) {
-    throw new Error(response.message || 'Error al verificar el reporte');
-  }
-  return response;
-}
-
-/**
- * Obtener todos los reportes de reseñas (solo admin/moderador)
+ * Obtener todos los reportes de reseñas agrupados (solo admin/moderador)
  * @param {Object} params - Parámetros de consulta
  * @param {number} params.page - Página actual
- * @param {number} params.limit - Cantidad de resultados por página
- * @param {string} params.status - Estado del reporte (pending, resolved, rejected)
+ * @param {string} params.orderBy - Ordenar por 'reportCount' o 'lastReportDate'
+ * @returns {Promise<Object>} Lista de reseñas reportadas con paginación
+ */
+export async function fetchReportedReviews({ page = 1, orderBy = 'reportCount' } = {}) {
+  const res = await fetchWithRefresh(`${config.API_URL}/reports/user-review?page=${page}&orderBy=${orderBy}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  const response = await res.json();
+  if (!res.ok) {
+    throw new Error(response.message || 'Error al obtener reseñas reportadas');
+  }
+  return response;
+}
+
+/**
+ * Obtener reportes de una reseña específica (solo admin/moderador)
+ * @param {number} userReviewId - ID de la reseña
+ * @param {number} page - Página actual
  * @returns {Promise<Object>} Lista de reportes con paginación
  */
-export async function fetchReviewReports({ page = 1, limit = 10, status = '' } = {}) {
-  const params = new URLSearchParams();
-  params.append('page', page);
-  params.append('limit', limit);
-  if (status) params.append('status', status);
-
-  const res = await fetchWithRefresh(`${config.API_URL}/review-reports?${params.toString()}`, {
+export async function fetchReviewReports(userReviewId, page = 1) {
+  const res = await fetchWithRefresh(`${config.API_URL}/reports/user-review/${userReviewId}?page=${page}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' }
   });
   const response = await res.json();
   if (!res.ok) {
-    throw new Error(response.message || 'Error al obtener reportes de reseñas');
-  }
-  return response;
-}
-
-/**
- * Obtener detalle de un reporte de reseña (solo admin/moderador)
- * @param {number} reportId - ID del reporte
- * @returns {Promise<Object>} Detalle del reporte
- */
-export async function fetchReviewReportDetail(reportId) {
-  const res = await fetchWithRefresh(`${config.API_URL}/review-reports/${reportId}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' }
-  });
-  const response = await res.json();
-  if (!res.ok) {
-    throw new Error(response.message || 'Error al obtener detalle del reporte');
-  }
-  return response;
-}
-
-/**
- * Resolver un reporte de reseña (admin/moderador)
- * @param {number} reportId - ID del reporte
- * @param {string} action - Acción a tomar (approve, reject)
- * @param {string} resolution - Comentario de resolución
- * @returns {Promise<Object>} Respuesta del servidor
- */
-export async function resolveReviewReport(reportId, action, resolution = '') {
-  const res = await fetchWithRefresh(`${config.API_URL}/review-reports/${reportId}/resolve`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, resolution })
-  });
-  const response = await res.json();
-  if (!res.ok) {
-    throw new Error(response.message || 'Error al resolver el reporte');
-  }
-  return response;
-}
-
-/**
- * Eliminar una reseña reportada (admin/moderador)
- * @param {number} reviewId - ID de la reseña a eliminar
- * @param {string} reason - Razón de la eliminación
- * @returns {Promise<Object>} Respuesta del servidor
- */
-export async function deleteReportedReview(reviewId, reason = '') {
-  const res = await fetchWithRefresh(`${config.API_URL}/user-reviews/${reviewId}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reason })
-  });
-  const response = await res.json();
-  if (!res.ok) {
-    throw new Error(response.message || 'Error al eliminar la reseña');
+    throw new Error(response.message || 'Error al obtener reportes de la reseña');
   }
   return response;
 }

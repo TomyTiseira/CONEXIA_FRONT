@@ -2,331 +2,274 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
-import { fetchReviewReports, resolveReviewReport } from '@/service/reports/reviewReportsFetch';
+import BackButton from '@/components/ui/BackButton';
+import { fetchReviewReports } from '@/service/reports/reviewReportsFetch';
 import { deleteReview } from '@/service/reviews/reviewsFetch';
-import { MdKeyboardArrowDown } from 'react-icons/md';
 import Pagination from '@/components/common/Pagination';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Toast from '@/components/ui/Toast';
 import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal';
 
-const STATUS_FILTERS = [
-  { label: 'Todos', value: '' },
-  { label: 'Pendientes', value: 'pending' },
-  { label: 'Resueltos', value: 'resolved' },
-  { label: 'Rechazados', value: 'rejected' },
-];
-
 export default function ReviewReportsList() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState('');
   const [reports, setReports] = useState([]);
+  const [reviewId, setReviewId] = useState(null);
+  const [reviewData, setReviewData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [toast, setToast] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [expandedReports, setExpandedReports] = useState(new Set());
 
-  // Initialize from URL
+  // Get review ID from URL
   useEffect(() => {
     if (!searchParams) return;
-    const qStatus = searchParams.get('status');
+    const id = searchParams.get('reviewId');
+    if (id) {
+      setReviewId(parseInt(id, 10));
+    }
     const qPageRaw = searchParams.get('page');
     const qPage = qPageRaw ? parseInt(qPageRaw, 10) : 1;
-    if (qStatus) setStatus(qStatus);
     if (!Number.isNaN(qPage) && qPage > 0) setPage(qPage);
   }, [searchParams]);
 
-  // Fetch reports
+  // Fetch reports for specific review
   useEffect(() => {
+    if (!reviewId) return;
     setLoading(true);
-    fetchReviewReports({ page, limit: 15, status })
+    fetchReviewReports(reviewId, page)
       .then(response => {
-        setReports(response.data?.reports || []);
+        const reportsData = response.data?.reports || [];
+        setReports(reportsData);
         setPagination(response.data?.pagination || null);
+        // Guardar datos de la reseña del primer reporte (todos tienen la misma reseña)
+        if (reportsData.length > 0 && reportsData[0].userReview) {
+          setReviewData(reportsData[0].userReview);
+        }
       })
       .catch(err => {
         setToast({ type: 'error', message: err.message || 'Error al cargar reportes' });
         setReports([]);
       })
       .finally(() => setLoading(false));
-  }, [page, status]);
+  }, [reviewId, page]);
 
   // Sync URL
   useEffect(() => {
+    if (!reviewId) return;
     const params = new URLSearchParams();
-    if (status) params.set('status', status);
+    params.set('reviewId', String(reviewId));
     params.set('page', String(page));
     router.replace(`/reports/review?${params.toString()}`, { scroll: false });
-  }, [status, page, router]);
+  }, [reviewId, page, router]);
 
-  // Reset page when status changes
-  useEffect(() => {
-    setPage(1);
-  }, [status]);
-
-  const handleResolve = async (reportId, action) => {
-    setActionLoading(true);
-    try {
-      await resolveReviewReport(reportId, action);
-      setToast({ type: 'success', message: `Reporte ${action === 'approve' ? 'aprobado' : 'rechazado'}` });
-      // Reload reports
-      const response = await fetchReviewReports({ page, limit: 15, status });
-      setReports(response.data?.reports || []);
-      setPagination(response.data?.pagination || null);
-    } catch (err) {
-      setToast({ type: 'error', message: err.message || 'Error al resolver reporte' });
-    } finally {
-      setActionLoading(false);
-    }
+  const handleDeleteReview = () => {
+    if (!reviewId) return;
+    setConfirmDeleteOpen(true);
   };
 
-  const handleDeleteReview = async () => {
-    if (!selectedReport) return;
+  const confirmDelete = () => {
+    if (!reviewId) return;
     setActionLoading(true);
-    try {
-      await deleteReview(selectedReport.reviewId);
-      setToast({ type: 'success', message: 'Reseña eliminada correctamente' });
-      setConfirmDeleteOpen(false);
-      // Reload reports
-      const response = await fetchReviewReports({ page, limit: 15, status });
-      setReports(response.data?.reports || []);
-      setPagination(response.data?.pagination || null);
-    } catch (err) {
-      setToast({ type: 'error', message: err.message || 'Error al eliminar reseña' });
-    } finally {
-      setActionLoading(false);
-      setSelectedReport(null);
-    }
+    deleteReview(reviewId)
+      .then(() => {
+        setToast({ type: 'success', message: 'Reseña eliminada correctamente' });
+        setTimeout(() => {
+          router.push('/reports?filter=reviews');
+        }, 1500);
+      })
+      .catch(err => {
+        setToast({ type: 'error', message: err.message || 'Error al eliminar reseña' });
+      })
+      .finally(() => {
+        setActionLoading(false);
+        setConfirmDeleteOpen(false);
+      });
   };
 
-  const toggleExpanded = (reportId) => {
-    const newExpanded = new Set(expandedReports);
-    if (newExpanded.has(reportId)) {
-      newExpanded.delete(reportId);
-    } else {
-      newExpanded.add(reportId);
-    }
-    setExpandedReports(newExpanded);
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-AR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
     });
   };
 
-  const getStatusBadge = (reportStatus) => {
-    const badges = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      resolved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800'
-    };
+  const getReasonLabel = (reason) => {
     const labels = {
-      pending: 'Pendiente',
-      resolved: 'Resuelto',
-      rejected: 'Rechazado'
+      'Spam': 'Spam',
+      'Acoso': 'Acoso',
+      'Contenido ofensivo': 'Contenido ofensivo',
+      'Información falsa': 'Información falsa',
+      'Otro': 'Otro',
     };
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-semibold ${badges[reportStatus] || 'bg-gray-100 text-gray-800'}`}>
-        {labels[reportStatus] || reportStatus}
-      </span>
-    );
+    return labels[reason] || reason;
   };
 
   return (
-    <div className="max-w-7xl mx-auto pt-8 pb-4">
+    <div className="max-w-6xl mx-auto pt-8 pb-24">
       <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative mb-6 mx-4 md:mx-0">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-conexia-green text-center sm:text-left">Reportes de Reseñas</h1>
-          <Button
-            variant="secondary"
-            className="px-5 py-2 text-sm font-semibold"
-            onClick={() => router.push('/reports')}
-          >
-            Volver a Reportes
-          </Button>
-        </div>
+        <h2 className="text-2xl font-bold text-conexia-green text-center">Reportes de Reseñas</h2>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border mb-8 mx-4 md:mx-0">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto relative">
-            <label className="text-sm text-conexia-green whitespace-nowrap">Estado:</label>
-            <div className="relative w-full md:w-auto">
-              <select
-                value={status}
-                onChange={e => setStatus(e.target.value)}
-                className="h-9 border border-conexia-green rounded px-3 pr-8 text-sm text-conexia-green focus:outline-none focus:ring-1 focus:ring-conexia-green transition w-full md:w-auto appearance-none bg-white"
+      {!reviewId ? (
+        <div className="bg-white rounded-xl shadow-sm mx-4 md:mx-0 p-8">
+          <p className="text-center text-gray-500">
+            No se especificó una reseña para ver los reportes.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative mb-6 mx-4 md:mx-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Reseña ID: {reviewId}
+                </h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  Total de reportes: {pagination?.total || reports.length}
+                </p>
+                {reviewData && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-500 mb-1">Mensaje de la reseña:</p>
+                    <p className="text-sm text-gray-800 italic line-clamp-3">
+                      &quot;{reviewData.description || reviewData.comment || 'Sin mensaje'}&quot;
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="hidden sm:block sm:ml-4">
+                <Button
+                  variant="danger"
+                  className="px-4 py-2 text-sm"
+                  onClick={handleDeleteReview}
+                  disabled={actionLoading}
+                >
+                  Eliminar Reseña
+                </Button>
+              </div>
+            </div>
+            <div className="sm:hidden mt-2 flex justify-center">
+              <Button
+                variant="danger"
+                className="px-4 py-2 text-sm w-full"
+                onClick={handleDeleteReview}
+                disabled={actionLoading}
               >
-                {STATUS_FILTERS.map(f => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green text-xl">
-                <MdKeyboardArrowDown />
-              </span>
+                Eliminar Reseña
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Lista de reportes */}
-      <div className="bg-white rounded-xl shadow-sm mx-4 md:mx-0">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Cargando reportes...</div>
-        ) : reports.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No se encontraron reportes</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Reseña Reportada
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Reportado por
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Motivo
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
+          <div className="bg-white rounded-xl shadow-sm border p-0 overflow-x-auto mx-4 md:mx-0">
+            <table className="min-w-full table-auto text-sm mb-0">
+              <colgroup>
+                <col className="w-[160px] md:w-[180px]" />
+                <col className="w-[120px] md:w-[160px]" />
+                <col className="w-[180px] md:w-[320px]" />
+                <col className="w-[120px] md:w-[160px]" />
+              </colgroup>
+              <thead>
+                <tr className="border-b">
+                  <th className="p-4 min-w-[120px] max-w-[180px] text-left">Reportado por</th>
+                  <th className="p-4 min-w-[80px] max-w-[160px] text-left">Razón</th>
+                  <th className="p-4 min-w-[120px] max-w-[320px] text-left">Descripción</th>
+                  <th className="p-4 min-w-[90px] max-w-[160px] text-center">Fecha</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {reports.map(report => (
-                  <tr key={report.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <div className="font-medium text-gray-900">
-                          {report.review?.reviewerUser?.name} {report.review?.reviewerUser?.lastName}
-                        </div>
-                        <div className="text-gray-500 text-xs">
-                          En perfil de: {report.review?.reviewedUser?.name} {report.review?.reviewedUser?.lastName}
-                        </div>
-                        <div className="mt-1 text-gray-600">
-                          {expandedReports.has(report.id) ? (
-                            report.review?.description
-                          ) : (
-                            `${report.review?.description?.substring(0, 60)}...`
-                          )}
-                        </div>
-                        <button
-                          onClick={() => toggleExpanded(report.id)}
-                          className="text-xs text-conexia-green hover:underline mt-1"
-                        >
-                          {expandedReports.has(report.id) ? 'Ver menos' : 'Ver más'}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {report.reporter?.name} {report.reporter?.lastName}
-                      </div>
-                      <div className="text-xs text-gray-500">{report.reporter?.email}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{report.reason}</div>
-                      {report.description && (
-                        <div className="text-xs text-gray-500 mt-1">{report.description}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(report.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(report.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {report.status === 'pending' && (
-                        <div className="flex flex-col gap-2">
-                          <Button
-                            variant="primary"
-                            onClick={() => handleResolve(report.id, 'approve')}
-                            disabled={actionLoading}
-                            className="text-xs px-3 py-1"
-                          >
-                            Aprobar
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => handleResolve(report.id, 'reject')}
-                            disabled={actionLoading}
-                            className="text-xs px-3 py-1"
-                          >
-                            Rechazar
-                          </Button>
-                          <Button
-                            variant="danger"
-                            onClick={() => {
-                              setSelectedReport(report);
-                              setConfirmDeleteOpen(true);
-                            }}
-                            disabled={actionLoading}
-                            className="text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white"
-                          >
-                            Eliminar reseña
-                          </Button>
-                        </div>
-                      )}
-                      {report.status !== 'pending' && (
-                        <span className="text-gray-400 text-xs">Sin acciones</span>
-                      )}
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="4" className="p-6 text-center text-conexia-green">Cargando reportes...</td>
+                  </tr>
+                ) : reports.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="p-6 text-center text-gray-500 italic">
+                      No se encontraron reportes para esta reseña
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  reports.map((report, index) => (
+                    <tr key={`report-${report.id}-${index}`} className="border-b hover:bg-gray-50 h-auto align-top">
+                      <td className="p-4 align-top break-words max-w-[180px] text-left">
+                        <Link 
+                          href={`/profile/${report.reporterId}`}
+                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {report.reporter?.name} {report.reporter?.lastName}
+                        </Link>
+                      </td>
+                      <td className="p-4 align-top break-words max-w-[160px] text-left">
+                        <div className="text-sm text-gray-900">
+                          {getReasonLabel(report.reason)}
+                        </div>
+                        {report.otherReason && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            ({report.otherReason})
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4 align-top break-words max-w-[320px] text-left">
+                        <div className="line-clamp-4 overflow-hidden" title={report.description}>
+                          {report.description}
+                        </div>
+                      </td>
+                      <td className="p-4 align-top break-words max-w-[160px] whitespace-nowrap text-center">
+                        {formatDate(report.createdAt)}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
+            {pagination && pagination.totalPages > 1 && (
+              <div className="pt-4 pb-6 flex justify-center">
+                <Pagination
+                  page={page}
+                  currentPage={page}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPreviousPage={pagination.hasPreviousPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Paginación */}
-        {pagination && pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t">
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              hasNextPage={pagination.hasNextPage}
-              hasPreviousPage={pagination.hasPreviousPage}
-              onPageChange={setPage}
-            />
+          <div className="mx-4 md:mx-0 mt-4">
+            <BackButton text="Volver a los reportes" onClick={() => window.location.href = '/reports'} />
           </div>
-        )}
-      </div>
+        </>
+      )}
 
-      {confirmDeleteOpen && (
-        <ConfirmDeleteModal
-          open={confirmDeleteOpen}
-          onClose={() => {
-            setConfirmDeleteOpen(false);
-            setSelectedReport(null);
-          }}
-          onConfirm={handleDeleteReview}
-          loading={actionLoading}
-          title="¿Eliminar esta reseña?"
-          message="Esta acción no se puede deshacer. La reseña será eliminada permanentemente del perfil del usuario."
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
         />
       )}
 
-      {toast && <Toast type={toast.type} message={toast.message} isVisible onClose={() => setToast(null)} position="top-center" />}
+      {confirmDeleteOpen && (
+        <ConfirmDeleteModal
+          isOpen={confirmDeleteOpen}
+          onClose={() => setConfirmDeleteOpen(false)}
+          onConfirm={confirmDelete}
+          title="Eliminar reseña"
+          message="¿Estás seguro de que deseas eliminar esta reseña? Esta acción no se puede deshacer."
+          isLoading={actionLoading}
+        />
+      )}
     </div>
   );
 }

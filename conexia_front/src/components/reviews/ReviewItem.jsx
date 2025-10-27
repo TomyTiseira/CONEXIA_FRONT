@@ -1,9 +1,9 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { deleteReview } from '@/service/reviews/reviewsFetch';
-import { createReviewReport, checkReviewReport } from '@/service/reports/reviewReportsFetch';
+import { createReviewReport } from '@/service/reports/reviewReportsFetch';
 import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal';
 import ReportReviewModal from './ReportReviewModal';
 import Toast from '@/components/ui/Toast';
@@ -19,29 +19,10 @@ export default function ReviewItem({ review, onEdit, onDeleted, profileOwnerId }
   const [reportLoading, setReportLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [hasReported, setHasReported] = useState(false);
-  const [checkingReport, setCheckingReport] = useState(false);
 
   const isOwner = user?.id === review.reviewerUserId;
   const isProfileOwner = user?.id === profileOwnerId;
-  const canReport = isProfileOwner && !isOwner; // Solo el dueño del perfil puede reportar, pero no su propia reseña
-
-  // Verificar si el usuario ya reportó esta reseña
-  useEffect(() => {
-    if (canReport && review.id) {
-      setCheckingReport(true);
-      checkReviewReport(review.id)
-        .then((response) => {
-          setHasReported(response.data?.hasReported || false);
-        })
-        .catch(() => {
-          setHasReported(false);
-        })
-        .finally(() => {
-          setCheckingReport(false);
-        });
-    }
-  }, [canReport, review.id]);
+  const canReport = user && !isOwner; // Cualquier usuario autenticado puede reportar, excepto el autor de la reseña
 
   const handleDelete = async () => {
     setLoading(true);
@@ -61,17 +42,16 @@ export default function ReviewItem({ review, onEdit, onDeleted, profileOwnerId }
     setReportLoading(true);
     try {
       await createReviewReport({
-        reviewId: review.id,
+        userReviewId: review.id,
         reason: reportData.reason,
+        otherReason: reportData.otherReason,
         description: reportData.description
       });
       setToast({ type: 'success', message: 'Reporte enviado correctamente' });
-      setHasReported(true); // Actualizar el estado local
       setReportModalOpen(false);
     } catch (err) {
-      if (err.message?.includes('ya reportaste') || err.message?.includes('already reported')) {
+      if (err.message?.includes('already reported') || err.message?.includes('ya reportaste') || err.message?.includes('Ya has reportado')) {
         setToast({ type: 'error', message: 'Ya reportaste esta reseña anteriormente' });
-        setHasReported(true);
       } else {
         setToast({ type: 'error', message: err.message || 'Error al enviar el reporte' });
       }
@@ -197,26 +177,21 @@ export default function ReviewItem({ review, onEdit, onDeleted, profileOwnerId }
                     </>
                   )}
 
-                  {/* Opción para reportar (solo para el dueño del perfil que no es el autor) */}
+                  {/* Opción para reportar (cualquier usuario autenticado que no sea el autor) */}
                   {canReport && (
                     <>
                       {isOwner && <div className="border-t my-1" />}
                       <button
                         onClick={() => {
                           setMenuOpen(false);
-                          if (hasReported) {
-                            setToast({ type: 'info', message: 'Ya reportaste esta reseña anteriormente' });
-                          } else {
-                            setReportModalOpen(true);
-                          }
+                          setReportModalOpen(true);
                         }}
                         className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2"
-                        disabled={checkingReport}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                         </svg>
-                        {hasReported ? 'Ya reportada' : 'Reportar reseña'}
+                        Reportar reseña
                       </button>
                     </>
                   )}

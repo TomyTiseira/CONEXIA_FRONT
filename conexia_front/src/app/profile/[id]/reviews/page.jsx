@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import Navbar from '@/components/navbar/Navbar';
 import { fetchAllUserReviews } from '@/service/reviews/reviewsFetch';
 import ReviewItem from '@/components/reviews/ReviewItem';
 import Toast from '@/components/ui/Toast';
@@ -58,14 +59,16 @@ export default function ReviewsPage(/* { params } */) {
   }, [id, page]);
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header with title and subtitle */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Reseñas</h1>
-        <p className="text-gray-600">
-          Opiniones y valoraciones de colaboradores sobre este usuario
-        </p>
-      </div>
+    <>
+      <Navbar />
+      <div className="container mx-auto p-6">
+        {/* Header with title and subtitle */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-2">Reseñas</h1>
+          <p className="text-gray-600">
+            Opiniones y valoraciones de colaboradores sobre este usuario
+          </p>
+        </div>
 
       {loading ? (
         <p>Cargando...</p>
@@ -109,5 +112,6 @@ export default function ReviewsPage(/* { params } */) {
 
       {toast && <Toast type={toast.type} message={toast.message} isVisible onClose={() => setToast(null)} position="top-center" />}
     </div>
+    </>
   );
 }

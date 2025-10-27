@@ -3,23 +3,24 @@ import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
 import { MdErrorOutline } from 'react-icons/md';
 
-// Motivos de reporte para reseñas
+// Motivos de reporte para reseñas (deben coincidir con el backend)
 const REPORT_REASONS = [
-  { value: 'Contenido ofensivo o inapropiado', label: 'Contenido ofensivo o inapropiado' },
-  { value: 'Información falsa o engañosa', label: 'Información falsa o engañosa' },
-  { value: 'Spam o contenido irrelevante', label: 'Spam o contenido irrelevante' },
-  { value: 'Acoso o intimidación', label: 'Acoso o intimidación' },
-  { value: 'Violación de políticas de la plataforma', label: 'Violación de políticas de la plataforma' },
+  { value: 'Contenido ofensivo', label: 'Contenido ofensivo' },
+  { value: 'Acoso', label: 'Acoso' },
+  { value: 'Spam', label: 'Spam' },
+  { value: 'Información falsa', label: 'Información falsa' },
   { value: 'Otro', label: 'Otro' }
 ];
 
 export default function ReportReviewModal({ open, onClose, onSubmit, loading, reviewId }) {
   const [selectedReason, setSelectedReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
 
   const resetForm = () => {
     setSelectedReason('');
+    setOtherReason('');
     setDescription('');
     setError('');
   };
@@ -41,6 +42,16 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
       return;
     }
 
+    if (selectedReason === 'Otro' && !otherReason.trim()) {
+      setError("Debes completar el campo 'Otro motivo' cuando seleccionas 'Otro'.");
+      return;
+    }
+
+    if (selectedReason !== 'Otro' && otherReason.trim()) {
+      setError("No debes completar el campo 'Otro motivo' si no seleccionaste 'Otro'.");
+      return;
+    }
+
     if (!description.trim()) {
       setError('La descripción es obligatoria.');
       return;
@@ -53,6 +64,7 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
 
     onSubmit({
       reason: selectedReason,
+      otherReason: selectedReason === 'Otro' ? otherReason.trim() : undefined,
       description: description.trim()
     });
   };
@@ -100,6 +112,24 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
                 ))}
               </div>
             </div>
+
+            {selectedReason === 'Otro' && (
+              <div className="ml-6">
+                <label className="block text-conexia-green font-semibold mb-2">
+                  Otro motivo <span className="text-red-500">*</span>
+                </label>
+                <InputField
+                  type="text"
+                  placeholder="Especifica el motivo... (máx. 100 caracteres)"
+                  value={otherReason}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 100) setOtherReason(e.target.value);
+                  }}
+                  name="otherReason"
+                  maxLength={100}
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-conexia-green font-semibold mb-2">
