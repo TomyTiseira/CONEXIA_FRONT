@@ -2,11 +2,16 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Star, ChevronDown } from 'lucide-react';
-import { getServiceReviews } from '@/service/serviceReviews';
+import { X, Star, ChevronDown, Edit2, Trash2, MoreVertical, Flag } from 'lucide-react';
+import { getServiceReviews, updateServiceReview, deleteServiceReview } from '@/service/serviceReviews';
 import { config } from '@/config';
+import ReviewEditModal from './ReviewEditModal';
+import ReviewDeleteModal from './ReviewDeleteModal';
+import ReviewReportModal from './ReviewReportModal';
+import Toast from '@/components/ui/Toast';
+import { FaEdit } from 'react-icons/fa';
 
-export default function AllReviewsModal({ serviceId, isOpen, onClose, initialData, filterRating: initialFilterRating = null }) {
+export default function AllReviewsModal({ serviceId, isOpen, onClose, initialData, filterRating: initialFilterRating = null, onReviewsChanged }) {
   const [reviews, setReviews] = useState(initialData?.reviews || []);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -19,17 +24,35 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
   const filterRef = useRef(null);
   const reviewsPerPage = 10;
 
+  // Estados para editar/eliminar/reportar reseñas
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRefs = useRef({});
+  const [hasChanges, setHasChanges] = useState(false); // Flag para detectar cambios
+
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (filterRef.current && !filterRef.current.contains(event.target)) {
         setShowRatingFilter(false);
       }
+      
+      // Cerrar menús de acciones
+      if (openMenuId && menuRefs.current[openMenuId]) {
+        if (!menuRefs.current[openMenuId].contains(event.target)) {
+          setOpenMenuId(null);
+        }
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [openMenuId]);
 
   // Inicializar summaryData con initialData una sola vez
   useEffect(() => {
@@ -105,12 +128,159 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
     };
   }, [hasMore, loading, page]);
 
+  const handleEditReview = (review) => {
+    setSelectedReview(review);
+    setShowEditModal(true);
+    setOpenMenuId(null);
+  };
+
+  const handleDeleteReview = (review) => {
+    setSelectedReview(review);
+    setShowDeleteModal(true);
+    setOpenMenuId(null);
+  };
+
+  const handleReportReview = (review) => {
+    setSelectedReview(review);
+    setShowReportModal(true);
+    setOpenMenuId(null);
+  };
+
+  const handleConfirmEdit = async (updatedData) => {
+    setActionLoading(true);
+    try {
+      await updateServiceReview(selectedReview.id, updatedData);
+      
+      // Actualizar la reseña en la lista local del modal
+      setReviews(prevReviews => 
+        prevReviews.map(r => 
+          r.id === selectedReview.id 
+            ? { ...r, comment: updatedData.comment }
+            : r
+        )
+      );
+      
+      setShowEditModal(false);
+      setSelectedReview(null);
+      setHasChanges(true); // Marcar que hubo cambios
+      
+      // Mostrar toast de éxito
+      setToast({
+        type: 'success',
+        message: 'Reseña actualizada correctamente',
+        isVisible: true
+      });
+    } catch (err) {
+      // Mostrar toast de error
+      setToast({
+        type: 'error',
+        message: err.message || 'Error al actualizar la reseña',
+        isVisible: true
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    setActionLoading(true);
+    try {
+      await deleteServiceReview(selectedReview.id);
+      
+      // Eliminar la reseña de la lista local del modal
+      setReviews(prevReviews => prevReviews.filter(r => r.id !== selectedReview.id));
+      
+      setShowDeleteModal(false);
+      setSelectedReview(null);
+      setHasChanges(true); // Marcar que hubo cambios
+      
+      // Mostrar toast de éxito
+      setToast({
+        type: 'success',
+        message: 'Reseña eliminada correctamente',
+        isVisible: true
+      });
+    } catch (err) {
+      // Mostrar toast de error
+      setToast({
+        type: 'error',
+        message: err.message || 'Error al eliminar la reseña',
+        isVisible: true
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmReport = async (reportData) => {
+    setActionLoading(true);
+    try {
+      // TODO: Implementar endpoint de reporte de reseñas cuando esté disponible
+      // await reportServiceReview(selectedReview.id, reportData);
+      
+      console.log('Reporte enviado:', { reviewId: selectedReview.id, ...reportData });
+      
+      setShowReportModal(false);
+      setSelectedReview(null);
+      
+      // Mostrar toast de éxito
+      setToast({
+        type: 'success',
+        message: 'Reporte enviado correctamente. Será revisado por nuestro equipo.',
+        isVisible: true
+      });
+    } catch (err) {
+      // Mostrar toast de error
+      setToast({
+        type: 'error',
+        message: err.message || 'Error al enviar el reporte',
+        isVisible: true
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCloseToast = () => {
+    setToast(null);
+  };
+
+  // Manejar el cierre del modal
+  const handleClose = () => {
+    // Si hubo cambios, notificar al padre para recargar
+    if (hasChanges && onReviewsChanged) {
+      onReviewsChanged();
+    }
+    // Resetear el flag de cambios
+    setHasChanges(false);
+    // Cerrar el modal
+    onClose();
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
     });
+  };
+
+  // Obtener primer nombre y primer apellido
+  const getFirstNameAndLastName = (user) => {
+    const firstName = user?.name?.split(' ')[0] || '';
+    const firstLastName = user?.lastName?.split(' ')[0] || '';
+    return `${firstName} ${firstLastName}`.trim();
+  };
+
+  // Helper para normalizar la URL de la imagen de perfil
+  const getProfilePictureUrl = (img) => {
+    const defaultAvatar = `${config.DOCUMENT_URL}/files/img/profile/no-photo.jpg`;
+    if (!img) return defaultAvatar;
+    if (img === defaultAvatar) return defaultAvatar;
+    if (img.startsWith('http://') || img.startsWith('https://')) return img;
+    if (img.startsWith('/uploads')) return `${config.DOCUMENT_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
+    if (img.startsWith('/')) return `${config.DOCUMENT_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
+    return `${config.IMAGE_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
   };
 
   if (!isOpen) return null;
@@ -126,7 +296,7 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
             Opiniones del servicio
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition"
             aria-label="Cerrar"
           >
@@ -254,63 +424,97 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                       key={review.id}
                       className="border-b border-gray-200 pb-6 last:border-b-0"
                     >
-                      {/* Encabezado de la reseña */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <img
-                          src={
-                            review.reviewUser?.profilePicture
-                              ? `${config.IMAGE_URL}/${review.reviewUser.profilePicture}`
-                              : '/images/default-avatar.png'
-                          }
-                          alt={`${review.reviewUser?.name || 'Usuario'} ${review.reviewUser?.lastName || ''}`}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between flex-wrap gap-2">
-                            <div>
-                              <h4 className="font-semibold text-gray-900">
-                                {review.reviewUser?.name} {review.reviewUser?.lastName}
-                              </h4>
-                            </div>
-                            <span className="text-xs text-gray-500">
+                      {/* Header de la reseña */}
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          {/* Avatar */}
+                          <img
+                            src={getProfilePictureUrl(review.reviewUser?.profilePicture)}
+                            alt={getFirstNameAndLastName(review.reviewUser)}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
+                          />
+                          
+                          {/* Información del usuario y fecha */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-gray-900 truncate">
+                              {getFirstNameAndLastName(review.reviewUser)}
+                            </h4>
+                            <p className="text-xs text-gray-500">
                               {formatDate(review.createdAt)}
-                            </span>
+                            </p>
                           </div>
-                          <div className="flex items-center gap-1 mt-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                size={16}
-                                className={
-                                  star <= review.rating
-                                    ? 'fill-yellow-400 text-yellow-400'
-                                    : 'text-gray-300'
-                                }
-                              />
-                            ))}
-                          </div>
+                        </div>
+
+                        {/* Botón de acciones */}
+                        <div className="flex-shrink-0 relative" ref={el => menuRefs.current[review.id] = el}>
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === review.id ? null : review.id)}
+                            className="p-1.5 hover:bg-gray-100 rounded-full transition-all duration-200"
+                            title="Más opciones"
+                          >
+                            <MoreVertical size={16} className="text-gray-600" />
+                          </button>
+                          
+                          {openMenuId === review.id && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                              {review.isOwner ? (
+                                // Opciones para el dueño de la reseña
+                                <>
+                                  <button
+                                    onClick={() => handleEditReview(review)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm border-b"
+                                  >
+                                    <FaEdit size={16} className="text-conexia-green" />
+                                    <span>Editar reseña</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteReview(review)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-red-600"
+                                  >
+                                    <Trash2 size={16} />
+                                    <span>Eliminar reseña</span>
+                                  </button>
+                                </>
+                              ) : (
+                                // Opción para reportar (usuarios que no son dueños)
+                                <button
+                                  onClick={() => handleReportReview(review)}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
+                                >
+                                  <Flag size={16} />
+                                  <span>Reportar reseña</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
+                      {/* Calificación */}
+                      <div className="flex items-center gap-1 mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={16}
+                            className={
+                              star <= review.rating
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-300'
+                            }
+                          />
+                        ))}
+                      </div>
+
                       {/* Comentario */}
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                      <p className="text-sm text-gray-700 whitespace-pre-line">
                         {review.comment}
                       </p>
 
-                      {/* Respuesta del dueño */}
+                      {/* Respuesta del dueño del servicio (si existe) */}
                       {review.ownerResponse && (
-                        <div className="ml-8 mt-4 p-4 bg-gray-50 rounded-lg border-l-4 border-conexia-green">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-semibold text-conexia-green">
-                              Respuesta del prestador
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {formatDate(review.ownerResponseDate)}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                            {review.ownerResponse}
-                          </p>
+                        <div className="mt-4 ml-6 p-3 bg-gray-50 rounded-lg border-l-4 border-conexia-green">
+                          <p className="text-xs font-semibold text-gray-700 mb-1">Respuesta del proveedor:</p>
+                          <p className="text-sm text-gray-600">{review.ownerResponse}</p>
                         </div>
                       )}
                     </div>
@@ -338,6 +542,54 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
           </div>
         </div>
       </div>
+
+      {/* Modales */}
+      <ReviewEditModal
+        open={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedReview(null);
+        }}
+        onConfirm={handleConfirmEdit}
+        review={selectedReview}
+        loading={actionLoading}
+      />
+
+      <ReviewDeleteModal
+        open={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedReview(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        loading={actionLoading}
+      />
+
+      <ReviewReportModal
+        open={showReportModal}
+        onClose={() => {
+          setShowReportModal(false);
+          setSelectedReview(null);
+        }}
+        onConfirm={handleConfirmReport}
+        loading={actionLoading}
+      />
+
+      {/* Toast con z-index superior al modal */}
+      {toast && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100000, pointerEvents: 'none', display: 'flex', justifyContent: 'center', paddingTop: '1rem' }}>
+          <div style={{ pointerEvents: 'auto' }}>
+            <Toast
+              type={toast.type}
+              message={toast.message}
+              isVisible={toast.isVisible}
+              onClose={handleCloseToast}
+              duration={3000}
+              position="top-center"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 
