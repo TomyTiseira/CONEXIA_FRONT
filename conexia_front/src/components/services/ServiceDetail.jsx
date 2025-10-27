@@ -136,10 +136,10 @@ const ServiceDetail = ({ serviceId }) => {
   const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active';
   const canViewOnly = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
 
-  // Determinar si se debe mostrar "Ver Cotización" (solo cuando está en estado 'quoted')
+  // Determinar si se debe mostrar "Ver Cotización" (cuando está en estado 'quoted' o 'negotiating')
   const activeHiring = service?.serviceHiring;
-  const isQuotedStatus = activeHiring?.status?.code === 'quoted';
-  const showViewQuotation = Boolean(service?.hasActiveQuotation && isQuotedStatus);
+  const isQuotedOrNegotiating = ['quoted', 'negotiating'].includes(activeHiring?.status?.code);
+  const showViewQuotation = Boolean(service?.hasActiveQuotation && isQuotedOrNegotiating);
 
 
   const handleEdit = () => {
@@ -267,11 +267,23 @@ const ServiceDetail = ({ serviceId }) => {
     try {
       // Usar los datos de service.serviceHiring si están presentes para mostrar el detalle completo
       const sh = service?.serviceHiring;
-      if (sh && service?.activeQuotationId === sh.id) {
+      if (sh) {
         // Enriquecer el hiring con el service y owner para el modal
         const enriched = {
           ...sh,
-          service: sh.service ? { ...sh.service } : { id: service.id, title: service.title, description: service.description, price: service.price, timeUnit: service.timeUnit, images: service.images },
+          // Normalizar quotedPrice a número si viene como string
+          quotedPrice: typeof sh.quotedPrice === 'string' ? parseFloat(sh.quotedPrice) : sh.quotedPrice,
+          service: sh.service ? { 
+            ...sh.service,
+            price: typeof sh.service.price === 'string' ? parseFloat(sh.service.price) : sh.service.price
+          } : { 
+            id: service.id, 
+            title: service.title, 
+            description: service.description, 
+            price: typeof service.price === 'string' ? parseFloat(service.price) : service.price, 
+            timeUnit: service.timeUnit, 
+            images: service.images 
+          },
           owner: service.owner,
         };
         // Si la modalidad de pago es por entregables y el backend devolvió los entregables
@@ -310,13 +322,36 @@ const ServiceDetail = ({ serviceId }) => {
         setShowQuotationModal(true);
       } else if (service?.activeQuotationId) {
         // Fallback mínimo si no vino serviceHiring completo
-        const minimal = {
+        const minimalBase = {
           id: service.activeQuotationId,
-          service: { id: service.id, title: service.title, description: service.description, price: service.price, timeUnit: service.timeUnit, images: service.images },
+          service: { id: service.id, title: service.title, description: service.description, price: typeof service.price === 'string' ? parseFloat(service.price) : service.price, timeUnit: service.timeUnit, images: service.images },
           owner: service.owner,
           status: { code: 'quoted', name: 'Cotizado' },
           availableActions: ['accept', 'reject', 'negotiate', 'cancel']
         };
+        const shFallback = service?.serviceHiring;
+        // Intentar completar con datos del hiring si existen aunque el ID no coincida
+        const minimal = {
+          ...minimalBase,
+          description: shFallback?.description,
+          quotedPrice: typeof shFallback?.quotedPrice === 'string' ? parseFloat(shFallback.quotedPrice) : shFallback?.quotedPrice,
+          estimatedHours: shFallback?.estimatedHours,
+          estimatedTimeUnit: shFallback?.estimatedTimeUnit,
+          quotationNotes: shFallback?.quotationNotes,
+          paymentModality: shFallback?.paymentModality,
+        };
+        // Adjuntar entregables si la modalidad es por entregables
+        if (
+          minimal.paymentModality?.code === 'by_deliverables' &&
+          Array.isArray(service?.deliverables) &&
+          service.deliverables.length > 0
+        ) {
+          minimal.deliverables = service.deliverables.map((d, idx) => ({
+            ...d,
+            price: typeof d.price === 'string' ? parseFloat(d.price) : d.price,
+            orderIndex: typeof d.orderIndex === 'number' ? d.orderIndex : idx + 1,
+          }));
+        }
         setQuotationHiring(minimal);
         setShowQuotationModal(true);
       } else {
