@@ -148,3 +148,6 @@ export const deleteServiceReview = async (reviewId) => {
     throw new Error(result.message || 'Error al eliminar la reseña');
   }
 };
+
+// Exportar también la función de eliminar respuesta
+export { deleteServiceReviewResponse } from './deleteServiceReviewResponse';

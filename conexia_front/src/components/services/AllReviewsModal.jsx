@@ -3,11 +3,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Star, ChevronDown, Edit2, Trash2, MoreVertical, Flag } from 'lucide-react';
-import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview } from '@/service/serviceReviews';
+import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse } from '@/service/serviceReviews';
 import { config } from '@/config';
-import ReviewEditModal from './ReviewEditModal';
 import ReviewDeleteModal from './ReviewDeleteModal';
 import ReviewReportModal from './ReviewReportModal';
+import ResponseDeleteModal from './ResponseDeleteModal';
 import Toast from '@/components/ui/Toast';
 
 export default function AllReviewsModal({ serviceId, isOpen, onClose, initialData, filterRating: initialFilterRating = null, onReviewsChanged }) {
@@ -24,15 +24,21 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
   const reviewsPerPage = 10;
 
   // Estados para editar/eliminar/reportar reseñas
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showResponseDeleteModal, setShowResponseDeleteModal] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRefs = useRef({});
   const [hasChanges, setHasChanges] = useState(false); // Flag para detectar cambios
+  
+  // Estados para edición inline de reseñas
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [editingComment, setEditingComment] = useState('');
+  const [editingRating, setEditingRating] = useState(0);
+  const [editLoading, setEditLoading] = useState(false);
   
   // Estados para respuestas del dueño del servicio (inline)
   const [respondingToReviewId, setRespondingToReviewId] = useState(null);
@@ -83,7 +89,8 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
       const data = await getServiceReviews(serviceId, 1, reviewsPerPage, selectedRating);
       setReviews(data.reviews || []);
       // NO actualizamos summaryData aquí para mantenerlo estático
-      setHasMore(data.reviews.length >= reviewsPerPage);
+      // Usar pagination.hasNext si está disponible, sino calcular basado en la cantidad de reviews
+      setHasMore(data.pagination?.hasNext ?? data.reviews.length >= reviewsPerPage);
     } catch (err) {
       console.error('Error loading reviews:', err);
     } finally {
@@ -102,7 +109,8 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
       if (data.reviews && data.reviews.length > 0) {
         setReviews(prev => [...prev, ...data.reviews]);
         setPage(nextPage);
-        setHasMore(data.reviews.length >= reviewsPerPage);
+        // Usar pagination.hasNext si está disponible
+        setHasMore(data.pagination?.hasNext ?? data.reviews.length >= reviewsPerPage);
       } else {
         setHasMore(false);
       }
@@ -137,9 +145,72 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
   }, [hasMore, loading, page]);
 
   const handleEditReview = (review) => {
-    setSelectedReview(review);
-    setShowEditModal(true);
+    setEditingReviewId(review.id);
+    setEditingComment(review.comment);
+    setEditingRating(review.rating);
     setOpenMenuId(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReviewId(null);
+    setEditingComment('');
+    setEditingRating(0);
+  };
+
+  const handleConfirmEdit = async (reviewId) => {
+    if (!editingComment || editingComment.trim().length < 10) {
+      setToast({
+        type: 'error',
+        message: 'El comentario debe tener al menos 10 caracteres',
+        isVisible: true
+      });
+      return;
+    }
+
+    if (editingComment.length > 500) {
+      setToast({
+        type: 'error',
+        message: 'El comentario no puede exceder 500 caracteres',
+        isVisible: true
+      });
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      // Solo enviamos el comentario, el rating no se puede editar
+      await updateServiceReview(reviewId, {
+        comment: editingComment.trim()
+      });
+      
+      // Actualizar la reseña en la lista local
+      setReviews(prevReviews =>
+        prevReviews.map(r =>
+          r.id === reviewId
+            ? { ...r, comment: editingComment.trim() }
+            : r
+        )
+      );
+      
+      setEditingReviewId(null);
+      setEditingComment('');
+      setEditingRating(0);
+      setHasChanges(true);
+      
+      setToast({
+        type: 'success',
+        message: 'Reseña actualizada exitosamente',
+        isVisible: true
+      });
+    } catch (err) {
+      setToast({
+        type: 'error',
+        message: err.message || 'Error al actualizar la reseña',
+        isVisible: true
+      });
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const handleDeleteReview = (review) => {
@@ -152,42 +223,6 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
     setSelectedReview(review);
     setShowReportModal(true);
     setOpenMenuId(null);
-  };
-
-  const handleConfirmEdit = async (updatedData) => {
-    setActionLoading(true);
-    try {
-      await updateServiceReview(selectedReview.id, updatedData);
-      
-      // Actualizar la reseña en la lista local del modal
-      setReviews(prevReviews => 
-        prevReviews.map(r => 
-          r.id === selectedReview.id 
-            ? { ...r, comment: updatedData.comment }
-            : r
-        )
-      );
-      
-      setShowEditModal(false);
-      setSelectedReview(null);
-      setHasChanges(true); // Marcar que hubo cambios
-      
-      // Mostrar toast de éxito
-      setToast({
-        type: 'success',
-        message: 'Reseña actualizada correctamente',
-        isVisible: true
-      });
-    } catch (err) {
-      // Mostrar toast de error
-      setToast({
-        type: 'error',
-        message: err.message || 'Error al actualizar la reseña',
-        isVisible: true
-      });
-    } finally {
-      setActionLoading(false);
-    }
   };
 
   const handleConfirmDelete = async () => {
@@ -314,6 +349,47 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
       });
     } finally {
       setResponseLoading(false);
+    }
+  };
+
+  // Manejar eliminación de respuesta del dueño del servicio
+  const handleDeleteResponse = (review) => {
+    setSelectedReview(review);
+    setShowResponseDeleteModal(true);
+    setOpenMenuId(null);
+  };
+
+  const handleConfirmDeleteResponse = async () => {
+    setActionLoading(true);
+    try {
+      await deleteServiceReviewResponse(selectedReview.id);
+      
+      setShowResponseDeleteModal(false);
+      setSelectedReview(null);
+      setHasChanges(true);
+      
+      // Actualizar la lista de reseñas localmente
+      setReviews(prevReviews =>
+        prevReviews.map(r =>
+          r.id === selectedReview.id
+            ? { ...r, ownerResponse: null, ownerResponseDate: null }
+            : r
+        )
+      );
+      
+      setToast({
+        type: 'success',
+        message: 'Respuesta eliminada correctamente',
+        isVisible: true
+      });
+    } catch (err) {
+      setToast({
+        type: 'error',
+        message: err.message || 'Error al eliminar la respuesta',
+        isVisible: true
+      });
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -511,12 +587,17 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
               ) : (
                 <div className="space-y-6">
                   {reviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="border-b border-gray-200 pb-6 last:border-b-0"
-                    >
-                      {/* Header de la reseña */}
-                      <div className="flex items-start justify-between gap-4 mb-3">
+                    <div key={review.id} className="border-b border-gray-200 pb-6 last:border-b-0">
+                      {/* Wrapper para la reseña del cliente con highlight condicional */}
+                      <div 
+                        className={`transition-all duration-200 ${
+                          editingReviewId === review.id 
+                            ? 'bg-gradient-to-r from-[#367d7d]/5 to-[#367d7d]/10 -mx-4 px-4 py-4 rounded-lg border-l-4 border-[#367d7d] shadow-sm' 
+                            : ''
+                        }`}
+                      >
+                        {/* Header de la reseña */}
+                        <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
                           {/* Avatar */}
                           <img
@@ -569,13 +650,15 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                               ) : review.isServiceOwner ? (
                                 // Opciones para el dueño del servicio
                                 <>
-                                  <button
-                                    onClick={() => handleRespondToReview(review)}
-                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green border-b"
-                                  >
-                                    <Edit2 size={16} />
-                                    <span>{review.ownerResponse ? 'Editar respuesta' : 'Responder'}</span>
-                                  </button>
+                                  {!review.ownerResponse && (
+                                    <button
+                                      onClick={() => handleRespondToReview(review)}
+                                      className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green border-b"
+                                    >
+                                      <Edit2 size={16} />
+                                      <span>'Responder'</span>
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() => handleReportReview(review)}
                                     className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
@@ -614,21 +697,61 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                         ))}
                       </div>
 
-                      {/* Comentario */}
-                      <div className="text-sm text-gray-700">
-                        <p className="whitespace-pre-line">
-                          {expandedComments[review.id] || !needsTruncation(review.comment)
-                            ? review.comment
-                            : truncateText(review.comment)}
-                        </p>
-                        {needsTruncation(review.comment) && (
-                          <button
-                            onClick={() => setExpandedComments(prev => ({ ...prev, [review.id]: !prev[review.id] }))}
-                            className="text-[#367d7d] hover:text-[#2b6a6a] font-medium text-sm mt-1 inline-flex items-center gap-1 transition"
-                          >
-                            {expandedComments[review.id] ? '' : '...más'}
-                          </button>
-                        )}
+                      {/* Comentario - Editable si está en modo edición */}
+                      {editingReviewId === review.id ? (
+                        /* Modo edición: Comentario editable */
+                        <div className="mt-2">
+                          <div className="relative">
+                            <textarea
+                              value={editingComment}
+                              onChange={(e) => setEditingComment(e.target.value)}
+                              placeholder="Comparte detalles sobre tu experiencia..."
+                              className="w-full px-3 py-2 pb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#367d7d]/50 focus:border-[#367d7d] text-sm resize-none"
+                              rows={3}
+                              maxLength={500}
+                              disabled={editLoading}
+                            />
+                            <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+                              {editingComment.length}/500
+                            </div>
+                          </div>
+                          
+                          {/* Botones */}
+                          <div className="flex justify-end gap-2 mt-3">
+                            <button
+                              onClick={handleCancelEdit}
+                              disabled={editLoading}
+                              className="px-4 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={() => handleConfirmEdit(review.id)}
+                              disabled={editLoading || !editingComment.trim() || editingComment.length < 10}
+                              className="px-4 py-1.5 text-sm bg-[#367d7d] text-white rounded-lg hover:bg-[#2b6a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {editLoading ? 'Actualizando...' : 'Actualizar'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Modo normal: Comentario solo lectura */
+                        <div className="text-sm text-gray-700">
+                          <p className="whitespace-pre-line">
+                            {expandedComments[review.id] || !needsTruncation(review.comment)
+                              ? review.comment
+                              : truncateText(review.comment)}
+                          </p>
+                          {needsTruncation(review.comment) && (
+                            <button
+                              onClick={() => setExpandedComments(prev => ({ ...prev, [review.id]: !prev[review.id] }))}
+                              className="text-[#367d7d] hover:text-[#2b6a6a] font-medium text-sm mt-1 inline-flex items-center gap-1 transition"
+                            >
+                              {expandedComments[review.id] ? '' : '...más'}
+                            </button>
+                          )}
+                        </div>
+                      )}
                       </div>
 
                       {/* Respuesta del dueño del servicio (si existe) */}
@@ -645,13 +768,20 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                 <MoreVertical size={16} className="text-gray-600" />
                               </button>
                               {openMenuId === `response-${review.id}` && (
-                                <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                   <button
                                     onClick={() => handleRespondToReview(review)}
                                     className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green"
                                   >
                                     <Edit2 size={16} />
                                     <span>Editar respuesta</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteResponse(review)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-red-600"
+                                  >
+                                    <Trash2 size={16} />
+                                    <span>Eliminar respuesta</span>
                                   </button>
                                 </div>
                               )}
@@ -774,17 +904,6 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
       </div>
 
       {/* Modales */}
-      <ReviewEditModal
-        open={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedReview(null);
-        }}
-        onConfirm={handleConfirmEdit}
-        review={selectedReview}
-        loading={actionLoading}
-      />
-
       <ReviewDeleteModal
         open={showDeleteModal}
         onClose={() => {
@@ -802,6 +921,17 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
           setSelectedReview(null);
         }}
         onConfirm={handleConfirmReport}
+        loading={actionLoading}
+      />
+
+      {/* Modal de eliminación de respuesta */}
+      <ResponseDeleteModal
+        isOpen={showResponseDeleteModal}
+        onClose={() => {
+          setShowResponseDeleteModal(false);
+          setSelectedReview(null);
+        }}
+        onConfirm={handleConfirmDeleteResponse}
         loading={actionLoading}
       />
 

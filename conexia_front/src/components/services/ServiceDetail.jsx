@@ -140,7 +140,7 @@ const ServiceDetail = ({ serviceId }) => {
         if (serviceId) {
           const data = await getServiceReviews(serviceId, 1, 1); // Solo necesitamos las estadísticas
           setReviewsStats({
-            total: data.total,
+            total: data.pagination?.total || 0,
             averageRating: data.averageRating,
             ratingDistribution: data.ratingDistribution,
           });
