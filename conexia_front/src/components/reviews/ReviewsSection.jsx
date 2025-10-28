@@ -81,7 +81,13 @@ export default function ReviewsSection({ profileUserId }) {
         ) : reviewsData.reviews && reviewsData.reviews.length > 0 ? (
           <div className="space-y-4">
             {reviewsData.reviews.map(r => (
-              <ReviewItem key={r.id} review={r} onEdit={() => { setEditReview(r); setFormOpen(true); }} onDeleted={onDeleted} />
+              <ReviewItem 
+                key={r.id} 
+                review={r} 
+                onEdit={() => { setEditReview(r); setFormOpen(true); }} 
+                onDeleted={onDeleted}
+                profileOwnerId={Number(profileUserId)}
+              />
             ))}
           </div>
         ) : (

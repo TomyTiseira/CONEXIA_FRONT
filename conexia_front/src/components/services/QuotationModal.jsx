@@ -23,18 +23,26 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
 
   if (!isOpen || !hiring) return null;
 
+  // Datos listos para renderizar (logs de depuración eliminados)
+
   const getStatusLabel = (statusCode) => {
     const statusMap = {
       pending: 'Pendiente',
       quoted: 'Cotizado',
       accepted: 'Aceptado',
+      approved: 'Aprobada',
       rejected: 'Rechazado',
       cancelled: 'Cancelado',
       negotiating: 'Negociando',
-      in_progress: 'En progreso',
+      in_progress: 'En Progreso',
       delivered: 'Entregado',
-      revision_requested: 'Revisión solicitada',
-      completed: 'Completado'
+      revision_requested: 'Revisión Solicitada',
+      completed: 'Completado',
+      expired: 'Vencida',
+      in_claim: 'En Reclamo',
+      cancelled_by_claim: 'Cancelado por reclamo',
+      completed_by_claim: 'Finalizado por reclamo',
+      completed_with_agreement: 'Finalizado con acuerdo'
     };
     return statusMap[statusCode] || statusCode;
   };
@@ -81,7 +89,10 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+    if (!dateString) return 'No disponible';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Fecha inválida';
+    return date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -90,7 +101,11 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
     });
   };
 
-  const hasQuotation = hiring.quotedPrice && hiring.estimatedHours;
+  // Determinar si hay cotización: debe tener precio O entregables, y estimatedHours
+  const hasQuotation = Boolean(
+    (hiring.quotedPrice || (hiring.deliverables && hiring.deliverables.length > 0)) && 
+    hiring.estimatedHours
+  );
   const availableActions = hiring.availableActions || [];
   const statusCode = hiring.status?.code;
   const defaultByStatus = {
@@ -99,8 +114,9 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
     pending: ['cancel']
   };
   const actions = Array.from(new Set([...(availableActions || []), ...((defaultByStatus[statusCode]) || [])]));
-  // Regla: si está vencida pero fue aceptada o rechazada, se debe poder ver el detalle igual
-  const showExpiredBlock = isExpired(hiring) && !['accepted', 'rejected'].includes(hiring.status?.code);
+  // Regla: solo mostrar "Cotización Vencida" cuando está en estado 'quoted' Y está vencida
+  // En negotiating, accepted, rejected, etc. siempre mostrar los detalles
+  const showExpiredBlock = isExpired(hiring) && hiring.status?.code === 'quoted';
 
   // Derivar información del dueño del servicio para mostrar en el encabezado de servicio
   const ownerRaw = hiring.owner || hiring.service?.owner || hiring.service?.user || null;
@@ -198,10 +214,14 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             Mi Solicitud
           </h4>
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-600 mb-1">
-              Fecha de solicitud: {formatDate(hiring.createdAt)}
+            {hiring.createdAt && (
+              <p className="text-sm text-gray-600 mb-1">
+                Fecha de solicitud: {formatDate(hiring.createdAt)}
+              </p>
+            )}
+            <p className="text-gray-900 whitespace-pre-wrap">
+              {hiring.description?.trim() || 'Sin descripción específica'}
             </p>
-            <p className="text-gray-900">{hiring.description}</p>
           </div>
 
           {/* Título Cotización del Proveedor */}

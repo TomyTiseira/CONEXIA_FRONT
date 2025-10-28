@@ -28,18 +28,23 @@ export default function ActionButtons({ analysis, onResolve, disabled = false })
 
     return (
       <div className="space-y-3">
-        <div className={`p-4 rounded-lg ${actionColors[analysis.resolutionAction]}`}>
-          <div className="font-semibold mb-2">
-            Acción: {actionLabels[analysis.resolutionAction]}
+        <div className={`p-4 rounded-lg border ${actionColors[analysis.resolutionAction] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>  
+          <div className="font-semibold text-lg mb-2 flex items-center gap-2">
+            Acción:
+            <span className="px-2 py-1 rounded text-base font-bold capitalize bg-white/60 border border-gray-300 ml-2">
+              {actionLabels[analysis.resolutionAction] || 'Sin acción registrada'}
+            </span>
           </div>
-          {analysis.resolutionNotes && (
-            <div className="text-sm">
-              <strong>Notas:</strong> {analysis.resolutionNotes}
-            </div>
-          )}
-          {analysis.resolvedBy && (
+          <div className="mb-2 text-sm">
+            <strong>Notas:</strong>{' '}
+            {analysis.resolutionNotes
+              ? <span className="inline-block ml-1 text-gray-800">{analysis.resolutionNotes}</span>
+              : <span className="inline-block ml-1 text-gray-400 italic">No se incluyeron notas adicionales en la resolución.</span>
+            }
+          </div>
+          {analysis.resolvedByEmail && (
             <div className="text-xs mt-2 opacity-75">
-              Resuelto por moderador ID: {analysis.resolvedBy}
+              Resuelto por: <span className="font-medium text-conexia-green">{analysis.resolvedByEmail}</span>
             </div>
           )}
         </div>
