@@ -20,6 +20,8 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
   } = useServiceHirings();
   
   const [actionLoading, setActionLoading] = useState(false);
+  const [negotiationDescription, setNegotiationDescription] = useState('');
+  const [showNegotiationInput, setShowNegotiationInput] = useState(false);
 
   if (!isOpen || !hiring) return null;
 
@@ -71,8 +73,16 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           message = 'Solicitud cancelada exitosamente';
           break;
         case 'negotiate':
-          // Iniciar negociación directamente desde este modal
-          result = await negotiateHiring(hiring.id, {});
+          // Mostrar el input de descripción en lugar de enviar directamente
+          if (!showNegotiationInput) {
+            setShowNegotiationInput(true);
+            setActionLoading(false);
+            return;
+          }
+          // Iniciar negociación con la descripción
+          result = await negotiateHiring(hiring.id, { 
+            negotiationDescription: negotiationDescription.trim() || undefined 
+          });
           message = 'Negociación iniciada exitosamente';
           break;
         default:
@@ -279,6 +289,49 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           {showExpiredBlock ? null : actions.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
               <h4 className="font-medium text-gray-900 mb-4">Acciones Disponibles</h4>
+              
+              {/* Input de descripción de negociación */}
+              {showNegotiationInput && (
+                <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <label htmlFor="negotiationDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción de la negociación (opcional)
+                  </label>
+                  <textarea
+                    id="negotiationDescription"
+                    value={negotiationDescription}
+                    onChange={(e) => setNegotiationDescription(e.target.value.slice(0, 1000))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                    rows={4}
+                    placeholder="Describe los cambios que propones en esta negociación..."
+                    maxLength={1000}
+                  />
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-xs text-gray-500">
+                      {negotiationDescription.length}/1000 caracteres
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          setShowNegotiationInput(false);
+                          setNegotiationDescription('');
+                        }}
+                        className="bg-gray-500 hover:bg-gray-600 text-white text-sm"
+                        disabled={actionLoading}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        onClick={() => handleAction('negotiate')}
+                        className="bg-orange-600 hover:bg-orange-700 text-white text-sm"
+                        disabled={actionLoading}
+                      >
+                        {actionLoading ? 'Procesando...' : 'Enviar Negociación'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex flex-wrap gap-3">
                 {actions.includes('accept') && (
                   <Button
@@ -300,7 +353,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                   </Button>
                 )}
                 
-                {actions.includes('negotiate') && (
+                {actions.includes('negotiate') && !showNegotiationInput && (
                   <Button
                     onClick={() => handleAction('negotiate')}
                     className="bg-orange-600 hover:bg-orange-700 text-white"

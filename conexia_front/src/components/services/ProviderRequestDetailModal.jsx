@@ -195,6 +195,21 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
             </div>
           </div>
 
+          {/* Descripción de Negociación (si existe) */}
+          {hiring.negotiationDescription && hiring.status?.code === 'negotiating' && (
+            <div className="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                🤝 <span className="text-orange-700">Solicitud de Negociación</span>
+              </h3>
+              <div>
+                <span className="font-medium text-gray-700">El cliente quiere negociar:</span>
+                <div className="text-gray-900 mt-2 bg-white p-4 rounded border border-yellow-300 break-words overflow-wrap-anywhere">
+                  {hiring.negotiationDescription}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Cotización enviada (si existe) */}
           {hasQuotation && (
             <div className="bg-green-50 rounded-lg p-4">

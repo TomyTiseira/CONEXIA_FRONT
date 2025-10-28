@@ -252,7 +252,7 @@ export async function cancelServiceHiring(hiringId) {
 /**
  * Negociar una cotización (actualizar precio y tiempo de entrega)
  * @param {number} hiringId - ID de la contratación
- * @param {Object} data - { price: string, deliveryTime: string, description?: string }
+ * @param {Object} data - { negotiationDescription?: string }
  * @returns {Promise<Object>} Cotización actualizada
  */
 export async function negotiateQuotation(hiringId, data = {}) {

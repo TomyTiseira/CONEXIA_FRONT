@@ -21,6 +21,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
   
   const [loading, setLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [negotiationDescription, setNegotiationDescription] = useState('');
 
   if (!isOpen || !hiring) return null;
 
@@ -44,7 +45,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
           message = 'Solicitud cancelada exitosamente';
           break;
         case 'negotiate':
-          result = await negotiateHiring(hiring.id, {});
+          result = await negotiateHiring(hiring.id, { negotiationDescription });
           message = 'Negociación iniciada exitosamente';
           break;
         default:
@@ -58,6 +59,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
     } finally {
       setLoading(false);
       setConfirmAction(null);
+      setNegotiationDescription('');
     }
   };
 
@@ -144,6 +146,31 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 {actionConfig.description}
               </p>
             </div>
+
+            {/* Campo de descripción de negociación */}
+            {confirmAction === 'negotiate' && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción de la Negociación
+                </label>
+                <textarea
+                  value={negotiationDescription}
+                  onChange={(e) => setNegotiationDescription(e.target.value)}
+                  placeholder="Describe los términos que deseas negociar (precio, tiempo, alcance, etc.)"
+                  maxLength={1000}
+                  rows={5}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                />
+                <div className="flex justify-between mt-1">
+                  <p className="text-xs text-gray-500">
+                    Describe qué aspectos deseas negociar con el proveedor
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {negotiationDescription.length}/1000
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Footer fijo */}
