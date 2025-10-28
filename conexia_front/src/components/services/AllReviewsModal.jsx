@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { X, Star, ChevronDown, Edit2, Trash2, MoreVertical, Flag } from 'lucide-react';
+import { X, Star, ChevronDown, Edit2, Trash2, MoreVertical, Flag, AlertCircle } from 'lucide-react';
 import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse, reportServiceReview } from '@/service/serviceReviews';
 import { config } from '@/config';
 import { useUserStore } from '@/store/userStore';
@@ -13,6 +14,7 @@ import ResponseDeleteModal from './ResponseDeleteModal';
 import Toast from '@/components/ui/Toast';
 
 export default function AllReviewsModal({ serviceId, isOpen, onClose, initialData, filterRating: initialFilterRating = null, onReviewsChanged }) {
+  const router = useRouter();
   const { roleName } = useUserStore();
   const [reviews, setReviews] = useState(initialData?.reviews || []);
   const [page, setPage] = useState(1);
@@ -226,6 +228,12 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
     setSelectedReview(review);
     setShowReportModal(true);
     setOpenMenuId(null);
+  };
+
+  const handleViewReports = (review) => {
+    setOpenMenuId(null);
+    onClose(); // Cerrar el modal antes de navegar
+    router.push(`/reports/service-review/${review.id}`);
   };
 
   const handleConfirmDelete = async () => {
@@ -676,6 +684,15 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                     </button>
                                   )}
                                 </>
+                              ) : (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) ? (
+                                // Opciones para admin/moderador
+                                <button
+                                  onClick={() => handleViewReports(review)}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-blue-600"
+                                >
+                                  <AlertCircle size={16} />
+                                  <span>Ver reportes</span>
+                                </button>
                               ) : (
                                 // Opción para reportar (usuarios que no son dueños ni del servicio)
                                 canReport && (

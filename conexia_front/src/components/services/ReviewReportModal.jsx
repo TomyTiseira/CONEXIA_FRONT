@@ -75,7 +75,7 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
+    <div className="fixed inset-0 z-[60] bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[95vh] overflow-hidden flex flex-col" style={{ borderRadius: '1rem' }}>
         {/* Header fijo */}
         <div className="sticky top-0 z-10 bg-white border-b px-6 py-4 rounded-t-xl">

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Star, ChevronRight, ChevronDown, Edit2, Trash2, MoreVertical, Flag } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Star, ChevronRight, ChevronDown, Edit2, Trash2, MoreVertical, Flag, AlertCircle } from 'lucide-react';
 import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse, reportServiceReview } from '@/service/serviceReviews';
 import { config } from '@/config';
 import { useUserStore } from '@/store/userStore';
@@ -13,6 +14,7 @@ import ResponseDeleteModal from './ResponseDeleteModal';
 import Toast from '@/components/ui/Toast';
 
 export default function ServiceReviewsSection({ serviceId }) {
+  const router = useRouter();
   const { roleName } = useUserStore();
   const [reviewsData, setReviewsData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function ServiceReviewsSection({ serviceId }) {
   const [showRatingFilter, setShowRatingFilter] = useState(false);
   const [selectedRating, setSelectedRating] = useState(null);
   const filterRef = useRef(null);
-  
+
   // Estados para editar/eliminar reseñas
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -31,18 +33,18 @@ export default function ServiceReviewsSection({ serviceId }) {
   const [toast, setToast] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRefs = useRef({});
-  
+
   // Estados para edición inline de reseñas
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [editingComment, setEditingComment] = useState('');
   const [editingRating, setEditingRating] = useState(0);
   const [editLoading, setEditLoading] = useState(false);
-  
+
   // Estados para respuestas del dueño del servicio (inline)
   const [respondingToReviewId, setRespondingToReviewId] = useState(null);
   const [responseText, setResponseText] = useState('');
   const [responseLoading, setResponseLoading] = useState(false);
-  
+
   // Estados para expandir comentarios largos
   const [expandedComments, setExpandedComments] = useState({});
   const [expandedResponses, setExpandedResponses] = useState({});
@@ -57,7 +59,7 @@ export default function ServiceReviewsSection({ serviceId }) {
       if (filterRef.current && !filterRef.current.contains(event.target)) {
         setShowRatingFilter(false);
       }
-      
+
       // Cerrar menú de acciones si se hace click fuera
       if (openMenuId !== null) {
         const menuRef = menuRefs.current[openMenuId];
@@ -137,14 +139,14 @@ export default function ServiceReviewsSection({ serviceId }) {
       await updateServiceReview(reviewId, {
         comment: editingComment.trim()
       });
-      
+
       setEditingReviewId(null);
       setEditingComment('');
       setEditingRating(0);
-      
+
       // Recargar reseñas
       await loadReviews();
-      
+
       setToast({
         type: 'success',
         message: 'Reseña actualizada exitosamente',
@@ -171,6 +173,11 @@ export default function ServiceReviewsSection({ serviceId }) {
     setSelectedReview(review);
     setShowReportModal(true);
     setOpenMenuId(null);
+  };
+
+  const handleViewReports = (review) => {
+    setOpenMenuId(null);
+    router.push(`/reports/service-review/${review.id}`);
   };
 
   const handleConfirmDelete = async () => {
@@ -205,7 +212,7 @@ export default function ServiceReviewsSection({ serviceId }) {
         serviceReviewId: selectedReview.id,
         ...reportData
       });
-      
+
       setShowReportModal(false);
       setSelectedReview(null);
       setToast({
@@ -258,13 +265,13 @@ export default function ServiceReviewsSection({ serviceId }) {
     setResponseLoading(true);
     try {
       await respondToServiceReview(reviewId, responseText.trim());
-      
+
       setRespondingToReviewId(null);
       setResponseText('');
-      
+
       // Recargar reseñas
       await loadReviews();
-      
+
       setToast({
         type: 'success',
         message: 'Respuesta publicada correctamente',
@@ -296,13 +303,13 @@ export default function ServiceReviewsSection({ serviceId }) {
     setActionLoading(true);
     try {
       await deleteServiceReviewResponse(selectedReview.id);
-      
+
       setShowResponseDeleteModal(false);
       setSelectedReview(null);
-      
+
       // Recargar reseñas
       await loadReviews();
-      
+
       setToast({
         type: 'success',
         message: 'Respuesta eliminada correctamente',
@@ -382,9 +389,9 @@ export default function ServiceReviewsSection({ serviceId }) {
     if (!img) return defaultAvatar;
     if (img === defaultAvatar) return defaultAvatar;
     if (img.startsWith('http://') || img.startsWith('https://')) return img;
-    if (img.startsWith('/uploads')) return `${config.DOCUMENT_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
-    if (img.startsWith('/')) return `${config.DOCUMENT_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
-    return `${config.IMAGE_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
+    if (img.startsWith('/uploads')) return `${config.DOCUMENT_URL.replace(/\/+$/, '')}/${img.replace(/^\/+/, '')}`;
+    if (img.startsWith('/')) return `${config.DOCUMENT_URL.replace(/\/+$/, '')}/${img.replace(/^\/+/, '')}`;
+    return `${config.IMAGE_URL.replace(/\/+$/, '')}/${img.replace(/^\/+/, '')}`;
   };
 
   // Verificar si el texto necesita truncado (más de 3 líneas aprox)
@@ -448,11 +455,10 @@ export default function ServiceReviewsSection({ serviceId }) {
                   <div
                     className="h-full bg-yellow-400 transition-all"
                     style={{
-                      width: `${
-                        total > 0
+                      width: `${total > 0
                           ? (ratingDistribution[rating] / total) * 100
                           : 0
-                      }%`,
+                        }%`,
                     }}
                   />
                 </div>
@@ -475,7 +481,7 @@ export default function ServiceReviewsSection({ serviceId }) {
             Calificaciones {selectedRating ? `(${selectedRating})` : ''}
             <ChevronDown size={16} className={`transition-transform ${showRatingFilter ? 'rotate-180' : ''}`} />
           </button>
-          
+
           {showRatingFilter && (
             <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               <button
@@ -514,77 +520,97 @@ export default function ServiceReviewsSection({ serviceId }) {
         {reviews.map((review) => (
           <div key={review.id} className="border-b border-gray-200 pb-6 last:border-b-0">
             {/* Wrapper para la reseña del cliente con highlight condicional */}
-            <div 
-              className={`transition-all duration-200 ${
-                editingReviewId === review.id 
-                  ? 'bg-gradient-to-r from-[#367d7d]/5 to-[#367d7d]/10 -mx-4 px-4 py-4 rounded-lg border-l-4 border-[#367d7d] shadow-sm' 
+            <div
+              className={`transition-all duration-200 ${editingReviewId === review.id
+                  ? 'bg-gradient-to-r from-[#367d7d]/5 to-[#367d7d]/10 -mx-4 px-4 py-4 rounded-lg border-l-4 border-[#367d7d] shadow-sm'
                   : ''
-              }`}
+                }`}
             >
               {/* Header de la reseña */}
               <div className="flex items-start justify-between gap-4 mb-3">
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                {/* Avatar */}
-                <img
-                  src={getProfilePictureUrl(review.reviewUser?.profilePicture)}
-                  alt={getFirstNameAndLastName(review.reviewUser)}
-                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
-                />
-                
-                {/* Información del usuario y fecha */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-gray-900 truncate">
-                    {getFirstNameAndLastName(review.reviewUser)}
-                  </h4>
-                  <p className="text-xs text-gray-500">
-                    {formatDate(review.createdAt)}
-                  </p>
-                </div>
-              </div>
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  {/* Avatar */}
+                  <img
+                    src={getProfilePictureUrl(review.reviewUser?.profilePicture)}
+                    alt={getFirstNameAndLastName(review.reviewUser)}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
+                  />
 
-              {/* Botón de acciones */}
-              <div className="flex-shrink-0 relative" ref={el => menuRefs.current[review.id] = el}>
-                <button
-                  onClick={() => setOpenMenuId(openMenuId === review.id ? null : review.id)}
-                  className="p-1.5 hover:bg-gray-100 rounded-full transition-all duration-200"
-                  title="Más opciones"
-                >
-                  <MoreVertical size={16} className="text-gray-600" />
-                </button>
-                
-                {openMenuId === review.id && (
-                  <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                    {review.isOwner ? (
-                      // Opciones para el dueño de la reseña
-                      <>
-                        <button
-                          onClick={() => handleEditReview(review)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm border-b"
-                        >
-                          <Edit2 size={16} className="text-conexia-green" />
-                          <span>Editar reseña</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteReview(review)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-red-600"
-                        >
-                          <Trash2 size={16} />
-                          <span>Eliminar reseña</span>
-                        </button>
-                      </>
-                    ) : review.isServiceOwner ? (
-                      // Opciones para el dueño del servicio
-                      <>
-                        {!review.ownerResponse && (
+                  {/* Información del usuario y fecha */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-gray-900 truncate">
+                      {getFirstNameAndLastName(review.reviewUser)}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {formatDate(review.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Botón de acciones */}
+                <div className="flex-shrink-0 relative" ref={el => menuRefs.current[review.id] = el}>
+                  <button
+                    onClick={() => setOpenMenuId(openMenuId === review.id ? null : review.id)}
+                    className="p-1.5 hover:bg-gray-100 rounded-full transition-all duration-200"
+                    title="Más opciones"
+                  >
+                    <MoreVertical size={16} className="text-gray-600" />
+                  </button>
+
+                  {openMenuId === review.id && (
+                    <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                      {review.isOwner ? (
+                        // Opciones para el dueño de la reseña
+                        <>
                           <button
-                            onClick={() => handleRespondToReview(review)}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green border-b"
+                            onClick={() => handleEditReview(review)}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm border-b"
                           >
-                            <Edit2 size={16} />
-                            <span>Responder</span>
+                            <Edit2 size={16} className="text-conexia-green" />
+                            <span>Editar reseña</span>
                           </button>
-                        )}
-                        {canReport && (
+                          <button
+                            onClick={() => handleDeleteReview(review)}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-red-600"
+                          >
+                            <Trash2 size={16} />
+                            <span>Eliminar reseña</span>
+                          </button>
+                        </>
+                      ) : review.isServiceOwner ? (
+                        // Opciones para el dueño del servicio
+                        <>
+                          {!review.ownerResponse && (
+                            <button
+                              onClick={() => handleRespondToReview(review)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green border-b"
+                            >
+                              <Edit2 size={16} />
+                              <span>Responder</span>
+                            </button>
+                          )}
+                          {canReport && (
+                            <button
+                              onClick={() => handleReportReview(review)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
+                            >
+                              <Flag size={16} />
+                              <span>Reportar reseña</span>
+                            </button>
+                          )}
+                        </>
+                      ) : (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) ? (
+                        // Opciones para admin/moderador
+                        <button
+                          onClick={() => handleViewReports(review)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-blue-600"
+                        >
+                          <AlertCircle size={16} />
+                          <span>Ver reportes</span>
+                        </button>
+                      ) : (
+                        // Opción para reportar (usuarios que no son dueños ni del servicio)
+                        canReport && (
                           <button
                             onClick={() => handleReportReview(review)}
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
@@ -592,95 +618,83 @@ export default function ServiceReviewsSection({ serviceId }) {
                             <Flag size={16} />
                             <span>Reportar reseña</span>
                           </button>
-                        )}
-                      </>
-                    ) : (
-                      // Opción para reportar (usuarios que no son dueños ni del servicio)
-                      canReport && (
-                        <button
-                          onClick={() => handleReportReview(review)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
-                        >
-                          <Flag size={16} />
-                          <span>Reportar reseña</span>
-                        </button>
-                      )
-                    )}
-                  </div>
-                )}
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Calificación */}
-            <div className="flex items-center gap-1 mb-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  size={16}
-                  className={
-                    star <= review.rating
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
-                  }
-                />
-              ))}
-            </div>
-
-            {/* Comentario - Editable si está en modo edición */}
-            {editingReviewId === review.id ? (
-              /* Modo edición: Comentario editable */
-              <div className="mt-2">
-                <div className="relative">
-                  <textarea
-                    value={editingComment}
-                    onChange={(e) => setEditingComment(e.target.value)}
-                    placeholder="Comparte detalles sobre tu experiencia..."
-                    className="w-full px-3 py-2 pb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#367d7d]/50 focus:border-[#367d7d] text-sm resize-none"
-                    rows={3}
-                    maxLength={500}
-                    disabled={editLoading}
+              {/* Calificación */}
+              <div className="flex items-center gap-1 mb-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={16}
+                    className={
+                      star <= review.rating
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-300'
+                    }
                   />
-                  <div className="absolute bottom-2 right-2 text-xs text-gray-500">
-                    {editingComment.length}/500
+                ))}
+              </div>
+
+              {/* Comentario - Editable si está en modo edición */}
+              {editingReviewId === review.id ? (
+                /* Modo edición: Comentario editable */
+                <div className="mt-2">
+                  <div className="relative">
+                    <textarea
+                      value={editingComment}
+                      onChange={(e) => setEditingComment(e.target.value)}
+                      placeholder="Comparte detalles sobre tu experiencia..."
+                      className="w-full px-3 py-2 pb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#367d7d]/50 focus:border-[#367d7d] text-sm resize-none"
+                      rows={3}
+                      maxLength={500}
+                      disabled={editLoading}
+                    />
+                    <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+                      {editingComment.length}/500
+                    </div>
+                  </div>
+
+                  {/* Botones */}
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={editLoading}
+                      className="px-4 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => handleConfirmEdit(review.id)}
+                      disabled={editLoading || !editingComment.trim() || editingComment.length < 10}
+                      className="px-4 py-1.5 text-sm bg-[#367d7d] text-white rounded-lg hover:bg-[#2b6a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {editLoading ? 'Actualizando...' : 'Actualizar'}
+                    </button>
                   </div>
                 </div>
-                
-                {/* Botones */}
-                <div className="flex justify-end gap-2 mt-3">
-                  <button
-                    onClick={handleCancelEdit}
-                    disabled={editLoading}
-                    className="px-4 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={() => handleConfirmEdit(review.id)}
-                    disabled={editLoading || !editingComment.trim() || editingComment.length < 10}
-                    className="px-4 py-1.5 text-sm bg-[#367d7d] text-white rounded-lg hover:bg-[#2b6a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {editLoading ? 'Actualizando...' : 'Actualizar'}
-                  </button>
+              ) : (
+                /* Modo normal: Comentario solo lectura */
+                <div className="text-sm text-gray-700">
+                  <p className="whitespace-pre-line">
+                    {expandedComments[review.id] || !needsTruncation(review.comment)
+                      ? review.comment
+                      : truncateText(review.comment)}
+                  </p>
+                  {needsTruncation(review.comment) && (
+                    <button
+                      onClick={() => setExpandedComments(prev => ({ ...prev, [review.id]: !prev[review.id] }))}
+                      className="text-[#367d7d] hover:text-[#2b6a6a] font-medium text-sm mt-1 inline-flex items-center gap-1 transition"
+                    >
+                      {expandedComments[review.id] ? '' : '...más'}
+                    </button>
+                  )}
                 </div>
-              </div>
-            ) : (
-              /* Modo normal: Comentario solo lectura */
-              <div className="text-sm text-gray-700">
-                <p className="whitespace-pre-line">
-                  {expandedComments[review.id] || !needsTruncation(review.comment)
-                    ? review.comment
-                    : truncateText(review.comment)}
-                </p>
-                {needsTruncation(review.comment) && (
-                  <button
-                    onClick={() => setExpandedComments(prev => ({ ...prev, [review.id]: !prev[review.id] }))}
-                    className="text-[#367d7d] hover:text-[#2b6a6a] font-medium text-sm mt-1 inline-flex items-center gap-1 transition"
-                  >
-                    {expandedComments[review.id] ? '' : '...más'}
-                  </button>
-                )}
-              </div>
-            )}
+              )}
             </div>
 
             {/* Respuesta del dueño del servicio (si existe) */}
@@ -716,7 +730,7 @@ export default function ServiceReviewsSection({ serviceId }) {
                     )}
                   </div>
                 )}
-                
+
                 <div className="flex items-start gap-3">
                   <img
                     src={getProfilePictureUrl(review.serviceOwner?.profilePicture)}

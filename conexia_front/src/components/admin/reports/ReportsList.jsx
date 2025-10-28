@@ -6,6 +6,7 @@ import { fetchReportedProjects } from '@/service/reports/reportsFetch';
 import { fetchReportedPublications } from '@/service/reports/publicationReportsFetch';
 import { fetchReportedServices } from '@/service/reports/fetchReportedServices';
 import { fetchReportedReviews } from '@/service/reports/reviewReportsFetch';
+import { getServiceReviewsWithReports } from '@/service/reports/serviceReviewReports';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import Pagination from '@/components/common/Pagination';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -17,7 +18,8 @@ const FILTERS = [
   { label: 'Publicaciones', value: 'publications' },
   { label: 'Comentarios', value: 'comments', disabled: true },
   { label: 'Servicios', value: 'services'},
-  { label: 'Reseñas', value: 'reviews'},
+  { label: 'Reseñas de Usuarios', value: 'reviews'},
+  { label: 'Reseñas de Servicios', value: 'service-reviews'},
 ];
 
 const ORDER_OPTIONS = [
@@ -36,6 +38,7 @@ export default function ReportsList() {
   const [publications, setPublications] = useState([]);
   const [services, setServices] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [serviceReviews, setServiceReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
@@ -92,6 +95,14 @@ export default function ReportsList() {
         .then(data => {
           setReviews(data?.data?.userReviews || []);
           setPagination(data?.data?.pagination || null);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    } else if (filter === 'service-reviews') {
+      getServiceReviewsWithReports(page, 15, order)
+        .then(data => {
+          setServiceReviews(data?.serviceReviews || []);
+          setPagination(data?.pagination || null);
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -181,7 +192,7 @@ export default function ReportsList() {
             <thead>
               <tr className="text-left border-b">
                 <th className="p-4 min-w-[140px] md:min-w-[180px]">
-                  {filter === 'projects' ? 'Proyecto' : filter === 'services' ? 'Servicio' : filter === 'reviews' ? 'Reseña' : 'Publicación'}
+                  {filter === 'projects' ? 'Proyecto' : filter === 'services' ? 'Servicio' : filter === 'reviews' ? 'Reseña' : filter === 'service-reviews' ? 'Reseña de servicio' : 'Publicación'}
                 </th>
                 <th className="p-4 min-w-[90px] max-w-[120px] text-center">Cantidad de reportes</th>
                 <th className="p-4 min-w-[120px] max-w-[180px] text-center">Fecha de último reporte</th>
@@ -342,6 +353,51 @@ export default function ReportsList() {
                       </td>
                     </tr>
                   )})
+                )
+              ) : filter === 'service-reviews' ? (
+                serviceReviews.length === 0 ? (
+                  <tr key="no-service-reviews">
+                    <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron reseñas de servicios reportadas.</td>
+                  </tr>
+                ) : (
+                  serviceReviews.map(review => (
+                    <tr key={`service-review-${review.serviceReviewId}`} className="border-b hover:bg-gray-50 h-auto align-top">
+                      <td className="p-4 align-top max-w-[300px]">
+                        <div className="text-conexia-green font-semibold">
+                          <div className="text-xs text-gray-500 mb-1">
+                            {review.reviewerUser?.firstName} {review.reviewerUser?.lastName} → {review.serviceOwnerUser?.firstName} {review.serviceOwnerUser?.lastName} (Servicio)
+                          </div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-yellow-500">★</span>
+                            <span className="text-sm font-medium">{review.rating}</span>
+                          </div>
+                          <div className="line-clamp-2 break-words overflow-hidden text-ellipsis text-sm" title={review.comment}>
+                            {review.comment}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center align-middle">{review.reportCount}</td>
+                      <td className="p-4 text-center align-middle">{new Date(review.lastReportDate).toLocaleString()}</td>
+                      <td className="p-4 text-center align-middle">
+                        <div className="flex justify-center gap-x-2">
+                          <Button
+                            variant="add"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => router.push(`/reports/service-review/${review.serviceReviewId}`)}
+                          >
+                            Ver reportes
+                          </Button>
+                          <Button
+                            variant="edit"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => router.push(`/services/${review.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`)}
+                          >
+                            Ver servicio
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )
               ) : (
                 <tr key="no-filter-selected">

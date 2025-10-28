@@ -191,14 +191,14 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Comparte detalles sobre tu experiencia con este servicio... ¿Qué te gustó? ¿Qué podría mejorar?"
-                  maxLength={1000}
+                  maxLength={500}
                   disabled={isSubmitting}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
               {/* Contador y guía de caracteres debajo del campo */}
               <div className="mt-2 text-xs text-gray-600">
-                Mínimo 10 caracteres. {comment.length}/1000
+                Mínimo 10 caracteres. {comment.length}/500
               </div>
             </div>
 
