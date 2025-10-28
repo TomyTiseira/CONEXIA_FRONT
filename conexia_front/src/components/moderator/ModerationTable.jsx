@@ -1,8 +1,7 @@
 'use client';
 
 import { AlertTriangle, Ban, CheckCircle, Eye } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { format } from 'date-fns';
 import StatusBadge from '@/components/common/StatusBadge';
 import Link from 'next/link';
 
@@ -135,10 +134,7 @@ export default function ModerationTable({ results, onViewDetails, loading }) {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDistanceToNow(new Date(analysis.createdAt), {
-                    addSuffix: true,
-                    locale: es,
-                  })}
+                  {format(new Date(analysis.createdAt), 'dd/MM/yyyy HH:mm')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <ResolutionBadge resolved={analysis.resolved} />
@@ -195,10 +191,7 @@ export default function ModerationTable({ results, onViewDetails, loading }) {
             </div>
 
             <div className="text-xs text-gray-500 mb-3">
-              {formatDistanceToNow(new Date(analysis.createdAt), {
-                addSuffix: true,
-                locale: es,
-              })}
+              {format(new Date(analysis.createdAt), 'dd/MM/yyyy HH:mm')}
             </div>
 
             <button
