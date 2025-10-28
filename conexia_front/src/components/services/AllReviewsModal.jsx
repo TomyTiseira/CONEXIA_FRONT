@@ -3,13 +3,12 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Star, ChevronDown, Edit2, Trash2, MoreVertical, Flag } from 'lucide-react';
-import { getServiceReviews, updateServiceReview, deleteServiceReview } from '@/service/serviceReviews';
+import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview } from '@/service/serviceReviews';
 import { config } from '@/config';
 import ReviewEditModal from './ReviewEditModal';
 import ReviewDeleteModal from './ReviewDeleteModal';
 import ReviewReportModal from './ReviewReportModal';
 import Toast from '@/components/ui/Toast';
-import { FaEdit } from 'react-icons/fa';
 
 export default function AllReviewsModal({ serviceId, isOpen, onClose, initialData, filterRating: initialFilterRating = null, onReviewsChanged }) {
   const [reviews, setReviews] = useState(initialData?.reviews || []);
@@ -34,6 +33,15 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRefs = useRef({});
   const [hasChanges, setHasChanges] = useState(false); // Flag para detectar cambios
+  
+  // Estados para respuestas del dueño del servicio (inline)
+  const [respondingToReviewId, setRespondingToReviewId] = useState(null);
+  const [responseText, setResponseText] = useState('');
+  const [responseLoading, setResponseLoading] = useState(false);
+
+  // Estados para expansión de comentarios y respuestas largas
+  const [expandedComments, setExpandedComments] = useState({});
+  const [expandedResponses, setExpandedResponses] = useState({});
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -245,6 +253,70 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
     setToast(null);
   };
 
+  // Manejar respuesta del dueño del servicio
+  const handleRespondToReview = (review) => {
+    setRespondingToReviewId(review.id);
+    setResponseText(review.ownerResponse || '');
+    setOpenMenuId(null);
+  };
+
+  const handleCancelResponse = () => {
+    setRespondingToReviewId(null);
+    setResponseText('');
+  };
+
+  const handleConfirmResponse = async (reviewId) => {
+    if (!responseText || responseText.trim().length < 10) {
+      setToast({
+        type: 'error',
+        message: 'La respuesta debe tener al menos 10 caracteres',
+        isVisible: true
+      });
+      return;
+    }
+
+    if (responseText.length > 500) {
+      setToast({
+        type: 'error',
+        message: 'La respuesta no puede exceder 500 caracteres',
+        isVisible: true
+      });
+      return;
+    }
+
+    setResponseLoading(true);
+    try {
+      await respondToServiceReview(reviewId, responseText.trim());
+      
+      // Actualizar la reseña en la lista local
+      setReviews(prevReviews =>
+        prevReviews.map(r =>
+          r.id === reviewId
+            ? { ...r, ownerResponse: responseText.trim(), ownerResponseDate: new Date().toISOString() }
+            : r
+        )
+      );
+      
+      setRespondingToReviewId(null);
+      setResponseText('');
+      setHasChanges(true);
+      
+      setToast({
+        type: 'success',
+        message: 'Respuesta publicada correctamente',
+        isVisible: true
+      });
+    } catch (err) {
+      setToast({
+        type: 'error',
+        message: err.message || 'Error al publicar la respuesta',
+        isVisible: true
+      });
+    } finally {
+      setResponseLoading(false);
+    }
+  };
+
   // Manejar el cierre del modal
   const handleClose = () => {
     // Si hubo cambios, notificar al padre para recargar
@@ -283,6 +355,26 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
     return `${config.IMAGE_URL.replace(/\/+$/,'')}/${img.replace(/^\/+/, '')}`;
   };
 
+  // Helper para verificar si un texto necesita truncamiento (más de 150 caracteres o 3 líneas)
+  const needsTruncation = (text) => {
+    if (!text) return false;
+    const lines = text.split('\n');
+    return text.length > 150 || lines.length > 3;
+  };
+
+  // Helper para truncar texto a aproximadamente 3 líneas o 150 caracteres
+  const truncateText = (text) => {
+    if (!text) return '';
+    const lines = text.split('\n');
+    if (lines.length > 3) {
+      return lines.slice(0, 3).join('\n');
+    }
+    if (text.length > 150) {
+      return text.substring(0, 150);
+    }
+    return text;
+  };
+
   if (!isOpen) return null;
 
   const { total = 0, averageRating = 0, ratingDistribution = {} } = summaryData || initialData || {};
@@ -305,67 +397,65 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
         </div>
 
         {/* Layout estilo Mercado Libre: 2 columnas */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 p-6 h-full">
-            {/* Columna izquierda: Resumen de calificaciones (sticky) - ancho fijo */}
-            <div className="h-fit">
-              <div className="md:sticky md:top-0">
-                <div className="bg-gradient-to-r from-conexia-green/10 to-green-50 rounded-lg p-6">
-                  {/* Promedio */}
-                  <div className="text-center mb-6">
-                    <div className="text-5xl font-bold text-conexia-green mb-2">
-                      {averageRating.toFixed(1)}
-                    </div>
-                    <div className="flex items-center justify-center gap-1 mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          size={20}
-                          className={
-                            star <= Math.round(averageRating)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }
-                        />
-                      ))}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Promedio entre {total} {total === 1 ? 'opinión' : 'opiniones'}
-                    </div>
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          <div className="w-full h-full flex">
+            {/* Columna izquierda: Resumen de calificaciones (STICKY - sin scroll) */}
+            <div className="hidden md:block w-[300px] flex-shrink-0 p-6 border-r border-gray-200">
+              <div className="bg-gradient-to-r from-conexia-green/10 to-green-50 rounded-lg p-6">
+                {/* Promedio */}
+                <div className="text-center mb-6">
+                  <div className="text-5xl font-bold text-conexia-green mb-2">
+                    {averageRating.toFixed(1)}
                   </div>
-
-                  {/* Distribución */}
-                  <div className="space-y-2">
-                    {[5, 4, 3, 2, 1].map((rating) => (
-                      <div key={rating} className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 w-16">
-                          <span className="text-sm text-gray-700">{rating}</span>
-                          <Star size={12} className="fill-yellow-400 text-yellow-400" />
-                        </div>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-yellow-400 transition-all"
-                            style={{
-                              width: `${
-                                total > 0
-                                  ? (ratingDistribution[rating] / total) * 100
-                                  : 0
-                              }%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-600 w-8 text-right">
-                          {ratingDistribution[rating] || 0}
-                        </span>
-                      </div>
+                  <div className="flex items-center justify-center gap-1 mb-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        size={20}
+                        className={
+                          star <= Math.round(averageRating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }
+                      />
                     ))}
                   </div>
+                  <div className="text-sm text-gray-600">
+                    Promedio entre {total} {total === 1 ? 'opinión' : 'opiniones'}
+                  </div>
+                </div>
+
+                {/* Distribución */}
+                <div className="space-y-2">
+                  {[5, 4, 3, 2, 1].map((rating) => (
+                    <div key={rating} className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 w-16">
+                        <span className="text-sm text-gray-700">{rating}</span>
+                        <Star size={12} className="fill-yellow-400 text-yellow-400" />
+                      </div>
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-yellow-400 transition-all"
+                          style={{
+                            width: `${
+                              total > 0
+                                ? (ratingDistribution[rating] / total) * 100
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-600 w-8 text-right">
+                        {ratingDistribution[rating] || 0}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Columna derecha: Lista de reseñas */}
-            <div className="flex-1 min-w-0">
+            {/* Columna derecha: Lista de reseñas (CON scroll independiente) */}
+            <div className="flex-1 overflow-y-auto p-6">
               {/* Filtro de calificaciones */}
               <div className="mb-6 flex items-center gap-2" ref={filterRef}>
                 <div className="relative">
@@ -412,6 +502,7 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                 </div>
               </div>
 
+              {/* Lista de reseñas */}
               {reviews.length === 0 && !loading ? (
                 <div className="text-center py-12">
                   <Star size={48} className="mx-auto text-gray-300 mb-3" />
@@ -464,7 +555,7 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                     onClick={() => handleEditReview(review)}
                                     className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm border-b"
                                   >
-                                    <FaEdit size={16} className="text-conexia-green" />
+                                    <Edit2 size={16} className="text-conexia-green" />
                                     <span>Editar reseña</span>
                                   </button>
                                   <button
@@ -475,8 +566,26 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                     <span>Eliminar reseña</span>
                                   </button>
                                 </>
+                              ) : review.isServiceOwner ? (
+                                // Opciones para el dueño del servicio
+                                <>
+                                  <button
+                                    onClick={() => handleRespondToReview(review)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green border-b"
+                                  >
+                                    <Edit2 size={16} />
+                                    <span>{review.ownerResponse ? 'Editar respuesta' : 'Responder'}</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleReportReview(review)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
+                                  >
+                                    <Flag size={16} />
+                                    <span>Reportar reseña</span>
+                                  </button>
+                                </>
                               ) : (
-                                // Opción para reportar (usuarios que no son dueños)
+                                // Opción para reportar (usuarios que no son dueños ni del servicio)
                                 <button
                                   onClick={() => handleReportReview(review)}
                                   className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
@@ -506,15 +615,136 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                       </div>
 
                       {/* Comentario */}
-                      <p className="text-sm text-gray-700 whitespace-pre-line">
-                        {review.comment}
-                      </p>
+                      <div className="text-sm text-gray-700">
+                        <p className="whitespace-pre-line">
+                          {expandedComments[review.id] || !needsTruncation(review.comment)
+                            ? review.comment
+                            : truncateText(review.comment)}
+                        </p>
+                        {needsTruncation(review.comment) && (
+                          <button
+                            onClick={() => setExpandedComments(prev => ({ ...prev, [review.id]: !prev[review.id] }))}
+                            className="text-[#367d7d] hover:text-[#2b6a6a] font-medium text-sm mt-1 inline-flex items-center gap-1 transition"
+                          >
+                            {expandedComments[review.id] ? '' : '...más'}
+                          </button>
+                        )}
+                      </div>
 
                       {/* Respuesta del dueño del servicio (si existe) */}
-                      {review.ownerResponse && (
-                        <div className="mt-4 ml-6 p-3 bg-gray-50 rounded-lg border-l-4 border-conexia-green">
-                          <p className="text-xs font-semibold text-gray-700 mb-1">Respuesta del proveedor:</p>
-                          <p className="text-sm text-gray-600">{review.ownerResponse}</p>
+                      {review.ownerResponse && review.serviceOwner && respondingToReviewId !== review.id && (
+                        <div className="mt-4 ml-6 p-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-lg border-l-4 border-conexia-green relative">
+                          {/* Menú de editar para el dueño del servicio */}
+                          {review.isServiceOwner && (
+                            <div className="absolute top-2 right-2" ref={el => menuRefs.current[`response-${review.id}`] = el}>
+                              <button
+                                onClick={() => setOpenMenuId(openMenuId === `response-${review.id}` ? null : `response-${review.id}`)}
+                                className="p-1.5 hover:bg-gray-200 rounded-full transition-all duration-200"
+                                title="Más opciones"
+                              >
+                                <MoreVertical size={16} className="text-gray-600" />
+                              </button>
+                              {openMenuId === `response-${review.id}` && (
+                                <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                  <button
+                                    onClick={() => handleRespondToReview(review)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green"
+                                  >
+                                    <Edit2 size={16} />
+                                    <span>Editar respuesta</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          <div className="flex items-start gap-3">
+                            <img
+                              src={getProfilePictureUrl(review.serviceOwner?.profilePicture)}
+                              alt={getFirstNameAndLastName(review.serviceOwner)}
+                              className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-semibold text-gray-900">
+                                {review.isServiceOwner ? 'Tu respuesta' : `Respuesta de ${getFirstNameAndLastName(review.serviceOwner)}`}
+                              </h4>
+                              {review.ownerResponseDate && (
+                                <p className="text-xs text-gray-500 mb-2">
+                                  {formatDate(review.ownerResponseDate)}
+                                </p>
+                              )}
+                              <div className="text-sm text-gray-700">
+                                <p className="whitespace-pre-line">
+                                  {expandedResponses[review.id] || !needsTruncation(review.ownerResponse)
+                                    ? review.ownerResponse
+                                    : truncateText(review.ownerResponse)}
+                                </p>
+                                {needsTruncation(review.ownerResponse) && (
+                                  <button
+                                    onClick={() => setExpandedResponses(prev => ({ ...prev, [review.id]: !prev[review.id] }))}
+                                    className="text-[#367d7d] hover:text-[#2b6a6a] font-medium text-sm mt-1 inline-flex items-center gap-1 transition"
+                                  >
+                                    {expandedResponses[review.id] ? '' : '...más'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Formulario inline para responder (dueño del servicio) */}
+                      {respondingToReviewId === review.id && review.isServiceOwner && (
+                        <div className="mt-4 ml-6 p-4 bg-gradient-to-r from-conexia-green/5 to-green-50/50 rounded-lg border-l-4 border-conexia-green">
+                          <div className="flex items-start gap-3">
+                            <img
+                              src={getProfilePictureUrl(review.serviceOwner?.profilePicture)}
+                              alt="Tu foto"
+                              className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-conexia-green/30"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-semibold text-conexia-green mb-2">
+                                Tu respuesta
+                              </h4>
+                              <div className="relative">
+                                <textarea
+                                  value={responseText}
+                                  onChange={(e) => setResponseText(e.target.value)}
+                                  placeholder="Escribe tu respuesta a esta reseña... (Mínimo 10 caracteres)"
+                                  className="w-full px-3 py-2 pb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green/50 focus:border-conexia-green text-sm resize-none"
+                                  rows={3}
+                                  maxLength={500}
+                                  disabled={responseLoading}
+                                />
+                                <span className="absolute bottom-2 right-3 text-xs text-gray-400">
+                                  {responseText.length}/500
+                                </span>
+                              </div>
+                              <div className="flex justify-end gap-2 mt-3">
+                                <button
+                                  onClick={handleCancelResponse}
+                                  disabled={responseLoading}
+                                  className="px-4 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  onClick={() => handleConfirmResponse(review.id)}
+                                  disabled={responseLoading || !responseText.trim() || responseText.trim().length < 10}
+                                  className="px-4 py-1.5 text-sm bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                  {responseLoading ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                      <span>Guardando...</span>
+                                    </>
+                                  ) : (
+                                    <span>{review.ownerResponse ? 'Actualizar' : 'Publicar'}</span>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

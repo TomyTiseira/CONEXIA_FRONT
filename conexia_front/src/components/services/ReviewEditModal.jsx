@@ -125,7 +125,7 @@ export default function ReviewEditModal({
             onChange={e => handleInputChange(e.target.value)}
             onBlur={() => setTouched(prev => ({ ...prev, comment: true }))}
             disabled={loading}
-            maxLength={1000}
+            maxLength={500}
           />
           <div className="flex justify-between items-center mt-1">
             <div>
@@ -134,7 +134,7 @@ export default function ReviewEditModal({
               )}
             </div>
             <span className="text-xs text-gray-500">
-              {formData.comment.length}/1000
+              {formData.comment.length}/500
             </span>
           </div>
         </div>
