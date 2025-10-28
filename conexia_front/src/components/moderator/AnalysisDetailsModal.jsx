@@ -103,27 +103,6 @@ export default function AnalysisDetailsModal({
             </p>
           </div>
 
-          {/* IDs de Reportes Analizados */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-800 mb-3">
-              Reportes Analizados ({analysis.analyzedReportIds?.length || 0})
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {analysis.analyzedReportIds && analysis.analyzedReportIds.length > 0 ? (
-                analysis.analyzedReportIds.map((reportId) => (
-                  <span
-                    key={reportId}
-                    className="inline-block px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono text-gray-600"
-                  >
-                    #{reportId}
-                  </span>
-                ))
-              ) : (
-                <span className="text-gray-500 text-sm">No hay IDs disponibles</span>
-              )}
-            </div>
-          </div>
-
           {/* Fecha del Análisis */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Calendar className="w-4 h-4" />
