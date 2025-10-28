@@ -3,14 +3,17 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Star, ChevronDown, Edit2, Trash2, MoreVertical, Flag } from 'lucide-react';
-import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse } from '@/service/serviceReviews';
+import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse, reportServiceReview } from '@/service/serviceReviews';
 import { config } from '@/config';
+import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import ReviewDeleteModal from './ReviewDeleteModal';
 import ReviewReportModal from './ReviewReportModal';
 import ResponseDeleteModal from './ResponseDeleteModal';
 import Toast from '@/components/ui/Toast';
 
 export default function AllReviewsModal({ serviceId, isOpen, onClose, initialData, filterRating: initialFilterRating = null, onReviewsChanged }) {
+  const { roleName } = useUserStore();
   const [reviews, setReviews] = useState(initialData?.reviews || []);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -258,10 +261,11 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
   const handleConfirmReport = async (reportData) => {
     setActionLoading(true);
     try {
-      // TODO: Implementar endpoint de reporte de reseñas cuando esté disponible
-      // await reportServiceReview(selectedReview.id, reportData);
-      
-      console.log('Reporte enviado:', { reviewId: selectedReview.id, ...reportData });
+      // Llamar al endpoint de reporte de reseñas
+      await reportServiceReview({
+        serviceReviewId: selectedReview.id,
+        ...reportData
+      });
       
       setShowReportModal(false);
       setSelectedReview(null);
@@ -454,6 +458,9 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
   if (!isOpen) return null;
 
   const { total = 0, averageRating = 0, ratingDistribution = {} } = summaryData || initialData || {};
+
+  // Verificar si el usuario puede reportar (no puede si es admin o moderador)
+  const canReport = roleName === ROLES.USER;
 
   const modalContent = (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-[99999] flex items-center justify-center p-4" style={{ margin: 0 }}>
@@ -656,9 +663,22 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                       className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green border-b"
                                     >
                                       <Edit2 size={16} />
-                                      <span>'Responder'</span>
+                                      <span>Responder</span>
                                     </button>
                                   )}
+                                  {canReport && (
+                                    <button
+                                      onClick={() => handleReportReview(review)}
+                                      className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
+                                    >
+                                      <Flag size={16} />
+                                      <span>Reportar reseña</span>
+                                    </button>
+                                  )}
+                                </>
+                              ) : (
+                                // Opción para reportar (usuarios que no son dueños ni del servicio)
+                                canReport && (
                                   <button
                                     onClick={() => handleReportReview(review)}
                                     className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
@@ -666,16 +686,7 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                     <Flag size={16} />
                                     <span>Reportar reseña</span>
                                   </button>
-                                </>
-                              ) : (
-                                // Opción para reportar (usuarios que no son dueños ni del servicio)
-                                <button
-                                  onClick={() => handleReportReview(review)}
-                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
-                                >
-                                  <Flag size={16} />
-                                  <span>Reportar reseña</span>
-                                </button>
+                                )
                               )}
                             </div>
                           )}

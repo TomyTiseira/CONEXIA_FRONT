@@ -3,16 +3,18 @@ import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
 import { MdErrorOutline } from 'react-icons/md';
 
+// Mapeo de valores del frontend a los esperados por el backend
 const REPORT_REASONS = [
-  { value: 'spam', label: 'Spam o contenido irrelevante' },
-  { value: 'offensive', label: 'Contenido ofensivo o inapropiado' },
-  { value: 'fake', label: 'Reseña falsa o fraudulenta' },
-  { value: 'personal', label: 'Información personal sensible' },
-  { value: 'other', label: 'Otro' }
+  { value: 'Spam o contenido irrelevante', label: 'Spam o contenido irrelevante' },
+  { value: 'Contenido ofensivo o inapropiado', label: 'Contenido ofensivo o inapropiado' },
+  { value: 'Reseña falsa o fraudulenta', label: 'Reseña falsa o fraudulenta' },
+  { value: 'Información personal sensible', label: 'Información personal sensible' },
+  { value: 'Otro', label: 'Otro' }
 ];
 
 export default function ReviewReportModal({ open, onClose, onConfirm, loading = false }) {
   const [selectedReason, setSelectedReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
 
@@ -23,6 +25,15 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
     
     if (!selectedReason) {
       newErrors.push('Debes seleccionar un motivo.');
+    }
+    
+    // Si el motivo es "Otro", validar que otherReason no esté vacío
+    if (selectedReason === 'Otro') {
+      if (!otherReason || otherReason.trim().length < 3) {
+        newErrors.push('Debes especificar el motivo (mínimo 3 caracteres).');
+      } else if (otherReason.length > 100) {
+        newErrors.push('El motivo personalizado no puede exceder 100 caracteres.');
+      }
     }
     
     if (!description || description.trim().length < 10) {
@@ -41,14 +52,23 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
       return;
     }
     
-    onConfirm({
+    // Construir el objeto de datos según el motivo seleccionado
+    const reportData = {
       reason: selectedReason,
       description: description.trim()
-    });
+    };
+    
+    // Solo incluir otherReason si el motivo es "Otro"
+    if (selectedReason === 'Otro' && otherReason.trim()) {
+      reportData.otherReason = otherReason.trim();
+    }
+    
+    onConfirm(reportData);
   };
 
   const handleClose = () => {
     setSelectedReason('');
+    setOtherReason('');
     setDescription('');
     setError('');
     onClose();
@@ -104,6 +124,27 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
             </div>
           </div>
 
+          {/* Campo de motivo personalizado (solo si selecciona "Otro") */}
+          {selectedReason === 'Otro' && (
+            <div className="mb-4">
+              <label className="block text-conexia-green font-semibold mb-2">
+                Especifica el motivo <span className="text-red-500">*</span>
+              </label>
+              <InputField
+                type="text"
+                placeholder="Ej: Reseña duplicada, Error en la información..."
+                value={otherReason}
+                onChange={(e) => setOtherReason(e.target.value)}
+                name="otherReason"
+                maxLength={100}
+                disabled={loading}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {otherReason.length}/100 caracteres
+              </p>
+            </div>
+          )}
+
           {/* Descripción */}
           <div className="mb-4">
             <label className="block text-conexia-green font-semibold mb-2">
@@ -117,7 +158,11 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
               onChange={(e) => setDescription(e.target.value)}
               name="description"
               maxLength={500}
+              disabled={loading}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              {description.length}/500 caracteres
+            </p>
           </div>
 
           {/* Mensaje de error único y centrado */}

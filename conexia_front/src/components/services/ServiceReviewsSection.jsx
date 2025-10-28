@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { Star, ChevronRight, ChevronDown, Edit2, Trash2, MoreVertical, Flag } from 'lucide-react';
-import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse } from '@/service/serviceReviews';
+import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse, reportServiceReview } from '@/service/serviceReviews';
 import { config } from '@/config';
+import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import AllReviewsModal from './AllReviewsModal';
 import ReviewDeleteModal from './ReviewDeleteModal';
 import ReviewReportModal from './ReviewReportModal';
@@ -11,6 +13,7 @@ import ResponseDeleteModal from './ResponseDeleteModal';
 import Toast from '@/components/ui/Toast';
 
 export default function ServiceReviewsSection({ serviceId }) {
+  const { roleName } = useUserStore();
   const [reviewsData, setReviewsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -197,10 +200,11 @@ export default function ServiceReviewsSection({ serviceId }) {
   const handleConfirmReport = async (reportData) => {
     setActionLoading(true);
     try {
-      // TODO: Implementar endpoint de reporte de reseñas cuando esté disponible
-      // await reportServiceReview(selectedReview.id, reportData);
-      
-      console.log('Reporte enviado:', { reviewId: selectedReview.id, ...reportData });
+      // Llamar al endpoint de reporte de reseñas
+      await reportServiceReview({
+        serviceReviewId: selectedReview.id,
+        ...reportData
+      });
       
       setShowReportModal(false);
       setSelectedReview(null);
@@ -353,6 +357,9 @@ export default function ServiceReviewsSection({ serviceId }) {
   }
 
   const { reviews, total, averageRating, ratingDistribution } = reviewsData;
+
+  // Verificar si el usuario puede reportar (no puede si es admin o moderador)
+  const canReport = roleName === ROLES.USER;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -577,6 +584,19 @@ export default function ServiceReviewsSection({ serviceId }) {
                             <span>Responder</span>
                           </button>
                         )}
+                        {canReport && (
+                          <button
+                            onClick={() => handleReportReview(review)}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
+                          >
+                            <Flag size={16} />
+                            <span>Reportar reseña</span>
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      // Opción para reportar (usuarios que no son dueños ni del servicio)
+                      canReport && (
                         <button
                           onClick={() => handleReportReview(review)}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
@@ -584,16 +604,7 @@ export default function ServiceReviewsSection({ serviceId }) {
                           <Flag size={16} />
                           <span>Reportar reseña</span>
                         </button>
-                      </>
-                    ) : (
-                      // Opción para reportar (usuarios que no son dueños ni del servicio)
-                      <button
-                        onClick={() => handleReportReview(review)}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
-                      >
-                        <Flag size={16} />
-                        <span>Reportar reseña</span>
-                      </button>
+                      )
                     )}
                   </div>
                 )}
