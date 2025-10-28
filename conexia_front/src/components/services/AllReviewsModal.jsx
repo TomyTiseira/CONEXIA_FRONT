@@ -13,7 +13,7 @@ import ReviewReportModal from './ReviewReportModal';
 import ResponseDeleteModal from './ResponseDeleteModal';
 import Toast from '@/components/ui/Toast';
 
-export default function AllReviewsModal({ serviceId, isOpen, onClose, initialData, filterRating: initialFilterRating = null, onReviewsChanged }) {
+export default function AllReviewsModal({ serviceId, isOpen, onClose, initialData, filterRating: initialFilterRating = null, highlightReviewId = null, onReviewsChanged }) {
   const router = useRouter();
   const { roleName } = useUserStore();
   const [reviews, setReviews] = useState(initialData?.reviews || []);
@@ -233,7 +233,7 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
   const handleViewReports = (review) => {
     setOpenMenuId(null);
     onClose(); // Cerrar el modal antes de navegar
-    router.push(`/reports/service-review/${review.id}`);
+    router.push(`/reports/service-review/${review.id}?filter=service-reviews&order=reportCount&page=1`);
   };
 
   const handleConfirmDelete = async () => {
@@ -281,14 +281,24 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
       // Mostrar toast de éxito
       setToast({
         type: 'success',
-        message: 'Reporte enviado correctamente. Será revisado por nuestro equipo.',
+        message: 'Reseña reportada exitosamente',
         isVisible: true
       });
     } catch (err) {
-      // Mostrar toast de error
+      setShowReportModal(false);
+      setSelectedReview(null);
+      
+      // Verificar si es un error de "ya reportado"
+      const errorMessage = err.message || 'Error al enviar el reporte';
+      const isAlreadyReported = errorMessage.toLowerCase().includes('already reported') || 
+                                errorMessage.toLowerCase().includes('ya has reportado');
+      
+      // Mostrar toast de error o warning
       setToast({
-        type: 'error',
-        message: err.message || 'Error al enviar el reporte',
+        type: isAlreadyReported ? 'warning' : 'error',
+        message: isAlreadyReported 
+          ? 'Ya has reportado esta reseña anteriormente' 
+          : errorMessage,
         isVisible: true
       });
     } finally {
@@ -608,9 +618,18 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                         className={`transition-all duration-200 ${
                           editingReviewId === review.id 
                             ? 'bg-gradient-to-r from-[#367d7d]/5 to-[#367d7d]/10 -mx-4 px-4 py-4 rounded-lg border-l-4 border-[#367d7d] shadow-sm' 
+                            : highlightReviewId && review.id === parseInt(highlightReviewId)
+                            ? 'bg-gradient-to-r from-orange-50 to-yellow-50 -mx-4 px-4 py-4 rounded-lg border-l-4 border-orange-500 shadow-md animate-pulse'
                             : ''
                         }`}
                       >
+                        {/* Mostrar badge si es la reseña reportada */}
+                        {highlightReviewId && review.id === parseInt(highlightReviewId) && (
+                          <div className="mb-3 flex items-center gap-2 text-orange-700 bg-orange-100 px-3 py-1.5 rounded-md w-fit">
+                            <Flag size={16} />
+                            <span className="text-sm font-semibold">Reseña Reportada</span>
+                          </div>
+                        )}
                         {/* Header de la reseña */}
                         <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">

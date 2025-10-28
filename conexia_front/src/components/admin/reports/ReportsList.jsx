@@ -6,7 +6,7 @@ import { fetchReportedProjects } from '@/service/reports/reportsFetch';
 import { fetchReportedPublications } from '@/service/reports/publicationReportsFetch';
 import { fetchReportedServices } from '@/service/reports/fetchReportedServices';
 import { fetchReportedReviews } from '@/service/reports/reviewReportsFetch';
-import { getServiceReviewsWithReports } from '@/service/reports/serviceReviewReports';
+import { fetchReportedServiceReviews } from '@/service/reports/fetchReportedServiceReviews';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import Pagination from '@/components/common/Pagination';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -99,7 +99,7 @@ export default function ReportsList() {
         })
         .catch(() => setLoading(false));
     } else if (filter === 'service-reviews') {
-      getServiceReviewsWithReports(page, 15, order)
+      fetchReportedServiceReviews({ page, orderBy: order, limit: 15 })
         .then(data => {
           setServiceReviews(data?.serviceReviews || []);
           setPagination(data?.pagination || null);
@@ -364,13 +364,6 @@ export default function ReportsList() {
                     <tr key={`service-review-${review.serviceReviewId}`} className="border-b hover:bg-gray-50 h-auto align-top">
                       <td className="p-4 align-top max-w-[300px]">
                         <div className="text-conexia-green font-semibold">
-                          <div className="text-xs text-gray-500 mb-1">
-                            {review.reviewerUser?.firstName} {review.reviewerUser?.lastName} → {review.serviceOwnerUser?.firstName} {review.serviceOwnerUser?.lastName} (Servicio)
-                          </div>
-                          <div className="flex items-center gap-1 mb-1">
-                            <span className="text-yellow-500">★</span>
-                            <span className="text-sm font-medium">{review.rating}</span>
-                          </div>
                           <div className="line-clamp-2 break-words overflow-hidden text-ellipsis text-sm" title={review.comment}>
                             {review.comment}
                           </div>
@@ -383,16 +376,16 @@ export default function ReportsList() {
                           <Button
                             variant="add"
                             className="px-3 py-1 text-xs"
-                            onClick={() => router.push(`/reports/service-review/${review.serviceReviewId}`)}
+                            onClick={() => router.push(`/reports/service-review/${review.serviceReviewId}?filter=${filter}&order=${order}&page=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
                             className="px-3 py-1 text-xs"
-                            onClick={() => router.push(`/services/${review.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`)}
+                            onClick={() => router.push(`/services/${review.serviceId}?from=reports-service-review&highlightReviewId=${review.serviceReviewId}&fromReportsServiceReviewId=${review.serviceReviewId}`)}
                           >
-                            Ver servicio
+                            Ver reseña en servicio
                           </Button>
                         </div>
                       </td>

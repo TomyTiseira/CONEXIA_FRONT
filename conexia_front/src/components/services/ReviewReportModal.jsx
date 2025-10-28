@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
 import { MdErrorOutline } from 'react-icons/md';
 
-// Mapeo de valores del frontend a los esperados por el backend
+// Motivos alineados con el enum del backend
 const REPORT_REASONS = [
-  { value: 'Spam o contenido irrelevante', label: 'Spam o contenido irrelevante' },
   { value: 'Contenido ofensivo o inapropiado', label: 'Contenido ofensivo o inapropiado' },
+  { value: 'Spam o contenido irrelevante', label: 'Spam o contenido irrelevante' },
   { value: 'Reseña falsa o fraudulenta', label: 'Reseña falsa o fraudulenta' },
   { value: 'Información personal sensible', label: 'Información personal sensible' },
   { value: 'Otro', label: 'Otro' }
@@ -17,6 +18,16 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
   const [otherReason, setOtherReason] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+
+  // Limpiar formulario cuando se abre/cierra el modal
+  useEffect(() => {
+    if (!open) {
+      setSelectedReason('');
+      setOtherReason('');
+      setDescription('');
+      setError('');
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -74,8 +85,8 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-[60] bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[95vh] overflow-hidden flex flex-col" style={{ borderRadius: '1rem' }}>
         {/* Header fijo */}
         <div className="sticky top-0 z-10 bg-white border-b px-6 py-4 rounded-t-xl">
@@ -195,4 +206,9 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
       </div>
     </div>
   );
+
+  // Renderizar el modal en un portal para evitar problemas de z-index
+  return typeof document !== 'undefined' 
+    ? createPortal(modalContent, document.body)
+    : null;
 }

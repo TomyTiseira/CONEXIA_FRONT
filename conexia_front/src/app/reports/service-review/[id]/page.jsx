@@ -1,14 +1,16 @@
 'use client';
 
 import { use } from 'react';
-import ServiceReviewReportsDetail from '@/components/admin/reports/ServiceReviewReportsDetail';
+import ServiceReviewReportsGrid from '@/components/admin/reports/ServiceReviewReportsGrid';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { ROLES } from '@/constants/roles';
 
 export default function ServiceReviewReportDetailPage({ params }) {
   const { id } = use(params);
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      <ServiceReviewReportsDetail serviceReviewId={id} />
-    </div>
+    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]}>
+      <ServiceReviewReportsGrid serviceReviewId={id} />
+    </ProtectedRoute>
   );
 }

@@ -152,3 +152,4 @@ export const deleteServiceReview = async (reviewId) => {
 // Exportar también funciones adicionales
 export { deleteServiceReviewResponse } from './deleteServiceReviewResponse';
 export { reportServiceReview } from './reportServiceReview';
+export { getServiceReviewById } from './getServiceReviewById';

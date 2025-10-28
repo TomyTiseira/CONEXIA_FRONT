@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Star, ChevronRight, ChevronDown, Edit2, Trash2, MoreVertical, Flag, AlertCircle } from 'lucide-react';
-import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse, reportServiceReview } from '@/service/serviceReviews';
+import { getServiceReviews, updateServiceReview, deleteServiceReview, respondToServiceReview, deleteServiceReviewResponse, reportServiceReview, getServiceReviewById } from '@/service/serviceReviews';
 import { config } from '@/config';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
@@ -15,6 +15,7 @@ import Toast from '@/components/ui/Toast';
 
 export default function ServiceReviewsSection({ serviceId }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { roleName } = useUserStore();
   const [reviewsData, setReviewsData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,14 @@ export default function ServiceReviewsSection({ serviceId }) {
   const [showRatingFilter, setShowRatingFilter] = useState(false);
   const [selectedRating, setSelectedRating] = useState(null);
   const filterRef = useRef(null);
+  
+  // Detectar si venimos desde reportes para resaltar una reseña
+  const highlightReviewId = searchParams?.get('highlightReviewId');
+  const fromReports = searchParams?.get('from') === 'reports-service-review';
+  
+  // Estado para la reseña reportada cargada específicamente
+  const [highlightedReview, setHighlightedReview] = useState(null);
+  const [loadingHighlightedReview, setLoadingHighlightedReview] = useState(false);
 
   // Estados para editar/eliminar reseñas
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -49,9 +58,33 @@ export default function ServiceReviewsSection({ serviceId }) {
   const [expandedComments, setExpandedComments] = useState({});
   const [expandedResponses, setExpandedResponses] = useState({});
 
+  // Ref para hacer scroll a la sección de reseñas
+  const reviewsSectionRef = useRef(null);
+  const highlightedReviewRef = useRef(null);
+
   useEffect(() => {
     loadReviews();
   }, [serviceId]);
+  
+  // Cargar reseña reportada específica si venimos desde reportes
+  useEffect(() => {
+    if (highlightReviewId && fromReports) {
+      loadHighlightedReview();
+    }
+  }, [highlightReviewId, fromReports]);
+
+  // Hacer scroll automático a la reseña reportada cuando se carga
+  useEffect(() => {
+    if (highlightedReview && highlightedReviewRef.current && fromReports) {
+      // Pequeño delay para asegurar que el DOM esté actualizado
+      setTimeout(() => {
+        highlightedReviewRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' // Centra la reseña en la pantalla
+        });
+      }, 300);
+    }
+  }, [highlightedReview, fromReports]);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -92,6 +125,22 @@ export default function ServiceReviewsSection({ serviceId }) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadHighlightedReview = async () => {
+    try {
+      setLoadingHighlightedReview(true);
+      const review = await getServiceReviewById(parseInt(highlightReviewId));
+      setHighlightedReview(review);
+    } catch (err) {
+      console.error('Error loading highlighted review:', err);
+      setToast({
+        type: 'error',
+        message: 'No se pudo cargar la reseña reportada'
+      });
+    } finally {
+      setLoadingHighlightedReview(false);
     }
   };
 
@@ -177,7 +226,7 @@ export default function ServiceReviewsSection({ serviceId }) {
 
   const handleViewReports = (review) => {
     setOpenMenuId(null);
-    router.push(`/reports/service-review/${review.id}`);
+    router.push(`/reports/service-review/${review.id}?filter=service-reviews&order=reportCount&page=1`);
   };
 
   const handleConfirmDelete = async () => {
@@ -217,13 +266,23 @@ export default function ServiceReviewsSection({ serviceId }) {
       setSelectedReview(null);
       setToast({
         type: 'success',
-        message: 'Reporte enviado correctamente. Será revisado por nuestro equipo.',
+        message: 'Reseña reportada exitosamente',
         isVisible: true
       });
     } catch (err) {
+      setShowReportModal(false);
+      setSelectedReview(null);
+      
+      // Verificar si es un error de "ya reportado"
+      const errorMessage = err.message || 'Error al enviar el reporte';
+      const isAlreadyReported = errorMessage.toLowerCase().includes('already reported') || 
+                                errorMessage.toLowerCase().includes('ya has reportado');
+      
       setToast({
-        type: 'error',
-        message: err.message || 'Error al enviar el reporte',
+        type: isAlreadyReported ? 'warning' : 'error',
+        message: isAlreadyReported 
+          ? 'Ya has reportado esta reseña anteriormente' 
+          : errorMessage,
         isVisible: true
       });
     } finally {
@@ -367,6 +426,9 @@ export default function ServiceReviewsSection({ serviceId }) {
 
   // Verificar si el usuario puede reportar (no puede si es admin o moderador)
   const canReport = roleName === ROLES.USER;
+  
+  // Verificar si el usuario puede ver la reseña reportada (solo ADMIN o MODERATOR)
+  const canViewReportedReview = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -417,7 +479,94 @@ export default function ServiceReviewsSection({ serviceId }) {
   return (
     <>
       {/* Título principal */}
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Reseñas del Servicio</h2>
+      <div ref={reviewsSectionRef}>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Reseñas del Servicio</h2>
+      </div>
+
+      {/* Reseña reportada destacada (solo si venimos desde reportes Y es ADMIN/MODERATOR) */}
+      {highlightedReview && fromReports && canViewReportedReview && (
+        <div 
+          ref={highlightedReviewRef}
+          className="mb-6 border-2 border-red-500 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 shadow-md overflow-hidden"
+        >
+          {/* Header de reseña reportada */}
+          <div className="bg-red-500 px-4 py-2 flex items-center gap-2">
+            <Flag className="text-white" size={18} />
+            <span className="text-white font-bold text-sm">RESEÑA REPORTADA</span>
+          </div>
+
+          {/* Contenido de la reseña */}
+          <div className="p-6">
+            {/* Header de la reseña */}
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                {/* Avatar */}
+                <img
+                  src={getProfilePictureUrl(highlightedReview.reviewUser?.profilePicture)}
+                  alt={getFirstNameAndLastName(highlightedReview.reviewUser)}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
+                />
+
+                {/* Información del usuario y fecha */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-gray-900 truncate">
+                    {getFirstNameAndLastName(highlightedReview.reviewUser)}
+                  </h4>
+                  <p className="text-xs text-gray-500">
+                    {formatDate(highlightedReview.createdAt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Calificación */}
+            <div className="flex items-center gap-1 mb-3">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  size={18}
+                  className={
+                    star <= highlightedReview.rating
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : 'text-gray-300'
+                  }
+                />
+              ))}
+            </div>
+
+            {/* Comentario */}
+            {highlightedReview.comment && (
+              <p className="text-sm text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap break-words">
+                {highlightedReview.comment}
+              </p>
+            )}
+
+            {/* Respuesta del dueño (si existe) */}
+            {highlightedReview.ownerResponse && (
+              <div className="mt-4 pl-4 border-l-4 border-conexia-green/40 bg-white/80 p-4 rounded-r-lg">
+                <div className="flex items-start gap-3 mb-2">
+                  <img
+                    src={getProfilePictureUrl(highlightedReview.serviceOwner?.profilePicture)}
+                    alt={getFirstNameAndLastName(highlightedReview.serviceOwner)}
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 border-2 border-conexia-green"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h5 className="text-xs font-semibold text-conexia-green truncate">
+                      Respuesta del proveedor - {getFirstNameAndLastName(highlightedReview.serviceOwner)}
+                    </h5>
+                    <p className="text-xs text-gray-500">
+                      {highlightedReview.ownerResponseDate ? formatDate(highlightedReview.ownerResponseDate) : ''}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                  {highlightedReview.ownerResponse}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Resumen de calificaciones */}
       <div className="bg-gradient-to-r from-conexia-green/10 to-green-50 rounded-lg p-6 mb-4">
@@ -824,7 +973,7 @@ export default function ServiceReviewsSection({ serviceId }) {
         ))}
       </div>
 
-      {/* Link ver todas - estilo Mercado Libre */}
+      {/* Link ver todas */}
       <div className="mt-6">
         <button
           onClick={() => {
