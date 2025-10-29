@@ -24,6 +24,7 @@ const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
   { value: 'pending', label: 'Pendiente' },
   { value: 'quoted', label: 'Cotizado' },
+  { value: 'requoting', label: 'Re-cotizando' },
   { value: 'accepted', label: 'Aceptado' },
   { value: 'approved', label: 'Aprobado' },
   { value: 'rejected', label: 'Rechazado' },
@@ -40,6 +41,7 @@ const getStatusBadge = (statusCode) => {
   const statusMap = {
     pending: { label: 'Pendiente', className: 'bg-yellow-100 text-yellow-800' },
     quoted: { label: 'Cotizado', className: 'bg-blue-100 text-blue-800' },
+    requoting: { label: 'Re-cotizando', className: 'bg-sky-100 text-sky-800' },
     accepted: { label: 'Aceptado', className: 'bg-green-100 text-green-800' },
     approved: { label: 'Aprobado', className: 'bg-conexia-green/10 text-conexia-green' },
     rejected: { label: 'Rechazado', className: 'bg-red-100 text-red-800' },
@@ -57,7 +59,7 @@ const getStatusBadge = (statusCode) => {
   
   const status = statusMap[statusCode] || { label: statusCode, className: 'bg-gray-100 text-gray-800' };
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${status.className}`}>
+    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${status.className}`}>
       {status.label}
     </span>
   );
@@ -188,7 +190,7 @@ export default function ServiceRequestsPage({ serviceId }) {
 
   const canEditQuote = (hiring) => {
     return hiring.availableActions?.includes('edit') || 
-           (hiring.quotedPrice && ['quoted', 'negotiating'].includes(hiring.status?.code));
+           (hiring.quotedPrice && ['quoted', 'negotiating', 'requoting'].includes(hiring.status?.code));
   };
 
   const handleDeliveryClick = (hiring) => {

@@ -405,6 +405,30 @@ export async function fetchPaymentModalities() {
 }
 
 /**
+ * Solicitar re-cotización de una cotización vencida
+ * @param {number} hiringId - ID de la contratación
+ * @returns {Promise<Object>} Resultado de la operación
+ */
+export async function requestRequote(hiringId) {
+  const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/request-requote`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json?.message || 'Error al solicitar re-cotización');
+  }
+
+  if (!json.success) {
+    throw new Error(json.message || 'Error en la respuesta del servidor');
+  }
+
+  return json.data;
+}
+
+/**
  * Crear cotización con modalidad de pago (soporta entregables)
  * @param {number} hiringId - ID de la contratación
  * @param {Object} data - Datos de la cotización con modalidad

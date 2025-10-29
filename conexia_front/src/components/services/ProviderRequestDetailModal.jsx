@@ -26,6 +26,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
     const statusMap = {
       pending: 'Pendiente',
       quoted: 'Cotizado',
+      requoting: 'Re-cotizando',
       accepted: 'Aceptado',
       approved: 'Aprobada',
       rejected: 'Rechazado',
@@ -48,6 +49,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
     const statusMap = {
       pending: 'text-yellow-800 bg-yellow-100',
       quoted: 'text-blue-800 bg-blue-100',
+      requoting: 'text-sky-800 bg-sky-100',
       accepted: 'text-green-800 bg-green-100',
       approved: 'text-conexia-green bg-conexia-green/10',
       rejected: 'text-red-800 bg-red-100',
@@ -186,7 +188,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
                 <div>
                   <span className="font-medium text-gray-700">Estado actual:</span>
                   <div className="mt-1">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(hiring.status?.code)}`}>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getStatusColor(hiring.status?.code)}`}>
                       {getStatusLabel(hiring.status?.code)}
                     </span>
                   </div>

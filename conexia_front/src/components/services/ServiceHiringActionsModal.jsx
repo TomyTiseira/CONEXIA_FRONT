@@ -16,7 +16,8 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
     acceptHiring, 
     rejectHiring, 
     cancelHiring, 
-    negotiateHiring
+    negotiateHiring,
+    requoteHiring
   } = useServiceHirings();
   
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,10 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
         case 'negotiate':
           result = await negotiateHiring(hiring.id, { negotiationDescription });
           message = 'Negociación iniciada exitosamente';
+          break;
+        case 'requote':
+          result = await requoteHiring(hiring.id);
+          message = 'Solicitud de re-cotización enviada al proveedor';
           break;
         default:
           throw new Error('Acción no válida');
@@ -92,6 +97,13 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
         buttonText: 'Sí, Negociar',
         buttonClass: 'bg-orange-600 hover:bg-orange-700 text-white',
         icon: '🤝'
+      },
+      requote: {
+        title: 'Solicitar Re-cotización',
+        description: 'Al solicitar una re-cotización, el proveedor será notificado para que actualice los términos de la cotización vencida. Esto renovará la vigencia de la solicitud.',
+        buttonText: 'Sí, Solicitar Re-cotización',
+        buttonClass: 'bg-blue-600 hover:bg-blue-700 text-white',
+        icon: '🔄'
       }
     };
     return configs[action];
@@ -103,12 +115,18 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
   const defaultByStatus = {
     quoted: ['accept', 'reject', 'negotiate', 'cancel'],
     negotiating: ['accept', 'reject', 'cancel'],
+    requoting: ['cancel'], // Solo puede cancelar cuando está re-cotizando
     pending: ['cancel']
   };
   const normalizedActions = Array.from(new Set([...(availableActions || []), ...((defaultByStatus[statusCode]) || [])]));
-  const isPostDecision = ['accepted', 'rejected'].includes(hiring?.status?.code);
-  const showExpiredBlock = isExpired(hiring) && !isPostDecision;
-  // Filtrar acciones para no permitir cancelar cuando ya fue aceptada o rechazada
+  
+  // Estados donde ya no se pueden realizar acciones de cotización
+  const isPostDecision = ['accepted', 'rejected', 'approved', 'in_progress', 'delivered', 'completed', 'cancelled'].includes(hiring?.status?.code);
+  
+  // Solo mostrar bloque de vencida si está vencida Y NO está en estado requoting Y NO está en post-decisión
+  const showExpiredBlock = isExpired(hiring) && !isPostDecision && statusCode !== 'requoting';
+  
+  // Filtrar acciones para no permitir cancelar cuando ya fue aceptada, aprobada o rechazada
   const actions = isPostDecision
     ? normalizedActions.filter(a => a !== 'cancel')
     : normalizedActions;
@@ -224,6 +242,22 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
             </p>
           </div>
           
+          {/* Mensaje informativo cuando está re-cotizando */}
+          {statusCode === 'requoting' && (
+            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-blue-600 mt-0.5" size={20} />
+                <div>
+                  <h4 className="font-medium text-blue-800 mb-1">Re-cotización Solicitada</h4>
+                  <p className="text-sm text-blue-600">
+                    Ya has solicitado una re-cotización. El proveedor está trabajando en actualizar los términos. 
+                    Recibirás una notificación cuando esté lista.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {showExpiredBlock ? (
             <div className="space-y-4">
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -232,11 +266,25 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                   <div>
                     <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
                     <p className="text-sm text-red-600">
-                      Esta cotización ha expirado. Cancela la solicitud para poder volver a cotizar este servicio.
+                      Esta cotización ha expirado. Puedes solicitar una re-cotización al proveedor o cancelar la solicitud.
                     </p>
                   </div>
                 </div>
               </div>
+              
+              {/* Botón de Re-cotizar */}
+              <button
+                onClick={() => setConfirmAction('requote')}
+                className="w-full flex items-center gap-3 p-4 border border-blue-200 bg-blue-600 rounded-lg hover:bg-blue-700 transition text-left"
+              >
+                <span className="text-2xl">🔄</span>
+                <div>
+                  <p className="font-medium text-white">Solicitar Re-cotización</p>
+                  <p className="text-sm text-blue-100">Pedir al proveedor que actualice la cotización</p>
+                </div>
+              </button>
+              
+              {/* Botón de Cancelar */}
               <button
                 onClick={() => setConfirmAction('cancel')}
                 className="w-full flex items-center gap-3 p-4 border border-gray-200 bg-gray-500 rounded-lg hover:bg-gray-600 transition text-left"
