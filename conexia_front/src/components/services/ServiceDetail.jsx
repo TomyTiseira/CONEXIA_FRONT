@@ -140,9 +140,9 @@ const ServiceDetail = ({ serviceId }) => {
         if (serviceId) {
           const data = await getServiceReviews(serviceId, 1, 1); // Solo necesitamos las estadísticas
           setReviewsStats({
-            total: data.pagination?.total || 0,
-            averageRating: data.averageRating,
-            ratingDistribution: data.ratingDistribution,
+            total: data.pagination?.totalItems || 0,
+            averageRating: data.averageRating || 0,
+            ratingDistribution: data.ratingDistribution || {},
           });
         }
       } catch (err) {
@@ -788,7 +788,7 @@ ${messageText.trim()}`;
                       </span>
                     </div>
                     {/* Mostrar calificación y número de reseñas debajo de la categoría */}
-                    {reviewsStats && reviewsStats.total > 0 && (
+                    {reviewsStats && (
                       <button
                         onClick={() => {
                           const reviewsSection = document.getElementById('reviews-section');
@@ -799,7 +799,7 @@ ${messageText.trim()}`;
                         className="flex items-center gap-1 mt-2 hover:opacity-80 transition-opacity cursor-pointer"
                       >
                         <span className="text-sm font-semibold text-gray-900">
-                          {reviewsStats.averageRating.toFixed(1)}
+                          {reviewsStats.total > 0 ? reviewsStats.averageRating.toFixed(1) : '0.0'}
                         </span>
                         <div className="flex items-center gap-0.5">
                           {[1, 2, 3, 4, 5].map((star) => (
@@ -807,7 +807,7 @@ ${messageText.trim()}`;
                               key={star}
                               size={16}
                               className={
-                                star <= Math.round(reviewsStats.averageRating)
+                                reviewsStats.total > 0 && star <= Math.round(reviewsStats.averageRating)
                                   ? 'fill-yellow-400 text-yellow-400'
                                   : 'text-gray-300'
                               }

@@ -114,9 +114,9 @@ export default function ServiceReviewsSection({ serviceId }) {
       // Adaptar la respuesta a la estructura antigua para compatibilidad
       const adaptedData = {
         reviews: data.reviews,
-        total: data.pagination?.total || 0,
-        averageRating: data.averageRating,
-        ratingDistribution: data.ratingDistribution,
+        total: data.pagination?.totalItems || 0,
+        averageRating: data.averageRating || 0,
+        ratingDistribution: data.ratingDistribution || {},
         pagination: data.pagination
       };
       setReviewsData(adaptedData);

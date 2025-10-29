@@ -90,9 +90,11 @@ export default function PublicationReportsGrid({ publicationId }) {
         {pagination && (
           <div className="pt-4 pb-6 flex justify-center">
             <Pagination
+              currentPage={pagination.currentPage}
               page={pagination.currentPage}
               hasNextPage={pagination.hasNextPage}
               hasPreviousPage={pagination.hasPreviousPage}
+              totalPages={pagination.totalPages}
               onPageChange={setPage}
             />
           </div>
