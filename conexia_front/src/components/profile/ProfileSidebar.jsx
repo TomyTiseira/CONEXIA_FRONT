@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Image from 'next/image';
 import { FaLinkedin, FaCertificate, FaUniversity, FaBriefcase, FaBirthdayCake, FaMapMarkerAlt } from 'react-icons/fa';
-import { CheckCircle } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { config } from '@/config';
 
 
@@ -85,10 +85,10 @@ export default function ProfileSidebar({ profile, userId}) {
           </h2>
           {profile.verified && (
             <div 
-              className="flex-shrink-0 bg-green-100 rounded-full p-0.5" 
+              className="flex-shrink-0" 
               title="Identidad verificada"
             >
-              <CheckCircle className="text-green-600" size={16} />
+              <ShieldCheck className="text-blue-600" size={20} strokeWidth={2} />
             </div>
           )}
         </div>
@@ -122,10 +122,10 @@ export default function ProfileSidebar({ profile, userId}) {
           </h2>
           {profile.verified && (
             <div 
-              className="flex-shrink-0 bg-green-100 rounded-full p-0.5" 
+              className="flex-shrink-0" 
               title="Identidad verificada"
             >
-              <CheckCircle className="text-green-600" size={16} />
+              <ShieldCheck className="text-blue-600" size={20} strokeWidth={2} />
             </div>
           )}
         </div>

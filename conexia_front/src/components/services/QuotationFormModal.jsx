@@ -41,6 +41,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
     estimatedTimeUnit: '',
     quotationNotes: '',
     quotationValidityDays: '',
+    isBusinessDays: false,
     deliverables: []
   });
   const [errors, setErrors] = useState({});
@@ -62,6 +63,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
         estimatedTimeUnit: isEditing && hiring.estimatedTimeUnit ? hiring.estimatedTimeUnit : '',
         quotationNotes: isEditing && hiring.quotationNotes ? hiring.quotationNotes : '',
         quotationValidityDays: isEditing && hiring.quotationValidityDays ? hiring.quotationValidityDays.toString() : '',
+        isBusinessDays: isEditing && hiring.isBusinessDays ? hiring.isBusinessDays : false,
         deliverables: isEditing && hiring.deliverables ? hiring.deliverables.map(d => ({
           title: d.title,
           description: d.description,
@@ -172,7 +174,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                   {hiring.service?.title}
                 </p>
                 <p className="text-xs text-gray-600">
-                  Precio base: ${hiring.service?.price?.toLocaleString()} {hiring.service?.currency}
+                  Precio base: ${hiring.service?.price?.toLocaleString()}{hiring.service?.timeUnit ? ` por ${getUnitLabel(hiring.service.timeUnit)}` : ''} {hiring.service?.currency}
                 </p>
               </div>
               {/* Solicitud del cliente */}
@@ -182,12 +184,28 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                   Lo que solicita el cliente
                 </h4>
                 <p className="text-sm text-gray-600 mb-1">
-                  Cliente: {getUserDisplayName(hiring.user)} • {formatDate(hiring.createdAt)}
+                  Cliente: {getUserDisplayName({ name: hiring.name, lastName: hiring.lastName })} • {formatDate(hiring.createdAt)}
                 </p>
                 <div className="text-sm text-gray-900 bg-white p-3 rounded border break-words overflow-wrap-anywhere">
                   {hiring.description || 'Sin descripción específica'}
                 </div>
               </div>
+
+              {/* Descripción de Negociación (si existe) */}
+              {hiring.negotiationDescription && hiring.status?.code === 'negotiating' && (
+                <div className="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-300">
+                  <h4 className="font-medium text-orange-700 mb-2 flex items-center gap-2">
+                    🤝 <span>Solicitud de Negociación</span>
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-2">
+                    El cliente quiere negociar:
+                  </p>
+                  <div className="text-sm text-gray-900 bg-white p-3 rounded border border-yellow-300 break-words overflow-wrap-anywhere">
+                    {hiring.negotiationDescription}
+                  </div>
+                </div>
+              )}
+
               {/* Formulario de cotización */}
               <div className="space-y-5">
                 <h4 className="font-medium text-gray-900">Detalles de la Cotización</h4>
@@ -333,6 +351,21 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                       <p className="text-xs text-gray-500 mt-1">
                         La cotización será válida por este número de días
                       </p>
+                    </div>
+
+                    {/* Checkbox de días hábiles */}
+                    <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <input
+                        type="checkbox"
+                        id="isBusinessDays"
+                        checked={formData.isBusinessDays}
+                        onChange={(e) => handleInputChange('isBusinessDays', e.target.checked)}
+                        className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green cursor-pointer"
+                        disabled={loading}
+                      />
+                      <label htmlFor="isBusinessDays" className="text-sm text-gray-700 cursor-pointer select-none">
+                        Calcular vencimiento en días hábiles (excluye sábados y domingos)
+                      </label>
                     </div>
 
                     {/* Notas adicionales */}

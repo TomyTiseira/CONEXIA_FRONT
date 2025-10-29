@@ -2,5 +2,6 @@ export {
   createDelivery,
   fetchDeliveries,
   reviewDelivery,
-  fetchHiringWithDeliveries
+  fetchHiringWithDeliveries,
+  fetchDeliverablesWithValidation
 } from './deliveriesFetch';

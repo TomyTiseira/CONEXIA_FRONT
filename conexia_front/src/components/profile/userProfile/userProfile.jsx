@@ -29,7 +29,7 @@ import MessagingWidget from "@/components/messaging/MessagingWidget";
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import VerificationSection from "@/components/profile/VerificationSection";
 import { useVerificationStatus } from "@/hooks";
-import { CheckCircle } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
@@ -494,10 +494,10 @@ export default function UserProfile() {
                   </h2>
                   {user.verified && (
                     <div 
-                      className="flex-shrink-0 bg-green-100 rounded-full p-1" 
+                      className="flex-shrink-0" 
                       title="Identidad verificada"
                     >
-                      <CheckCircle className="text-green-600" size={20} />
+                      <ShieldCheck className="text-blue-600" size={28} strokeWidth={2} />
                     </div>
                   )}
                 </div>

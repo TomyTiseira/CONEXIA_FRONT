@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useHiringWithDeliveries } from '@/hooks/deliveries';
-import { ArrowLeft, Package, Calendar, DollarSign, CheckCircle, Clock, AlertCircle, Upload, Eye } from 'lucide-react';
+import { fetchDeliverablesWithValidation } from '@/service/deliveries';
+import { ArrowLeft, Package, Calendar, DollarSign, CheckCircle, Clock, AlertCircle, Upload, Eye, Lock } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import StatusBadge from '@/components/common/StatusBadge';
 import Button from '@/components/ui/Button';
 import DeliveryModal from '@/components/deliveries/DeliveryModal';
+import Toast from '@/components/ui/Toast';
 import { getUserDisplayName } from '@/utils/formatUserName';
 
 export default function DeliverablesPage() {
@@ -19,6 +21,9 @@ export default function DeliverablesPage() {
 
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [selectedDeliverable, setSelectedDeliverable] = useState(null);
+  const [deliverables, setDeliverables] = useState([]);
+  const [deliverablesLoading, setDeliverablesLoading] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     if (hiringId) {
@@ -26,18 +31,62 @@ export default function DeliverablesPage() {
     }
   }, [hiringId, loadHiring]);
 
-  const deliverables = hiring?.deliverables || [];
+  // Cargar entregables con validaciones
+  useEffect(() => {
+    const loadDeliverablesWithValidation = async () => {
+      if (!hiringId || !hiring) return;
+
+      setDeliverablesLoading(true);
+      try {
+        const data = await fetchDeliverablesWithValidation(hiringId);
+        setDeliverables(data || []);
+      } catch (error) {
+        console.error('Error al cargar entregables con validaciones:', error);
+        // Fallback a los entregables del hiring si falla
+        setDeliverables(hiring?.deliverables || []);
+      } finally {
+        setDeliverablesLoading(false);
+      }
+    };
+
+    loadDeliverablesWithValidation();
+  }, [hiringId, hiring]);
 
   const handleOpenDeliveryModal = (deliverable) => {
+    // Verificar si puede entregar este entregable
+    if (deliverable.canDeliver === false) {
+      setToast({
+        type: 'error',
+        message: deliverable.lockReason || 'Debes entregar el entregable anterior primero',
+        isVisible: true
+      });
+      return;
+    }
+
     setSelectedDeliverable(deliverable);
     setShowDeliveryModal(true);
   };
 
-  const handleDeliverySuccess = () => {
+  const handleDeliverySuccess = async () => {
     // Recargar datos después de entregar
-    loadHiring();
+    await loadHiring();
+    
+    // Recargar deliverables con validaciones
+    try {
+      const data = await fetchDeliverablesWithValidation(hiringId);
+      setDeliverables(data || []);
+    } catch (error) {
+      console.error('Error al recargar entregables:', error);
+    }
+
     setShowDeliveryModal(false);
     setSelectedDeliverable(null);
+    
+    setToast({
+      type: 'success',
+      message: 'Entrega realizada exitosamente',
+      isVisible: true
+    });
   };
 
   const handleViewDelivery = (deliverable) => {
@@ -47,6 +96,11 @@ export default function DeliverablesPage() {
   };
 
   const canDeliverDeliverable = (deliverable) => {
+    // Primero verificar la validación del backend
+    if (deliverable.canDeliver === false) {
+      return false;
+    }
+    
     // Solo se puede entregar si está en estado pendiente o si fue rechazado
     return deliverable.status === 'pending' || deliverable.status === 'revision_requested';
   };
@@ -270,6 +324,14 @@ export default function DeliverablesPage() {
                                 >
                                   <Upload size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
+                              ) : deliverable.isLocked ? (
+                                <button
+                                  disabled
+                                  className="flex items-center justify-center w-8 h-8 text-gray-400 cursor-not-allowed rounded-md bg-gray-100 border border-gray-200"
+                                  title={deliverable.lockReason || 'Debes entregar el entregable anterior primero'}
+                                >
+                                  <Lock size={16} />
+                                </button>
                               ) : (deliverable.status === 'delivered' || deliverable.status === 'approved') ? (
                                 <button
                                   onClick={() => handleViewDelivery(deliverable)}
@@ -336,6 +398,19 @@ export default function DeliverablesPage() {
                           <Upload size={18} />
                           {deliverable.status === 'revision_requested' ? 'Re-entregar' : 'Entregar'}
                         </button>
+                      ) : deliverable.isLocked ? (
+                        <div className="w-full">
+                          <button
+                            disabled
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed"
+                          >
+                            <Lock size={18} />
+                            Bloqueado
+                          </button>
+                          <p className="text-xs text-red-600 mt-2 text-center">
+                            {deliverable.lockReason}
+                          </p>
+                        </div>
                       ) : (deliverable.status === 'delivered' || deliverable.status === 'approved') ? (
                         <button
                           onClick={() => handleViewDelivery(deliverable)}
@@ -366,6 +441,17 @@ export default function DeliverablesPage() {
         deliverableInfo={selectedDeliverable}
         onSuccess={handleDeliverySuccess}
       />
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+        />
+      )}
     </>
   );
 }

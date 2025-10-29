@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useUserServices } from '@/hooks/services';
 import ServiceList from '@/components/services/ServiceList';
 import { useAuth } from '@/context/AuthContext';
-import { FaTools } from 'react-icons/fa';
+import { Briefcase } from 'lucide-react';
 
 export default function UserServices({ userId }) {
   const { user: authUser } = useAuth();
@@ -31,7 +31,7 @@ export default function UserServices({ userId }) {
       <div className="mt-8">
         <div className="bg-white border border-[#e0e0e0] rounded-xl shadow-md p-4 md:p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 mb-1">
-            <FaTools className="w-6 h-6 text-conexia-green" />
+            <Briefcase className="w-6 h-6 text-conexia-green" />
             <h3 className="text-base md:text-lg font-bold text-conexia-green">Servicios</h3>
           </div>
           <div className="text-gray-500 text-sm md:text-base">Cargando servicios...</div>
@@ -51,7 +51,7 @@ export default function UserServices({ userId }) {
     <div className="mt-8">
       <div className="bg-white border border-[#e0e0e0] rounded-xl shadow-md p-4 md:p-6 flex flex-col gap-2">
         <div className="flex items-center gap-2 mb-1">
-          <FaTools className="w-6 h-6 text-conexia-green" />
+          <Briefcase className="w-6 h-6 text-conexia-green" />
           <h3 className="text-base md:text-lg font-bold text-conexia-green">
             {isOwner ? 'Mis Servicios' : `Servicios`}
           </h3>

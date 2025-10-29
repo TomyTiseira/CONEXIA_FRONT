@@ -76,6 +76,10 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       label: 'Cotizado',
       className: 'bg-blue-200 text-blue-800'
     },
+    requoting: {
+      label: 'Re-cotizando',
+      className: 'bg-sky-200 text-sky-800'
+    },
     accepted: {
       label: 'Aceptado',
       className: 'bg-green-200 text-green-800'
@@ -152,7 +156,7 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
 
   return (
     <span 
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusData.className} ${className}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${statusData.className} ${className}`}
     >
       {statusData.label}
     </span>

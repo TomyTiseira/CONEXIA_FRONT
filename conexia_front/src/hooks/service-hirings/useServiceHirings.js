@@ -7,7 +7,8 @@ import {
   rejectQuotation,
   cancelServiceHiring,
   negotiateQuotation,
-  contractService
+  contractService,
+  requestRequote
 } from '@/service/service-hirings/serviceHiringsFetch';
 
 /**
@@ -179,6 +180,28 @@ export function useServiceHirings() {
     }
   };
 
+  // Solicitar re-cotización
+  const requoteHiring = async (hiringId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await requestRequote(hiringId);
+      // Actualizar el hiring en el estado local - vuelve a estado 'pending'
+      setHirings(prev => prev.map(h => 
+        h.id === hiringId 
+          ? { ...h, status: { ...h.status, code: 'pending' }, availableActions: response.availableActions || [], isExpired: false }
+          : h
+      ));
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     hirings,
     pagination,
@@ -192,6 +215,7 @@ export function useServiceHirings() {
     cancelHiring,
     negotiateHiring,
     contractHiring,
+    requoteHiring,
     setHirings,
     setError
   };
