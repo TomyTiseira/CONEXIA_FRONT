@@ -107,11 +107,20 @@ export default function DeliveryModal({
       }, 1500);
 
     } catch (error) {
-      setToast({
-        type: 'error',
-        message: error.message || 'Error al crear la entrega',
-        isVisible: true
-      });
+      // Detectar error 403 de validación de orden secuencial
+      if (error.status === 403 || error.statusCode === 403) {
+        setToast({
+          type: 'error',
+          message: error.message || 'No puedes entregar este entregable en este momento',
+          isVisible: true
+        });
+      } else {
+        setToast({
+          type: 'error',
+          message: error.message || 'Error al crear la entrega',
+          isVisible: true
+        });
+      }
     }
   };
 
