@@ -24,6 +24,7 @@ export async function createDelivery(hiringId, formData) {
     });
     
     const error = new Error(json?.message || 'Error al crear la entrega');
+    error.status = res.status;
     error.statusCode = res.status;
     throw error;
   }
@@ -32,6 +33,7 @@ export async function createDelivery(hiringId, formData) {
     console.error('❌ [API] Error en respuesta:', json.message || 'Sin mensaje');
     
     const error = new Error(json.message || 'Error en la respuesta del servidor');
+    error.status = json.statusCode || 400;
     error.statusCode = json.statusCode || 400;
     throw error;
   }
@@ -128,6 +130,35 @@ export async function fetchHiringWithDeliveries(hiringId) {
     });
     
     throw new Error(json?.message || 'Error al obtener la contratación');
+  }
+
+  if (!json.success) {
+    throw new Error(json.message || 'Error en la respuesta del servidor');
+  }
+
+  return json.data;
+}
+
+/**
+ * Obtener entregables con validaciones de bloqueo y permisos
+ * @param {number} hiringId - ID de la contratación
+ * @returns {Promise<Array>} Array de deliverables con campos de control (isLocked, canDeliver, canView, etc.)
+ */
+export async function fetchDeliverablesWithValidation(hiringId) {
+  const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/deliverables`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    console.error('❌ [API] Error al obtener entregables:', {
+      status: res.status,
+      message: json?.message || 'Sin mensaje'
+    });
+    
+    throw new Error(json?.message || 'Error al obtener los entregables');
   }
 
   if (!json.success) {

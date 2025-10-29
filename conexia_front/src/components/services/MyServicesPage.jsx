@@ -183,7 +183,7 @@ export default function MyServicesPage() {
     
     const serviceStatus = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${serviceStatus.className}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${serviceStatus.className}`}>
         {serviceStatus.label}
       </span>
     );

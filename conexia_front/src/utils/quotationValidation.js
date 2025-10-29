@@ -146,6 +146,11 @@ export function prepareQuotationData(formData, modality) {
     quotationValidityDays: parseInt(formData.quotationValidityDays),
   };
 
+  // Agregar campo de días hábiles si está definido
+  if (formData.isBusinessDays !== undefined) {
+    data.isBusinessDays = Boolean(formData.isBusinessDays);
+  }
+
   // Agregar notas si existen
   if (formData.quotationNotes?.trim()) {
     data.quotationNotes = formData.quotationNotes.trim();

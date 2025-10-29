@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useHiringWithDeliveries, useDeliveries } from '@/hooks/deliveries';
+import { fetchDeliverablesWithValidation } from '@/service/deliveries';
 import { useClaims } from '@/hooks/claims';
-import { ArrowLeft, Package, DollarSign, User, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Package, DollarSign, User, Calendar, FileText, Lock } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import DeliveryReview from '@/components/deliveries/DeliveryReview';
+import LockedDeliverableCard from '@/components/deliveries/LockedDeliverableCard';
 import StatusBadge from '@/components/common/StatusBadge';
 import { ClaimAlert, ClaimModal } from '@/components/claims';
 import { getUserDisplayName } from '@/utils/formatUserName';
@@ -25,6 +27,8 @@ export default function ServiceDeliveryPage() {
 
   const [selectedDeliveryIndex, setSelectedDeliveryIndex] = useState(0);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [deliverables, setDeliverables] = useState([]);
+  const [deliverablesLoading, setDeliverablesLoading] = useState(false);
 
   useEffect(() => {
     if (hiringId) {
@@ -32,6 +36,30 @@ export default function ServiceDeliveryPage() {
       loadDeliveries();
     }
   }, [hiringId, loadHiring, loadDeliveries]);
+
+  // Cargar entregables con validaciones si es modalidad por entregables
+  useEffect(() => {
+    const loadDeliverablesWithValidation = async () => {
+      if (!hiringId || !hiring) return;
+      
+      const isByDeliverables = hiring?.paymentModality?.code === 'by_deliverables';
+      if (!isByDeliverables) return;
+
+      setDeliverablesLoading(true);
+      try {
+        const data = await fetchDeliverablesWithValidation(hiringId);
+        setDeliverables(data || []);
+      } catch (error) {
+        console.error('Error al cargar entregables con validaciones:', error);
+        // Fallback a los entregables del hiring si falla
+        setDeliverables(hiring?.deliverables || []);
+      } finally {
+        setDeliverablesLoading(false);
+      }
+    };
+
+    loadDeliverablesWithValidation();
+  }, [hiringId, hiring]);
 
   const handleReviewSuccess = () => {
     // Recargar datos después de revisar
@@ -47,10 +75,10 @@ export default function ServiceDeliveryPage() {
   };
 
   const isByDeliverables = hiring?.paymentModality?.code === 'by_deliverables';
-  const deliverables = hiring?.deliverables || [];
   
   // Verificar si el usuario actual es el cliente (quien solicitó el servicio)
   const isClient = user?.id === hiring?.userId;
+  const isProvider = !isClient;
 
   // Agrupar deliveries por deliverable
   const getDeliveriesByDeliverable = (deliverableId) => {
@@ -62,7 +90,11 @@ export default function ServiceDeliveryPage() {
     return deliveries.filter(d => !d.deliverableId);
   };
 
-  const loading = hiringLoading || deliveriesLoading;
+  const loading = hiringLoading || deliveriesLoading || deliverablesLoading;
+
+  // TODOS ven TODOS los entregables
+  // La diferencia está en cómo se muestran (bloqueados vs desbloqueados)
+  const visibleDeliverables = deliverables;
 
   if (loading) {
     return (
@@ -222,11 +254,13 @@ export default function ServiceDeliveryPage() {
                   {/* Tabs */}
                   <div className="bg-white rounded-t-lg shadow-sm border-b overflow-x-auto">
                     <div className="flex min-w-full">
-                      {deliverables
+                      {visibleDeliverables
                         .sort((a, b) => a.orderIndex - b.orderIndex)
                         .map((deliverable, index) => {
                           const deliverableDeliveries = getDeliveriesByDeliverable(deliverable.id);
                           const latestDelivery = deliverableDeliveries[0];
+                          // Solo el cliente ve entregables bloqueados
+                          const isLocked = isClient && deliverable.isLocked === true;
 
                           return (
                             <button
@@ -236,12 +270,16 @@ export default function ServiceDeliveryPage() {
                                 selectedDeliveryIndex === index
                                   ? 'border-conexia-green bg-conexia-green/5 text-conexia-green'
                                   : 'border-transparent hover:bg-gray-50 text-gray-600'
-                              }`}
+                              } ${isLocked ? 'opacity-75' : ''}`}
                             >
                               <div className="flex items-center justify-between mb-1">
-                                <span className="font-semibold">
-                                  Entregable {deliverable.orderIndex}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  {/* Solo mostrar candado para cliente bloqueado */}
+                                  {isLocked && <Lock size={16} className="text-red-500" />}
+                                  <span className="font-semibold">
+                                    Entregable {deliverable.orderIndex}
+                                  </span>
+                                </div>
                                 {/* Mostrar estado de la delivery si existe, sino el estado del deliverable */}
                                 {latestDelivery ? (
                                   <StatusBadge 
@@ -249,6 +287,11 @@ export default function ServiceDeliveryPage() {
                                     type="delivery" 
                                     className="text-xs"
                                   />
+                                ) : isLocked ? (
+                                  /* Solo cliente ve badge de bloqueado */
+                                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                                    Bloqueado
+                                  </span>
                                 ) : (
                                   <StatusBadge 
                                     status={deliverable.status} 
@@ -266,55 +309,66 @@ export default function ServiceDeliveryPage() {
 
                   {/* Contenido del Tab */}
                   <div className="bg-white rounded-b-lg shadow-sm p-6">
-                    {deliverables[selectedDeliveryIndex] && (
+                    {visibleDeliverables[selectedDeliveryIndex] && (
                       <>
-                        <div className="mb-6 pb-6 border-b">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {deliverables[selectedDeliveryIndex].title}
-                          </h3>
-                          <p className="text-gray-600 mb-3">
-                            {deliverables[selectedDeliveryIndex].description}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>
-                              Precio: ${deliverables[selectedDeliveryIndex].price?.toLocaleString()}
-                            </span>
-                            <span>
-                              Fecha estimada: {new Date(deliverables[selectedDeliveryIndex].estimatedDeliveryDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-
-                        {(() => {
-                          const deliverableDeliveries = getDeliveriesByDeliverable(
-                            deliverables[selectedDeliveryIndex].id
-                          );
-
-                          if (deliverableDeliveries.length === 0) {
-                            return (
-                              <div className="text-center py-8">
-                                <Package size={48} className="mx-auto text-gray-400 mb-3" />
-                                <p className="text-gray-600">
-                                  Este entregable aún no ha sido entregado
-                                </p>
+                        {/* Solo el CLIENTE ve el LockedDeliverableCard cuando está bloqueado */}
+                        {/* El PROVEEDOR siempre ve el contenido normal (puede ver todas sus entregas) */}
+                        {visibleDeliverables[selectedDeliveryIndex].isLocked && isClient ? (
+                          <LockedDeliverableCard 
+                            deliverable={visibleDeliverables[selectedDeliveryIndex]}
+                            userRole="CLIENT"
+                          />
+                        ) : (
+                          <>
+                            <div className="mb-6 pb-6 border-b">
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                {visibleDeliverables[selectedDeliveryIndex].title}
+                              </h3>
+                              <p className="text-gray-600 mb-3">
+                                {visibleDeliverables[selectedDeliveryIndex].description}
+                              </p>
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <span>
+                                  Precio: ${visibleDeliverables[selectedDeliveryIndex].price?.toLocaleString()}
+                                </span>
+                                <span>
+                                  Fecha estimada: {new Date(visibleDeliverables[selectedDeliveryIndex].estimatedDeliveryDate).toLocaleDateString()}
+                                </span>
                               </div>
-                            );
-                          }
-
-                          return (
-                            <div className="space-y-6">
-                              {deliverableDeliveries.map((delivery) => (
-                                <DeliveryReview
-                                  key={delivery.id}
-                                  delivery={delivery}
-                                  isClient={isClient}
-                                  onReviewSuccess={handleReviewSuccess}
-                                  hasActiveClaim={hasActiveClaim}
-                                />
-                              ))}
                             </div>
-                          );
-                        })()}
+
+                            {(() => {
+                              const deliverableDeliveries = getDeliveriesByDeliverable(
+                                visibleDeliverables[selectedDeliveryIndex].id
+                              );
+
+                              if (deliverableDeliveries.length === 0) {
+                                return (
+                                  <div className="text-center py-8">
+                                    <Package size={48} className="mx-auto text-gray-400 mb-3" />
+                                    <p className="text-gray-600">
+                                      Este entregable aún no ha sido entregado
+                                    </p>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div className="space-y-6">
+                                  {deliverableDeliveries.map((delivery) => (
+                                    <DeliveryReview
+                                      key={delivery.id}
+                                      delivery={delivery}
+                                      isClient={isClient}
+                                      onReviewSuccess={handleReviewSuccess}
+                                      hasActiveClaim={hasActiveClaim}
+                                    />
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                          </>
+                        )}
                       </>
                     )}
                   </div>

@@ -6,6 +6,7 @@ import { fetchReportedProjects } from '@/service/reports/reportsFetch';
 import { fetchReportedPublications } from '@/service/reports/publicationReportsFetch';
 import { fetchReportedServices } from '@/service/reports/fetchReportedServices';
 import { fetchReportedReviews } from '@/service/reports/reviewReportsFetch';
+import { fetchReportedComments } from '@/service/reports/commentReportsFetch';
 import { fetchReportedServiceReviews } from '@/service/reports/fetchReportedServiceReviews';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import Pagination from '@/components/common/Pagination';
@@ -16,7 +17,7 @@ import { ROLES } from '@/constants/roles';
 const FILTERS = [
   { label: 'Proyectos', value: 'projects' },
   { label: 'Publicaciones', value: 'publications' },
-  { label: 'Comentarios', value: 'comments', disabled: true },
+  { label: 'Comentarios', value: 'comments' },
   { label: 'Servicios', value: 'services'},
   { label: 'Reseñas de Usuarios', value: 'reviews'},
   { label: 'Reseñas de Servicios', value: 'service-reviews'},
@@ -36,6 +37,7 @@ export default function ReportsList() {
   const [order, setOrder] = useState('reportCount');
   const [projects, setProjects] = useState([]);
   const [publications, setPublications] = useState([]);
+  const [comments, setComments] = useState([]);
   const [services, setServices] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [serviceReviews, setServiceReviews] = useState([]);
@@ -82,6 +84,14 @@ export default function ReportsList() {
           setPagination(data?.data?.pagination || null);
           setLoading(false);
         });
+    } else if (filter === 'comments') {
+      fetchReportedComments({ page, orderBy: order, limit: 15 })
+        .then(data => {
+          setComments(data?.data?.comments || []);
+          setPagination(data?.data?.pagination || null);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
     } else if (filter === 'services') {
       fetchReportedServices({ page, orderBy: order })
         .then(data => {
@@ -192,7 +202,12 @@ export default function ReportsList() {
             <thead>
               <tr className="text-left border-b">
                 <th className="p-4 min-w-[140px] md:min-w-[180px]">
-                  {filter === 'projects' ? 'Proyecto' : filter === 'services' ? 'Servicio' : filter === 'reviews' ? 'Reseña' : filter === 'service-reviews' ? 'Reseña de servicio' : 'Publicación'}
+                  {filter === 'projects' ? 'Proyecto' : 
+                   filter === 'services' ? 'Servicio' : 
+                   filter === 'reviews' ? 'Reseña de usuarios ' :
+                   filter === 'service-reviews' ? 'Reseña de servicio':
+                   filter === 'comments' ? 'Comentario' : 
+                   'Publicación'}
                 </th>
                 <th className="p-4 min-w-[90px] max-w-[120px] text-center">Cantidad de reportes</th>
                 <th className="p-4 min-w-[120px] max-w-[180px] text-center">Fecha de último reporte</th>
@@ -274,6 +289,47 @@ export default function ReportsList() {
                             onClick={() => window.location.href = `/publication/${pub.publicationId}?from=reports`}
                           >
                             Ver publicación
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )
+              ) : filter === 'comments' ? (
+                comments.length === 0 ? (
+                  <tr key="no-comments">
+                    <td colSpan="4" className="p-6 text-center text-gray-500 italic">No se encontraron comentarios reportados.</td>
+                  </tr>
+                ) : (
+                  comments.map(comment => (
+                    <tr key={comment.commentId} className="border-b hover:bg-gray-50 h-auto align-top">
+                      <td className="p-4 align-top max-w-[300px]">
+                        <div className="text-conexia-green font-semibold line-clamp-2 break-words overflow-hidden text-ellipsis" title={comment.commentContent}>
+                          {comment.commentContent || 'Sin contenido'}
+                        </div>
+                      </td>
+                      <td className="p-4 text-center align-middle">{comment.reportCount}</td>
+                      <td className="p-4 text-center align-middle">{new Date(comment.lastReportDate).toLocaleString()}</td>
+                      <td className="p-4 text-center align-middle">
+                        <div className="flex justify-center gap-x-2">
+                          <Button
+                            variant="add"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => router.push(`/reports/comment/${comment.commentId}`)}
+                          >
+                            Ver reportes
+                          </Button>
+                          <Button
+                            variant="edit"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => {
+                              if (comment.publicationId) {
+                                router.push(`/publication/${comment.publicationId}?commentId=${comment.commentId}`);
+                              }
+                            }}
+                            disabled={!comment.publicationId}
+                          >
+                            Ver comentario
                           </Button>
                         </div>
                       </td>

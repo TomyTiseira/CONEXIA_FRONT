@@ -19,9 +19,11 @@ import { editPublication } from '@/service/publications/editPublication';
 import { createComment, getPublicationComments, updateComment, deleteComment } from '@/service/publications/comments';
 import { createOrUpdateReaction, deleteReaction, getPublicationReactions } from '@/service/publications/reactions';
 import { createPublicationReport } from '@/service/reports/publicationReportsFetch';
+import { createCommentReport } from '@/service/reports/commentReportsFetch';
 import { ROLES } from '@/constants/roles';
 import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 import ReportPublicationModal from './report/ReportPublicationModal';
+import ReportCommentModal from './report/ReportCommentModal';
 import Toast from '@/components/ui/Toast';
 
 const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -970,6 +972,9 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
 
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
+  const [showReportCommentModal, setShowReportCommentModal] = useState(false);
+  const [reportCommentLoading, setReportCommentLoading] = useState(false);
+  const [commentToReport, setCommentToReport] = useState(null);
   // Toast local de respaldo si el padre no provee onShowToast
   const [internalToast, setInternalToast] = useState(null);
 
@@ -1008,6 +1013,63 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
       }
     } finally {
       setReportLoading(false);
+    }
+  };
+
+  // Handler para enviar el reporte de comentario
+  const handleReportCommentSubmit = async (data) => {
+    setReportCommentLoading(true);
+    setShowReportCommentModal(false);
+    const showToast = (payload) => {
+      if (onShowToast) {
+        onShowToast({ ...payload, isVisible: true });
+      } else {
+        setInternalToast({ ...payload, isVisible: true });
+      }
+    };
+    try {
+      await createCommentReport({
+        commentId: commentToReport,
+        reason: data.reason,
+        otherReason: data.otherReason,
+        description: data.description
+      });
+      showToast({ 
+        type: 'success', 
+        message: 'Reporte enviado exitosamente. Nuestro equipo lo revisará pronto.' 
+      });
+      setCommentToReport(null);
+    } catch (err) {
+      const isAlreadyReported = 
+        err.message && 
+        (err.message.includes('Ya has reportado este comentario') || 
+         err.message.includes('already reported'));
+      const isNotFound = 
+        err.message && 
+        (err.message.includes('no encontrado') || 
+         err.message.includes('not found') ||
+         err.message.includes('no está disponible'));
+      
+      if (isAlreadyReported) {
+        showToast({ 
+          type: 'warning', 
+          message: 'Ya has reportado este comentario anteriormente.' 
+        });
+      } else if (isNotFound) {
+        showToast({ 
+          type: 'error', 
+          message: 'Este comentario ya no está disponible.' 
+        });
+      } else {
+        console.error('Error al reportar comentario:', err);
+        showToast({ 
+          type: 'error', 
+          message: 'No se pudo enviar el reporte. Por favor, intenta nuevamente.' 
+        });
+      }
+      setCommentToReport(null);
+    } finally {
+      setReportCommentLoading(false);
     }
   };
 
@@ -1137,6 +1199,17 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
           onCancel={() => setShowReportModal(false)}
           onSubmit={handleReportSubmit}
           loading={reportLoading}
+        />
+      )}
+      {/* Modal de reporte de comentario */}
+      {showReportCommentModal && (
+        <ReportCommentModal
+          onCancel={() => {
+            setShowReportCommentModal(false);
+            setCommentToReport(null);
+          }}
+          onSubmit={handleReportCommentSubmit}
+          loading={reportCommentLoading}
         />
       )}
       {/* Línea divisoria entre header y contenido */}
@@ -1966,11 +2039,12 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
                                 <button
                                   className="flex items-center w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-orange-500"
                                   onClick={() => {
-                                    // Por ahora solo cerramos el menú
-                                    setCommentMenuOpen(prevState => ({
-                                      ...prevState,
-                                      [comment.id]: false
-                                    }));
+                                    // Cerramos el menú
+                                    setCommentMenuOpen({});
+                                    // Guardamos el ID del comentario a reportar
+                                    setCommentToReport(comment.id);
+                                    // Abrimos el modal de reporte
+                                    setShowReportCommentModal(true);
                                   }}
                                 >
                                   <Flag size={16} className="mr-2" />

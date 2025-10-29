@@ -26,6 +26,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
     const statusMap = {
       pending: 'Pendiente',
       quoted: 'Cotizado',
+      requoting: 'Re-cotizando',
       accepted: 'Aceptado',
       approved: 'Aprobada',
       rejected: 'Rechazado',
@@ -48,6 +49,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
     const statusMap = {
       pending: 'text-yellow-800 bg-yellow-100',
       quoted: 'text-blue-800 bg-blue-100',
+      requoting: 'text-sky-800 bg-sky-100',
       accepted: 'text-green-800 bg-green-100',
       approved: 'text-conexia-green bg-conexia-green/10',
       rejected: 'text-red-800 bg-red-100',
@@ -186,7 +188,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
                 <div>
                   <span className="font-medium text-gray-700">Estado actual:</span>
                   <div className="mt-1">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(hiring.status?.code)}`}>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getStatusColor(hiring.status?.code)}`}>
                       {getStatusLabel(hiring.status?.code)}
                     </span>
                   </div>
@@ -194,6 +196,21 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
               </div>
             </div>
           </div>
+
+          {/* Descripción de Negociación (si existe) */}
+          {hiring.negotiationDescription && hiring.status?.code === 'negotiating' && (
+            <div className="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                🤝 <span className="text-orange-700">Solicitud de Negociación</span>
+              </h3>
+              <div>
+                <span className="font-medium text-gray-700">El cliente quiere negociar:</span>
+                <div className="text-gray-900 mt-2 bg-white p-4 rounded border border-yellow-300 break-words overflow-wrap-anywhere">
+                  {hiring.negotiationDescription}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Cotización enviada (si existe) */}
           {hasQuotation && (

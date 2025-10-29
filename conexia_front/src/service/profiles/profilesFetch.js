@@ -2,6 +2,7 @@
 import { config } from "@/config";
 
 export async function createUserProfile(formData) {
+  // Usar POST - El backend detecta si hay perfil vacío y lo actualiza automáticamente
   const res = await fetch(`${config.API_URL}/users/profile`, {
     method: "POST",
     body: formData,
@@ -20,11 +21,6 @@ export async function createUserProfile(formData) {
       name: 'ProfileError',
       toString: () => errorMessage
     };
-    
-    // Si es un error 409, agregar información específica
-    if (res.status === 409) {
-      customError.isDuplicateProfile = true;
-    }
     
     throw customError;
   }

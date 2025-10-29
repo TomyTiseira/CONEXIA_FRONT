@@ -11,13 +11,14 @@ import { removeItemFromFormArray } from "@/components/utils/removeItemArray";
 import ConexiaLogo from "@/components/ui/ConexiaLogo";
 import { toggleHabilidad } from "@/components/utils/toggleHabilidad";
 import { useAuth } from "@/context/AuthContext";
-import { isValidPhoneNumber, validateSimplePhone } from "@/components/utils/validations/phones";
 import { isValidURL } from "@/components/utils/validations/urls";
 
 import InputField from "@/components/form/InputField";
 import TextArea from "@/components/form/InputField";
 import { handleSubmitProfile } from "@/components/utils/handlers";
 import RubroSkillsSelector from "@/components/skills/RubroSkillsSelector";
+import PhoneInput from "@/components/form/PhoneInput";
+import DateInput from "@/components/form/DateInput";
 
 
 
@@ -31,9 +32,10 @@ export default function CreateProfileForm() {
   const [form, setForm] = useState({
     name: "",
     lastName: "",
-    birthDate: "",
+    birthDate: null,
     documentTypeId: "",
     documentNumber: "",
+    areaCode: "",
     phoneNumber: "",
     country: "",
     state: "",
@@ -176,13 +178,40 @@ export default function CreateProfileForm() {
 
   const validateField = (field, value) => {
     if (requiredFields.some(f => f.name === field)) {
-      if (!value || value.trim() === "") {
-        return "Este campo es obligatorio";
+      // Para birthDate (Date object), verificar si existe
+      if (field === "birthDate") {
+        if (!value) {
+          return "Este campo es obligatorio";
+        }
+      } else {
+        // Para otros campos (strings), usar trim
+        if (!value || value.trim() === "") {
+          return "Este campo es obligatorio";
+        }
       }
     }
+    
+    // Validación de número de documento según el tipo
+    if (field === "documentNumber" && value && form.documentTypeId) {
+      const docType = parseInt(form.documentTypeId);
+      const docNumber = value.trim();
+      
+      if (docType === 1) {
+        // DNI: 7-8 dígitos numéricos
+        if (!/^\d{7,8}$/.test(docNumber)) {
+          return "El DNI debe tener 7 u 8 dígitos";
+        }
+      } else if (docType === 3) {
+        // Pasaporte: 6-9 caracteres alfanuméricos
+        if (!/^[A-Z0-9]{6,9}$/i.test(docNumber)) {
+          return "El pasaporte debe tener entre 6 y 9 caracteres alfanuméricos";
+        }
+      }
+    }
+    
     // Validación de mayor de 18 años para fecha de nacimiento
     if (field === "birthDate" && value) {
-      const birth = new Date(value);
+      const birth = value instanceof Date ? value : new Date(value);
       const today = new Date();
       const age = today.getFullYear() - birth.getFullYear();
       const m = today.getMonth() - birth.getMonth();
@@ -203,6 +232,16 @@ export default function CreateProfileForm() {
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     
+    // Si se cambia el tipo de documento, revalidar el número de documento
+    if (field === "documentTypeId" && form.documentNumber) {
+      if (touched.documentNumber) {
+        setErrors((prev) => ({ 
+          ...prev, 
+          documentNumber: validateField("documentNumber", form.documentNumber) 
+        }));
+      }
+    }
+    
     // Limpiar errores del backend cuando el usuario empiece a escribir
     if (msg && !msg.ok) {
       // Si es un error de campo único
@@ -221,32 +260,72 @@ export default function CreateProfileForm() {
   };
 
   // Funciones específicas para el teléfono
-  const handlePhoneChange = (value) => {
-    setForm((prev) => ({ ...prev, phoneNumber: value }));
-    // Solo validar si hay contenido y el campo ha sido tocado
-    if (touched.phoneNumber && value && value.trim() !== "") {
-      const phoneValidation = validateSimplePhone(value);
+  const validateAreaCode = (value) => {
+    if (!value || value.trim() === "") {
+      return ""; // Opcional
+    }
+    if (!/^\+\d{1,4}$/.test(value.trim())) {
+      return "Formato: +XX (ejemplo: +54)";
+    }
+    return "";
+  };
+
+  const validatePhoneNumber = (value) => {
+    if (!value || value.trim() === "") {
+      return ""; // Opcional
+    }
+    if (!/^[0-9]{6,15}$/.test(value.trim())) {
+      return "Debe tener entre 6 y 15 dígitos";
+    }
+    return "";
+  };
+
+  const handleAreaCodeChange = (value) => {
+    setForm((prev) => ({ ...prev, areaCode: value }));
+    if (touched.areaCode && value && value.trim() !== "") {
       setErrors((prev) => ({ 
         ...prev, 
-        phoneNumber: phoneValidation.isValid ? "" : phoneValidation.message 
+        areaCode: validateAreaCode(value)
       }));
-    } else if (touched.phoneNumber && (!value || value.trim() === "")) {
-      // Limpiar error si el campo se vacía
+    } else if (touched.areaCode && (!value || value.trim() === "")) {
+      setErrors((prev) => ({ ...prev, areaCode: "" }));
+    }
+  };
+
+  const handleAreaCodeBlur = () => {
+    setTouched((prev) => ({ ...prev, areaCode: true }));
+    if (form.areaCode && form.areaCode.trim() !== "") {
+      setErrors((prev) => ({ 
+        ...prev, 
+        areaCode: validateAreaCode(form.areaCode)
+      }));
+    } else {
+      setErrors((prev) => ({ ...prev, areaCode: "" }));
+    }
+  };
+
+  const handlePhoneChange = (value) => {
+    // Solo permitir dígitos
+    const digitsOnly = value.replace(/\D/g, '');
+    setForm((prev) => ({ ...prev, phoneNumber: digitsOnly }));
+    if (touched.phoneNumber && digitsOnly && digitsOnly.trim() !== "") {
+      setErrors((prev) => ({ 
+        ...prev, 
+        phoneNumber: validatePhoneNumber(digitsOnly)
+      }));
+    } else if (touched.phoneNumber && (!digitsOnly || digitsOnly.trim() === "")) {
       setErrors((prev) => ({ ...prev, phoneNumber: "" }));
     }
   };
 
   const handlePhoneBlur = () => {
     setTouched((prev) => ({ ...prev, phoneNumber: true }));
-    // Solo validar si hay contenido
     if (form.phoneNumber && form.phoneNumber.trim() !== "") {
-      const phoneValidation = validateSimplePhone(form.phoneNumber);
       setErrors((prev) => ({ 
         ...prev, 
-        phoneNumber: phoneValidation.isValid ? "" : phoneValidation.message 
+        phoneNumber: validatePhoneNumber(form.phoneNumber)
       }));
     } else {
-      // Limpiar error si el campo está vacío
       setErrors((prev) => ({ ...prev, phoneNumber: "" }));
     }
   };
@@ -541,12 +620,32 @@ export default function CreateProfileForm() {
     });
 
     // Validación específica del teléfono al enviar - solo si tiene contenido
-    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
-      const phoneValidation = validateSimplePhone(form.phoneNumber);
-      if (!phoneValidation.isValid) {
-        newErrors.phoneNumber = phoneValidation.message;
+    if (form.areaCode && form.areaCode.trim() !== "") {
+      const areaCodeError = validateAreaCode(form.areaCode);
+      if (areaCodeError) {
+        newErrors.areaCode = areaCodeError;
         hasError = true;
       }
+    }
+    
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      const phoneError = validatePhoneNumber(form.phoneNumber);
+      if (phoneError) {
+        newErrors.phoneNumber = phoneError;
+        hasError = true;
+      }
+    }
+
+    // Validación cruzada: si hay areaCode debe haber phoneNumber y viceversa
+    if ((form.areaCode && form.areaCode.trim() !== "" && (!form.phoneNumber || form.phoneNumber.trim() === "")) ||
+        (form.phoneNumber && form.phoneNumber.trim() !== "" && (!form.areaCode || form.areaCode.trim() === ""))) {
+      if (form.areaCode && !form.phoneNumber) {
+        newErrors.phoneNumber = "Si ingresás código de área, también debes ingresar el número";
+      }
+      if (form.phoneNumber && !form.areaCode) {
+        newErrors.areaCode = "Si ingresás número, también debes ingresar el código de área";
+      }
+      hasError = true;
     }
 
     // Validación de errores de imágenes
@@ -685,6 +784,10 @@ export default function CreateProfileForm() {
     // Si no hay errores, limpiar 'confirmed' y campos vacíos antes de enviar al backend
     const cleanForm = {
       ...form,
+      // Convertir la fecha de Date object a string YYYY-MM-DD
+      birthDate: form.birthDate instanceof Date 
+        ? form.birthDate.toISOString().split('T')[0] 
+        : form.birthDate,
       experience: form.experience.map(({ confirmed, ...exp }) => {
         const cleanExp = {
           title: exp.title.trim(),
@@ -764,39 +867,54 @@ export default function CreateProfileForm() {
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Fecha de nacimiento</label>
-            <input
-              type="date"
-              name="birthDate"
+            <DateInput
               value={form.birthDate}
-              onChange={e => handleChange("birthDate", e.target.value)}
-              onBlur={() => handleBlur("birthDate")}
-              className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40 ${errors.birthDate ? 'border-red-500 ring-red-300' : ''}`}
-            />
-            {errors.birthDate && <p className="text-xs text-red-600 mt-1 text-left">{errors.birthDate}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">Teléfono (Opcional)</label>
-            <InputField
-              name="phoneNumber"
-              value={form.phoneNumber}
-              onChange={e => handlePhoneChange(e.target.value)}
-              onBlur={handlePhoneBlur}
-              error={errors.phoneNumber}
+              onChange={(date) => {
+                handleChange("birthDate", date);
+                if (touched.birthDate) {
+                  handleBlur("birthDate");
+                }
+              }}
+              error={errors.birthDate}
+              maxDate={new Date()}
+              placeholder="Seleccioná tu fecha de nacimiento"
             />
           </div>
         </div>
+        
+        {/* Teléfono con selector de país */}
+        <PhoneInput
+          areaCode={form.areaCode}
+          phoneNumber={form.phoneNumber}
+          onAreaCodeChange={(value) => handleAreaCodeChange(value)}
+          onPhoneNumberChange={(value) => handlePhoneChange(value)}
+          areaCodeError={errors.areaCode}
+          phoneNumberError={errors.phoneNumber}
+          onBlur={() => {
+            handleAreaCodeBlur();
+            handlePhoneBlur();
+          }}
+        />
+        
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Tipo de documento</label>
             <select
               name="documentTypeId"
               value={form.documentTypeId}
-              onChange={e => handleChange("documentTypeId", e.target.value)}
+              onChange={e => {
+                handleChange("documentTypeId", e.target.value);
+                // Limpiar el número de documento al cambiar el tipo
+                if (form.documentNumber) {
+                  setForm(prev => ({ ...prev, documentNumber: '' }));
+                  setErrors(prev => ({ ...prev, documentNumber: '' }));
+                }
+              }}
               onBlur={() => handleBlur("documentTypeId")}
               className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-conexia-green/40 ${errors.documentTypeId ? 'border-red-500 ring-red-300' : ''}`}
             >
               <option value="" disabled hidden>Seleccioná una opción</option>
-              {documentTypes.map((t) => (
+              {documentTypes.filter(t => t.id === 1 || t.id === 3).map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
@@ -810,6 +928,11 @@ export default function CreateProfileForm() {
               onChange={e => handleChange("documentNumber", e.target.value)}
               onBlur={() => handleBlur("documentNumber")}
               error={errors.documentNumber}
+              placeholder={
+                form.documentTypeId === "1" ? "12345678" : 
+                form.documentTypeId === "3" ? "ABC123456" : 
+                "Seleccioná tipo de documento"
+              }
             />
           </div>
         </div>

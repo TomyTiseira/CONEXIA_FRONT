@@ -252,7 +252,7 @@ export async function cancelServiceHiring(hiringId) {
 /**
  * Negociar una cotización (actualizar precio y tiempo de entrega)
  * @param {number} hiringId - ID de la contratación
- * @param {Object} data - { price: string, deliveryTime: string, description?: string }
+ * @param {Object} data - { negotiationDescription?: string }
  * @returns {Promise<Object>} Cotización actualizada
  */
 export async function negotiateQuotation(hiringId, data = {}) {
@@ -395,6 +395,30 @@ export async function fetchPaymentModalities() {
 
   if (!res.ok) {
     throw new Error(json?.message || 'Error al obtener modalidades de pago');
+  }
+
+  if (!json.success) {
+    throw new Error(json.message || 'Error en la respuesta del servidor');
+  }
+
+  return json.data;
+}
+
+/**
+ * Solicitar re-cotización de una cotización vencida
+ * @param {number} hiringId - ID de la contratación
+ * @returns {Promise<Object>} Resultado de la operación
+ */
+export async function requestRequote(hiringId) {
+  const res = await fetch(`${config.API_URL}/service-hirings/${hiringId}/request-requote`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json?.message || 'Error al solicitar re-cotización');
   }
 
   if (!json.success) {

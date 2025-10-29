@@ -46,7 +46,19 @@ export default function DeleteMyUserModal({ email, onConfirm, onCancel, loading,
         window.location.replace("/?logout=true");
       }
     } catch (err) {
-      setMsg({ ok: false, text: err.message });
+      // Detectar error de contrataciones activas
+      if (err.message && err.message.includes('active service hiring')) {
+        // Extraer el número de contrataciones del mensaje si está disponible
+        const match = err.message.match(/(\d+)\s+active service hiring/);
+        const count = match ? parseInt(match[1]) : 0;
+        
+        setError(
+          `No puedes eliminar tu cuenta porque tienes ${count} ${count === 1 ? 'contratación' : 'contrataciones'} de servicio en curso. ` +
+          `Debes esperar a que finalicen o sean canceladas antes de poder dar de baja tu cuenta.`
+        );
+      } else {
+        setMsg({ ok: false, text: err.message });
+      }
     }
   };
 
