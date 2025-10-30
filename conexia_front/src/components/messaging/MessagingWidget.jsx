@@ -11,6 +11,7 @@ import { config } from '@/config';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { getMessagingSocket } from '@/lib/socket/messagingSocket';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages';
+import { useChatWidgets } from '@/context/ChatWidgetsContext';
 
 export default function MessagingWidget({ avatar = '/images/default-avatar.png', chats = [] }) {
   const [open, setOpen] = useState(false);
@@ -28,6 +29,17 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
   // Store chats
   const { chats: convs, loading: chatsLoading, loadConversations, selectConversation, refreshUnreadCount } = useMessaging();
   const { messages, typingStates } = useChatMessages(); // <- incluir typingStates
+  
+  // Context para coordinar con NEXO
+  const { nexoOpen, openMessaging, closeMessaging } = useChatWidgets();
+
+  // Cerrar el chat cuando NEXO se abre
+  useEffect(() => {
+    if (nexoOpen) {
+      setOpen(false);
+      setActiveChat(null);
+    }
+  }, [nexoOpen]);
 
   // Restaurar estado al montar (si existe)
   useEffect(() => {
@@ -94,6 +106,15 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
       // ignore
     }
   }, [open, activeChat?.id, activeChat?.name, activeChat?.avatar, activeChat?.conversationId]);
+
+  // Notificar al contexto cuando el chat se abre/cierra o activeChat cambia
+  useEffect(() => {
+    if (open || activeChat) {
+      openMessaging();
+    } else {
+      closeMessaging();
+    }
+  }, [open, activeChat, openMessaging, closeMessaging]);
 
   // Helper para normalizar la URL de la imagen de perfil
   const getProfilePictureUrl = (img) => {
@@ -276,7 +297,9 @@ export default function MessagingWidget({ avatar = '/images/default-avatar.png',
   if (!isUserRole) return null;
 
   return (
-    <div className="hidden md:flex flex-row-reverse items-end fixed right-6 bottom-0 z-50 gap-6 pointer-events-none">
+    <div className={`hidden md:flex flex-row-reverse items-end fixed right-6 bottom-0 z-50 gap-6 transition-all duration-500 ease-in-out ${
+      nexoOpen ? 'opacity-0 pointer-events-none scale-95' : 'opacity-100 pointer-events-auto scale-100'
+    }`}>
       {/* Contenedor vertical: flotante principal y modal de historial */}
       <div className="flex flex-col items-end pointer-events-none">
         {/* Flotante principal */}
