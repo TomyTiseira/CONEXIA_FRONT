@@ -143,16 +143,16 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
               </label>
               <InputField
                 type="text"
-                placeholder="Ej: Reseña duplicada, Error en la información..."
+                placeholder="Especifica el motivo (Máximo 30 caracteres)"
                 value={otherReason}
-                onChange={(e) => setOtherReason(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.length <= 30) setOtherReason(e.target.value);
+                }}
                 name="otherReason"
-                maxLength={100}
+                maxLength={30}
                 disabled={loading}
+                showCharCount={true}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {otherReason.length}/100 caracteres
-              </p>
             </div>
           )}
 
@@ -170,10 +170,8 @@ export default function ReviewReportModal({ open, onClose, onConfirm, loading = 
               name="description"
               maxLength={500}
               disabled={loading}
+              showCharCount={true}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {description.length}/500 caracteres
-            </p>
           </div>
 
           {/* Mensaje de error único y centrado */}

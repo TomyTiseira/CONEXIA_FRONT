@@ -20,7 +20,7 @@ export default function ReportCommentModal({ onCancel, onSubmit, loading }) {
 
   const MIN_DESCRIPTION_LENGTH = 10;
   const MAX_DESCRIPTION_LENGTH = 500;
-  const MAX_OTHER_REASON_LENGTH = 200;
+  const MAX_OTHER_REASON_LENGTH = 30;
 
   useEffect(() => {
     setCharCount(description.length);
@@ -34,59 +34,42 @@ export default function ReportCommentModal({ onCancel, onSubmit, loading }) {
     }
   };
 
-  const handleDescriptionChange = (e) => {
-    const value = e.target.value;
-    if (value.length <= MAX_DESCRIPTION_LENGTH) {
-      setDescription(value);
-      setError("");
-    }
-  };
-
-  const handleOtherTextChange = (e) => {
-    const value = e.target.value;
-    if (value.length <= MAX_OTHER_REASON_LENGTH) {
-      setOtherText(value);
-      setError("");
-    }
-  };
-
   const validateForm = () => {
     if (!selectedReason) {
-      setError("Debes seleccionar un motivo.");
       return false;
     }
     
-    if (selectedReason === "Otro" && !otherText.trim()) {
-      setError("Debes especificar el motivo del reporte.");
+    if (selectedReason === "Otro" && (!otherText || otherText.trim().length === 0)) {
       return false;
     }
 
-    if (!description.trim()) {
-      setError("La descripción es obligatoria.");
-      return false;
-    }
-
-    if (description.trim().length < MIN_DESCRIPTION_LENGTH) {
-      setError(`La descripción debe tener al menos ${MIN_DESCRIPTION_LENGTH} caracteres.`);
+    if (!description || description.trim().length < MIN_DESCRIPTION_LENGTH) {
       return false;
     }
 
     return true;
   };
 
-  const isFormValid = () => {
-    return (
-      selectedReason &&
-      description.trim().length >= MIN_DESCRIPTION_LENGTH &&
-      description.trim().length <= MAX_DESCRIPTION_LENGTH &&
-      (selectedReason !== "Otro" || (otherText.trim() && otherText.length <= MAX_OTHER_REASON_LENGTH))
-    );
-  };
-
   const handleSubmit = () => {
     setError("");
     
-    if (!validateForm()) {
+    if (!selectedReason) {
+      setError("Debes seleccionar un motivo.");
+      return;
+    }
+    
+    if (selectedReason === "Otro" && !otherText.trim()) {
+      setError("Debes especificar el motivo.");
+      return;
+    }
+
+    if (!description.trim()) {
+      setError("La descripción es obligatoria.");
+      return;
+    }
+
+    if (description.trim().length < MIN_DESCRIPTION_LENGTH) {
+      setError(`La descripción debe tener al menos ${MIN_DESCRIPTION_LENGTH} caracteres.`);
       return;
     }
 
@@ -97,34 +80,16 @@ export default function ReportCommentModal({ onCancel, onSubmit, loading }) {
     });
   };
 
-  const getInputBorderColor = (value, isValid) => {
-    if (!value) return "border-gray-300";
-    return isValid ? "border-green-500" : "border-red-500";
-  };
-
-  const isDescriptionValid = description.trim().length >= MIN_DESCRIPTION_LENGTH && description.trim().length <= MAX_DESCRIPTION_LENGTH;
-  const isOtherReasonValid = selectedReason !== "Otro" || (otherText.trim() && otherText.length <= MAX_OTHER_REASON_LENGTH);
-
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
-      <div
-        className="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[95vh] overflow-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', borderRadius: '1rem' }}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-conexia-green">
-            Reportar Comentario
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-            disabled={loading}
-            aria-label="Cerrar"
-          >
-            ×
-          </button>
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[95vh] overflow-hidden flex flex-col" style={{ borderRadius: '1rem' }}>
+        {/* Header fijo */}
+        <div className="sticky top-0 z-10 bg-white border-b px-6 py-4 rounded-t-xl">
+          <h2 className="text-xl font-bold text-center text-conexia-green">Reportar comentario</h2>
         </div>
+
+        {/* Contenido scrollable */}
+        <div className="flex-1 overflow-auto px-6 py-4">
 
         {/* Info Alert */}
         <div className="flex items-start gap-2 bg-conexia-coral/10 border border-conexia-coral rounded-lg px-3 py-2 mb-4">
@@ -141,105 +106,90 @@ export default function ReportCommentModal({ onCancel, onSubmit, loading }) {
           </div>
         </div>
 
-        {/* Campo 1: Motivo del Reporte */}
+        {/* Motivos de reporte */}
         <div className="mb-4">
-          <label className="block text-conexia-green font-semibold mb-2 text-sm">
-            Motivo <span className="text-red-500">*</span>
+          <label className="block text-conexia-green font-semibold mb-2">
+            Motivos de reporte <span className="text-red-500">*</span>
           </label>
-          <select
-            value={selectedReason}
-            onChange={(e) => handleReasonChange(e.target.value)}
-            className={`w-full border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-conexia-green/50 ${
-              !selectedReason ? "border-gray-300 text-gray-500" : "border-gray-300 text-gray-900"
-            }`}
-            disabled={loading}
-          >
-            <option value="">Selecciona un motivo</option>
+          <div className="flex flex-col gap-2 ml-6">
             {REPORT_REASONS.map((reason) => (
-              <option key={reason.value} value={reason.value}>
-                {reason.label}
-              </option>
+              <label key={reason.value} className="flex items-center gap-2 cursor-pointer select-none text-base">
+                <input
+                  type="radio"
+                  name="reason"
+                  value={reason.value}
+                  checked={selectedReason === reason.value}
+                  onChange={() => handleReasonChange(reason.value)}
+                  disabled={loading}
+                  className="w-3.5 h-3.5 rounded border-gray-300 focus:ring-2 focus:ring-conexia-green/40"
+                  style={{ accentColor: '#145750' }}
+                />
+                <span className="text-gray-700">{reason.label}</span>
+              </label>
             ))}
-          </select>
+          </div>
         </div>
 
-        {/* Campo 2: Otro Motivo (Condicional) */}
+        {/* Especifica el motivo (Condicional) */}
         {selectedReason === "Otro" && (
           <div className="mb-4">
-            <label className="block text-conexia-green font-semibold mb-2 text-sm">
+            <label className="block text-conexia-green font-semibold mb-2">
               Especifica el motivo <span className="text-red-500">*</span>
             </label>
-            <input
+            <InputField
               type="text"
+              placeholder="Especifica el motivo (Máximo 30 caracteres)"
               value={otherText}
-              onChange={handleOtherTextChange}
-              placeholder="Describe el motivo del reporte"
-              className={`w-full border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-conexia-green/50 ${
-                getInputBorderColor(otherText, isOtherReasonValid)
-              }`}
-              disabled={loading}
+              onChange={(e) => {
+                if (e.target.value.length <= MAX_OTHER_REASON_LENGTH) {
+                  setOtherText(e.target.value);
+                }
+              }}
+              name="otherReason"
               maxLength={MAX_OTHER_REASON_LENGTH}
+              disabled={loading}
+              showCharCount={true}
             />
-            <div className="flex justify-between items-center mt-1">
-              {otherText && !isOtherReasonValid && (
-                <span className="text-red-500 text-xs">Este campo es requerido</span>
-              )}
-              <span className="text-gray-500 text-xs ml-auto">
-                {otherText.length}/{MAX_OTHER_REASON_LENGTH}
-              </span>
-            </div>
           </div>
         )}
 
-        {/* Campo 3: Descripción */}
+        {/* Descripción */}
         <div className="mb-4">
-          <label className="block text-conexia-green font-semibold mb-2 text-sm">
-            Descripción del reporte <span className="text-red-500">*</span>
+          <label className="block text-conexia-green font-semibold mb-2">
+            Descripción <span className="text-red-500">*</span>
           </label>
-          <textarea
-            className={`w-full border rounded-lg p-2.5 min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-conexia-green/50 ${
-              getInputBorderColor(description, isDescriptionValid)
-            }`}
-            value={description}
-            onChange={handleDescriptionChange}
+          <InputField
+            multiline
+            rows={3}
             placeholder="Describe detalladamente por qué reportas este comentario"
-            disabled={loading}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            name="description"
             maxLength={MAX_DESCRIPTION_LENGTH}
+            disabled={loading}
+            showCharCount={true}
           />
-          <div className="flex justify-between items-center mt-1">
-            {description && !isDescriptionValid && (
-              <span className="text-red-500 text-xs">
-                {description.trim().length < MIN_DESCRIPTION_LENGTH
-                  ? `Mínimo ${MIN_DESCRIPTION_LENGTH} caracteres`
-                  : ""}
-              </span>
-            )}
-            <span className={`text-xs ml-auto ${
-              charCount >= MAX_DESCRIPTION_LENGTH ? "text-red-500" : "text-gray-500"
-            }`}>
-              {charCount}/{MAX_DESCRIPTION_LENGTH}
-            </span>
-          </div>
         </div>
 
-        {/* Error Message */}
+        {/* Mensaje de error único y centrado */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div className="flex justify-center">
+            <p className="text-red-600 text-sm text-center">{error}</p>
           </div>
         )}
+        </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-2 mt-4">
-          <Button onClick={onCancel} variant="secondary" disabled={loading}>
-            Cancelar
-          </Button>
+        {/* Footer fijo */}
+        <div className="sticky bottom-0 z-10 bg-white border-t px-6 py-4 rounded-b-xl flex justify-end gap-2">
           <Button 
             onClick={handleSubmit} 
             variant="primary" 
-            disabled={loading || !isFormValid()}
+            disabled={loading || !validateForm()}
           >
             {loading ? "Procesando..." : "Aceptar"}
+          </Button>
+          <Button onClick={onCancel} variant="cancel" disabled={loading}>
+            Cancelar
           </Button>
         </div>
       </div>

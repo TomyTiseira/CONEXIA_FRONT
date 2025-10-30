@@ -16,7 +16,14 @@ import {
  */
 export function useServiceHirings() {
   const [hirings, setHirings] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 10,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -44,7 +51,14 @@ export function useServiceHirings() {
     try {
       const response = await fetchMyServiceHirings(filters);
       setHirings(response.data || []);
-      setPagination(response.pagination || { page: 1, totalPages: 1, total: 0 });
+      setPagination(response.pagination || {
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalItems: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false
+      });
     } catch (err) {
       setError(err.message);
       setHirings([]);
@@ -61,7 +75,14 @@ export function useServiceHirings() {
     try {
       const response = await fetchMyServiceRequests(filters);
       setHirings(response.data || []);
-      setPagination(response.pagination || { page: 1, totalPages: 1, total: 0 });
+      setPagination(response.pagination || {
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalItems: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false
+      });
     } catch (err) {
       setError(err.message);
       setHirings([]);

@@ -441,7 +441,7 @@ export default function ReportsList() {
                             className="px-3 py-1 text-xs"
                             onClick={() => router.push(`/services/${review.serviceId}?from=reports-service-review&highlightReviewId=${review.serviceReviewId}&fromReportsServiceReviewId=${review.serviceReviewId}`)}
                           >
-                            Ver reseña en servicio
+                            Ver reseña
                           </Button>
                         </div>
                       </td>

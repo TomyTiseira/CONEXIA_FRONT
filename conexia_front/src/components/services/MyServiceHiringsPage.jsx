@@ -732,17 +732,16 @@ export default function MyServiceHiringsPage() {
                 </div>
 
                 {/* Paginación */}
-                {pagination.totalPages > 1 && (
                   <div className="px-6 py-4 border-t border-gray-200 flex justify-center">
                     <Pagination
-                      currentPage={pagination.page || 1}
+                      currentPage={pagination.currentPage || 1}
+                      page={pagination.currentPage || 1}
                       totalPages={pagination.totalPages || 1}
-                      hasNextPage={pagination.hasNext || false}
-                      hasPreviousPage={pagination.hasPrev || false}
+                      hasNextPage={pagination.hasNextPage || false}
+                      hasPreviousPage={pagination.hasPreviousPage || false}
                       onPageChange={handlePageChange}
                     />
                   </div>
-                )}
               </>
             )}
           </div>

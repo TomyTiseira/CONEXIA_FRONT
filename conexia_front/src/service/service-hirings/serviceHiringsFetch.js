@@ -28,10 +28,17 @@ export async function fetchMyServiceHirings(filters = {}) {
     throw new Error(json.message || 'Error en la respuesta del servidor');
   }
 
-  // Retornamos la estructura completa con datos y paginación
+  // Retornamos la estructura completa con datos y paginación en formato estándar
   return {
     data: json.data.data || [],
-    pagination: json.data.pagination || { page: 1, totalPages: 1, total: 0 }
+    pagination: json.data.pagination || {
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItems: 0,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false
+    }
   };
 }
 
@@ -64,10 +71,17 @@ export async function fetchMyServiceRequests(filters = {}) {
     throw new Error(json.message || 'Error en la respuesta del servidor');
   }
 
-  // Retornamos la estructura completa con datos y paginación
+  // Retornamos la estructura completa con datos y paginación en formato estándar
   return {
     data: json.data.data || [],
-    pagination: json.data.pagination || { page: 1, totalPages: 1, total: 0 }
+    pagination: json.data.pagination || {
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItems: 0,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false
+    }
   };
 }
 
