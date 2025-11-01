@@ -25,42 +25,56 @@ export default function ReportServiceModal({ open, onClose, onSubmit, loading })
   };
 
   useEffect(() => {
-    if (open) {
+    if (!open) {
       resetForm();
     }
   }, [open]);
 
   if (!open) return null;
 
+  const validateForm = () => {
+    if (!selectedReason) {
+      return false;
+    }
+    
+    if (selectedReason === 'Otro' && (!otherText || otherText.trim().length === 0)) {
+      return false;
+    }
+    
+    if (!description || description.trim().length < 10) {
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
+    
     if (!selectedReason) {
       setError('Debes seleccionar un motivo.');
       return;
     }
     if (selectedReason === 'Otro' && !otherText.trim()) {
-      setError("Debes completar el campo 'Otro'.");
-      return;
-    }
-    if (selectedReason !== 'Otro' && otherText.trim()) {
-      setError("No debes completar el campo 'Otro' si el motivo no es 'Otro'.");
+      setError('Debes especificar el motivo.');
       return;
     }
     if (!description.trim()) {
       setError('La descripción es obligatoria.');
       return;
     }
+    if (description.trim().length < 10) {
+      setError('La descripción debe tener al menos 10 caracteres.');
+      return;
+    }
+    
     onSubmit({
       reason: selectedReason,
       otherText: selectedReason === 'Otro' ? otherText : undefined,
       description
     });
   };
-
-  const reasonError = error.toLowerCase().includes('motivo');
-  const otherError = error.toLowerCase().includes("'otro'");
-  const descriptionError = error.toLowerCase().includes('descripción');
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
@@ -87,14 +101,19 @@ export default function ReportServiceModal({ open, onClose, onSubmit, loading })
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-conexia-green font-semibold mb-2">Motivos de reporte <span className="text-red-500">*</span></label>
+              <label className="block text-conexia-green font-semibold mb-2">
+                Motivos de reporte <span className="text-red-500">*</span>
+              </label>
               <div className="flex flex-col gap-2 ml-6">
                 {REPORT_REASONS.map((opt) => (
                   <label key={opt.value} className="flex items-center gap-2 cursor-pointer select-none text-base">
                     <input
                       type="radio"
+                      name="reason"
+                      value={opt.value}
                       checked={selectedReason === opt.value}
                       onChange={() => setSelectedReason(opt.value)}
+                      disabled={loading}
                       className="w-3.5 h-3.5 rounded border-gray-300 focus:ring-2 focus:ring-conexia-green/40"
                       style={{ accentColor: '#145750' }}
                     />
@@ -102,27 +121,32 @@ export default function ReportServiceModal({ open, onClose, onSubmit, loading })
                   </label>
                 ))}
               </div>
-              {/* Error de motivo removido aquí; mostraremos un único error centrado más abajo */}
             </div>
 
             {selectedReason === 'Otro' && (
-              <div className="ml-6">
+              <div>
+                <label className="block text-conexia-green font-semibold mb-2">
+                  Especifica el motivo <span className="text-red-500">*</span>
+                </label>
                 <InputField
                   type="text"
-                  placeholder="Completa el motivo... (máx. 30 caracteres)"
+                  placeholder="Especifica el motivo (Máximo 30 caracteres)"
                   value={otherText}
                   onChange={(e) => {
                     if (e.target.value.length <= 30) setOtherText(e.target.value);
                   }}
                   name="otherReason"
                   maxLength={30}
+                  disabled={loading}
+                  showCharCount={true}
                 />
-                {/* Error de 'Otro' removido aquí; usaremos un único error centrado */}
               </div>
             )}
 
             <div>
-              <label className="block text-conexia-green font-semibold mb-2">Descripción <span className="text-red-500">*</span></label>
+              <label className="block text-conexia-green font-semibold mb-2">
+                Descripción <span className="text-red-500">*</span>
+              </label>
               <InputField
                 multiline
                 rows={3}
@@ -131,14 +155,15 @@ export default function ReportServiceModal({ open, onClose, onSubmit, loading })
                 onChange={(e) => setDescription(e.target.value)}
                 name="description"
                 maxLength={500}
+                disabled={loading}
+                showCharCount={true}
               />
-              {/* Error específico de descripción removido; usaremos un único error centrado */}
             </div>
 
-            {/* Mensaje de error único, centrado y con poco espacio debajo de la descripción */}
+            {/* Mensaje de error único y centrado */}
             {error && (
               <div className="flex justify-center">
-                <p className="text-red-600 text-sm mt-2 text-center">{error}</p>
+                <p className="text-red-600 text-sm text-center">{error}</p>
               </div>
             )}
           </form>
@@ -146,7 +171,14 @@ export default function ReportServiceModal({ open, onClose, onSubmit, loading })
 
         {/* Footer fijo */}
         <div className="sticky bottom-0 z-10 bg-white border-t px-6 py-4 rounded-b-xl flex justify-end gap-2">
-          <Button type="button" variant="primary" onClick={handleSubmit} disabled={loading}>{loading ? 'Procesando...' : 'Aceptar'}</Button>
+          <Button 
+            type="button" 
+            variant="primary" 
+            onClick={handleSubmit} 
+            disabled={loading || !validateForm()}
+          >
+            {loading ? 'Procesando...' : 'Aceptar'}
+          </Button>
           <Button
             type="button"
             variant="cancel"

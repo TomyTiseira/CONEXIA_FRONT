@@ -12,7 +12,9 @@ export default function ServiceDetailPage({ params, searchParams }) {
   const isFromReports =
     from === 'reports' ||
     from === 'reports-service' ||
-    resolvedSearchParams?.fromReportsServiceId;
+    from === 'reports-service-review' ||
+    resolvedSearchParams?.fromReportsServiceId ||
+    resolvedSearchParams?.fromReportsServiceReviewId;
   const allowedRoles = isFromReports
     ? [ROLES.ADMIN, ROLES.MODERATOR]
     : [ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR];

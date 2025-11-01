@@ -33,6 +33,22 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
 
   if (!open) return null;
 
+  const validateForm = () => {
+    if (!selectedReason) {
+      return false;
+    }
+    
+    if (selectedReason === 'Otro' && (!otherReason || otherReason.trim().length === 0)) {
+      return false;
+    }
+    
+    if (!description || description.trim().length < 10) {
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -43,12 +59,7 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
     }
 
     if (selectedReason === 'Otro' && !otherReason.trim()) {
-      setError("Debes completar el campo 'Otro motivo' cuando seleccionas 'Otro'.");
-      return;
-    }
-
-    if (selectedReason !== 'Otro' && otherReason.trim()) {
-      setError("No debes completar el campo 'Otro motivo' si no seleccionaste 'Otro'.");
+      setError('Debes especificar el motivo.');
       return;
     }
 
@@ -114,19 +125,21 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
             </div>
 
             {selectedReason === 'Otro' && (
-              <div className="ml-6">
+              <div>
                 <label className="block text-conexia-green font-semibold mb-2">
-                  Otro motivo <span className="text-red-500">*</span>
+                  Especifica el motivo <span className="text-red-500">*</span>
                 </label>
                 <InputField
                   type="text"
-                  placeholder="Especifica el motivo... (máx. 100 caracteres)"
+                  placeholder="Especifica el motivo (Máximo 30 caracteres)"
                   value={otherReason}
                   onChange={(e) => {
-                    if (e.target.value.length <= 100) setOtherReason(e.target.value);
+                    if (e.target.value.length <= 30) setOtherReason(e.target.value);
                   }}
                   name="otherReason"
-                  maxLength={100}
+                  maxLength={30}
+                  disabled={loading}
+                  showCharCount={true}
                 />
               </div>
             )}
@@ -143,10 +156,8 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
                 onChange={(e) => setDescription(e.target.value)}
                 name="description"
                 maxLength={500}
+                showCharCount={true}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {description.length}/500 caracteres
-              </p>
             </div>
 
             {/* Mensaje de error único, centrado */}
@@ -164,9 +175,9 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
             type="button" 
             variant="primary" 
             onClick={handleSubmit} 
-            disabled={loading}
+            disabled={loading || !validateForm()}
           >
-            {loading ? 'Enviando...' : 'Enviar reporte'}
+            {loading ? 'Procesando...' : 'Aceptar'}
           </Button>
           <Button
             type="button"

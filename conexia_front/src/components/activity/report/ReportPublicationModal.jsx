@@ -15,12 +15,30 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
   const [otherText, setOtherText] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+
   const handleReasonChange = (reason) => {
     setSelectedReason(reason);
     if (reason !== "Otro") {
       setOtherText("");
     }
   };
+
+  const validateForm = () => {
+    if (!selectedReason) {
+      return false;
+    }
+    
+    if (selectedReason === "Otro" && (!otherText || otherText.trim().length === 0)) {
+      return false;
+    }
+    
+    if (!description || description.trim().length < 10) {
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = () => {
     setError("");
     if (!selectedReason) {
@@ -28,15 +46,15 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
       return;
     }
     if (selectedReason === "Otro" && !otherText.trim()) {
-      setError("Debes completar el campo 'Otro'.");
-      return;
-    }
-    if (selectedReason !== "Otro" && otherText.trim()) {
-      setError("No debes completar el campo 'Otro' si el motivo no es 'Otro'.");
+      setError("Debes especificar el motivo.");
       return;
     }
     if (!description.trim()) {
       setError("La descripción es obligatoria.");
+      return;
+    }
+    if (description.trim().length < 10) {
+      setError("La descripción debe tener al menos 10 caracteres.");
       return;
     }
     // Delegamos totalmente el feedback al padre (toast + cierre)
@@ -48,13 +66,14 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
   };
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
-      <div
-        className="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[95vh] overflow-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', borderRadius: '1rem' }}
-      >
-        <h2 className="text-xl font-bold text-center mb-4 text-conexia-green">
-          Reportar publicación
-        </h2>
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[95vh] overflow-hidden flex flex-col" style={{ borderRadius: '1rem' }}>
+        {/* Header fijo */}
+        <div className="sticky top-0 z-10 bg-white border-b px-6 py-4 rounded-t-xl">
+          <h2 className="text-xl font-bold text-center text-conexia-green">Reportar publicación</h2>
+        </div>
+
+        {/* Contenido scrollable */}
+        <div className="flex-1 overflow-auto px-6 py-4">
         <div className="flex items-center gap-2 bg-conexia-coral/10 border border-conexia-coral rounded-lg px-3 py-2 mb-4">
           <MdErrorOutline size={28} className="text-conexia-coral flex-shrink-0" />
           <div className="flex-1">
@@ -67,52 +86,84 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
           </div>
         </div>
         <div className="mb-4">
-          <label className="block text-conexia-green font-semibold mb-1">
+          <label className="block text-conexia-green font-semibold mb-2">
             Motivos de reporte <span className="text-red-500">*</span>
           </label>
           <div className="flex flex-col gap-2 ml-6">
             {REPORT_REASONS.map((reason) => (
-              <label key={reason.value} className="flex items-center gap-2 cursor-pointer select-none text-base" style={{ opacity: 1 }}>
+              <label key={reason.value} className="flex items-center gap-2 cursor-pointer select-none text-base">
                 <input
                   type="radio"
                   name="reportReason"
                   value={reason.value}
                   checked={selectedReason === reason.value}
                   onChange={() => handleReasonChange(reason.value)}
-                  className="accent-conexia-coral"
+                  disabled={loading}
+                  className="w-3.5 h-3.5 rounded border-gray-300 focus:ring-2 focus:ring-conexia-green/40"
+                  style={{ accentColor: '#145750' }}
                 />
-                {reason.label}
+                <span className="text-gray-700">{reason.label}</span>
               </label>
             ))}
           </div>
-          {selectedReason === "Otro" && (
-            <InputField
-              label="Otro motivo"
-              value={otherText}
-              onChange={e => setOtherText(e.target.value)}
-              required
-              className="mt-2"
-            />
-          )}
         </div>
+
+        {selectedReason === "Otro" && (
+          <div className="mb-4">
+            <label className="block text-conexia-green font-semibold mb-2">
+              Especifica el motivo <span className="text-red-500">*</span>
+            </label>
+            <InputField
+              type="text"
+              placeholder="Especifica el motivo (Máximo 30 caracteres)"
+              value={otherText}
+              onChange={(e) => {
+                if (e.target.value.length <= 30) setOtherText(e.target.value);
+              }}
+              name="otherReason"
+              maxLength={30}
+              disabled={loading}
+              showCharCount={true}
+            />
+          </div>
+        )}
+
         <div className="mb-4">
-          <label className="block text-conexia-green font-semibold mb-1">
+          <label className="block text-conexia-green font-semibold mb-2">
             Descripción <span className="text-red-500">*</span>
           </label>
-          <textarea
-            className="w-full border rounded-lg p-2 min-h-[60px] resize-none"
-            value={description}
-            onChange={e => setDescription(e.target.value)}
+          <InputField
+            multiline
+            rows={3}
             placeholder="Describe el motivo del reporte..."
-            required
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            name="description"
+            maxLength={500}
+            disabled={loading}
+            showCharCount={true}
           />
         </div>
-        {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-        {/* Feedback visual (éxito/error) ahora se muestra mediante Toast externo y el modal se cierra automáticamente tras el intento */}
-        <div className="flex justify-end gap-2 mt-4">
-          <Button onClick={onCancel} variant="secondary" disabled={loading}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="primary" disabled={loading}>
+
+        {/* Mensaje de error único y centrado */}
+        {error && (
+          <div className="flex justify-center">
+            <p className="text-red-600 text-sm text-center">{error}</p>
+          </div>
+        )}
+        </div>
+
+        {/* Footer fijo */}
+        <div className="sticky bottom-0 z-10 bg-white border-t px-6 py-4 rounded-b-xl flex justify-end gap-2">
+          <Button 
+            onClick={handleSubmit} 
+            variant="primary" 
+            disabled={loading || !validateForm()}
+          >
             {loading ? "Procesando..." : "Aceptar"}
+          </Button>
+          <Button onClick={onCancel} variant="cancel" disabled={loading}>
+            Cancelar
           </Button>
         </div>
       </div>

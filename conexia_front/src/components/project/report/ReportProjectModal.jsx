@@ -17,16 +17,29 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   
-  // Usamos un único mensaje de error centrado (como se pidió)
-  const reasonError = error.toLowerCase().includes("motivo");
-  const otherError = error.toLowerCase().includes("'otro'");
-  const descriptionError = error.toLowerCase().includes("descripción");
   const handleReasonChange = (reason) => {
     setSelectedReason(reason);
     if (reason !== "Otro") {
       setOtherText("");
     }
   };
+
+  const validateForm = () => {
+    if (!selectedReason) {
+      return false;
+    }
+    
+    if (selectedReason === "Otro" && (!otherText || otherText.trim().length === 0)) {
+      return false;
+    }
+    
+    if (!description || description.trim().length < 10) {
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = () => {
     setError("");
     if (!selectedReason) {
@@ -34,15 +47,15 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
       return;
     }
     if (selectedReason === "Otro" && !otherText.trim()) {
-      setError("Debes completar el campo 'Otro'.");
-      return;
-    }
-    if (selectedReason !== "Otro" && otherText.trim()) {
-      setError("No debes completar el campo 'Otro' si el motivo no es 'Otro'.");
+      setError("Debes especificar el motivo.");
       return;
     }
     if (!description.trim()) {
       setError("La descripción es obligatoria.");
+      return;
+    }
+    if (description.trim().length < 10) {
+      setError("La descripción debe tener al menos 10 caracteres.");
       return;
     }
     onSubmit({
@@ -51,6 +64,7 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
       description,
     });
   };
+
   const handleCancel = () => {
     // Resetear estado al cancelar
     setSelectedReason("");
@@ -79,41 +93,49 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
               </div>
             </div>
           </div>
-          <label className="block text-conexia-green font-semibold mb-1">
+          <label className="block text-conexia-green font-semibold mb-2">
             Motivos de reporte <span className="text-red-500">*</span>
           </label>
           <div className="flex flex-col gap-2 ml-6">
             {REPORT_REASONS.map((reason) => (
-              <label key={reason.value} className="flex items-center gap-2 cursor-pointer select-none text-base" style={{ opacity: 1 }}>
+              <label key={reason.value} className="flex items-center gap-2 cursor-pointer select-none text-base">
                 <input
                   type="radio"
+                  name="reason"
+                  value={reason.value}
                   checked={selectedReason === reason.value}
                   onChange={() => handleReasonChange(reason.value)}
+                  disabled={loading}
                   className="w-3.5 h-3.5 rounded border-gray-300 focus:ring-2 focus:ring-conexia-green/40"
-                  style={{ accentColor: '#145750', opacity: 1 }}
+                  style={{ accentColor: '#145750' }}
                 />
                 <span className="text-gray-700">{reason.label}</span>
               </label>
             ))}
           </div>
+
           {selectedReason === "Otro" && (
-            <div className="mt-2 mb-2 ml-6">
+            <div className="mt-4">
+              <label className="block text-conexia-green font-semibold mb-2">
+                Especifica el motivo <span className="text-red-500">*</span>
+              </label>
               <InputField
                 type="text"
-                placeholder="Completa el motivo... (máx. 30 caracteres)"
+                placeholder="Especifica el motivo (Máximo 30 caracteres)"
                 value={otherText}
                 onChange={(e) => {
                   if (e.target.value.length <= 30) setOtherText(e.target.value);
                 }}
-                required
                 name="otherReason"
                 maxLength={30}
+                disabled={loading}
+                showCharCount={true}
               />
-              {/* Error específico removido; usaremos un único mensaje centrado más abajo */}
             </div>
           )}
-        <div className="mt-3 mb-2">
-          <label className="block text-conexia-green font-semibold mb-1">
+
+        <div className="mt-4">
+          <label className="block text-conexia-green font-semibold mb-2">
             Descripción <span className="text-red-500">*</span>
           </label>
           <InputField
@@ -122,22 +144,37 @@ export default function ReportProjectModal({ onCancel, onSubmit, loading }) {
             placeholder="Describe el motivo del reporte..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            required
             name="description"
             maxLength={500}
+            disabled={loading}
+            showCharCount={true}
           />
-          {/* Error específico removido; usaremos un único mensaje centrado */}
         </div>
-        {/* Mensaje de error único y centrado con poco espacio debajo de la descripción */}
+
+        {/* Mensaje de error único y centrado */}
         {error && (
-          <div className="flex justify-center">
-            <p className="text-red-600 text-sm mt-2 text-center">{error}</p>
+          <div className="flex justify-center mt-2">
+            <p className="text-red-600 text-sm text-center">{error}</p>
           </div>
         )}
         </div>
         <div className="sticky bottom-0 z-10 bg-white border-t px-6 py-4 rounded-b-xl flex justify-end gap-2">
-          <Button type="button" variant="cancel" onClick={handleCancel} disabled={loading}>Cancelar</Button>
-          <Button type="button" variant="primary" onClick={handleSubmit} disabled={loading}>{loading ? "Procesando..." : "Aceptar"}</Button>
+          <Button 
+            type="button" 
+            variant="primary" 
+            onClick={handleSubmit} 
+            disabled={loading || !validateForm()}
+          >
+            {loading ? "Procesando..." : "Aceptar"}
+          </Button>
+          <Button 
+            type="button" 
+            variant="cancel" 
+            onClick={handleCancel} 
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
         </div>
       </div>
     </div>

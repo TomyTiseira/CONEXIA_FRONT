@@ -18,7 +18,14 @@ export default function MyServicesPage() {
   const router = useRouter();
   const { user } = useUserStore();
   const [services, setServices] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 10,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
@@ -45,7 +52,14 @@ export default function MyServicesPage() {
     try {
       const response = await fetchUserServices(user.id, filters);
       setServices(response.services || []);
-      setPagination(response.pagination || { page: 1, totalPages: 1, total: 0 });
+      setPagination(response.pagination || {
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalItems: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false
+      });
       
       // Cargar conteos de solicitudes para cada servicio
       await loadRequestsCounts(response.services || []);
@@ -69,7 +83,7 @@ export default function MyServicesPage() {
           page: 1
         });
         counts[service.id] = {
-          total: response.pagination?.total || 0,
+          total: response.pagination?.totalItems || 0,
           pending: 0 // Podríamos hacer otra consulta para obtener solo pendientes
         };
         
@@ -80,7 +94,7 @@ export default function MyServicesPage() {
           limit: 1,
           page: 1
         });
-        counts[service.id].pending = pendingResponse.pagination?.total || 0;
+        counts[service.id].pending = pendingResponse.pagination?.totalItems || 0;
       } catch (err) {
         console.error(`Error loading requests count for service ${service.id}:`, err);
         counts[service.id] = { total: 0, pending: 0 };
@@ -218,7 +232,7 @@ export default function MyServicesPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Servicios</p>
-                  <p className="text-2xl font-bold text-gray-900">{pagination.total}</p>
+                  <p className="text-2xl font-bold text-gray-900">{pagination.totalItems}</p>
                 </div>
               </div>
             </div>
@@ -441,10 +455,11 @@ export default function MyServicesPage() {
                 {/* Paginación para desktop */}
                 <div className="hidden md:block px-6 py-4 border-t border-gray-200 flex justify-center">
                   <Pagination
-                    currentPage={pagination.page || 1}
+                    currentPage={pagination.currentPage || 1}
+                    page={pagination.currentPage || 1}
                     totalPages={pagination.totalPages || 1}
-                    hasNextPage={pagination.hasNext || false}
-                    hasPreviousPage={pagination.hasPrev || false}
+                    hasNextPage={pagination.hasNextPage || false}
+                    hasPreviousPage={pagination.hasPreviousPage || false}
                     onPageChange={handlePageChange}
                   />
                 </div>
@@ -546,10 +561,11 @@ export default function MyServicesPage() {
                 {/* Paginación para mobile */}
                 <div className="md:hidden px-4 py-4 flex justify-center">
                   <Pagination
-                    currentPage={pagination.page || 1}
+                    currentPage={pagination.currentPage || 1}
+                    page={pagination.currentPage || 1}
                     totalPages={pagination.totalPages || 1}
-                    hasNextPage={pagination.hasNext || false}
-                    hasPreviousPage={pagination.hasPrev || false}
+                    hasNextPage={pagination.hasNextPage || false}
+                    hasPreviousPage={pagination.hasPreviousPage || false}
                     onPageChange={handlePageChange}
                   />
                 </div>
