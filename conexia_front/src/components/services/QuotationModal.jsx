@@ -32,6 +32,8 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
       pending: 'Pendiente',
       quoted: 'Cotizado',
       accepted: 'Aceptado',
+      payment_pending: 'Pago en proceso',
+      payment_rejected: 'Pago rechazado',
       approved: 'Aprobada',
       rejected: 'Rechazado',
       cancelled: 'Cancelado',
