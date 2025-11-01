@@ -332,44 +332,44 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                 </div>
               )}
               
-              <div className="flex flex-wrap gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {actions.includes('accept') && (
                   <Button
                     onClick={() => handleAction('accept')}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
                     disabled={actionLoading}
                   >
-                    {actionLoading ? 'Procesando...' : 'Aceptar Cotización'}
+                    {actionLoading ? 'Procesando...' : '✓ Aceptar Cotización'}
                   </Button>
                 )}
                 
                 {actions.includes('reject') && (
                   <Button
                     onClick={() => handleAction('reject')}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
                     disabled={actionLoading}
                   >
-                    Rechazar
+                    ✗ Rechazar
                   </Button>
                 )}
                 
                 {actions.includes('negotiate') && !showNegotiationInput && (
                   <Button
                     onClick={() => handleAction('negotiate')}
-                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                    className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
                     disabled={actionLoading}
                   >
-                    Negociar
+                    ⇄ Negociar
                   </Button>
                 )}
                 
                 {actions.includes('cancel') && (
                   <Button
                     onClick={() => handleAction('cancel')}
-                    className="bg-gray-600 hover:bg-gray-700 text-white"
+                    className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
                     disabled={actionLoading}
                   >
-                    Cancelar Solicitud
+                    ⊘ Cancelar Solicitud
                   </Button>
                 )}
               </div>

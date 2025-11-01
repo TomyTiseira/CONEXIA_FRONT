@@ -70,7 +70,7 @@ export default function QuotationDisplay({ quotation, compact = false }) {
             <span className="text-sm font-medium text-gray-600">Duración estimada</span>
           </div>
           <p className="text-lg font-semibold text-gray-900">
-            {estimatedHours} {getUnitLabel(estimatedTimeUnit)}
+            {estimatedHours} {getUnitLabel(estimatedTimeUnit, estimatedHours)}
           </p>
         </div>
 

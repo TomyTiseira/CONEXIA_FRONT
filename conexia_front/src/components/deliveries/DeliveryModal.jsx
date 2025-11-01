@@ -18,7 +18,7 @@ export default function DeliveryModal({
 }) {
   const { createDelivery, loading } = useCreateDelivery();
   const [content, setContent] = useState('');
-  const [attachment, setAttachment] = useState(null);
+  const [attachments, setAttachments] = useState([]); // Cambiado a array
   const [toast, setToast] = useState(null);
 
   if (!isOpen) return null;
@@ -31,35 +31,55 @@ export default function DeliveryModal({
       return 'El contenido debe tener al menos 10 caracteres';
     }
 
-    if (attachment && attachment.size > 20 * 1024 * 1024) {
-      return 'El archivo no debe superar 20MB';
+    // Validar límite de archivos
+    if (attachments.length > 10) {
+      return 'Solo puedes subir un máximo de 10 archivos por entrega';
+    }
+
+    // Validar cada archivo
+    for (const file of attachments) {
+      if (file.size > 20 * 1024 * 1024) {
+        return `El archivo "${file.name}" supera el límite de 20MB`;
+      }
     }
 
     return null;
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 20 * 1024 * 1024) {
-        setToast({
-          type: 'error',
-          message: 'El archivo no debe superar 20MB',
-          isVisible: true
-        });
-        e.target.value = '';
-        return;
-      }
-      setAttachment(file);
+    const files = Array.from(e.target.files || []);
+    
+    // Validar límite de 10 archivos
+    const totalFiles = attachments.length + files.length;
+    if (totalFiles > 10) {
+      setToast({
+        type: 'error',
+        message: `Solo puedes subir un máximo de 10 archivos. Ya tienes ${attachments.length} archivo(s) seleccionado(s).`,
+        isVisible: true
+      });
+      e.target.value = '';
+      return;
     }
+    
+    // Validar tamaño de cada archivo
+    const invalidFiles = files.filter(file => file.size > 20 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      setToast({
+        type: 'error',
+        message: `${invalidFiles.length} archivo(s) superan el límite de 20MB`,
+        isVisible: true
+      });
+      e.target.value = '';
+      return;
+    }
+
+    // Agregar nuevos archivos al array existente
+    setAttachments(prev => [...prev, ...files]);
+    e.target.value = ''; // Resetear input para permitir seleccionar más archivos
   };
 
-  const handleRemoveFile = () => {
-    setAttachment(null);
-    const fileInput = document.getElementById('attachment-input');
-    if (fileInput) {
-      fileInput.value = '';
-    }
+  const handleRemoveFile = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -87,8 +107,11 @@ export default function DeliveryModal({
         }
       }
 
-      if (attachment) {
-        formData.append('attachment', attachment);
+      if (attachments && attachments.length > 0) {
+        // Enviar múltiples archivos
+        attachments.forEach((file) => {
+          formData.append('attachments', file);
+        });
       }
 
       const delivery = await createDelivery(hiringId, formData);
@@ -128,7 +151,7 @@ export default function DeliveryModal({
   const handleClose = () => {
     if (!loading) {
       setContent('');
-      setAttachment(null);
+      setAttachments([]);
       setToast(null);
       onClose();
     }
@@ -239,61 +262,79 @@ export default function DeliveryModal({
               </div>
             </div>
 
-            {/* Campo: Archivo adjunto */}
+            {/* Campo: Archivos adjuntos */}
             <div className="mb-6">
               <label htmlFor="attachment-input" className="block text-sm font-medium text-gray-700 mb-2">
-                Archivo adjunto (opcional)
+                Archivos adjuntos (opcional)
               </label>
               
-              {!attachment ? (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-conexia-green transition-colors">
-                  <input
-                    id="attachment-input"
-                    type="file"
-                    onChange={handleFileChange}
-                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt"
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="attachment-input"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    <Upload size={32} className="text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-600 mb-1">
-                      Click para seleccionar un archivo
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Máximo 20MB • Imágenes, videos, PDF, documentos, comprimidos
-                    </span>
-                  </label>
-                </div>
-              ) : (
-                <div className="border border-gray-300 rounded-lg p-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <FileText size={24} className="text-blue-500 mr-3" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 truncate max-w-xs">
-                        {attachment.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatFileSize(attachment.size)}
-                      </p>
+              {/* Botón para agregar archivos */}
+              <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors mb-3 ${
+                attachments.length >= 10 
+                  ? 'border-gray-200 bg-gray-50 cursor-not-allowed' 
+                  : 'border-gray-300 hover:border-conexia-green cursor-pointer'
+              }`}>
+                <input
+                  id="attachment-input"
+                  type="file"
+                  onChange={handleFileChange}
+                  accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt"
+                  className="hidden"
+                  multiple
+                  disabled={attachments.length >= 10}
+                />
+                <label
+                  htmlFor="attachment-input"
+                  className={`flex flex-col items-center ${
+                    attachments.length >= 10 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                  }`}
+                >
+                  <Upload size={32} className="text-gray-400 mb-2" />
+                  <span className="text-sm text-gray-600 mb-1">
+                    {attachments.length >= 10 ? 'Límite alcanzado (10 archivos)' : 'Click para seleccionar archivos'}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Máximo 10 archivos • 20MB por archivo • Imágenes, videos, PDF, documentos, comprimidos
+                  </span>
+                </label>
+              </div>
+
+              {/* Lista de archivos seleccionados */}
+              {attachments.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  <p className="text-sm font-medium text-gray-700">
+                    {attachments.length} de 10 archivo{attachments.length !== 1 ? 's' : ''} seleccionado{attachments.length !== 1 ? 's' : ''}
+                  </p>
+                  {attachments.map((file, index) => (
+                    <div key={index} className="border border-gray-300 rounded-lg p-3 flex items-center justify-between bg-white">
+                      <div className="flex items-center min-w-0 flex-1">
+                        <FileText size={20} className="text-blue-500 mr-3 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 truncate" title={file.name}>
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatFileSize(file.size)}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(index)}
+                        className="text-red-500 hover:text-red-700 ml-2 flex-shrink-0"
+                        title="Eliminar archivo"
+                      >
+                        <X size={18} />
+                      </button>
                     </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRemoveFile}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <X size={20} />
-                  </button>
+                  ))}
                 </div>
               )}
 
               <div className="mt-2 flex items-start">
                 <AlertCircle size={16} className="text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-gray-600">
-                  El archivo se almacenará en el servidor y el cliente podrá descargarlo.
+                  Los archivos se almacenarán en el servidor y el cliente podrá descargarlos.
                 </p>
               </div>
             </div>
@@ -304,7 +345,7 @@ export default function DeliveryModal({
               <ul className="text-sm text-gray-700 space-y-1">
                 <li>• Tipo: {isDeliverableDelivery ? 'Entregable parcial' : 'Entrega total'}</li>
                 <li>• Precio: ${price.toLocaleString()}</li>
-                <li>• Archivo adjunto: {attachment ? 'Sí' : 'No'}</li>
+                <li>• Archivos adjuntos: {attachments.length > 0 ? `${attachments.length} archivo${attachments.length !== 1 ? 's' : ''}` : 'Ninguno'}</li>
               </ul>
             </div>
 
