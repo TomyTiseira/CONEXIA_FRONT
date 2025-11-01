@@ -45,7 +45,7 @@ const getMediaUrl = (mediaUrl) => {
 
 
 
-function PublicationCard({ publication, isGridItem = false, onShowToast }) {
+function PublicationCard({ publication, isGridItem = false, onShowToast, searchParams }) {
   const { sendRequest, loading: connectLoading, success: connectSuccess, error: connectError } = useSendConnectionRequest();
   const { user } = useAuth();
   const { roleName } = useUserStore();
@@ -292,6 +292,36 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
       loadAllComments();
     }
   }, [publicationId]);
+
+  // Si recibimos un commentId en searchParams, abrimos la sección de comentarios,
+  // cargamos todos los comentarios y hacemos scroll hacia el comentario objetivo.
+  useEffect(() => {
+    const targetCommentId = searchParams?.commentId;
+    if (!targetCommentId || !publicationId) return;
+
+    // Intentar cargar todos los comentarios y abrir la vista
+    (async () => {
+      try {
+        await loadAllComments();
+        setShowCommentSection(true);
+        setShowAllComments(true);
+        // Esperar un pequeño intervalo para que el DOM renderice los comentarios
+        setTimeout(() => {
+          const el = document.getElementById(`comment-${targetCommentId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Opcional: resaltar temporalmente
+            el.classList.add('ring-2', 'ring-conexia-green');
+            setTimeout(() => el.classList.remove('ring-2', 'ring-conexia-green'), 2500);
+          }
+        }, 300);
+      } catch (err) {
+        // No bloquear si falla; simplemente no hacer scroll
+        console.error('No se pudo navegar al comentario solicitado:', err);
+      }
+    })();
+
+  }, [searchParams?.commentId, publicationId]);
 
   // Avatar, nombre, profesión y privacidad desde publication.owner
   const avatar = publication.owner?.profilePicture
@@ -1782,7 +1812,7 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
                   .slice(0, showAllComments ? (allComments.length > 0 ? allComments.length : comments.length) : 2)
                   .filter(comment => comment && comment.id) // Asegurarnos de que el comentario existe y tiene ID
                   .map(comment => (
-                  <div key={comment.id} className="bg-[#f3f9f8] rounded-lg p-3 border border-[#e0f0f0] relative">
+                  <div key={comment.id} id={`comment-${comment.id}`} className="bg-[#f3f9f8] rounded-lg p-3 border border-[#e0f0f0] relative">
                     <div className={`flex items-start ${editingComment === comment.id ? 'justify-start' : 'justify-between'}`}>
                       <div className="flex items-start flex-1">
                         <div className="h-8 w-8 flex-shrink-0 mr-2">

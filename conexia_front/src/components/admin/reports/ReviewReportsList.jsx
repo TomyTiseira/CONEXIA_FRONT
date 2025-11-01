@@ -1,14 +1,11 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import { fetchReviewReports } from '@/service/reports/reviewReportsFetch';
-import { deleteReview } from '@/service/reviews/reviewsFetch';
 import Pagination from '@/components/common/Pagination';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Toast from '@/components/ui/Toast';
-import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal';
 
 export default function ReviewReportsList() {
   const router = useRouter();
@@ -20,8 +17,7 @@ export default function ReviewReportsList() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [toast, setToast] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  // Removed delete action for reviews in reports view per request
 
   // Get review ID from URL
   useEffect(() => {
@@ -65,29 +61,6 @@ export default function ReviewReportsList() {
     router.replace(`/reports/review?${params.toString()}`, { scroll: false });
   }, [reviewId, page, router]);
 
-  const handleDeleteReview = () => {
-    if (!reviewId) return;
-    setConfirmDeleteOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (!reviewId) return;
-    setActionLoading(true);
-    deleteReview(reviewId)
-      .then(() => {
-        setToast({ type: 'success', message: 'Reseña eliminada correctamente' });
-        setTimeout(() => {
-          router.push('/reports?filter=reviews');
-        }, 1500);
-      })
-      .catch(err => {
-        setToast({ type: 'error', message: err.message || 'Error al eliminar reseña' });
-      })
-      .finally(() => {
-        setActionLoading(false);
-        setConfirmDeleteOpen(false);
-      });
-  };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
@@ -148,26 +121,6 @@ export default function ReviewReportsList() {
                   </div>
                 )}
               </div>
-              <div className="hidden sm:block sm:ml-4">
-                <Button
-                  variant="danger"
-                  className="px-4 py-2 text-sm"
-                  onClick={handleDeleteReview}
-                  disabled={actionLoading}
-                >
-                  Eliminar Reseña
-                </Button>
-              </div>
-            </div>
-            <div className="sm:hidden mt-2 flex justify-center">
-              <Button
-                variant="danger"
-                className="px-4 py-2 text-sm w-full"
-                onClick={handleDeleteReview}
-                disabled={actionLoading}
-              >
-                Eliminar Reseña
-              </Button>
             </div>
           </div>
 
@@ -260,16 +213,7 @@ export default function ReviewReportsList() {
         />
       )}
 
-      {confirmDeleteOpen && (
-        <ConfirmDeleteModal
-          isOpen={confirmDeleteOpen}
-          onClose={() => setConfirmDeleteOpen(false)}
-          onConfirm={confirmDelete}
-          title="Eliminar reseña"
-          message="¿Estás seguro de que deseas eliminar esta reseña? Esta acción no se puede deshacer."
-          isLoading={actionLoading}
-        />
-      )}
+      {/* Delete action removed: no modal shown */}
     </div>
   );
 }

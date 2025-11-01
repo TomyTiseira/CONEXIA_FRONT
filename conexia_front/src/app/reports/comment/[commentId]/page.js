@@ -212,11 +212,12 @@ export default function CommentReportsPage() {
               Acciones de Moderación
             </h2>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button
+                    <Button
                 variant="edit"
                 onClick={() => {
                   if (commentData.publicationId) {
-                    router.push(`/publication/${commentData.publicationId}?commentId=${commentId}`);
+                    // Añadimos flag de origen para mantener consistencia con la navegación desde reportes
+                    router.push(`/publication/${commentData.publicationId}?from=reports&fromReportsPublicationId=${commentData.publicationId}&commentId=${commentId}`);
                   }
                 }}
                 disabled={!commentData.publicationId}
