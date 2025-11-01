@@ -286,7 +286,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                             min="1"
                             value={formData.estimatedHours}
                             onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green text-base ${
                               errors.estimatedHours ? 'border-red-300' : 'border-gray-300'
                             }`}
                             placeholder="1"
@@ -298,14 +298,19 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                             id="estimatedTimeUnit"
                             value={formData.estimatedTimeUnit}
                             onChange={(e) => handleInputChange('estimatedTimeUnit', e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green text-base appearance-none ${
                               errors.estimatedTimeUnit ? 'border-red-300' : 'border-gray-300'
                             }`}
+                            style={{ 
+                              WebkitAppearance: 'none', 
+                              MozAppearance: 'none',
+                              backgroundImage: 'none'
+                            }}
                             disabled={loading}
                           >
-                            <option value="">Seleccionar unidad</option>
+                            <option value="" style={{ padding: '8px' }}>Seleccionar unidad</option>
                             {getTimeUnitOptions().map(option => (
-                              <option key={option.value} value={option.value}>
+                              <option key={option.value} value={option.value} style={{ padding: '8px' }}>
                                 {option.label}
                               </option>
                             ))}

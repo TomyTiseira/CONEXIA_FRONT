@@ -63,7 +63,15 @@ export default function DeliverablesPage() {
       return;
     }
 
-    setSelectedDeliverable(deliverable);
+    // Buscar si hay una delivery en revisión para este entregable
+    const previousDelivery = hiring?.deliveries?.find(
+      d => d.deliverable?.id === deliverable.id && d.status === 'revision_requested'
+    );
+
+    setSelectedDeliverable({ 
+      ...deliverable, 
+      previousDelivery: previousDelivery || null 
+    });
     setShowDeliveryModal(true);
   };
 
@@ -316,7 +324,8 @@ export default function DeliverablesPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-1">
-                              {canDeliverDeliverable(deliverable) ? (
+                              {/* Botón para Re-entregar cuando está en revisión solicitada o puede entregar */}
+                              {canDeliverDeliverable(deliverable) && (
                                 <button
                                   onClick={() => handleOpenDeliveryModal(deliverable)}
                                   className="flex items-center justify-center w-8 h-8 text-conexia-green hover:text-white hover:bg-conexia-green rounded-md transition-all duration-200 group bg-gray-50 border border-gray-200"
@@ -324,15 +333,10 @@ export default function DeliverablesPage() {
                                 >
                                   <Upload size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
-                              ) : deliverable.isLocked ? (
-                                <button
-                                  disabled
-                                  className="flex items-center justify-center w-8 h-8 text-gray-400 cursor-not-allowed rounded-md bg-gray-100 border border-gray-200"
-                                  title={deliverable.lockReason || 'Debes entregar el entregable anterior primero'}
-                                >
-                                  <Lock size={16} />
-                                </button>
-                              ) : (deliverable.status === 'delivered' || deliverable.status === 'approved') ? (
+                              )}
+                              
+                              {/* Botón para Ver cuando está entregado, aprobado o en revisión */}
+                              {(['delivered', 'approved', 'revision_requested'].includes(deliverable.status)) && (
                                 <button
                                   onClick={() => handleViewDelivery(deliverable)}
                                   className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group bg-gray-50 border border-gray-200"
@@ -340,7 +344,23 @@ export default function DeliverablesPage() {
                                 >
                                   <Eye size={16} className="group-hover:scale-110 transition-transform" />
                                 </button>
-                              ) : (
+                              )}
+                              
+                              {/* Botón bloqueado cuando no puede entregar y no tiene entrega para ver */}
+                              {deliverable.isLocked && !(['delivered', 'approved', 'revision_requested'].includes(deliverable.status)) && (
+                                <button
+                                  disabled
+                                  className="flex items-center justify-center w-8 h-8 text-gray-400 cursor-not-allowed rounded-md bg-gray-100 border border-gray-200"
+                                  title={deliverable.lockReason || 'Debes entregar el entregable anterior primero'}
+                                >
+                                  <Lock size={16} />
+                                </button>
+                              )}
+                              
+                              {/* Sin acciones disponibles */}
+                              {!canDeliverDeliverable(deliverable) && 
+                               !deliverable.isLocked && 
+                               !(['delivered', 'approved', 'revision_requested'].includes(deliverable.status)) && (
                                 <span className="text-sm text-gray-400 italic">-</span>
                               )}
                             </div>
@@ -390,40 +410,55 @@ export default function DeliverablesPage() {
                         </div>
                       </div>
 
-                      {canDeliverDeliverable(deliverable) ? (
-                        <button
-                          onClick={() => handleOpenDeliveryModal(deliverable)}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-all duration-200"
-                        >
-                          <Upload size={18} />
-                          {deliverable.status === 'revision_requested' ? 'Re-entregar' : 'Entregar'}
-                        </button>
-                      ) : deliverable.isLocked ? (
-                        <div className="w-full">
+                      {/* Acciones - Botones de acción */}
+                      <div className="flex flex-col gap-2">
+                        {/* Botón para Re-entregar */}
+                        {canDeliverDeliverable(deliverable) && (
                           <button
-                            disabled
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed"
+                            onClick={() => handleOpenDeliveryModal(deliverable)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-all duration-200"
                           >
-                            <Lock size={18} />
-                            Bloqueado
+                            <Upload size={18} />
+                            {deliverable.status === 'revision_requested' ? 'Re-entregar' : 'Entregar'}
                           </button>
-                          <p className="text-xs text-red-600 mt-2 text-center">
-                            {deliverable.lockReason}
-                          </p>
-                        </div>
-                      ) : (deliverable.status === 'delivered' || deliverable.status === 'approved') ? (
-                        <button
-                          onClick={() => handleViewDelivery(deliverable)}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
-                        >
-                          <Eye size={18} />
-                          Ver Entrega
-                        </button>
-                      ) : (
-                        <div className="w-full text-center py-2 text-gray-400 italic text-sm">
-                          No disponible
-                        </div>
-                      )}
+                        )}
+                        
+                        {/* Botón para Ver */}
+                        {(['delivered', 'approved', 'revision_requested'].includes(deliverable.status)) && (
+                          <button
+                            onClick={() => handleViewDelivery(deliverable)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
+                          >
+                            <Eye size={18} />
+                            Ver Entrega
+                          </button>
+                        )}
+                        
+                        {/* Estado bloqueado */}
+                        {deliverable.isLocked && !(['delivered', 'approved', 'revision_requested'].includes(deliverable.status)) && (
+                          <div className="w-full">
+                            <button
+                              disabled
+                              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed"
+                            >
+                              <Lock size={18} />
+                              Bloqueado
+                            </button>
+                            <p className="text-xs text-red-600 mt-2 text-center">
+                              {deliverable.lockReason}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Sin acciones disponibles */}
+                        {!canDeliverDeliverable(deliverable) && 
+                         !deliverable.isLocked && 
+                         !(['delivered', 'approved', 'revision_requested'].includes(deliverable.status)) && (
+                          <div className="w-full text-center py-2 text-gray-400 italic text-sm">
+                            No disponible
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
               </div>
@@ -439,6 +474,7 @@ export default function DeliverablesPage() {
         hiringId={hiringId}
         deliverableId={selectedDeliverable?.id}
         deliverableInfo={selectedDeliverable}
+        previousDelivery={selectedDeliverable?.previousDelivery}
         onSuccess={handleDeliverySuccess}
       />
 

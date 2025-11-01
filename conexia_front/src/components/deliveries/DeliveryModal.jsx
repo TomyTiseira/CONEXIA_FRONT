@@ -13,6 +13,7 @@ export default function DeliveryModal({
   deliverableId = null,
   deliverableInfo = null,
   totalPrice = null,
+  previousDelivery = null,
   onSuccess
 }) {
   const { createDelivery, loading } = useCreateDelivery();
@@ -168,6 +169,37 @@ export default function DeliveryModal({
 
           {/* Body */}
           <form onSubmit={handleSubmit} className="p-6">
+            {/* Notas de revisión (si aplica) */}
+            {previousDelivery && previousDelivery.status === 'revision_requested' && previousDelivery.revisionNotes && (
+              <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle size={24} className="text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-orange-900 mb-2">
+                      ⚠️ Revisión solicitada
+                    </h4>
+                    <p className="text-sm font-medium text-orange-800 mb-1">
+                      Notas del cliente:
+                    </p>
+                    <p className="text-sm text-orange-700 whitespace-pre-wrap bg-white rounded px-3 py-2 border border-orange-200">
+                      {previousDelivery.revisionNotes}
+                    </p>
+                    {previousDelivery.reviewedAt && (
+                      <p className="text-xs text-orange-600 mt-2">
+                        Solicitado el {new Date(previousDelivery.reviewedAt).toLocaleDateString('es-ES', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Info del entregable (si aplica) */}
             {deliverableInfo && (
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -219,7 +251,7 @@ export default function DeliveryModal({
                     id="attachment-input"
                     type="file"
                     onChange={handleFileChange}
-                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt"
+                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt"
                     className="hidden"
                   />
                   <label
@@ -231,7 +263,7 @@ export default function DeliveryModal({
                       Click para seleccionar un archivo
                     </span>
                     <span className="text-xs text-gray-500">
-                      Máximo 20MB • Imágenes, PDF, documentos, comprimidos
+                      Máximo 20MB • Imágenes, videos, PDF, documentos, comprimidos
                     </span>
                   </label>
                 </div>

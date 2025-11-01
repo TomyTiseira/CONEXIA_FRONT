@@ -111,6 +111,14 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
     return 'archivo';
   };
 
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
   const handleDownload = async () => {
     setDownloading(true);
     try {
@@ -312,7 +320,7 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
             </div>
           </div>
 
-          {/* Archivo adjunto con marca de agua si no está pagado */}
+              {/* Archivo adjunto con marca de agua si no está pagado */}
           {delivery.attachmentUrl && (
             <div className="mb-6">
               <label className="flex items-center font-semibold text-gray-900 mb-2">
@@ -323,9 +331,12 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
                     Pendiente de pago
                   </span>
                 )}
-              </label>
-              
-              {/* Preview con marca de agua para imágenes - Solo para cliente */}
+                {delivery.attachmentSize && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    ({formatFileSize(delivery.attachmentSize)})
+                  </span>
+                )}
+              </label>              {/* Preview con marca de agua para imágenes - Solo para cliente */}
               {delivery.attachmentPath && /\.(jpg|jpeg|png|gif|webp)$/i.test(delivery.attachmentPath) && (
                 <div
                   className="relative mb-3 rounded-lg overflow-hidden border border-gray-200 select-none"
@@ -391,6 +402,11 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
                     <p className="text-sm text-gray-700 mb-1">
                       {getAttachmentFileName()}
                     </p>
+                    {delivery.attachmentSize && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        Tamaño: {formatFileSize(delivery.attachmentSize)}
+                      </p>
+                    )}
                     <p className="text-xs text-gray-600 max-w-md mb-3">
                       Este archivo estará disponible para descargar una vez que apruebes y completes el pago de esta entrega.
                     </p>
@@ -408,19 +424,23 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
                   disabled={downloading}
                   className="w-full flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FileText size={32} className="text-blue-500" />
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-blue-900 group-hover:text-blue-700">
+                  <FileText size={32} className="text-blue-500 flex-shrink-0" />
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="font-medium text-blue-900 group-hover:text-blue-700 truncate">
                       {getAttachmentFileName()}
                     </p>
                     <p className="text-sm text-blue-600">
-                      {downloading ? 'Descargando...' : 'Click para descargar'}
+                      {downloading ? 'Descargando...' : (
+                        delivery.attachmentSize 
+                          ? `${formatFileSize(delivery.attachmentSize)} • Click para descargar`
+                          : 'Click para descargar'
+                      )}
                     </p>
                   </div>
                   {downloading ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 flex-shrink-0"></div>
                   ) : (
-                    <Download size={20} className="text-blue-500" />
+                    <Download size={20} className="text-blue-500 flex-shrink-0" />
                   )}
                 </button>
               )}
