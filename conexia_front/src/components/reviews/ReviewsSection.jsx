@@ -16,6 +16,7 @@ export default function ReviewsSection({ profileUserId }) {
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editReview, setEditReview] = useState(null);
+  const [hasUserReview, setHasUserReview] = useState(false);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -26,6 +27,21 @@ export default function ReviewsSection({ profileUserId }) {
         const data = await fetchUserReviews(profileUserId, { limit: 2 });
         if (!mounted) return;
         setReviewsData(data);
+        // Si el usuario está autenticado y es un usuario regular, verificar si ya dejó una reseña
+        if (user && roleName === 'user') {
+          try {
+            // Traer un conjunto mayor de reseñas para comprobar si el usuario ya reseñó este perfil.
+            // Usamos un límite alto para evitar paginar en el cliente. Si existen muchos items en
+            // el futuro, podríamos añadir un endpoint específico en el backend.
+            const all = await fetchUserReviews(profileUserId, { limit: 200 });
+            if (!mounted) return;
+            const found = (all.reviews || []).some(r => r.reviewerUserId === user.id);
+            setHasUserReview(Boolean(found));
+          } catch (e) {
+            // Si falla la verificación, no bloquear la UI: asumir que no hay reseña del usuario.
+            if (mounted) setHasUserReview(false);
+          }
+        }
       } catch (err) {
         // Si falla la API, cargar datos mock para poder probar la UI
         setToast({ type: 'error', message: err.message });
@@ -42,14 +58,17 @@ export default function ReviewsSection({ profileUserId }) {
     }
     load();
     return () => { mounted = false; }
-  }, [profileUserId]);
+  }, [profileUserId, user?.id, roleName]);
 
   const canAdd = user && roleName === 'user' && user.id !== Number(profileUserId);
+  const canAddFinal = canAdd && !hasUserReview;
 
   const onSaved = async () => {
     setFormOpen(false);
     setEditReview(null);
     setToast({ type: 'success', message: 'Reseña guardada' });
+    // Al guardar, asumimos que el usuario actual ahora tiene una reseña
+    if (user && roleName === 'user') setHasUserReview(true);
     try {
       const data = await fetchUserReviews(profileUserId, { limit: 2 });
       setReviewsData(data);
@@ -61,6 +80,12 @@ export default function ReviewsSection({ profileUserId }) {
     try {
       const data = await fetchUserReviews(profileUserId, { limit: 2 });
       setReviewsData(data);
+      // Si el usuario actual borró su reseña, actualizar el flag
+      if (user && roleName === 'user') {
+        const all = await fetchUserReviews(profileUserId, { limit: 200 });
+        const found = (all.reviews || []).some(r => r.reviewerUserId === user.id);
+        setHasUserReview(Boolean(found));
+      }
     } catch (e) {}
   };
 
@@ -69,7 +94,7 @@ export default function ReviewsSection({ profileUserId }) {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Reseñas</h3>
         <div>
-          {canAdd && (
+          {canAddFinal && (
             <Button variant="primary" onClick={() => setFormOpen(true)}>Agregar reseña</Button>
           )}
         </div>

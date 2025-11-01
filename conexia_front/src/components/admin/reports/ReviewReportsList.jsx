@@ -157,7 +157,7 @@ export default function ReviewReportsList() {
                       <td className="p-4 align-top break-words max-w-[180px] text-left">
                         <Link 
                           href={`/profile/${report.reporterId}`}
-                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                          className="text-conexia-green hover:underline font-medium text-sm"
                         >
                           {report.reporter?.name} {report.reporter?.lastName}
                         </Link>
@@ -173,7 +173,7 @@ export default function ReviewReportsList() {
                         )}
                       </td>
                       <td className="p-4 align-top break-words max-w-[320px] text-left">
-                        <div className="line-clamp-4 overflow-hidden" title={report.description}>
+                        <div className="whitespace-pre-wrap break-words sm:line-clamp-4 overflow-hidden" title={report.description}>
                           {report.description}
                         </div>
                       </td>

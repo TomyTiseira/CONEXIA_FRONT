@@ -1008,10 +1008,7 @@ ${messageText.trim()}`;
                 </div>
               </div>
 
-              {/* Sección de reseñas */}
-              <div id="reviews-section" className="mt-8 pt-8 border-t scroll-mt-20">
-                <ServiceReviewsSection serviceId={serviceId} />
-              </div>
+              {/* Sección de reseñas (moved below to its own container) */}
 
               {/* Navegación y Acciones */}
               <div className="mt-8 pt-8 border-t">
@@ -1046,6 +1043,14 @@ ${messageText.trim()}`;
             </div> 
           </div> 
         </div> 
+
+        {/* Contenedor separado para reseñas: aparece debajo de todo el detalle del servicio */}
+        <div className="container mx-auto px-4 py-6">
+          <div id="reviews-section" className="bg-white rounded-lg shadow p-6">
+            <ServiceReviewsSection serviceId={serviceId} />
+          </div>
+        </div>
+
       </main> 
 
       {/* Modal de edición */}

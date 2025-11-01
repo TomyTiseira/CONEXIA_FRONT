@@ -410,7 +410,7 @@ export default function ReportsList() {
                           <Button
                             variant="edit"
                             className="px-3 py-1 text-xs"
-                            onClick={() => router.push(`/profile/${review.reviewedUser?.id}?highlightReviewId=${review.id || review.userReviewId}`)}
+                            onClick={() => router.push(`/profile/${review.reviewedUser?.id}/reviews?highlightReviewId=${review.id || review.userReviewId}`)}
                           >
                             Ver reseña
                           </Button>
