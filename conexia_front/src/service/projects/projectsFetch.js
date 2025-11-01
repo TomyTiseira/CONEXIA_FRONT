@@ -35,6 +35,7 @@ export async function fetchProjectById(id) {
     endDate: p.endDate,
     isOwner: p.isOwner,
     isApplied: p.isApplied || false, // Agregar isApplied desde el backend
+    hasReported: p.hasReported || false, // Agregar hasReported desde el backend
   };
   
   return result;

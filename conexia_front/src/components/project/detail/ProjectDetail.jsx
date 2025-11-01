@@ -137,7 +137,7 @@ ${messageText.trim()}`;
         ></div>
   <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative mt-4">
           {/* Botón tres puntos: absolute en la esquina del card, tanto mobile como desktop */}
-          {!isOwner && !alreadyReported && (
+          {!isOwner && (
             <div className="absolute top-4 right-6 md:right-8 z-30">
               <button
                 className="p-2 rounded-full hover:bg-gray-100"
@@ -165,26 +165,28 @@ ${messageText.trim()}`;
                         </span>
                       </button>
                     ) : (
-                      !alreadyReported && (
-                        <button
-                          className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
-                          style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
-                          onClick={() => {
-                            setMenuOpen(false);
-                            setShowReportModal(true);
-                          }}
-                        >
-                          <span className="flex items-center gap-2">
-                            {/* Icono advertencia simple */}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
-                              <circle cx="12" cy="16" r="1.2" fill="currentColor" />
-                              <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
-                            </svg>
-                            <span>Reportar proyecto</span>
-                          </span>
-                        </button>
-                      )
+                      <button
+                        className="w-full flex items-center justify-center px-6 py-3 gap-3 font-semibold border border-[#c6e3e4] bg-white text-conexia-green rounded shadow hover:bg-[#eef6f6] transition-colors"
+                        style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          if (project.hasReported) {
+                            setToast({ type: 'warning', message: 'Ya has reportado este proyecto', isVisible: true });
+                            return;
+                          }
+                          setShowReportModal(true);
+                        }}
+                      >
+                        <span className="flex items-center gap-2">
+                          {/* Icono advertencia simple */}
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-conexia-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                            <circle cx="12" cy="16" r="1.2" fill="currentColor" />
+                            <rect x="11.1" y="7" width="1.8" height="6" rx="0.9" fill="currentColor" />
+                          </svg>
+                          <span>Reportar proyecto</span>
+                        </span>
+                      </button>
                     )}
                 </div>
               )}
@@ -489,6 +491,10 @@ ${messageText.trim()}`;
                   otherReason: data.other,
                   description: data.description,
                 });
+                
+                // Actualizar el estado local para marcar como reportado
+                setProject(prev => ({ ...prev, hasReported: true }));
+                
                 setToast({ type: 'success', message: 'Proyecto reportado con éxito.', isVisible: true });
                 setAlreadyReported(true);
               } catch (err) {

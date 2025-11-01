@@ -188,7 +188,7 @@ export default function ReportCommentModal({ onCancel, onSubmit, loading }) {
           >
             {loading ? "Procesando..." : "Aceptar"}
           </Button>
-          <Button onClick={onCancel} variant="cancel" disabled={loading}>
+          <Button onClick={onCancel} variant="secondary" disabled={loading}>
             Cancelar
           </Button>
         </div>

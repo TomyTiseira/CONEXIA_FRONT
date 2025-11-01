@@ -181,7 +181,7 @@ export default function ReportReviewModal({ open, onClose, onSubmit, loading, re
           </Button>
           <Button
             type="button"
-            variant="secondary"
+            variant="cancel"
             onClick={() => {
               resetForm();
               onClose();

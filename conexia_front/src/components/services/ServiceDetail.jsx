@@ -601,7 +601,15 @@ ${messageText.trim()}`;
                           style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
                           onClick={() => {
                             setMenuOpen(false);
-                            setShowReportModal(true);
+                            if (service?.hasReported) {
+                              setToast({
+                                type: 'warning',
+                                message: 'Ya has reportado este servicio',
+                                isVisible: true
+                              });
+                            } else {
+                              setShowReportModal(true);
+                            }
                           }}
                           type="button"
                         >
@@ -1162,6 +1170,10 @@ ${messageText.trim()}`;
               otherReason: reason === 'Otro' ? otherText : undefined,
               description
             });
+            
+            // Actualizar el estado local del servicio para marcar como reportado
+            loadServiceDetail();
+            
             setToast({ type: 'success', message: 'Servicio reportado con éxito.', isVisible: true });
             setAlreadyReportedService(true);
           } catch (err) {
