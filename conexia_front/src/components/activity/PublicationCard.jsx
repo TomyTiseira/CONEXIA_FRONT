@@ -997,6 +997,11 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
         otherReason: data.other,
         description: data.description
       });
+      
+      // Actualizar el estado local para marcar como reportado y forzar re-render
+      publication.hasReported = true;
+      setRerenderTick(prev => prev + 1);
+      
       showToast({ type: 'success', message: 'Reporte enviado correctamente.' });
     } catch (err) {
       const alreadyReportedRegex = /User \d+ has already reported publication \d+/;
@@ -1034,6 +1039,15 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
         otherReason: data.otherReason,
         description: data.description
       });
+      
+      // Actualizar el estado local para marcar el comentario como reportado
+      setAllComments(prev => prev.map(c => 
+        c.id === commentToReport ? {...c, hasReported: true} : c
+      ));
+      setComments(prev => prev.map(c => 
+        c.id === commentToReport ? {...c, hasReported: true} : c
+      ));
+      
       showToast({ 
         type: 'success', 
         message: 'Reporte enviado exitosamente. Nuestro equipo lo revisará pronto.' 
@@ -1140,7 +1154,22 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
               {!isAdmin && !isModerator && !isOwner && (
                 <button
                   className="flex items-center gap-2 px-4 py-2 text-conexia-green hover:bg-[#eef6f6] text-base font-semibold w-full whitespace-nowrap"
-                  onClick={() => { setMenuOpen(false); setShowReportModal(true); }}
+                  onClick={() => { 
+                    setMenuOpen(false); 
+                    // Verificar si ya fue reportada
+                    if (publication.hasReported) {
+                      const showToast = (payload) => {
+                        if (onShowToast) {
+                          onShowToast({ ...payload, isVisible: true });
+                        } else {
+                          setInternalToast({ ...payload, isVisible: true });
+                        }
+                      };
+                      showToast({ type: 'warning', message: 'Ya has reportado esta publicación' });
+                      return;
+                    }
+                    setShowReportModal(true); 
+                  }}
                   style={{maxWidth: 'none'}}>
                   <span className="flex-shrink-0 flex items-center justify-center"><AlertCircle size={22} strokeWidth={2} className="text-conexia-green" /></span>
                   <span>Reportar publicación</span>
@@ -2041,6 +2070,20 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
                                   onClick={() => {
                                     // Cerramos el menú
                                     setCommentMenuOpen({});
+                                    
+                                    // Verificar si ya fue reportado
+                                    if (comment.hasReported) {
+                                      const showToast = (payload) => {
+                                        if (onShowToast) {
+                                          onShowToast({ ...payload, isVisible: true });
+                                        } else {
+                                          setInternalToast({ ...payload, isVisible: true });
+                                        }
+                                      };
+                                      showToast({ type: 'warning', message: 'Ya has reportado este comentario' });
+                                      return;
+                                    }
+                                    
                                     // Guardamos el ID del comentario a reportar
                                     setCommentToReport(comment.id);
                                     // Abrimos el modal de reporte

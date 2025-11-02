@@ -225,9 +225,20 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
   };
 
   const handleReportReview = (review) => {
+    setOpenMenuId(null);
+    
+    // Verificar si ya fue reportada
+    if (review.hasReported) {
+      setToast({
+        type: 'warning',
+        message: 'Ya has reportado esta reseña',
+        isVisible: true
+      });
+      return;
+    }
+    
     setSelectedReview(review);
     setShowReportModal(true);
-    setOpenMenuId(null);
   };
 
   const handleViewReports = (review) => {
@@ -276,7 +287,18 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
       });
       
       setShowReportModal(false);
+      
+      // Actualizar la reseña en la lista local para marcar hasReported como true
+      setReviews(prevReviews => 
+        prevReviews.map(review => 
+          review.id === selectedReview.id 
+            ? { ...review, hasReported: true }
+            : review
+        )
+      );
+      
       setSelectedReview(null);
+      setHasChanges(true); // Marcar que hubo cambios
       
       // Mostrar toast de éxito
       setToast({
@@ -682,24 +704,15 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                   </button>
                                 </>
                               ) : review.isServiceOwner ? (
-                                // Opciones para el dueño del servicio
+                                // Opciones para el dueño del servicio (solo responder, no puede reportar su propia reseña)
                                 <>
                                   {!review.ownerResponse && (
                                     <button
                                       onClick={() => handleRespondToReview(review)}
-                                      className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green border-b"
+                                      className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green"
                                     >
                                       <Edit2 size={16} />
                                       <span>Responder</span>
-                                    </button>
-                                  )}
-                                  {canReport && (
-                                    <button
-                                      onClick={() => handleReportReview(review)}
-                                      className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
-                                    >
-                                      <Flag size={16} />
-                                      <span>Reportar reseña</span>
                                     </button>
                                   )}
                                 </>

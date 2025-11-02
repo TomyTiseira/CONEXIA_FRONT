@@ -10,7 +10,7 @@ import Toast from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { config } from '@/config';
 
-export default function ReviewItem({ review, onEdit, onDeleted, profileOwnerId }) {
+export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess, profileOwnerId }) {
   const { user } = useAuth();
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -19,15 +19,16 @@ export default function ReviewItem({ review, onEdit, onDeleted, profileOwnerId }
   const [reportLoading, setReportLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [localReview, setLocalReview] = useState(review);
 
-  const isOwner = user?.id === review.reviewerUserId;
+  const isOwner = user?.id === localReview.reviewerUserId;
   const isProfileOwner = user?.id === profileOwnerId;
   const canReport = user && !isOwner; // Cualquier usuario autenticado puede reportar, excepto el autor de la reseña
 
   const handleDelete = async () => {
     setLoading(true);
     try {
-      await deleteReview(review.id);
+      await deleteReview(localReview.id);
       setToast({ type: 'success', message: 'Reseña eliminada' });
       onDeleted();
     } catch (err) {
@@ -38,21 +39,60 @@ export default function ReviewItem({ review, onEdit, onDeleted, profileOwnerId }
     }
   };
 
+  const handleReportClick = () => {
+    setMenuOpen(false);
+    // Verificar si ya fue reportado antes de abrir el modal
+    if (localReview.hasReported) {
+      setToast({ type: 'warning', message: 'Ya has reportado esta reseña' });
+      return;
+    }
+    setReportModalOpen(true);
+  };
+
   const handleReportSubmit = async (reportData) => {
     setReportLoading(true);
     try {
       await createReviewReport({
-        userReviewId: review.id,
+        userReviewId: localReview.id,
         reason: reportData.reason,
         otherReason: reportData.otherReason,
         description: reportData.description
       });
-      setToast({ type: 'success', message: 'Reporte enviado correctamente' });
+      
+      // Cerrar modal solo si fue exitoso
       setReportModalOpen(false);
+      
+      // Actualizar estado local para marcar como reportado
+      setLocalReview(prev => ({ ...prev, hasReported: true }));
+      
+      setToast({ type: 'success', message: 'Reporte enviado correctamente' });
+      
+      // Notificar al padre para recargar datos
+      if (onReportSuccess) {
+        onReportSuccess();
+      }
     } catch (err) {
-      if (err.message?.includes('already reported') || err.message?.includes('ya reportaste') || err.message?.includes('Ya has reportado')) {
-        setToast({ type: 'error', message: 'Ya reportaste esta reseña anteriormente' });
+      // Cerrar modal en caso de error
+      setReportModalOpen(false);
+      
+      // Detectar si ya fue reportado previamente
+      const alreadyReportedPatterns = [
+        /already reported/i,
+        /ya has reportado/i,
+        /You have already reported this review/i,
+        /User \d+ has already reported user review \d+/i
+      ];
+      
+      const isAlreadyReported = alreadyReportedPatterns.some(pattern => 
+        err.message && pattern.test(err.message)
+      );
+      
+      if (isAlreadyReported) {
+        // Actualizar estado local para reflejar que ya fue reportado
+        setLocalReview(prev => ({ ...prev, hasReported: true }));
+        setToast({ type: 'warning', message: 'Ya has reportado esta reseña' });
       } else {
+        console.error('Error al reportar reseña:', err);
         setToast({ type: 'error', message: err.message || 'Error al enviar el reporte' });
       }
     } finally {
@@ -182,10 +222,7 @@ export default function ReviewItem({ review, onEdit, onDeleted, profileOwnerId }
                     <>
                       {isOwner && <div className="border-t my-1" />}
                       <button
-                        onClick={() => {
-                          setMenuOpen(false);
-                          setReportModalOpen(true);
-                        }}
+                        onClick={handleReportClick}
                         className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">

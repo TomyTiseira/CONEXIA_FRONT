@@ -337,16 +337,9 @@ export default function MyServicesPage() {
                           Estado
                         </th>
                         <th 
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors select-none group"
-                          onClick={() => handleSort('price')}
-                          title="Click para ordenar por precio"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          <div className="flex items-center gap-2">
                             Precio
-                            <span className="group-hover:scale-110 transition-transform">
-                              {getSortIcon('price')}
-                            </span>
-                          </div>
                         </th>
                         <th 
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors select-none group"
