@@ -65,21 +65,29 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full md:w-[40%] px-6 py-10 bg-conexia-soft">
-      <div className="flex justify-center mb-4">
-        <ConexiaLogo width={80} height={32} />
-      </div>
+    <div className="w-full max-w-md">
+      {/* Card principal */}
+      <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10">
+        {/* Logo y header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <ConexiaLogo width={100} height={40} />
+          </div>
+          <h1 className="text-3xl font-bold text-conexia-green mb-2">Iniciar sesión</h1>
+          <p className="text-sm text-gray-600">
+            Accede a tu cuenta para conectar con tu comunidad
+          </p>
+        </div>
 
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-conexia-green mb-4">Iniciar sesión</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Campo email */}
-          <div className="min-h-[64px]">
-            <label className="block text-sm font-medium text-conexia-green mb-1">Correo</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Correo electrónico
+            </label>
             <input
               type="email"
-              placeholder="Correo electrónico"
+              placeholder="juan2025@gmail.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}
@@ -87,18 +95,22 @@ export default function LoginForm() {
                 setFocused((prev) => ({ ...prev, email: false }));
                 setTouched((prev) => ({ ...prev, email: true }));
               }}
-              className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring ${
+              className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
                 getEmailError()
-                  ? "border-red-500 ring-red-300"
-                  : "border-gray-300 focus:ring-conexia-green/40"
+                  ? "border-red-500 ring-2 ring-red-300"
+                  : "border-gray-300 focus:ring-conexia-green/40 focus:border-conexia-green"
               }`}
             />
-            <p className="text-xs text-red-600 mt-1 h-[14px]">{getEmailError()}</p>
+            {getEmailError() && (
+              <p className="text-xs text-red-600 mt-1.5">{getEmailError()}</p>
+            )}
           </div>
 
           {/* Campo contraseña */}
-          <div className="min-h-[64px]">
-            <label className="block text-sm font-medium text-conexia-green mb-1">Contraseña</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Contraseña
+            </label>
             <div className="relative">
               <input
                 type={showPwd ? "text" : "password"}
@@ -110,53 +122,59 @@ export default function LoginForm() {
                   setFocused((prev) => ({ ...prev, password: false }));
                   setTouched((prev) => ({ ...prev, password: true }));
                 }}
-                className={`w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring ${
+                className={`w-full px-4 py-2.5 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all ${
                   getPasswordError()
-                    ? "border-red-500 ring-red-300"
-                    : "border-gray-300 focus:ring-conexia-green/40"
+                    ? "border-red-500 ring-2 ring-red-300"
+                    : "border-gray-300 focus:ring-conexia-green/40 focus:border-conexia-green"
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPwd(!showPwd)}
-                className="absolute right-3 top-2.5 text-conexia-green"
+                className="absolute right-3 top-3 text-gray-500 hover:text-conexia-green transition-colors"
               >
                 {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            <p className="text-xs text-red-600 mt-1 h-[14px]">{getPasswordError()}</p>
+            {getPasswordError() && (
+              <p className="text-xs text-red-600 mt-1.5">{getPasswordError()}</p>
+            )}
           </div>
 
-          <div className="text-right text-sm mt-1 mb-2">
-            <Link href="/forgot-password" className="text-conexia-green hover:underline">
-              ¿Has olvidado tu contraseña?
+          {/* Link olvidé contraseña */}
+          <div className="text-right">
+            <Link href="/forgot-password" className="text-sm text-conexia-green hover:underline font-medium">
+              ¿Olvidaste tu contraseña?
             </Link>
           </div>
 
+          {/* Botón submit */}
           <button
             type="submit"
-            className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"
+            className="w-full bg-conexia-green text-white py-3 rounded-lg font-semibold hover:bg-conexia-green/90 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             Iniciar sesión
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        {/* Botón crear cuenta */}
+        <div className="mt-6">
           <Link
             href="/register"
-            className="inline-block w-full bg-conexia-soft text-conexia-green py-2 rounded font-semibold hover:bg-conexia-green hover:text-white"
+            className="block w-full text-center bg-gray-100 text-conexia-green py-3 rounded-lg font-semibold hover:bg-gray-200 transition-all"
           >
-            Crea una cuenta nueva
+            Crear cuenta nueva
           </Link>
         </div>
 
-        <div className="min-h-[60px] mt-4">
-          {msg && (
-            <p className={`text-center text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>
+        {/* Mensaje de éxito/error */}
+        {msg && (
+          <div className="mt-4 text-center">
+            <p className={`text-sm font-medium ${msg.ok ? "text-green-600" : "text-red-600"}`}>
               {msg.text}
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -96,26 +96,29 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="relative flex flex-col justify-center items-center w-full md:w-[40%] px-6 pt-10 pb-12 bg-conexia-soft">
-      <div className="flex justify-center mb-4">
-        <ConexiaLogo width={80} height={32} />
-      </div>
+    <div className="w-full max-w-md">
+      {/* Card principal */}
+      <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10">
+        {/* Logo y header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <ConexiaLogo width={100} height={40} />
+          </div>
+          <h1 className="text-3xl font-bold text-conexia-green mb-2">Crea tu cuenta</h1>
+          <p className="text-sm text-gray-600">
+            Ingresa tu correo y crea una contraseña. Te enviaremos un código por email para verificar tu identidad antes de completar el registro.
+          </p>
+        </div>
 
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-conexia-green mb-4">Crea tu cuenta</h1>
-        <p className="mb-5 text-sm text-conexia-green/90">
-          Ingresa tu correo y crea una contraseña. Te enviaremos un código por email para verificar tu identidad antes de completar el registro.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Campo Correo */}
           <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Correo electrónico
             </label>
             <InputField
               type="email"
-              placeholder="Correo electrónico"
+              placeholder="juan2025@gmail.com"
               value={form.email}
               onChange={(e) => handleChange("email", e.target.value)}
               onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}
@@ -126,7 +129,7 @@ export default function RegisterForm() {
 
           {/* Campo Contraseña */}
           <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Contraseña
             </label>
             <InputField
@@ -145,7 +148,7 @@ export default function RegisterForm() {
 
           {/* Campo Repetir Contraseña */}
           <div>
-            <label className="block text-sm font-medium text-conexia-green mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Repetir contraseña
             </label>
             <InputField
@@ -162,38 +165,41 @@ export default function RegisterForm() {
             />
           </div>
 
-          <div className="flex flex-col items-center gap-2">
+          {/* reCAPTCHA */}
+          <div className="flex justify-center pt-2">
             <ReCAPTCHA
               sitekey={RECAPTCHA_SITE_KEY}
               onChange={setCaptchaValue}
-              className="mb-2"
             />
-            <button
-              type="submit"
-              className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"
-            >
-              Registrarme
-            </button>
           </div>
+
+          {/* Botón submit */}
+          <button
+            type="submit"
+            className="w-full bg-conexia-green text-white py-3 rounded-lg font-semibold hover:bg-conexia-green/90 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+          >
+            Registrarme
+          </button>
         </form>
 
-        <div className="mt-6 text-center text-sm">
+        {/* Link a login */}
+        <div className="mt-6 text-center text-sm text-gray-600">
           ¿Ya sos parte de Conexia?{" "}
           <Link href="/login" className="text-conexia-coral hover:underline font-semibold">
             Iniciar sesión
           </Link>
         </div>
 
-        <div className="min-h-[40px] mt-4 text-center text-sm transition-all duration-300">
-          {msg && (
-            <p className={`${msg.ok ? "text-green-600" : "text-red-600"}`}>
+        {/* Mensaje de éxito/error */}
+        {msg && (
+          <div className="mt-4 text-center">
+            <p className={`text-sm font-medium ${msg.ok ? "text-green-600" : "text-red-600"}`}>
               {msg.text}
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
-
   );
 }
 
