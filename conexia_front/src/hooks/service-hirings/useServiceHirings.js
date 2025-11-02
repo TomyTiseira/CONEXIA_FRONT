@@ -186,10 +186,11 @@ export function useServiceHirings() {
     
     try {
       const response = await contractService(hiringId, paymentMethod);
-      // Actualizar el hiring en el estado local
+      // Actualizar el hiring en el estado local a "pago en proceso"
+      // NO lo marcamos como 'approved' aún, esperamos la confirmación del webhook
       setHirings(prev => prev.map(h => 
         h.id === hiringId 
-          ? { ...h, status: { ...h.status, code: 'approved' }, availableActions: response.availableActions || [] }
+          ? { ...h, status: { ...h.status, code: 'payment_pending' }, availableActions: response.availableActions || [] }
           : h
       ));
       return response;

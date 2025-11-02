@@ -52,6 +52,8 @@ const getStatusBadge = (statusCode) => {
     quoted: { label: 'Cotizado', className: 'bg-blue-100 text-blue-800' },
     requoting: { label: 'Re-cotizando', className: 'bg-sky-100 text-sky-800' },
     accepted: { label: 'Aceptado', className: 'bg-green-100 text-green-800' },
+    payment_pending: { label: 'Pago en proceso', className: 'bg-amber-100 text-amber-800' },
+    payment_rejected: { label: 'Pago rechazado', className: 'bg-rose-100 text-rose-800' },
     approved: { label: 'Aprobado', className: 'bg-conexia-green/10 text-conexia-green' },
     rejected: { label: 'Rechazado', className: 'bg-red-100 text-red-800' },
     cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },

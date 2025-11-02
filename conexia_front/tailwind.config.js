@@ -30,12 +30,18 @@ module.exports = {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        loadingBar: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(400%)' },
+        },
       },
       animation: {
         slideIn: 'slideIn 0.3s ease-out',
         slideUp: 'slideUp 0.3s ease-out',
         breathing: 'breathing 3s ease-in-out infinite',
         fadeIn: 'fadeIn 0.3s ease-out',
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'loading-bar': 'loadingBar 1.5s ease-in-out infinite',
       },
       zIndex: {
         '45': '45',

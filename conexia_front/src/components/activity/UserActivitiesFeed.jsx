@@ -4,6 +4,7 @@ import { getProfilePublications } from '@/service/publications/profilePublicatio
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import Toast from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function UserActivitiesFeed({ userId }) {
   const [profile, setProfile] = useState(null);
@@ -83,7 +84,7 @@ export default function UserActivitiesFeed({ userId }) {
           <div className="flex flex-col gap-0 w-full max-w-2xl">
             {error && <div className="text-red-500">{error}</div>}
             {loading && publications.length === 0 && (
-              <div className="text-conexia-green/70 py-4 text-center">Cargando publicaciones...</div>
+              <LoadingSpinner message="Cargando publicaciones..." fullScreen={false} />
             )}
             {!loading && publications.length === 0 && !error && (
               <div className="text-conexia-green/70">No hay publicaciones para mostrar.</div>

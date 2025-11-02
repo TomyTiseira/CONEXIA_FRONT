@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import ActivityFeed from '@/components/activity/ActivityFeed';
 import { getProfilePublications } from '@/service/publications/profilePublicationsFetch';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function UserActivity({ userId, isOwner }) {
   const [publications, setPublications] = useState([]);
@@ -42,7 +43,7 @@ export default function UserActivity({ userId, isOwner }) {
     if (!loading && hasMore) setPage(prev => prev + 1);
   };
 
-  if (loading && publications.length === 0) return <div className="text-center text-conexia-green mt-4">Cargando actividad...</div>;
+  if (loading && publications.length === 0) return <LoadingSpinner message="Cargando actividad..." fullScreen={false} />;
   if (error) return <div className="text-center text-red-500 mt-4">{error}</div>;
 
   return <ActivityFeed publications={publications} isOwner={isOwner} userId={userId} />;

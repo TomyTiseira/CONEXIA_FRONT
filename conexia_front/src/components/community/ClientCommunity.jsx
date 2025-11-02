@@ -19,6 +19,7 @@ import MessagingWidget from '@/components/messaging/MessagingWidget';
 import { MiniRecommendations } from '@/components/connections/MiniRecommendations';
 import { useRecommendations } from '@/hooks/connections/useRecommendations';
 import { sendConnectionRequest } from '@/service/connections/sendConnectionRequest';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ClientCommunity() {
   useSessionTimeout();
@@ -26,13 +27,14 @@ export default function ClientCommunity() {
   const { user, isLoading } = useAuth();
   const { profile, roleName } = useUserStore();
   const [publications, setPublications] = useState([]);
-  const [loadingPublications, setLoadingPublications] = useState(false);
+  const [loadingPublications, setLoadingPublications] = useState(true);
   const [errorPublications, setErrorPublications] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
   const { user: userStore } = useUserStore();
   const [toast, setToast] = useState(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Hook para recomendaciones
   const { 
@@ -79,6 +81,9 @@ export default function ClientCommunity() {
         console.error('Error al cargar publicaciones:', err);
       } finally {
         setLoadingPublications(false);
+        if (page === 1) {
+          setInitialLoadComplete(true);
+        }
       }
     };
     fetchPublications();
@@ -115,6 +120,11 @@ export default function ClientCommunity() {
       ? `${config.IMAGE_URL}/${profile.profilePicture}`
       : '/images/default-avatar.png';
     const displayName = !isInternal && profile?.name && profile?.lastName ? `${profile.name} ${profile.lastName}` : (isInternal ? (roleName === ROLES.ADMIN ? 'Administrador' : 'Moderador') : 'Usuario');
+
+    // Mostrar spinner de carga inicial hasta que las publicaciones estén listas
+    if (!initialLoadComplete) {
+      return <LoadingSpinner message="Cargando publicaciones..." />;
+    }
 
     // Helper para asegurar URLs absolutas (igual que en ProjectDetail)
     const getMediaUrl = (mediaUrl) => {
@@ -201,9 +211,6 @@ export default function ClientCommunity() {
             {/* Publicaciones de la comunidad (no propias) */}
             {errorPublications && <div className="text-red-500">{errorPublications}</div>}
             <div className="flex flex-col gap-0 w-full">
-              {loadingPublications && publications.length === 0 && (
-                <div className="text-conexia-green/70 py-4 text-center">Cargando publicaciones...</div>
-              )}
               {!loadingPublications && publications.length === 0 && !errorPublications && (
                 <div className="text-conexia-green/70">No hay publicaciones de la comunidad para mostrar.</div>
               )}

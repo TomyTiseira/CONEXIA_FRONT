@@ -9,67 +9,71 @@ export default function NavbarHome() {
   const [open, setOpen] = useState(false);
 
   const navItems = [
-    { label: "Inicio", href: "/" },
     { label: "Servicios", href: "/services" },
     { label: "Proyectos", href: "/project/search" },
-    { label: "Conecta", href: "#conecta" },
   ];
 
   return (
-    <header className="bg-white shadow sticky top-0 z-50">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6 h-[64px]">
+    <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
+      <nav className="mx-auto max-w-7xl flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8 h-[64px]">
         {/* Logo */}
-        <div className="flex items-center gap-2 select-none">
-          <Image src="/logo.png" alt="Conexia" width={30} height={30} />
-        </div>
+        <Link href="/" className="flex items-center gap-2 select-none hover:opacity-80 transition-opacity">
+          <Image src="/logo.png" alt="Conexia" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9" />
+          <span className="text-xl font-bold text-conexia-green hidden sm:block">CONEXIA</span>
+        </Link>
 
         {/* Mobile menu toggle */}
         <button
           onClick={() => setOpen(!open)}
-          className="md:hidden p-2 text-conexia-green"
+          className="md:hidden p-2 text-conexia-green hover:bg-gray-50 rounded-lg transition-colors"
           aria-label="Toggle menu"
         >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
 
         {/* Desktop nav */}
-        <ul className="hidden md:flex items-center gap-6 font-semibold text-base text-conexia-green">
-          {navItems.map(({ label, href }) => (
-            <li key={label}>
-              <Link href={href}>{label}</Link>
-            </li>
-          ))}
-          <li>
+        <div className="hidden md:flex items-center gap-8">
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="rounded bg-conexia-soft px-5 py-2 hover:bg-conexia-green hover:text-white"
+              className="px-5 py-2 text-conexia-green font-semibold hover:bg-gray-50 rounded-lg transition-colors"
             >
               Iniciar sesión
             </Link>
-          </li>
-        </ul>
+            <Link
+              href="/register"
+              className="px-5 py-2 bg-conexia-green text-white font-semibold rounded-lg hover:bg-conexia-green/90 shadow-sm hover:shadow transition-all"
+            >
+              Registrarse
+            </Link>
+          </div>
+        </div>
       </nav>
 
       {/* Mobile nav */}
       {open && (
-        <ul className="md:hidden flex flex-col gap-4 bg-white px-6 pb-6 text-conexia-green font-medium shadow-inner">
-          {navItems.map(({ label, href }) => (
-            <li key={label}>
-              <Link href={href} onClick={() => setOpen(false)}>
-                {label}
+        <div className="md:hidden border-t border-gray-100 bg-white shadow-lg">
+          <ul className="flex flex-col py-4 px-4 space-y-1">
+            <li className="pt-3">
+              <Link
+                href="/login"
+                className="block px-4 py-2.5 text-center text-conexia-green font-semibold hover:bg-gray-50 rounded-lg transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                Iniciar sesión
               </Link>
             </li>
-          ))}
-          <li>
-            <Link
-              href="/login"
-              className="rounded bg-conexia-soft px-4 py-2 text-center hover:bg-conexia-green hover:text-white"
-              onClick={() => setOpen(false)}
-            >
-              Iniciar sesión
-            </Link>
-          </li>
-        </ul>
+            <li>
+              <Link
+                href="/register"
+                className="block px-4 py-2.5 text-center bg-conexia-green text-white font-semibold rounded-lg hover:bg-conexia-green/90 shadow-sm transition-all"
+                onClick={() => setOpen(false)}
+              >
+                Registrarse
+              </Link>
+            </li>
+          </ul>
+        </div>
       )}
     </header>
   );

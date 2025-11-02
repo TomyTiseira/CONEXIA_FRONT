@@ -123,10 +123,6 @@ export default function NexoAboutModal({ isOpen, onClose }) {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-conexia-green font-bold">•</span>
-                  <span><strong>Conexión:</strong> Los zorros son conocidos por su aguda percepción y habilidad para navegar entornos complejos</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-conexia-green font-bold">•</span>
                   <span><strong>Agilidad:</strong> Rápido, eficiente y siempre listo para ayudar, como debe ser un buen asistente virtual</span>
                 </li>
               </ul>
@@ -140,7 +136,7 @@ export default function NexoAboutModal({ isOpen, onClose }) {
               El ecosistema CONEXIA
             </h3>
             <p className="text-gray-600 leading-relaxed">
-              CONEXIA es más que una plataforma de servicios; es un <strong>ecosistema de networking</strong> diseñado para emprendedores digitales y profesionales que buscan crecer. Aquí puedes:
+              CONEXIA es más que una plataforma de servicios, es un <strong>ecosistema de networking</strong> diseñado para emprendedores digitales y profesionales que buscan crecer. Aquí puedes:
             </p>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2 text-sm text-gray-700">
