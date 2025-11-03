@@ -22,6 +22,8 @@ export default function NexoChat() {
     isConnected,
     isTyping,
     error,
+    socketError,
+    tokenRefreshed,
     initialize,
     sendMessage,
     disconnect,
@@ -112,6 +114,55 @@ export default function NexoChat() {
       });
     }
   }, [error, nexoOpen]);
+
+  // Manejar eventos estructurados desde socket (auth_error, refresh failures, etc.)
+  useEffect(() => {
+    if (!socketError || !nexoOpen) return;
+
+    const code = socketError.code;
+
+    switch (code) {
+      case 'refresh_token_expired':
+        setToast({ type: 'error', message: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.', isVisible: true });
+        // Cerrar y redirigir al login
+        setTimeout(() => {
+          window.location.href = '/login?reason=session_expired';
+        }, 2000);
+        break;
+
+      case 'no_tokens':
+      case 'no_valid_tokens':
+        setToast({ type: 'error', message: 'No se encontró sesión activa. Por favor, inicia sesión.', isVisible: true });
+        setTimeout(() => {
+          window.location.href = '/login?reason=no_session';
+        }, 1500);
+        break;
+
+      case 'refresh_timeout':
+      case 'refresh_failed':
+        setToast({ type: 'error', message: 'Error temporal al renovar la sesión. Reintentando...', isVisible: true });
+        // Intentar reconectar/reenviar inicialización
+        setTimeout(() => {
+          initialize().catch(() => {});
+        }, 3000);
+        break;
+
+      default:
+        // Mostrar mensaje genérico si existe
+        setToast({ type: 'error', message: socketError.message || 'Error de autenticación', isVisible: true });
+    }
+  }, [socketError, nexoOpen, initialize]);
+
+  // Mostrar notificación cuando token sea renovado por socket
+  useEffect(() => {
+    if (!tokenRefreshed || !nexoOpen) return;
+
+    setToast({
+      type: 'info',
+      message: tokenRefreshed.message || 'Sesión renovada automáticamente',
+      isVisible: true,
+    });
+  }, [tokenRefreshed, nexoOpen]);
 
   if (!shouldShow) return null;
 
