@@ -5,7 +5,7 @@ export default function NexoIcon({ onClick, hasNewMessage, isMinimized }) {
     <button
       onClick={onClick}
       className="group relative"
-      title="Abrir NEXO - Asistente Virtual"
+      aria-label="Abrir Nexo"
     >
       {/* Botón principal con fondo de humo y verde CONEXIA */}
       <div 
@@ -42,11 +42,11 @@ export default function NexoIcon({ onClick, hasNewMessage, isMinimized }) {
         </div>
       )}
       
-      {/* Tooltip */}
+      {/* Tooltip: always show a single short label */}
       <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs 
                       rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap
                       pointer-events-none z-30">
-        {isMinimized ? 'Restaurar NEXO' : 'Abrir NEXO'}
+        Abrir Nexo
         <div className="absolute top-full right-4 w-2 h-2 bg-gray-900 transform rotate-45 -mt-1" />
       </div>
       
