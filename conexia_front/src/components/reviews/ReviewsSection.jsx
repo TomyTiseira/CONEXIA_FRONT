@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { fetchUserReviews } from '@/service/reviews/reviewsFetch';
 import ReviewForm from './ReviewForm';
 import ReviewItem from './ReviewItem';
-import Button from '@/components/ui/Button';
 import Link from 'next/link';
 import Toast from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
@@ -126,7 +125,7 @@ export default function ReviewsSection({ profileUserId }) {
       {/* Botón ver más */}
       {reviewsData.reviews && reviewsData.reviews.length > 0 && (
         <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
-          <a
+          <Link
             href={`/profile/${profileUserId}/reviews`}
             className="w-full sm:w-auto flex items-center gap-1.5 px-5 py-2 rounded-lg font-semibold shadow bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] text-base border border-[#c6e3e4] justify-center text-center"
             style={{ minHeight: '40px' }}
@@ -136,7 +135,7 @@ export default function ReviewsSection({ profileUserId }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m4-4H8" />
             </svg>
             <span className="w-full text-center">Ver más…</span>
-          </a>
+          </Link>
         </div>
       )}
 
