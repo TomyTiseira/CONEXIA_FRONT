@@ -9,7 +9,7 @@ export default function NexoIcon({ onClick, hasNewMessage, isMinimized }) {
     >
       {/* Botón principal con fondo de humo y verde CONEXIA */}
       <div 
-        className="relative flex items-center justify-center w-10 h-10 sm:w-16 sm:h-16 rounded-full shadow-lg hover:shadow-xl 
+        className="relative flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 rounded-full shadow-lg hover:shadow-xl 
                    transition-all duration-300 hover:scale-110 active:scale-95 animate-breathing 
                    border-2 border-conexia-green overflow-hidden"
         style={{ 
