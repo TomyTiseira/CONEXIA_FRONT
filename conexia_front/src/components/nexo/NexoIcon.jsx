@@ -9,7 +9,7 @@ export default function NexoIcon({ onClick, hasNewMessage, isMinimized }) {
     >
       {/* Botón principal con fondo de humo y verde CONEXIA */}
       <div 
-        className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-lg hover:shadow-xl 
+        className="relative flex items-center justify-center w-10 h-10 sm:w-16 sm:h-16 rounded-full shadow-lg hover:shadow-xl 
                    transition-all duration-300 hover:scale-110 active:scale-95 animate-breathing 
                    border-2 border-conexia-green overflow-hidden"
         style={{ 
@@ -28,17 +28,17 @@ export default function NexoIcon({ onClick, hasNewMessage, isMinimized }) {
         }} />
         
         {/* Zorro */}
-        <span className="relative text-3xl z-10">🦊</span>
+        <span className="relative text-xl sm:text-3xl z-10">🦊</span>
       </div>
       
       {/* Badge de conexión/estado - fuera del overflow-hidden */}
-      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-md" />
+      <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white shadow-md" />
       
       {/* Badge de notificación */}
       {hasNewMessage && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full border-2 border-white 
+        <div className="absolute -top-2 -right-2 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full border-2 border-white 
                         flex items-center justify-center animate-pulse shadow-md">
-          <span className="text-xs text-white font-bold">!</span>
+          <span className="text-[10px] sm:text-xs text-white font-bold">!</span>
         </div>
       )}
       
