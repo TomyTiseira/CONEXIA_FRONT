@@ -15,7 +15,6 @@ import {
   Briefcase,
   Layers,
   ChevronDown,
-  Users,
 } from 'lucide-react';
 import DropdownInternalUserMenu from '@/components/navbar/DropdownInternalUserMenu';
 import { config } from '@/config';
