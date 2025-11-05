@@ -169,6 +169,10 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
   };
 
   const handleConfirmPublish = async () => {
+    // Validar nuevamente antes de publicar (útil para botón directo en mobile)
+    const isValid = validateAll();
+    if (!isValid) return;
+
     try {
       await publishService(form);
       
@@ -355,7 +359,7 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
         {/* Galería de Imágenes */}
         <div className="bg-white p-6 rounded-lg shadow-sm border mt-8">
           <h2 className="text-xl font-semibold text-conexia-green-dark mb-4 flex items-center gap-2">
-            Galería de Imágenes
+            Galería de imágenes
           </h2>
           
           <div className="space-y-4">
@@ -412,11 +416,20 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
           </Button>
           <Button 
             type="submit" 
-            variant="primary" 
+            variant="neutral" 
             disabled={loading}
             className="sm:w-auto w-full"
           >
             Vista previa
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleConfirmPublish}
+            disabled={loading}
+            className="sm:w-auto w-full"
+          >
+            Confirmar
           </Button>
         </div>
 
