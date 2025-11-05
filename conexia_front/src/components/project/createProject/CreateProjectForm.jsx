@@ -14,8 +14,8 @@ import SelectField from '@/components/form/SelectField';
 import DateRangePicker from '@/components/form/DateRangePicker';
 import RubroSkillsSelector from '@/components/skills/RubroSkillsSelector';
 import Button from '@/components/ui/Button';
-import LocalitySelector from '@/components/localities/LocalitySelector';
 import RequireVerification from '@/components/common/RequireVerification';
+import LocalitySelector from '@/components/localities/LocalitySelector';
 
 export default function CreateProjectForm() {
   // Handler para el selector de provincia

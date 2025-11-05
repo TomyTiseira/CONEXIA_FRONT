@@ -14,6 +14,7 @@ import { IoCheckmarkCircleSharp } from 'react-icons/io5';
 import { MoreVertical, Star } from 'lucide-react';
 import { config } from '@/config';
 import Button from '@/components/ui/Button';
+import RequireVerification from '@/components/common/RequireVerification';
 import BackButton from '@/components/ui/BackButton';
 import Navbar from '@/components/navbar/Navbar';
 import ServiceImageCarousel from './ServiceImageCarousel';
@@ -1010,23 +1011,25 @@ ${messageText.trim()}`;
                           </p>
                         </div>
                       ) : (
-                        <Button
-                          variant={
-                            service?.hasPendingQuotation
-                              ? 'danger'
-                              : 'primary'
-                          }
-                          onClick={handleQuote}
-                          disabled={false}
-                          className="flex items-center justify-center gap-2 !px-6 !py-3 w-full md:w-auto"
-                        >
-                          <FaHandshake size={16} />
-                          {service?.hasPendingQuotation
-                            ? 'Cancelar Solicitud'
-                            : showViewQuotation
-                              ? 'Ver Cotización'
-                              : 'Solicitar Cotización'}
-                        </Button>
+                        <RequireVerification action="solicitar una cotización">
+                          <Button
+                            variant={
+                              service?.hasPendingQuotation
+                                ? 'danger'
+                                : 'primary'
+                            }
+                            onClick={handleQuote}
+                            disabled={false}
+                            className="flex items-center justify-center gap-2 !px-6 !py-3 w-full md:w-auto"
+                          >
+                            <FaHandshake size={16} />
+                            {service?.hasPendingQuotation
+                              ? 'Cancelar Solicitud'
+                              : showViewQuotation
+                                ? 'Ver Cotización'
+                                : 'Solicitar Cotización'}
+                          </Button>
+                        </RequireVerification>
                       )}
                     </div>
                   )}

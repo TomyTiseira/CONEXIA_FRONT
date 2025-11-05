@@ -15,6 +15,7 @@ import { HiOutlineClipboardList } from 'react-icons/hi';
 import { MdCleaningServices } from 'react-icons/md';
 import ProjectSearchFilters from './ProjectSearchFilters';
 import ProjectSearchBar from './ProjectSearchBar';
+import RequireVerification from '@/components/common/RequireVerification';
 import ProjectList from './ProjectList';
 import RecommendationsCarousel from './RecommendationsCarousel';
 import EmptyRecommendationsState from './EmptyRecommendationsState';
@@ -228,15 +229,17 @@ export default function ProjectSearch() {
             </div>
             {(roleName === ROLES.USER || user?.roleId === 2) && (
               <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
-                <button
-                  className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"
-                  onClick={() => router.push('/project/create')}
-                >
-                  <span className="flex items-center justify-center gap-2 w-full">
-                    <FaRegLightbulb className="text-base" />
-                    <span>Publica tu proyecto</span>
-                  </span>
-                </button>
+                <RequireVerification action="publicar un proyecto">
+                  <button
+                    className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"
+                    onClick={() => router.push('/project/create')}
+                  >
+                    <span className="flex items-center justify-center gap-2 w-full">
+                      <FaRegLightbulb className="text-base" />
+                      <span>Publica tu proyecto</span>
+                    </span>
+                  </button>
+                </RequireVerification>
                 {roleName === ROLES.USER && (
                   <button
                     className="bg-[#367d7d] text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-[#2b6a6a] transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"

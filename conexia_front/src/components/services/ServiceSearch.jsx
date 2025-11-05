@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Search, FileText } from 'lucide-react';
 import { Briefcase } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import RequireVerification from '@/components/common/RequireVerification';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import ServiceFilters from './ServiceFilters';
@@ -107,14 +108,16 @@ export default function ServiceSearch() {
             </div>
             <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
               {canCreateService && (
-                <Link href="/services/create" className="w-full sm:w-auto order-1 sm:order-none">
-                  <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
-                    <span className="flex items-center justify-center gap-2 w-full">
-                      <Briefcase size={16} className="text-base" />
-                      <span>Publica tu servicio</span>
-                    </span>
-                  </button>
-                </Link>
+                <RequireVerification action="publicar un servicio">
+                  <Link href="/services/create" className="w-full sm:w-auto order-1 sm:order-none">
+                    <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
+                      <span className="flex items-center justify-center gap-2 w-full">
+                        <Briefcase size={16} className="text-base" />
+                        <span>Publica tu servicio</span>
+                      </span>
+                    </button>
+                  </Link>
+                </RequireVerification>
               )}
               {canViewHirings && (
                 <button 

@@ -11,6 +11,7 @@ import { HiUserGroup } from 'react-icons/hi';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { config } from '@/config';
 import Navbar from '@/components/navbar/Navbar';
+import RequireVerification from '@/components/common/RequireVerification';
 import Pagination from '@/components/common/Pagination';
 import Toast from '@/components/ui/Toast';
 
@@ -281,13 +282,15 @@ export default function MyServicesPage() {
                 </label>
               </div>
               
-              <button
-                onClick={() => router.push('/services/create')}
-                className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
-              >
-                <Briefcase size={16} />
-                Crear Nuevo Servicio
-              </button>
+              <RequireVerification action="publicar un servicio">
+                <button
+                  onClick={() => router.push('/services/create')}
+                  className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
+                >
+                  <Briefcase size={16} />
+                  Crear Nuevo Servicio
+                </button>
+              </RequireVerification>
             </div>
           </div>
 
@@ -316,12 +319,14 @@ export default function MyServicesPage() {
                 <p className="text-gray-500 mb-4">
                   Comienza creando tu primer servicio para recibir solicitudes de contratación.
                 </p>
-                <button
-                  onClick={() => router.push('/services/create')}
-                  className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
-                >
-                  Crear Mi Primer Servicio
-                </button>
+                <RequireVerification action="publicar un servicio">
+                  <button
+                    onClick={() => router.push('/services/create')}
+                    className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
+                  >
+                    Crear Mi Primer Servicio
+                  </button>
+                </RequireVerification>
               </div>
             ) : (
               <>
@@ -446,7 +451,7 @@ export default function MyServicesPage() {
                 </div>
 
                 {/* Paginación para desktop */}
-                <div className="hidden md:block px-6 py-4 border-t border-gray-200 flex justify-center">
+                <div className="hidden md:flex px-6 py-4 border-t border-gray-200 justify-center">
                   <Pagination
                     currentPage={pagination.currentPage || 1}
                     page={pagination.currentPage || 1}

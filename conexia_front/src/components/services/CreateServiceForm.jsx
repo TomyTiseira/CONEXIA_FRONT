@@ -6,6 +6,7 @@ import { useCreateService, useServiceCategories } from '@/hooks/services';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
 import Button from '@/components/ui/Button';
+import RequireVerification from '@/components/common/RequireVerification';
 import ImageUploadZone from '@/components/services/ImageUploadZone';
 import ImageCarousel from '@/components/services/ImageCarousel';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
@@ -422,15 +423,17 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
           >
             Vista previa
           </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleConfirmPublish}
-            disabled={loading}
-            className="sm:w-auto w-full"
-          >
-            Confirmar
-          </Button>
+          <RequireVerification action="publicar un servicio">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleConfirmPublish}
+              disabled={loading}
+              className="sm:w-auto w-full"
+            >
+              Confirmar
+            </Button>
+          </RequireVerification>
         </div>
 
       </form>
