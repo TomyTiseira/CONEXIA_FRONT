@@ -327,12 +327,14 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
             </label>
             <InputField
               name="price"
-              type="text"
+              type="number"
               inputMode="numeric"
               pattern="[0-9]*"
               placeholder="Ej: 150"
+              min={1}
+              step={1}
               value={form.price}
-              onChange={(e) => handleChange('price', e.target.value)}
+              onChange={(e) => handleChange('price', String(e.target.value).replace(/[^0-9]/g, ''))}
               onBlur={() => handleBlur('price')}
               error={touched.price && errors.price}
               required

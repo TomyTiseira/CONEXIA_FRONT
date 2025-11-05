@@ -56,9 +56,12 @@ export default function LoginForm() {
         friendlyMsg = "El correo ingresado no pertenece a ninguna cuenta registrada.";
       } else if (err.message.includes("The email is not valid")) {
       friendlyMsg = "El formato del correo electrónico no es válido.";
-      } else {
-        friendlyMsg = err.message;
-      }
+      } else if (err && err.message && /fetch|failed to fetch|network error/i.test(err.message)) {
+          friendlyMsg = 'Ocurrió un error inesperado. Intenta de nuevo más tarde.';
+        } else {
+          // Fallback: if server returned a message use it, otherwise generic
+          friendlyMsg = err && err.message ? err.message : 'Ocurrió un error inesperado. Intenta de nuevo más tarde.';
+        }
 
       setMsg({ ok: false, text: friendlyMsg });
     }
