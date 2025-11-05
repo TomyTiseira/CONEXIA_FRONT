@@ -17,6 +17,30 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
   const [downloading, setDownloading] = useState(false);
   const [previewSrc, setPreviewSrc] = useState(null);
 
+  // Función para obtener attachments (con retrocompatibilidad)
+  const getAttachments = () => {
+    // Nuevo formato: array de attachments
+    if (delivery.attachments && Array.isArray(delivery.attachments) && delivery.attachments.length > 0) {
+      return delivery.attachments;
+    }
+    
+    // Formato antiguo: attachmentUrl single
+    if (delivery.attachmentUrl || delivery.attachmentPath) {
+      return [{
+        id: 'legacy',
+        fileUrl: delivery.attachmentUrl,
+        filePath: delivery.attachmentPath,
+        fileName: delivery.attachmentPath?.split('/').pop() || 'archivo',
+        fileSize: delivery.attachmentSize,
+        orderIndex: 0
+      }];
+    }
+    
+    return [];
+  };
+
+  const attachments = getAttachments();
+
   if (!delivery) {
     return (
       <div className="bg-gray-50 rounded-lg p-8 text-center">
@@ -97,24 +121,44 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
     }
   };
 
-  const getAttachmentUrl = () => {
-    if (delivery.attachmentUrl) {
-      return buildMediaUrl(delivery.attachmentUrl);
+  const getAttachmentUrl = (attachment) => {
+    // Priorizar filePath para reconstruir la URL correcta con el puerto del frontend
+    if (attachment?.filePath) {
+      return buildMediaUrl(attachment.filePath);
+    }
+    // Fallback a fileUrl solo si no hay filePath
+    if (attachment?.fileUrl) {
+      return buildMediaUrl(attachment.fileUrl);
     }
     return null;
   };
 
-  const getAttachmentFileName = () => {
-    if (delivery.attachmentPath) {
-      return delivery.attachmentPath.split('/').pop() || 'archivo';
+  const getAttachmentFileName = (attachment) => {
+    if (attachment?.fileName) {
+      return attachment.fileName;
+    }
+    if (attachment?.filePath) {
+      return attachment.filePath.split('/').pop() || 'archivo';
     }
     return 'archivo';
   };
 
-  const handleDownload = async () => {
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const handleDownload = async (attachment) => {
     setDownloading(true);
     try {
-      const url = getAttachmentUrl();
+      const url = getAttachmentUrl(attachment);
+      if (!url) {
+        throw new Error('URL de archivo no disponible');
+      }
+
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -125,7 +169,7 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = getAttachmentFileName();
+      link.download = getAttachmentFileName(attachment);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -312,118 +356,117 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
             </div>
           </div>
 
-          {/* Archivo adjunto con marca de agua si no está pagado */}
-          {delivery.attachmentUrl && (
+          {/* Archivos adjuntos */}
+          {attachments.length > 0 && (
             <div className="mb-6">
-              <label className="flex items-center font-semibold text-gray-900 mb-2">
+              <label className="flex items-center font-semibold text-gray-900 mb-3">
                 <Download size={18} className="mr-2" />
-                Archivo Adjunto
+                {attachments.length === 1 ? 'Archivo Adjunto' : `Archivos Adjuntos (${attachments.length})`}
                 {isClient && delivery.needsWatermark && (
                   <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">
                     Pendiente de pago
                   </span>
                 )}
               </label>
-              
-              {/* Preview con marca de agua para imágenes - Solo para cliente */}
-              {delivery.attachmentPath && /\.(jpg|jpeg|png|gif|webp)$/i.test(delivery.attachmentPath) && (
-                <div
-                  className="relative mb-3 rounded-lg overflow-hidden border border-gray-200 select-none"
-                  onContextMenu={(e) => {
-                    if (isClient && delivery.needsWatermark) e.preventDefault();
-                  }}
-                  onMouseDown={(e) => {
-                    if (isClient && delivery.needsWatermark) e.preventDefault();
-                  }}
-                  onDragStart={(e) => {
-                    if (isClient && delivery.needsWatermark) e.preventDefault();
-                  }}
-                >
-                  <img
-                    src={(isClient && delivery.needsWatermark && previewSrc) ? previewSrc : getAttachmentUrl()}
-                    alt="Vista previa"
-                    className="w-full max-h-96 object-contain bg-gray-50 pointer-events-none"
-                    draggable={false}
-                  />
-                  {isClient && delivery.needsWatermark && (
-                    // Si tenemos previewSrc (canvas), no agregamos textos por CSS para evitar duplicado.
-                    previewSrc ? (
-                      <div
-                        className="absolute inset-0 cursor-not-allowed"
-                        title="Descarga bloqueada hasta realizar el pago"
-                        aria-label="Descarga bloqueada"
-                      />
-                    ) : (
-                      <>
-                        {/* Fallback CSS si no pudimos generar canvas */}
-                        <div
-                          className="absolute inset-0 cursor-not-allowed"
-                          title="Descarga bloqueada hasta realizar el pago"
-                          aria-label="Descarga bloqueada"
-                        />
-                        <div className="absolute top-3 left-1/2 -translate-x-1/2 select-none">
-                          <div className="text-4xl md:text-6xl font-extrabold tracking-widest text-white/70 drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)] whitespace-nowrap">
-                            NO PAGADO
+
+              <div className="space-y-3">
+                {attachments.map((attachment, index) => {
+                  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.filePath || attachment.fileName || '');
+                  const attachmentUrl = getAttachmentUrl(attachment);
+                  
+                  return (
+                    <div key={attachment.id || index} className="border border-gray-200 rounded-lg overflow-hidden">
+                      {/* Preview de imagen si aplica */}
+                      {isImage && attachmentUrl && (
+                        <div className="relative bg-gray-100 flex items-center justify-center" style={{ minHeight: '200px' }}>
+                          <img
+                            src={attachmentUrl}
+                            alt={`Vista previa ${index + 1}`}
+                            className="w-full max-h-96 object-contain"
+                            loading="lazy"
+                          />
+                          {isClient && delivery.needsWatermark && (
+                            <div 
+                              className="absolute inset-0 pointer-events-none overflow-hidden"
+                              style={{
+                                background: `repeating-linear-gradient(
+                                  45deg,
+                                  transparent,
+                                  transparent 100px,
+                                  rgba(255, 255, 255, 0.05) 100px,
+                                  rgba(255, 255, 255, 0.05) 200px
+                                )`
+                              }}
+                            >
+                              <div className="absolute inset-0 flex flex-wrap items-center justify-center opacity-30">
+                                {Array.from({ length: 20 }).map((_, i) => (
+                                  <div
+                                    key={i}
+                                    className="text-white font-bold text-4xl md:text-5xl transform rotate-[-45deg] m-8"
+                                    style={{
+                                      textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                                      userSelect: 'none'
+                                    }}
+                                  >
+                                    CONEXIA
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Información y descarga del archivo */}
+                      {isClient && delivery.needsWatermark ? (
+                        <div className="bg-yellow-50 p-4">
+                          <div className="flex items-start gap-3">
+                            <FileText size={24} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 truncate" title={getAttachmentFileName(attachment)}>
+                                {getAttachmentFileName(attachment)}
+                              </p>
+                              {attachment.fileSize && (
+                                <p className="text-sm text-gray-600">
+                                  Tamaño: {formatFileSize(attachment.fileSize)}
+                                </p>
+                              )}
+                              <p className="text-xs text-yellow-700 mt-1">
+                                Bloqueado hasta realizar el pago
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        <div className="absolute inset-0 bg-black/15" />
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 select-none">
-                          <div className="text-base md:text-xl font-semibold tracking-wider text-white/80 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-                            CONEXIA
+                      ) : (
+                        <button
+                          onClick={() => handleDownload(attachment)}
+                          disabled={downloading}
+                          className="w-full flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 transition-colors group disabled:opacity-50"
+                        >
+                          <FileText size={24} className="text-blue-500 flex-shrink-0" />
+                          <div className="flex-1 text-left min-w-0">
+                            <p className="font-medium text-blue-900 group-hover:text-blue-700 truncate" title={getAttachmentFileName(attachment)}>
+                              {getAttachmentFileName(attachment)}
+                            </p>
+                            <p className="text-sm text-blue-600">
+                              {downloading ? 'Descargando...' : (
+                                attachment.fileSize 
+                                  ? `${formatFileSize(attachment.fileSize)} • Click para descargar`
+                                  : 'Click para descargar'
+                              )}
+                            </p>
                           </div>
-                        </div>
-                      </>
-                    )
-                  )}
-                </div>
-              )}
-              
-              {/* Mensaje de bloqueo para archivos no pagados - Solo para cliente */}
-              {isClient && delivery.needsWatermark ? (
-                <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center">
-                  <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-3">
-                      <FileText size={32} className="text-yellow-600" />
+                          {downloading ? (
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 flex-shrink-0"></div>
+                          ) : (
+                            <Download size={20} className="text-blue-500 flex-shrink-0" />
+                          )}
+                        </button>
+                      )}
                     </div>
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Archivo bloqueado
-                    </h4>
-                    <p className="text-sm text-gray-700 mb-1">
-                      {getAttachmentFileName()}
-                    </p>
-                    <p className="text-xs text-gray-600 max-w-md mb-3">
-                      Este archivo estará disponible para descargar una vez que apruebes y completes el pago de esta entrega.
-                    </p>
-                    {delivery.attachmentPath && /\.(jpg|jpeg|png|gif|webp)$/i.test(delivery.attachmentPath) && (
-                      <p className="text-xs text-blue-600">
-                        Vista previa disponible arriba (con marca de agua)
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                /* Botón de descarga - Para prestador siempre, para cliente solo si está pagado */
-                <button
-                  onClick={handleDownload}
-                  disabled={downloading}
-                  className="w-full flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <FileText size={32} className="text-blue-500" />
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-blue-900 group-hover:text-blue-700">
-                      {getAttachmentFileName()}
-                    </p>
-                    <p className="text-sm text-blue-600">
-                      {downloading ? 'Descargando...' : 'Click para descargar'}
-                    </p>
-                  </div>
-                  {downloading ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                  ) : (
-                    <Download size={20} className="text-blue-500" />
-                  )}
-                </button>
-              )}
+                  );
+                })}
+              </div>
             </div>
           )}
 

@@ -4,15 +4,17 @@ import useSessionTimeout from '@/hooks/useSessionTimeout';
 import { useState, useEffect } from 'react';
 import PublicationCard from '@/components/activity/PublicationCard';
 import { getCommunityPublications } from '@/service/publications/publicationsFetch';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ClientModerator() {
   useSessionTimeout();
   const [publications, setPublications] = useState([]);
-  const [loadingPublications, setLoadingPublications] = useState(false);
+  const [loadingPublications, setLoadingPublications] = useState(true);
   const [errorPublications, setErrorPublications] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
     const fetchPublications = async () => {
@@ -28,6 +30,9 @@ export default function ClientModerator() {
         console.error('Error al cargar publicaciones:', err);
       } finally {
         setLoadingPublications(false);
+        if (page === 1) {
+          setInitialLoadComplete(true);
+        }
       }
     };
     fetchPublications();
@@ -48,14 +53,16 @@ export default function ClientModerator() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadingPublications, hasMore]);
 
+  // Mostrar spinner de carga inicial hasta que las publicaciones estén listas
+  if (!initialLoadComplete) {
+    return <LoadingSpinner message="Cargando publicaciones..." />;
+  }
+
   return (
     <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8">
       <h1 className="text-2xl font-bold text-conexia-green mb-6">¡Bienvenido Moderador!</h1>
       <div className="flex flex-col gap-0 w-full max-w-2xl mx-auto">
         {errorPublications && <div className="text-red-500">{errorPublications}</div>}
-        {loadingPublications && publications.length === 0 && (
-          <div className="text-conexia-green/70 py-4 text-center">Cargando publicaciones...</div>
-        )}
         {!loadingPublications && publications.length === 0 && !errorPublications && (
           <div className="text-conexia-green/70">No hay publicaciones para mostrar.</div>
         )}

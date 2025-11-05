@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import PhoneInputWithCountry from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
+import { getCountries, getCountryCallingCode } from 'react-phone-number-input/input';
+import en from 'react-phone-number-input/locale/en.json';
 
 /**
  * Componente de input de teléfono con selector de país y código de área
@@ -17,87 +17,127 @@ export default function PhoneInput({
   phoneNumberError,
   onBlur
 }) {
-  // Combinar areaCode y phoneNumber para mostrar en el componente
-  const fullPhoneNumber = areaCode && phoneNumber ? `${areaCode}${phoneNumber}` : areaCode || '';
-  const [previousValue, setPreviousValue] = useState(fullPhoneNumber);
-  
-  useEffect(() => {
-    setPreviousValue(fullPhoneNumber);
-  }, [fullPhoneNumber]);
-  
-  const handleChange = (value) => {
-    // Si intentan borrar todo o dejar solo el código incompleto
-    if (!value || value.length < (areaCode?.length || 0)) {
-      // Restaurar al valor anterior (mantener el código de área)
-      return;
-    }
+  const countries = getCountries();
+  const [selectedCountry, setSelectedCountry] = useState('');
 
-    // Parsear el valor para extraer código de área y número
-    // react-phone-number-input devuelve el número en formato E.164 (ej: +541123456789)
-    const match = value.match(/^(\+\d{1,4})(\d*)$/);
+  // Inicializar el país basado en el areaCode si existe
+  useEffect(() => {
+    if (areaCode && !selectedCountry) {
+      const code = areaCode.replace('+', '');
+      const country = countries.find(
+        (c) => getCountryCallingCode(c) === code
+      );
+      if (country) {
+        setSelectedCountry(country);
+      }
+    }
+  }, [areaCode, selectedCountry, countries]);
+
+  const handleCountryChange = (e) => {
+    const country = e.target.value;
+    setSelectedCountry(country);
     
-    if (match) {
-      const [, code, number] = match;
-      
-      // Solo actualizar si el código de área cambió o si hay número
-      if (code !== areaCode || number !== phoneNumber) {
-        onAreaCodeChange?.(code);
-        onPhoneNumberChange?.(number || '');
-        setPreviousValue(value);
-      }
+    if (country) {
+      const code = `+${getCountryCallingCode(country)}`;
+      onAreaCodeChange?.(code);
     } else {
-      // Si no coincide con el patrón, intentar extraer al menos el código
-      const codeMatch = value.match(/^(\+\d{1,4})/);
-      if (codeMatch) {
-        const code = codeMatch[1];
-        const restNumber = value.replace(codeMatch[1], '').replace(/\D/g, ''); // Solo dígitos
-        onAreaCodeChange?.(code);
-        onPhoneNumberChange?.(restNumber);
-        setPreviousValue(value);
-      }
+      onAreaCodeChange?.('');
+      onPhoneNumberChange?.('');
     }
   };
 
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ''); // Solo números
+    onPhoneNumberChange?.(value);
+  };
+
+  // Obtener la bandera del país seleccionado
+  const getFlag = (countryCode) => {
+    if (!countryCode) return '';
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt());
+    return String.fromCodePoint(...codePoints);
+  };
+
   return (
-    <div className="space-y-1">
+    <div>
       <label className="block text-sm font-medium text-conexia-green mb-1">
         Teléfono (Opcional)
       </label>
       
-      <div className="phone-input-wrapper">
-        <PhoneInputWithCountry
-          international
-          withCountryCallingCode
-          countryCallingCodeEditable={false}
-          defaultCountry="AR"
-          value={fullPhoneNumber}
-          onChange={handleChange}
-          onBlur={onBlur}
-          placeholder="Ingresa tu número de teléfono"
-          numberInputProps={{
-            className: `w-full px-3 py-2 border rounded-lg text-base outline-none transition-all ${
-              (areaCodeError || phoneNumberError) 
-                ? 'border-red-500 ring-2 ring-red-100' 
-                : 'border-gray-300 focus:border-conexia-green focus:ring-2 focus:ring-conexia-green/20'
-            }`
-          }}
-        />
+      <div className="flex gap-3">
+        {/* Select de País con código */}
+        <div className="min-h-[64px]" style={{ width: '140px' }}>
+          <div className="relative">
+            <select
+              value={selectedCountry}
+              onChange={handleCountryChange}
+              onBlur={onBlur}
+              className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring appearance-none bg-white cursor-pointer ${
+                areaCodeError
+                  ? 'border-red-500 ring-red-300'
+                  : 'border-gray-300 focus:ring-conexia-green/40'
+              } ${selectedCountry ? 'text-transparent' : 'text-conexia-green'}`}
+              style={{ 
+                paddingLeft: selectedCountry ? '0.75rem' : '1rem',
+                paddingRight: '2rem'
+              }}
+            >
+              <option value="" className="text-gray-700">Cód. Área</option>
+              {countries.map((country) => (
+                <option key={country} value={country} className="text-conexia-green">
+                  {country} {en[country]} (+{getCountryCallingCode(country)})
+                </option>
+              ))}
+            </select>
+            
+            {/* Código de país y área cuando está seleccionado */}
+            {selectedCountry && (
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1.5 bg-white px-1">
+                <span className="text-sm font-semibold text-gray-700">
+                  {selectedCountry}
+                </span>
+                <span className="text-sm text-gray-600">
+                  +{getCountryCallingCode(selectedCountry)}
+                </span>
+              </div>
+            )}
+            
+            {/* Flecha del select */}
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-xs text-red-600 mt-1 text-left h-[30px]">
+            {areaCodeError || ' '}
+          </p>
+        </div>
+
+        {/* Input de Número de Teléfono */}
+        <div className="min-h-[64px] flex-1">
+          <input
+            type="text"
+            placeholder="Número de teléfono"
+            value={phoneNumber}
+            onChange={handlePhoneNumberChange}
+            onBlur={onBlur}
+            disabled={!selectedCountry}
+            className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring ${
+              phoneNumberError
+                ? 'border-red-500 ring-red-300'
+                : 'border-gray-300 focus:ring-conexia-green/40'
+            } ${!selectedCountry ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
+          />
+          <p className="text-xs text-red-600 mt-1 text-left h-[30px]">
+            {phoneNumberError || ' '}
+          </p>
+        </div>
       </div>
       
-      {/* Errores */}
-      {areaCodeError && (
-        <p className="text-xs text-red-600 mt-1">{areaCodeError}</p>
-      )}
-      {phoneNumberError && (
-        <p className="text-xs text-red-600 mt-1">{phoneNumberError}</p>
-      )}
-      
-      {/* Ayuda - solo cuando no hay número escrito */}
-      {!areaCodeError && !phoneNumberError && !phoneNumber && (
-        <p className="text-xs text-gray-500 mt-1">
-          Selecciona el país y escribe tu número sin el código de área
-        </p>
-      )}
     </div>
   );
 }

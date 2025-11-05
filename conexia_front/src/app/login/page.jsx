@@ -1,18 +1,9 @@
-import HeroPanel from "@/components/hero/HeroPanel";
 import LoginForm from "@/components/login/LoginForm";
-import { Footer } from "@/components/Footer";
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen flex flex-col">
-      <section className="flex flex-col md:flex-row flex-grow min-h-[720px] bg-conexia-soft md:bg-transparent">
-        <HeroPanel
-          title="¡Volve a conectarte con tu comunidad digital!"
-          subtitle="Tu perfil, tus servicios, tus proyectos. Todo en un solo lugar."
-        />
-        <LoginForm />
-      </section>
-      <Footer />
+    <main className="min-h-screen bg-gradient-to-br from-conexia-green via-conexia-green/95 to-[#0d2d28] flex items-center justify-center p-4">
+      <LoginForm />
     </main>
   );
 }

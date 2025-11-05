@@ -9,15 +9,16 @@ import HeroHome from "@/components/hero/HeroHome";
 import { Footer } from "@/components/Footer";
 import { ROLES } from "@/constants/roles";
 import Navbar from "@/components/navbar/Navbar";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function Home() {
   // Contenido público para usuarios no autenticados
   const publicContent = (
-    <>
+    <div className="min-h-screen flex flex-col">
       <NavbarHome />
       <HeroHome />
       <Footer />
-    </>
+    </div>
   );
 
   // Contenido específico para cada rol
@@ -43,14 +44,7 @@ export default function Home() {
   };
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-          <p className="text-conexia-green">Cargando...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingSpinner message="Cargando CONEXIA" size="large" />}>
       <ProtectedRoute 
         publicContent={publicContent}
         roleBasedContent={roleBasedContent}

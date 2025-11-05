@@ -118,6 +118,22 @@ export default function ReviewReportsList() {
                     <p className="text-sm text-gray-800 italic line-clamp-3">
                       &quot;{reviewData.description || reviewData.comment || 'Sin mensaje'}&quot;
                     </p>
+                    <div className="mt-3 flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          // Navegar al listado de reseñas del usuario y resaltar esta reseña
+                          const profileId = reviewData.reviewedUser?.id || reviewData.reviewedProfileId || reviewData.reviewedUserId;
+                          if (profileId) {
+                            router.push(`/profile/${profileId}/reviews?highlightReviewId=${reviewId}`);
+                          } else {
+                            setToast({ type: 'warning', message: 'No se pudo determinar el perfil del usuario.' });
+                          }
+                        }}
+                        className="text-sm px-3 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50 text-conexia-green"
+                      >
+                        Ver reseña en perfil
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

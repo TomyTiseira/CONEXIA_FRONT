@@ -17,7 +17,8 @@ export async function fetchUserReviews(userId, { page = 1, limit = 2 } = {}) {
       totalPages: response.data.pagination.totalPages,
       hasNext: response.data.pagination.hasNextPage,
       hasPrev: response.data.pagination.hasPreviousPage
-    }
+    },
+    hasReviewed: response.data.hasReviewed || false
   };
 }
 
@@ -37,7 +38,8 @@ export async function fetchAllUserReviews(userId, page = 1) {
       totalPages: response.data.pagination.totalPages,
       hasNext: response.data.pagination.hasNextPage,
       hasPrev: response.data.pagination.hasPreviousPage
-    }
+    },
+    hasReviewed: response.data.hasReviewed || false
   };
 }
 

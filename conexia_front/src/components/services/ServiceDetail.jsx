@@ -164,6 +164,35 @@ const ServiceDetail = ({ serviceId }) => {
   const isQuotedOrNegotiating = ['quoted', 'negotiating'].includes(activeHiring?.status?.code);
   const showViewQuotation = Boolean(service?.hasActiveQuotation && isQuotedOrNegotiating);
 
+  // Estados que bloquean solicitar nueva cotización
+  const BLOCKED_STATES = ['pending', 'quoted', 'requoting', 'negotiating', 'accepted', 'approved', 'in_progress', 'in_claim', 'delivered', 'revision_requested'];
+  
+  // Validar si hay un hiring activo en estado bloqueado
+  const hasBlockedHiring = activeHiring && BLOCKED_STATES.includes(activeHiring?.status?.code);
+  
+  // El servicio está bloqueado si:
+  // 1. Tiene hasPendingQuotation o hasActiveQuotation (para backward compatibility)
+  // 2. O tiene un serviceHiring con estado bloqueado
+  const isBlocked = (service?.hasPendingQuotation || service?.hasActiveQuotation || hasBlockedHiring);
+
+  const getHiringStatusLabel = () => {
+    if (!activeHiring?.status?.code) return '';
+    const status = activeHiring.status.code;
+    const statusLabels = {
+      'pending': 'pendiente de cotización',
+      'quoted': 'cotizada',
+      'requoting': 'en re-cotización',
+      'negotiating': 'en negociación',
+      'accepted': 'aceptada',
+      'approved': 'aprobada',
+      'in_progress': 'en progreso',
+      'in_claim': 'en reclamo',
+      'delivered': 'con entrega pendiente',
+      'revision_requested': 'en revisión'
+    };
+    return statusLabels[status] || '';
+  };
+
 
   const handleEdit = () => {
     setShowEditModal(true);
@@ -601,7 +630,15 @@ ${messageText.trim()}`;
                           style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)' }}
                           onClick={() => {
                             setMenuOpen(false);
-                            setShowReportModal(true);
+                            if (service?.hasReported) {
+                              setToast({
+                                type: 'warning',
+                                message: 'Ya has reportado este servicio',
+                                isVisible: true
+                              });
+                            } else {
+                              setShowReportModal(true);
+                            }
                           }}
                           type="button"
                         >
@@ -966,23 +1003,31 @@ ${messageText.trim()}`;
                   {/* Botón de cotización - extremo derecho en desktop, centrado en mobile */}
                   {canContract && (
                     <div className="flex justify-end md:justify-end justify-center w-full md:w-auto">
-                      <Button
-                        variant={
-                          service?.hasPendingQuotation
-                            ? 'danger'
-                            : 'primary'
-                        }
-                        onClick={handleQuote}
-                        disabled={false}
-                        className="flex items-center justify-center gap-2 !px-6 !py-3 w-full md:w-auto"
-                      >
-                        <FaHandshake size={16} />
-                        {service?.hasPendingQuotation
-                          ? 'Cancelar Solicitud'
-                          : showViewQuotation
-                            ? 'Ver Cotización'
-                            : 'Solicitar Cotización'}
-                      </Button>
+                      {isBlocked && !service?.hasPendingQuotation ? (
+                        <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 w-full md:max-w-md">
+                          <p className="text-sm text-orange-800 font-medium text-center">
+                            Ya tienes una solicitud <span className="font-semibold">{getHiringStatusLabel()}</span> para este servicio
+                          </p>
+                        </div>
+                      ) : (
+                        <Button
+                          variant={
+                            service?.hasPendingQuotation
+                              ? 'danger'
+                              : 'primary'
+                          }
+                          onClick={handleQuote}
+                          disabled={false}
+                          className="flex items-center justify-center gap-2 !px-6 !py-3 w-full md:w-auto"
+                        >
+                          <FaHandshake size={16} />
+                          {service?.hasPendingQuotation
+                            ? 'Cancelar Solicitud'
+                            : showViewQuotation
+                              ? 'Ver Cotización'
+                              : 'Solicitar Cotización'}
+                        </Button>
+                      )}
                     </div>
                   )}
 
@@ -1167,6 +1212,10 @@ ${messageText.trim()}`;
               otherReason: reason === 'Otro' ? otherText : undefined,
               description
             });
+            
+            // Actualizar el estado local del servicio para marcar como reportado
+            loadServiceDetail();
+            
             setToast({ type: 'success', message: 'Servicio reportado con éxito.', isVisible: true });
             setAlreadyReportedService(true);
           } catch (err) {

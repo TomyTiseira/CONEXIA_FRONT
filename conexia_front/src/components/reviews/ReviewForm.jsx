@@ -55,7 +55,7 @@ export default function ReviewForm({ initial = null, reviewedUserId, onClose, on
           </div>
           <div>
             <label className="block font-medium">Descripción</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full border rounded px-3 py-2" />
+            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full border rounded px-3 py-2 resize-none overflow-y-auto" />
             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
           </div>
 

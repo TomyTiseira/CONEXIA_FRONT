@@ -12,7 +12,16 @@ import { config } from '@/config';
 export function buildMediaUrl(raw) {
   if (!raw) return '';
   let mediaUrl = String(raw);
-  if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) return mediaUrl;
+  
+  // Si es una URL absoluta del backend, extraer solo el path
+  if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
+    try {
+      const url = new URL(mediaUrl);
+      mediaUrl = url.pathname; // Extraer solo /uploads/deliveries/...
+    } catch (e) {
+      // Si falla el parsing, continuar con la lógica normal
+    }
+  }
 
   let base = config?.IMAGE_URL || '';
   // Normalizar base removiendo slash final

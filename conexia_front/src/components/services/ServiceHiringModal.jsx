@@ -6,7 +6,7 @@ import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { getUnitLabel } from '@/utils/timeUnit';
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import RequireVerification from '@/components/common/RequireVerification';
 
@@ -19,6 +19,18 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
 
   // Validaciones
   const canHire = isAuthenticated && roleName === ROLES.USER && service?.owner?.id !== user?.id;
+  
+  // Estados que bloquean solicitar nueva cotización
+  const BLOCKED_STATES = ['pending', 'quoted', 'requoting', 'negotiating', 'accepted', 'approved', 'in_progress', 'in_claim', 'delivered', 'revision_requested'];
+  const activeHiring = service?.serviceHiring;
+  
+  // Validar si hay un hiring activo en estado bloqueado
+  const hasBlockedHiring = activeHiring && BLOCKED_STATES.includes(activeHiring?.status?.code);
+  
+  // El servicio está bloqueado si:
+  // 1. Tiene hasPendingQuotation o hasActiveQuotation (para backward compatibility)
+  // 2. O tiene un serviceHiring con estado bloqueado
+  const isBlocked = service?.hasPendingQuotation || service?.hasActiveQuotation || hasBlockedHiring;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -150,6 +162,84 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
           >
             Entendido
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Validación si ya tiene una cotización activa o en curso
+  if (isBlocked) {
+    const getStatusMessage = () => {
+      const status = activeHiring?.status?.code;
+      const statusMessages = {
+        'pending': 'pendiente de cotización',
+        'quoted': 'cotizada',
+        'requoting': 'en re-cotización',
+        'negotiating': 'en negociación',
+        'accepted': 'aceptada',
+        'approved': 'aprobada',
+        'in_progress': 'en progreso',
+        'in_claim': 'con reclamo activo',
+        'delivered': 'con entrega pendiente de revisión',
+        'revision_requested': 'en revisión'
+      };
+      return statusMessages[status] || 'en curso';
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="text-orange-600" size={24} />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Solicitud en Curso
+              </h3>
+            </div>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-orange-800 mb-2">
+              Ya tienes una solicitud <strong>{getStatusMessage()}</strong> para este servicio.
+            </p>
+            <p className="text-xs text-orange-700">
+              No puedes solicitar una nueva cotización mientras tengas una solicitud activa, en progreso o en reclamo.
+            </p>
+          </div>
+
+          <div className="space-y-2 text-sm text-gray-600 mb-6">
+            <p className="font-medium text-gray-700">Puedes:</p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>Esperar a que se complete la solicitud actual</li>
+              <li>Cancelar la solicitud pendiente si es necesario</li>
+              <li>Revisar el estado en "Mis Servicios Solicitados"</li>
+            </ul>
+          </div>
+          
+          <div className="flex gap-3">
+            <Button
+              onClick={handleClose}
+              variant="outline"
+              className="flex-1"
+            >
+              Cerrar
+            </Button>
+            <Button
+              onClick={() => {
+                handleClose();
+                window.location.href = '/my-services';
+              }}
+              className="flex-1"
+            >
+              Ver Mis Solicitudes
+            </Button>
+          </div>
         </div>
       </div>
     );

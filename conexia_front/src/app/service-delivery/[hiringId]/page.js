@@ -273,10 +273,10 @@ export default function ServiceDeliveryPage() {
                               } ${isLocked ? 'opacity-75' : ''}`}
                             >
                               <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
                                   {/* Solo mostrar candado para cliente bloqueado */}
-                                  {isLocked && <Lock size={16} className="text-red-500" />}
-                                  <span className="font-semibold">
+                                  {isLocked && <Lock size={16} className="text-red-500 flex-shrink-0" />}
+                                  <span className="font-semibold truncate">
                                     Entregable {deliverable.orderIndex}
                                   </span>
                                 </div>
@@ -285,18 +285,18 @@ export default function ServiceDeliveryPage() {
                                   <StatusBadge 
                                     status={latestDelivery.status} 
                                     type="delivery" 
-                                    className="text-xs"
+                                    className="text-xs flex-shrink-0"
                                   />
                                 ) : isLocked ? (
                                   /* Solo cliente ve badge de bloqueado */
-                                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full whitespace-nowrap flex-shrink-0">
                                     Bloqueado
                                   </span>
                                 ) : (
                                   <StatusBadge 
                                     status={deliverable.status} 
                                     type="deliverable" 
-                                    className="text-xs"
+                                    className="text-xs flex-shrink-0"
                                   />
                                 )}
                               </div>
