@@ -11,6 +11,7 @@ import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 import { FaRegLightbulb } from 'react-icons/fa';
+import { PlanBadge } from '@/components/plans';
 
 const defaultAvatar = '/images/default-avatar.png';
 
@@ -119,6 +120,17 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
           </Link>
         </div>
       </div>
+
+      {/* Plan del usuario (solo para rol USER) */}
+      {roleName === ROLES.USER && (
+        <div className="px-4 py-3 border-b">
+          <PlanBadge 
+            planId={profile.planId || 1} 
+            variant="compact"
+            className="w-full justify-center"
+          />
+        </div>
+      )}
 
       {/* Servicios (solo para usuarios con rol USER) */}
       {roleName === ROLES.USER && (

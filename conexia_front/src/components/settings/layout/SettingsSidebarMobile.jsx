@@ -1,16 +1,16 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { User, ShieldCheck, Eye } from 'lucide-react';
+import { User, ShieldCheck, Eye, CreditCard } from 'lucide-react';
+import { FiAward } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
-
-import { CreditCard } from 'lucide-react';
 
 const sections = [
   { id: 'account', label: 'Cuenta', icon: User, path: '/settings/account' },
   { id: 'payment', label: 'Datos de cobro', icon: CreditCard, path: '/settings/payment' },
   { id: 'security', label: 'Seguridad', icon: ShieldCheck, path: '/settings/security' },
   { id: 'privacy', label: 'Privacidad', icon: Eye, path: '/settings/privacy' },
+  { id: 'my-plan', label: 'Mi plan', icon: FiAward, path: '/settings/my-plan' },
 ];
 
 export default function SettingsSidebarMobile({ active, onChange }) {

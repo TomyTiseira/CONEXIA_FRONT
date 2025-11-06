@@ -30,6 +30,7 @@ import ReviewsSection from '@/components/reviews/ReviewsSection';
 import VerificationSection from "@/components/profile/VerificationSection";
 import { useVerificationStatus } from "@/hooks";
 import { ShieldCheck } from 'lucide-react';
+import { PlanBadge } from '@/components/plans';
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
@@ -508,6 +509,15 @@ export default function UserProfile() {
                 )}
                 {(user.state || user.country) && (
                   <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
+                )}
+                {/* Badge del plan (solo para el dueño del perfil) */}
+                {isOwner && (
+                  <div className="mt-2 flex justify-center sm:justify-start">
+                    <PlanBadge 
+                      planId={user.planId || 1} 
+                      variant="compact"
+                    />
+                  </div>
                 )}
                 {/* Botones de conexión y mensaje (la lógica de visibilidad está dentro del componente) */}
                 <ProfileConnectionButtons 

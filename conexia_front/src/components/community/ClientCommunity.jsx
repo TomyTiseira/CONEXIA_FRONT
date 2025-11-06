@@ -20,6 +20,7 @@ import { MiniRecommendations } from '@/components/connections/MiniRecommendation
 import { useRecommendations } from '@/hooks/connections/useRecommendations';
 import { sendConnectionRequest } from '@/service/connections/sendConnectionRequest';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import UpgradeBanner from '@/components/plans/UpgradeBanner';
 
 export default function ClientCommunity() {
   useSessionTimeout();
@@ -148,6 +149,11 @@ export default function ClientCommunity() {
           {userStore?.id && !isInternal && (
             <div className="hidden md:block w-full md:w-72 lg:w-64 flex-shrink-0">
               <ProfileSidebar profile={profile} userId={userStore.id} />
+              
+              {/* Banner de Upgrade - separado del perfil */}
+              <div className="mt-4">
+                <UpgradeBanner variant="compact" />
+              </div>
             </div>
           )}
           {/* Feed principal */}
