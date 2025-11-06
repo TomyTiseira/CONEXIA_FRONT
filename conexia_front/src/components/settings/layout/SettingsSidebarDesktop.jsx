@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useRoleValidation } from '@/hooks/useRoleValidation';
 import { User, ShieldCheck, Eye, CreditCard } from 'lucide-react';
+import { FiAward } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 
@@ -13,7 +14,9 @@ export default function SettingsSidebarDesktop({ active }) {
 		{ id: 'security', label: 'Seguridad', icon: ShieldCheck, path: '/settings/security' },
 		{ id: 'privacy', label: 'Privacidad', icon: Eye, path: '/settings/privacy' },
 		// Solo mostrar 'Datos de cobro' si el usuario tiene rol 'user'
-		...(hasAnyRole(['user']) ? [{ id: 'payment', label: 'Datos de cobro', icon: CreditCard, path: '/settings/payment' }] : [])
+		...(hasAnyRole(['user']) ? [{ id: 'payment', label: 'Datos de cobro', icon: CreditCard, path: '/settings/payment' }] : []),
+		// Mi plan - disponible para todos los usuarios
+		{ id: 'my-plan', label: 'Mi plan', icon: FiAward, path: '/settings/my-plan' }
 	];
 
 	return (
