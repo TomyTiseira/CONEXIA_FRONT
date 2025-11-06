@@ -1,17 +1,20 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { deleteReview } from '@/service/reviews/reviewsFetch';
 import { createReviewReport } from '@/service/reports/reviewReportsFetch';
+import { fetchReviewReports } from '@/service/reports/reviewReportsFetch';
 import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal';
 import ReportReviewModal from './ReportReviewModal';
 import Toast from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
+import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
 
-export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess, profileOwnerId }) {
+export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess, profileOwnerId, highlighted = false }) {
   const { user } = useAuth();
+  const { roleName } = useUserStore();
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -20,10 +23,48 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
   const [toast, setToast] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [localReview, setLocalReview] = useState(review);
+  const [hasReportsFromServer, setHasReportsFromServer] = useState(false);
 
   const isOwner = user?.id === localReview.reviewerUserId;
   const isProfileOwner = user?.id === profileOwnerId;
-  const canReport = user && !isOwner; // Cualquier usuario autenticado puede reportar, excepto el autor de la reseña
+  // Solo los usuarios regulares pueden reportar reseñas. Moderadores/administradores no deben ver esta opción.
+  const canReport = user && !isOwner && roleName === 'user';
+
+  // Para moderadores/administradores, si la reseña tiene reportes, mostrar opción de "Ver reportes"
+  // Los roles pueden venir en inglés o español según el backend
+  const canModerate = user && (roleName === 'admin' || roleName === 'moderator' || roleName === 'administrador' || roleName === 'moderador');
+  const hasReports = (localReview.reportCount && localReview.reportCount > 0) || (localReview.reports && localReview.reports.length > 0);
+
+  // If this review is the one highlighted via query param (prop), treat it as having reports for admins
+  const isHighlighted = highlighted;
+  const reviewId = localReview.id || localReview.userReviewId;
+  
+  // Para moderadores/administradores: mostrar opción si tiene reportes, está resaltada, o si consultamos al servidor
+  const hasReportsEffective = canModerate && (hasReports || Boolean(isHighlighted) || hasReportsFromServer);
+
+  // Si es moderador/administrador y la reseña está resaltada (viene desde reportes), 
+  // consultar al servidor para confirmar que tiene reportes
+  useEffect(() => {
+    let mounted = true;
+    // Solo consultar si: es admin/moderador, está resaltada, y aún no sabemos si tiene reportes
+    const shouldCheck = canModerate && isHighlighted && !hasReports && !hasReportsFromServer && reviewId;
+    if (!shouldCheck) return;
+
+    fetchReviewReports(reviewId, 1)
+      .then(resp => {
+        if (!mounted) return;
+        const reports = resp?.data?.reports || resp?.reports || [];
+        if (Array.isArray(reports) && reports.length > 0) {
+          setHasReportsFromServer(true);
+        }
+      })
+      .catch(err => {
+        // silently ignore — absence of data means no server-side reports visible or error
+        console.debug('Error al verificar reportes de reseña:', err);
+      });
+
+    return () => { mounted = false; };
+  }, [canModerate, isHighlighted, hasReports, hasReportsFromServer, reviewId]);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -113,7 +154,7 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
   };
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
+  <div id={`review-${localReview.id || localReview.userReviewId}`} className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
       <div className="flex gap-4">
         {/* Foto de perfil del reviewer a la izquierda */}
         <div className="flex-shrink-0">
@@ -164,7 +205,7 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
         </div>
 
         {/* Botones de acción */}
-        {(isOwner || canReport) && (
+  {(isOwner || canReport || (canModerate && hasReportsEffective)) && (
           <div className="relative flex items-start">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -218,6 +259,24 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
                   )}
 
                   {/* Opción para reportar (cualquier usuario autenticado que no sea el autor) */}
+                  {canModerate && hasReportsEffective && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setMenuOpen(false);
+                          // Redirigir a la vista de reportes para esta reseña (mismo patrón usado en ReportsList)
+                          router.push(`/reports/review?reviewId=${localReview.id || localReview.userReviewId}`);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Ver reportes
+                      </button>
+                    </>
+                  )}
+
                   {canReport && (
                     <>
                       {isOwner && <div className="border-t my-1" />}

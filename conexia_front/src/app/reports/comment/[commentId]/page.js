@@ -122,6 +122,19 @@ export default function CommentReportsPage() {
                   {commentData.isActive ? 'Activo' : 'Eliminado'}
                 </span>
               </div>
+              {commentData.publicationId && (
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      // Navegar a la publicación y resaltar el comentario
+                      router.push(`/?highlightCommentId=${commentId}&publicationId=${commentData.publicationId}`);
+                    }}
+                    className="text-sm px-4 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-conexia-green font-medium transition-colors"
+                  >
+                    Ver comentario en publicación
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -212,11 +225,12 @@ export default function CommentReportsPage() {
               Acciones de Moderación
             </h2>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button
+                    <Button
                 variant="edit"
                 onClick={() => {
                   if (commentData.publicationId) {
-                    router.push(`/publication/${commentData.publicationId}?commentId=${commentId}`);
+                    // Añadimos flag de origen para mantener consistencia con la navegación desde reportes
+                    router.push(`/publication/${commentData.publicationId}?from=reports&fromReportsPublicationId=${commentData.publicationId}&commentId=${commentId}`);
                   }
                 }}
                 disabled={!commentData.publicationId}

@@ -324,7 +324,9 @@ export default function ReportsList() {
                             className="px-3 py-1 text-xs"
                             onClick={() => {
                               if (comment.publicationId) {
-                                router.push(`/publication/${comment.publicationId}?commentId=${comment.commentId}`);
+                                // Añadimos parámetros para indicar que venimos desde la pantalla de reportes
+                                // y pasamos el commentId para que la publicación pueda (si lo soporta) resaltar/ir al comentario
+                                router.push(`/publication/${comment.publicationId}?from=reports&fromReportsPublicationId=${comment.publicationId}&commentId=${comment.commentId}`);
                               }
                             }}
                             disabled={!comment.publicationId}
@@ -404,6 +406,13 @@ export default function ReportsList() {
                             onClick={() => router.push(`/reports/review?reviewId=${review.id || review.userReviewId}`)}
                           >
                             Ver reportes
+                          </Button>
+                          <Button
+                            variant="edit"
+                            className="px-3 py-1 text-xs"
+                            onClick={() => router.push(`/profile/${review.reviewedUser?.id}/reviews?highlightReviewId=${review.id || review.userReviewId}`)}
+                          >
+                            Ver reseña
                           </Button>
                         </div>
                       </td>

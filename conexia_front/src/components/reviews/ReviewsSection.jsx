@@ -12,43 +12,56 @@ import { useUserStore } from '@/store/userStore';
 export default function ReviewsSection({ profileUserId }) {
   const { user } = useAuth();
   const { roleName } = useUserStore();
+
   const [reviewsData, setReviewsData] = useState({ reviews: [], pagination: {}, hasReviewed: false });
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editReview, setEditReview] = useState(null);
+  const [hasUserReview, setHasUserReview] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const data = await fetchUserReviews(profileUserId, { limit: 2 });
-      setReviewsData(data);
-    } catch (err) {
-      setToast({ type: 'error', message: err.message });
-      setReviewsData({
-        reviews: [],
-        pagination: { page: 1, totalPages: 1 },
-        hasReviewed: false
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Load reviews and check if current user already reviewed
   useEffect(() => {
-    load();
-  }, [profileUserId]);
+    let mounted = true;
 
-  // Verificar si el usuario actual es el dueño del perfil
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchUserReviews(profileUserId, { limit: 2 });
+        if (!mounted) return;
+        setReviewsData(data);
+
+        if (user && roleName === 'user') {
+          try {
+            const all = await fetchUserReviews(profileUserId, { limit: 200 });
+            if (!mounted) return;
+            const found = (all.reviews || []).some(r => r.reviewerUserId === user.id);
+            setHasUserReview(Boolean(found));
+          } catch (e) {
+            if (mounted) setHasUserReview(false);
+          }
+        }
+      } catch (err) {
+        if (mounted) setToast({ type: 'error', message: err.message });
+        if (mounted) setReviewsData({ reviews: [], pagination: { page: 1, totalPages: 1 } });
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, [profileUserId, user?.id, roleName]);
+
+  // Determine permissions
   const isOwner = user && user.id === Number(profileUserId);
-  
-  // Usuario puede agregar reseña solo si: está autenticado, es user, NO es el dueño del perfil y NO ha hecho una reseña aún
-  const canAdd = user && roleName === 'user' && !isOwner && !reviewsData.hasReviewed;
+  const canAdd = user && roleName === 'user' && !isOwner && !hasUserReview;
 
   const onSaved = async () => {
     setFormOpen(false);
     setEditReview(null);
     setToast({ type: 'success', message: 'Reseña guardada' });
+    if (user && roleName === 'user') setHasUserReview(true);
     try {
       const data = await fetchUserReviews(profileUserId, { limit: 2 });
       setReviewsData(data);
@@ -60,37 +73,40 @@ export default function ReviewsSection({ profileUserId }) {
     try {
       const data = await fetchUserReviews(profileUserId, { limit: 2 });
       setReviewsData(data);
+      if (user && roleName === 'user') {
+        const all = await fetchUserReviews(profileUserId, { limit: 200 });
+        const found = (all.reviews || []).some(r => r.reviewerUserId === user.id);
+        setHasUserReview(Boolean(found));
+      }
     } catch (e) {}
   };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      {/* Header con título, descripción y botón */}
-      <div className="flex flex-col gap-3 mb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-conexia-green mb-1">
-              {isOwner ? 'Mis reseñas profesionales' : 'Reseñas profesionales'}
-            </h3>
-            <p className="text-sm text-gray-600">
-              {isOwner 
-                ? 'Opiniones y experiencias de quienes han trabajado contigo.' 
-                : 'Opiniones y experiencias de quienes han trabajado con este profesional'}
-            </p>
-          </div>
-          {canAdd && (
-            <button
-              onClick={() => setFormOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-conexia-green text-white rounded-lg font-semibold hover:bg-conexia-green/90 transition-colors shadow-sm whitespace-nowrap"
-            >
-              <svg className="w-7 h-7 hidden sm:inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ verticalAlign: 'middle' }}>
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m4-4H8" />
-              </svg>
-              <span>Agregar reseña</span>
-            </button>
-          )}
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-conexia-green mb-1">
+            {isOwner ? 'Mis reseñas profesionales' : 'Reseñas profesionales'}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {isOwner
+              ? 'Opiniones y experiencias de quienes han trabajado contigo.'
+              : 'Opiniones y experiencias de quienes han trabajado con este profesional'}
+          </p>
         </div>
+        {canAdd && (
+          <button
+            onClick={() => setFormOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-conexia-green text-white rounded-lg font-semibold hover:bg-conexia-green/90 transition-colors shadow-sm whitespace-nowrap"
+          >
+            <svg className="w-7 h-7 hidden sm:inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ verticalAlign: 'middle' }}>
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m4-4H8" />
+            </svg>
+            <span>Agregar reseña</span>
+          </button>
+        )}
       </div>
 
       <div className="mt-4">
@@ -99,14 +115,17 @@ export default function ReviewsSection({ profileUserId }) {
         ) : reviewsData.reviews && reviewsData.reviews.length > 0 ? (
           <div className="space-y-4">
             {reviewsData.reviews.map(r => (
-              <ReviewItem 
-                key={r.id} 
-                review={r} 
-                onEdit={() => { setEditReview(r); setFormOpen(true); }} 
+              <ReviewItem
+                key={r.id}
+                review={r}
+                onEdit={() => { setEditReview(r); setFormOpen(true); }}
                 onDeleted={onDeleted}
-                onReportSuccess={() => {
+                onReportSuccess={async () => {
                   // Recargar reseñas después de reportar para actualizar hasReported
-                  load();
+                  try {
+                    const data = await fetchUserReviews(profileUserId, { limit: 2 });
+                    setReviewsData(data);
+                  } catch (e) {}
                 }}
                 profileOwnerId={Number(profileUserId)}
               />
@@ -123,7 +142,7 @@ export default function ReviewsSection({ profileUserId }) {
         )}
       </div>
 
-      {/* Botón ver más */}
+      {/* Ver más */}
       {reviewsData.reviews && reviewsData.reviews.length > 0 && (
         <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
           <a

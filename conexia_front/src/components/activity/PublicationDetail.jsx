@@ -92,7 +92,8 @@ export default function PublicationDetail({ publicationId, searchParams }) {
 
       {/* Publicación */}
       <div className="mx-4 md:mx-0">
-        <PublicationCard publication={publication} />
+        {/* Pasamos searchParams a PublicationCard para que pueda leer commentId u otros flags */}
+        <PublicationCard publication={publication} searchParams={searchParams} />
       </div>
     </div>
   );

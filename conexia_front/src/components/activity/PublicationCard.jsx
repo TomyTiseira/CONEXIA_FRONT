@@ -45,7 +45,7 @@ const getMediaUrl = (mediaUrl) => {
 
 
 
-function PublicationCard({ publication, isGridItem = false, onShowToast }) {
+function PublicationCard({ publication, isGridItem = false, onShowToast, searchParams }) {
   const { sendRequest, loading: connectLoading, success: connectSuccess, error: connectError } = useSendConnectionRequest();
   const { user } = useAuth();
   const { roleName } = useUserStore();
@@ -292,6 +292,36 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
       loadAllComments();
     }
   }, [publicationId]);
+
+  // Si recibimos un commentId en searchParams, abrimos la sección de comentarios,
+  // cargamos todos los comentarios y hacemos scroll hacia el comentario objetivo.
+  useEffect(() => {
+    const targetCommentId = searchParams?.commentId;
+    if (!targetCommentId || !publicationId) return;
+
+    // Intentar cargar todos los comentarios y abrir la vista
+    (async () => {
+      try {
+        await loadAllComments();
+        setShowCommentSection(true);
+        setShowAllComments(true);
+        // Esperar un pequeño intervalo para que el DOM renderice los comentarios
+        setTimeout(() => {
+          const el = document.getElementById(`comment-${targetCommentId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Opcional: resaltar temporalmente
+            el.classList.add('ring-2', 'ring-conexia-green');
+            setTimeout(() => el.classList.remove('ring-2', 'ring-conexia-green'), 2500);
+          }
+        }, 300);
+      } catch (err) {
+        // No bloquear si falla; simplemente no hacer scroll
+        console.error('No se pudo navegar al comentario solicitado:', err);
+      }
+    })();
+
+  }, [searchParams?.commentId, publicationId]);
 
   // Avatar, nombre, profesión y privacidad desde publication.owner
   const avatar = publication.owner?.profilePicture
@@ -1811,7 +1841,7 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
                   .slice(0, showAllComments ? (allComments.length > 0 ? allComments.length : comments.length) : 2)
                   .filter(comment => comment && comment.id) // Asegurarnos de que el comentario existe y tiene ID
                   .map(comment => (
-                  <div key={comment.id} className="bg-[#f3f9f8] rounded-lg p-3 border border-[#e0f0f0] relative">
+                  <div key={comment.id} id={`comment-${comment.id}`} className="bg-[#f3f9f8] rounded-lg p-3 border border-[#e0f0f0] relative">
                     <div className={`flex items-start ${editingComment === comment.id ? 'justify-start' : 'justify-between'}`}>
                       <div className="flex items-start flex-1">
                         <div className="h-8 w-8 flex-shrink-0 mr-2">
@@ -2064,35 +2094,53 @@ function PublicationCard({ publication, isGridItem = false, onShowToast }) {
                                   </button>
                                 </>
                               ) : (
-                                // Opción para usuarios que no son dueños: reportar
-                                <button
-                                  className="flex items-center w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-orange-500"
-                                  onClick={() => {
-                                    // Cerramos el menú
-                                    setCommentMenuOpen({});
-                                    
-                                    // Verificar si ya fue reportado
-                                    if (comment.hasReported) {
-                                      const showToast = (payload) => {
-                                        if (onShowToast) {
-                                          onShowToast({ ...payload, isVisible: true });
-                                        } else {
-                                          setInternalToast({ ...payload, isVisible: true });
+                                // Opción para usuarios que no son dueños
+                                <>
+                                  {/* Si es admin/moderador Y el comentario tiene reportes, mostrar "Ver reportes" */}
+                                  {(roleName === 'admin' || roleName === 'moderator' || roleName === 'administrador' || roleName === 'moderador') && 
+                                   (comment.reportsCount > 0 || comment.reportCount > 0) ? (
+                                    <button
+                                      className="flex items-center w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-blue-600"
+                                      onClick={() => {
+                                        setCommentMenuOpen({});
+                                        router.push(`/reports/comment/${comment.id}`);
+                                      }}
+                                    >
+                                      <Flag size={16} className="mr-2" />
+                                      Ver reportes
+                                    </button>
+                                  ) : (
+                                    // Usuario regular: mostrar "Reportar"
+                                    <button
+                                      className="flex items-center w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-orange-500"
+                                      onClick={() => {
+                                        // Cerramos el menú
+                                        setCommentMenuOpen({});
+                                        
+                                        // Verificar si ya fue reportado
+                                        if (comment.hasReported) {
+                                          const showToast = (payload) => {
+                                            if (onShowToast) {
+                                              onShowToast({ ...payload, isVisible: true });
+                                            } else {
+                                              setInternalToast({ ...payload, isVisible: true });
+                                            }
+                                          };
+                                          showToast({ type: 'warning', message: 'Ya has reportado este comentario' });
+                                          return;
                                         }
-                                      };
-                                      showToast({ type: 'warning', message: 'Ya has reportado este comentario' });
-                                      return;
-                                    }
-                                    
-                                    // Guardamos el ID del comentario a reportar
-                                    setCommentToReport(comment.id);
-                                    // Abrimos el modal de reporte
-                                    setShowReportCommentModal(true);
-                                  }}
-                                >
-                                  <Flag size={16} className="mr-2" />
-                                  Reportar
-                                </button>
+                                        
+                                        // Guardamos el ID del comentario a reportar
+                                        setCommentToReport(comment.id);
+                                        // Abrimos el modal de reporte
+                                        setShowReportCommentModal(true);
+                                      }}
+                                    >
+                                      <Flag size={16} className="mr-2" />
+                                      Reportar
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </div>
                           )}
