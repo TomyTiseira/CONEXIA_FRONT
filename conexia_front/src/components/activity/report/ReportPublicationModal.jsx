@@ -162,7 +162,7 @@ export default function ReportPublicationModal({ onCancel, onSubmit, loading }) 
           >
             {loading ? "Procesando..." : "Aceptar"}
           </Button>
-          <Button onClick={onCancel} variant="secondary" disabled={loading}>
+          <Button onClick={onCancel} variant="cancel" disabled={loading}>
             Cancelar
           </Button>
         </div>

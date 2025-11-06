@@ -16,6 +16,7 @@ import {
   Layers,
   ChevronDown,
   Users,
+  CreditCard,
 } from 'lucide-react';
 import DropdownInternalUserMenu from '@/components/navbar/DropdownInternalUserMenu';
 import { config } from '@/config';
@@ -47,6 +48,7 @@ export default function NavbarAdmin() {
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },
   { label: 'Reclamos', href: '/admin/claims', icon: AlertCircle },
   { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
+  { label: 'Planes', href: '/admin/plans', icon: CreditCard },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';
