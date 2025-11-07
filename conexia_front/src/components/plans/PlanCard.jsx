@@ -56,14 +56,9 @@ export default function PlanCard({
 
       {/* Nombre del plan */}
       <div className="text-center mt-2 mb-4">
-        <h3 className="text-2xl font-bold text-gray-900 mb-1 min-h-[64px] flex items-center justify-center">
+        <h3 className="text-2xl font-bold text-gray-900">
           {plan.name}
         </h3>
-        {plan.description && (
-          <p className="text-gray-600 text-xs min-h-[32px]">
-            {plan.description}
-          </p>
-        )}
       </div>
 
       {/* Precio */}

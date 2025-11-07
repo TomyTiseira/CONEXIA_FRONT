@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { contractPlan } from '@/service/plans/plansService';
+import { handlePlanError } from '@/utils/planErrorHandler';
 
 /**
  * Hook para manejar la contratación de planes
@@ -44,8 +45,10 @@ export function useSubscriptionContract() {
       
       return response;
     } catch (err) {
-      setError(err.message || 'Error al contratar el plan');
-      throw err;
+      // Usar el manejador de errores para obtener un mensaje amigable
+      const errorInfo = handlePlanError(err);
+      setError(errorInfo);
+      throw errorInfo;
     } finally {
       setLoading(false);
     }

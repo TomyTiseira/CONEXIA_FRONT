@@ -11,7 +11,7 @@ import PricingToggle from '@/components/plans/PricingToggle';
 import ContractConfirmationModal from '@/components/plans/ContractConfirmationModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
-import { FiAlertCircle } from 'react-icons/fi';
+import { FiAlertCircle, FiX } from 'react-icons/fi';
 import useSessionTimeout from '@/hooks/useSessionTimeout';
 
 export default function MyPlanPage() {
@@ -25,6 +25,7 @@ export default function MyPlanPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [planToContract, setPlanToContract] = useState(null);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
 
   // Determinar si el usuario puede contratar planes
   const canContractPlans = roleName === ROLES.USER;
@@ -43,16 +44,19 @@ export default function MyPlanPage() {
     if (plan) {
       setPlanToContract(plan);
       setIsConfirmModalOpen(true);
+      setShowErrorAlert(false); // Limpiar errores previos
     }
   };
 
   const handleConfirmContract = async (planId, billingCycle, cardTokenId) => {
     try {
+      setShowErrorAlert(false);
       await handleContractPlan(planId, billingCycle, cardTokenId);
       // La redirección a MercadoPago se maneja en el hook
     } catch (err) {
       console.error('Error al contratar plan:', err);
-      alert(err.message || 'Error al procesar el pago. Por favor intenta nuevamente.');
+      setShowErrorAlert(true);
+      // No cerrar el modal para que el usuario vea el error
     }
   };
 
@@ -119,10 +123,36 @@ export default function MyPlanPage() {
             Como {roleName}, puedes visualizar los planes pero no contratarlos
           </div>
         )}
+
+        {/* Alerta de error al contratar */}
+        {showErrorAlert && contractError && (
+          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 flex-1">
+                <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-red-900 mb-1">
+                    {contractError.title || 'Error al contratar plan'}
+                  </h3>
+                  <p className="text-sm text-red-700">
+                    {contractError.message || 'Ocurrió un error al procesar tu solicitud'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowErrorAlert(false)}
+                className="text-red-400 hover:text-red-600 transition-colors"
+                aria-label="Cerrar alerta"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pricing Toggle */}
-      <div className="mb-12">
+      <div className="mb-8 flex justify-center">
         <PricingToggle 
           value={billingCycle}
           onChange={setBillingCycle}
@@ -130,7 +160,7 @@ export default function MyPlanPage() {
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
         {plans.map((plan) => (
           <PlanCard
             key={plan.id}
