@@ -5,3 +5,5 @@ export { default as PlanBadge } from './PlanBadge';
 export { default as PlanDetailsModal } from './PlanDetailsModal';
 export { default as ContractConfirmationModal } from './ContractConfirmationModal';
 export { default as CardTokenForm } from './CardTokenForm';
+export { default as PlanComparisonBanner } from './PlanComparisonBanner';
+export { default as PlanInfoCard } from './PlanInfoCard';

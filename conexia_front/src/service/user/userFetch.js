@@ -148,3 +148,22 @@ export async function fetchUsers({ search = '', page = 1, limit = 3 } = {}) {
   const json = await res.json();
   return json?.data?.users || [];
 }
+
+/**
+ * Obtener el plan activo del usuario autenticado
+ * @returns {Promise<Object>} - Plan, suscripción y flag isFreePlan
+ */
+export async function getUserPlan() {
+  const response = await fetchWithRefresh(`${config.API_URL}/users/me/plan`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'No se pudo obtener el plan del usuario');
+  }
+
+  return data.data;
+}

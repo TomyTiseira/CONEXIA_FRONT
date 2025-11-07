@@ -5,6 +5,78 @@
 @tailwind utilities;
 /* stylelint-enable at-rule-no-unknown */
 
+/* ========================================
+   Plan Styles (Free, Basic, Premium)
+   ======================================== */
+
+:root {
+  /* Plan Free */
+  --plan-free-bg: #f9fafb;
+  --plan-free-bg-light: #f3f4f6;
+  --plan-free-text: #374151;
+  --plan-free-text-light: #6b7280;
+  --plan-free-border: #d1d5db;
+  --plan-free-gradient-from: #9ca3af;
+  --plan-free-gradient-to: #6b7280;
+
+  /* Plan Basic */
+  --plan-basic-bg: #eff6ff;
+  --plan-basic-bg-light: #dbeafe;
+  --plan-basic-text: #1e40af;
+  --plan-basic-text-light: #3b82f6;
+  --plan-basic-border: #93c5fd;
+  --plan-basic-gradient-from: #3b82f6;
+  --plan-basic-gradient-to: #2563eb;
+
+  /* Plan Premium */
+  --plan-premium-bg: #fffbeb;
+  --plan-premium-bg-light: #fef3c7;
+  --plan-premium-text: #92400e;
+  --plan-premium-text-light: #d97706;
+  --plan-premium-border: #fbbf24;
+  --plan-premium-gradient-from: #f59e0b;
+  --plan-premium-gradient-to: #d97706;
+}
+
+/* Plan Badge Animations */
+@keyframes planPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes planShine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.plan-badge-premium {
+  animation: planPulse 2s ease-in-out infinite;
+}
+
+.plan-badge-shine {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: planShine 3s linear infinite;
+}
+
+/* Plan-specific utility classes */
+.plan-free-gradient {
+  background: linear-gradient(135deg, var(--plan-free-gradient-from), var(--plan-free-gradient-to));
+}
+
+.plan-basic-gradient {
+  background: linear-gradient(135deg, var(--plan-basic-gradient-from), var(--plan-basic-gradient-to));
+}
+
+.plan-premium-gradient {
+  background: linear-gradient(135deg, var(--plan-premium-gradient-from), var(--plan-premium-gradient-to));
+}
+
 /* Soft white/gray scrollbar styling */
 .scrollbar-soft::-webkit-scrollbar {
   width: 10px;

@@ -9,6 +9,7 @@ import { Briefcase } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
+import { PlanComparisonBanner } from '@/components/plans';
 import ServiceFilters from './ServiceFilters';
 import ServiceList from './ServiceList';
 import ServiceSearchBar from './ServiceSearchBar';
@@ -91,6 +92,13 @@ export default function ServiceSearch() {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
         <div className="w-full max-w-7xl flex flex-col gap-6">
+          {/* Plan Comparison Banner - Solo para usuarios con rol USER */}
+          {canCreateService && (
+            <div className="w-full">
+              <PlanComparisonBanner context="services" />
+            </div>
+          )}
+
           {/* Header: título, buscador y botón */}
           <div className="flex flex-col md:flex-row md:items-center md:gap-6 mb-2 w-full">
             <div className="flex flex-col md:flex-row md:items-center w-full">

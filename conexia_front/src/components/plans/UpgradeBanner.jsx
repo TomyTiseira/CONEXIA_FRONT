@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { FiStar, FiArrowRight, FiZap } from 'react-icons/fi';
+import { useUserPlan } from '@/hooks/memberships';
 
 /**
  * Banner para promover la mejora de plan
@@ -14,18 +15,29 @@ export default function UpgradeBanner({
   className = ''
 }) {
   const router = useRouter();
+  const { data: userPlanData, isLoading } = useUserPlan();
 
   const handleUpgrade = () => {
     router.push('/settings/my-plan');
   };
 
   if (variant === 'compact') {
+    const planName = userPlanData?.plan?.name || 'Free';
+    const planEmoji = planName === 'Free' ? '⭐' : planName === 'Basic' ? '⚡' : '👑';
+    
     return (
       <div className={`
         bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-4 shadow-lg
         ${className}
       `}>
         <div className="flex flex-col gap-3">
+          {/* Plan actual - alineado a la izquierda */}
+          {!isLoading && (
+            <p className="text-blue-200/70 text-xs leading-tight">
+              Tu plan actual: <span className="font-semibold text-white">{planName} {planEmoji}</span>
+            </p>
+          )}
+          
           {/* Contenido superior */}
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">

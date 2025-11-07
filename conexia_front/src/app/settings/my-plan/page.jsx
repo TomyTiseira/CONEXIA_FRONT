@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { usePlans } from '@/hooks/plans/usePlans';
+import { useUserPlan } from '@/hooks/memberships';
 import { useSubscriptionContract } from '@/hooks/plans/useSubscriptionContract';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
@@ -9,6 +10,7 @@ import PlanCard from '@/components/plans/PlanCard';
 import PlanDetailsModal from '@/components/plans/PlanDetailsModal';
 import PricingToggle from '@/components/plans/PricingToggle';
 import ContractConfirmationModal from '@/components/plans/ContractConfirmationModal';
+import { PlanInfoCard } from '@/components/plans';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
 import { FiAlertCircle, FiX } from 'react-icons/fi';
@@ -17,6 +19,7 @@ import useSessionTimeout from '@/hooks/useSessionTimeout';
 export default function MyPlanPage() {
   useSessionTimeout();
   const { plans, loading, error, refetch } = usePlans();
+  const { data: currentUserPlanData } = useUserPlan();
   const { handleContractPlan, loading: contracting, error: contractError } = useSubscriptionContract();
   const { user } = useAuth();
   const { roleName, profile } = useUserStore();
@@ -30,8 +33,8 @@ export default function MyPlanPage() {
   // Determinar si el usuario puede contratar planes
   const canContractPlans = roleName === ROLES.USER;
 
-  // Obtener el plan actual del usuario (por ahora desde profile o asumir Free)
-  const currentPlanId = profile?.planId || 1; // Asumir 1 como plan Free por defecto
+  // Obtener el plan actual del usuario desde el nuevo hook
+  const currentPlanId = currentUserPlanData?.plan?.id || profile?.planId || 1;
 
   // Handlers
   const handleInitiateContract = (planId) => {
@@ -110,8 +113,25 @@ export default function MyPlanPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Mejora tu plan
+          Mi Plan
         </h1>
+        <p className="text-gray-600">
+          Gestiona tu suscripción y explora planes para desbloquear más beneficios
+        </p>
+      </div>
+
+      {/* Plan Info Card - Mostrar info del plan actual del usuario */}
+      {canContractPlans && (
+        <div className="mb-8">
+          <PlanInfoCard />
+        </div>
+      )}
+
+      {/* Divider */}
+      <div className="mb-8 border-t border-gray-200 pt-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Explorar Planes
+        </h2>
         <p className="text-gray-600">
           Elige el plan perfecto para ti y desbloquea todo el potencial de Conexia
         </p>

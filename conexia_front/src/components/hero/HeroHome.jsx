@@ -1,5 +1,5 @@
 "use client";
-import { Users, Briefcase, TrendingUp, Shield } from "lucide-react";
+import { Users, Briefcase, TrendingUp, Shield, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -66,14 +66,40 @@ export default function HeroHome() {
       <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center py-6">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
           {/* Left Column - Hero Text */}
-          <div className="text-white space-y-4">
+          <div className="text-white space-y-5">
             <div className="space-y-3">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-                Conectamos <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">talentos</span> con oportunidades
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+                Conectamos <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">talentos</span><br />con oportunidades
               </h1>
-              <p className="text-lg sm:text-xl text-white/80 max-w-xl leading-relaxed">
+              <p className="text-base sm:text-lg text-white/80 max-w-xl leading-relaxed">
                 La plataforma profesional donde freelancers y empresas se encuentran para colaborar en servicios y proyectos innovadores
               </p>
+            </div>
+            
+            {/* CTA para planes - Visible para usuarios no autenticados */}
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 max-w-md">
+              <div className="flex items-start gap-3">
+                <div className="bg-amber-400 rounded-lg p-2.5 flex-shrink-0">
+                  <Star className="w-5 h-5 text-amber-900" fill="currentColor" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-base mb-1">
+                    🚀 Impulsa tu carrera
+                  </h3>
+                  <p className="text-xs text-white/90 mb-3 leading-snug">
+                    Accede a planes diseñados para llevar tu negocio al siguiente nivel
+                  </p>
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center gap-2 bg-white text-conexia-green px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-sm"
+                  >
+                    Comenzar
+                    <span className="text-xs bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full font-bold">
+                      Gratis
+                    </span>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
 
