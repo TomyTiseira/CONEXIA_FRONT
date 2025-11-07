@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiCheckCircle, FiStar, FiArrowRight } from 'react-icons/fi';
 import useSessionTimeout from '@/hooks/useSessionTimeout';
 
-export default function SubscriptionSuccessPage() {
-  useSessionTimeout();
+function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [subscriptionData, setSubscriptionData] = useState(null);
@@ -176,5 +175,19 @@ export default function SubscriptionSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SubscriptionSuccessPage() {
+  useSessionTimeout();
+
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-conexia-soft flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-conexia-green"></div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
