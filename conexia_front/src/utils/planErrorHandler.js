@@ -16,7 +16,17 @@ export function handlePlanError(error) {
   // 1. Error de sincronización con MercadoPago
   if (errorCode === 'MERCADOPAGO_SYNC_ERROR' || errorMessage.includes('MercadoPago')) {
     
-    // Caso 1: Precio menor al mínimo
+    // Caso 1: CVV no validado
+    if (errorMessage.includes('cvv') || errorMessage.includes('CVV') || 
+        errorMessage.includes('security code')) {
+      return {
+        title: 'Error en los datos de la tarjeta',
+        message: 'Hubo un problema al validar tu tarjeta. Por favor verifica los datos e intenta nuevamente.',
+        type: 'error',
+      };
+    }
+    
+    // Caso 2: Precio menor al mínimo
     if (errorMessage.includes('Cannot pay an amount lower than') || 
         errorMessage.includes('mínimo $15')) {
       return {
@@ -26,7 +36,7 @@ export function handlePlanError(error) {
       };
     }
     
-    // Caso 2: URL inválida
+    // Caso 3: URL inválida
     if (errorMessage.includes('URL de retorno') || 
         errorMessage.includes('back url')) {
       return {
@@ -36,7 +46,7 @@ export function handlePlanError(error) {
       };
     }
     
-    // Caso 3: Credenciales inválidas
+    // Caso 4: Credenciales inválidas
     if (errorMessage.includes('credentials') || 
         errorMessage.includes('Credenciales')) {
       return {
@@ -46,10 +56,10 @@ export function handlePlanError(error) {
       };
     }
 
-    // Caso 4: Error genérico de MercadoPago
+    // Caso 5: Error genérico de MercadoPago
     return {
-      title: 'Error de MercadoPago',
-      message: 'No se pudo procesar el pago con MercadoPago. Por favor intenta nuevamente o contacta al soporte.',
+      title: 'Error al procesar el pago',
+      message: 'No se pudo procesar el pago. Por favor verifica los datos de tu tarjeta e intenta nuevamente.',
       type: 'error',
     };
   }
