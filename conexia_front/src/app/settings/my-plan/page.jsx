@@ -2,48 +2,84 @@
 
 import React, { useState } from 'react';
 import { usePlans } from '@/hooks/plans/usePlans';
+import { useUserPlan } from '@/hooks/memberships';
+import { useSubscriptionContract } from '@/hooks/plans/useSubscriptionContract';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import PlanCard from '@/components/plans/PlanCard';
 import PlanDetailsModal from '@/components/plans/PlanDetailsModal';
 import PricingToggle from '@/components/plans/PricingToggle';
+import ContractConfirmationModal from '@/components/plans/ContractConfirmationModal';
+import { PlanInfoCard } from '@/components/plans';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
-import { FiAlertCircle } from 'react-icons/fi';
+import { FiAlertCircle, FiX } from 'react-icons/fi';
 import useSessionTimeout from '@/hooks/useSessionTimeout';
 
 export default function MyPlanPage() {
   useSessionTimeout();
   const { plans, loading, error, refetch } = usePlans();
+  const { data: currentUserPlanData } = useUserPlan();
+  const { handleContractPlan, loading: contracting, error: contractError } = useSubscriptionContract();
   const { user } = useAuth();
   const { roleName, profile } = useUserStore();
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [planToContract, setPlanToContract] = useState(null);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
 
   // Determinar si el usuario puede contratar planes
   const canContractPlans = roleName === ROLES.USER;
 
-  // Obtener el plan actual del usuario (por ahora desde profile o asumir Free)
-  const currentPlanId = profile?.planId || 1; // Asumir 1 como plan Free por defecto
+  // Obtener el plan actual del usuario desde el nuevo hook
+  const currentPlanId = currentUserPlanData?.plan?.id || profile?.planId || 1;
 
   // Handlers
-  const handleContractPlan = (planId) => {
-    // TODO: Implementar en CNX-62 - integración con MercadoPago
-    console.log('Contratar plan:', planId);
-    alert('Esta funcionalidad estará disponible próximamente');
+  const handleInitiateContract = (planId) => {
+    if (!canContractPlans) {
+      alert('No tienes permisos para contratar planes');
+      return;
+    }
+
+    const plan = plans.find(p => p.id === planId);
+    if (plan) {
+      setPlanToContract(plan);
+      setIsConfirmModalOpen(true);
+      setShowErrorAlert(false); // Limpiar errores previos
+    }
+  };
+
+  const handleConfirmContract = async (planId, billingCycle, cardTokenId) => {
+    try {
+      setShowErrorAlert(false);
+      await handleContractPlan(planId, billingCycle, cardTokenId);
+      // La redirección a MercadoPago se maneja en el hook
+    } catch (err) {
+      console.error('Error al contratar plan:', err);
+      setShowErrorAlert(true);
+      // No cerrar el modal para que el usuario vea el error
+    }
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (!contracting) {
+      setIsConfirmModalOpen(false);
+      setPlanToContract(null);
+    }
   };
 
   const handleViewDetails = (planId) => {
     const plan = plans.find(p => p.id === planId);
     if (plan) {
       setSelectedPlan(plan);
-      setIsModalOpen(true);
+      setIsDetailsModalOpen(true);
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
     setSelectedPlan(null);
   };
 
@@ -77,8 +113,25 @@ export default function MyPlanPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Mejora tu plan
+          Mi Plan
         </h1>
+        <p className="text-gray-600">
+          Gestiona tu suscripción y explora planes para desbloquear más beneficios
+        </p>
+      </div>
+
+      {/* Plan Info Card - Mostrar info del plan actual del usuario */}
+      {canContractPlans && (
+        <div className="mb-8">
+          <PlanInfoCard />
+        </div>
+      )}
+
+      {/* Divider */}
+      <div className="mb-8 border-t border-gray-200 pt-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Explorar Planes
+        </h2>
         <p className="text-gray-600">
           Elige el plan perfecto para ti y desbloquea todo el potencial de Conexia
         </p>
@@ -90,10 +143,36 @@ export default function MyPlanPage() {
             Como {roleName}, puedes visualizar los planes pero no contratarlos
           </div>
         )}
+
+        {/* Alerta de error al contratar */}
+        {showErrorAlert && contractError && (
+          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 flex-1">
+                <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-red-900 mb-1">
+                    {contractError.title || 'Error al contratar plan'}
+                  </h3>
+                  <p className="text-sm text-red-700">
+                    {contractError.message || 'Ocurrió un error al procesar tu solicitud'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowErrorAlert(false)}
+                className="text-red-400 hover:text-red-600 transition-colors"
+                aria-label="Cerrar alerta"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pricing Toggle */}
-      <div className="mb-12">
+      <div className="mb-8 flex justify-center">
         <PricingToggle 
           value={billingCycle}
           onChange={setBillingCycle}
@@ -101,7 +180,7 @@ export default function MyPlanPage() {
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
         {plans.map((plan) => (
           <PlanCard
             key={plan.id}
@@ -110,7 +189,7 @@ export default function MyPlanPage() {
             isMostPopular={plan.name === mostPopularPlanName}
             billingCycle={billingCycle}
             canContract={canContractPlans}
-            onContractClick={handleContractPlan}
+            onContractClick={handleInitiateContract}
             onDetailsClick={handleViewDetails}
           />
         ))}
@@ -129,12 +208,22 @@ export default function MyPlanPage() {
       {/* Modal de detalles */}
       <PlanDetailsModal
         plan={selectedPlan}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
         isCurrentPlan={selectedPlan?.id === currentPlanId}
         billingCycle={billingCycle}
         canContract={canContractPlans}
-        onContractClick={handleContractPlan}
+        onContractClick={handleInitiateContract}
+      />
+
+      {/* Modal de confirmación de pago */}
+      <ContractConfirmationModal
+        isOpen={isConfirmModalOpen}
+        onClose={handleCloseConfirmModal}
+        plan={planToContract}
+        billingCycle={billingCycle}
+        onConfirm={handleConfirmContract}
+        loading={contracting}
       />
     </div>
   );

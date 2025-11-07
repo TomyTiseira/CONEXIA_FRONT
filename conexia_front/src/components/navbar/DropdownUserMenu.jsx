@@ -125,7 +125,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
       {roleName === ROLES.USER && (
         <div className="px-4 py-3 border-b">
           <PlanBadge 
-            planId={profile.planId || 1} 
+            useCurrentPlan={true}
             variant="compact"
             className="w-full justify-center"
           />

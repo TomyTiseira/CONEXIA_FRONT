@@ -13,6 +13,7 @@ import Navbar from '@/components/navbar/Navbar';
 import { FaRegLightbulb } from 'react-icons/fa';
 import { HiOutlineClipboardList } from 'react-icons/hi';
 import { MdCleaningServices } from 'react-icons/md';
+import { PlanComparisonBanner } from '@/components/plans';
 import ProjectSearchFilters from './ProjectSearchFilters';
 import ProjectSearchBar from './ProjectSearchBar';
 import ProjectList from './ProjectList';
@@ -216,6 +217,13 @@ export default function ProjectSearch() {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
         <div className="w-full max-w-7xl flex flex-col gap-6">
+          {/* Plan Comparison Banner - Solo para usuarios con rol USER */}
+          {roleName === ROLES.USER && (
+            <div className="w-full">
+              <PlanComparisonBanner context="projects" />
+            </div>
+          )}
+
           {/* Header: título, buscador y botón */}
           <div className="flex flex-col md:flex-row md:items-center md:gap-6 mb-2 w-full">
             <div className="flex flex-col md:flex-row md:items-center w-full">
