@@ -16,6 +16,7 @@ import RubroSkillsSelector from '@/components/skills/RubroSkillsSelector';
 import Button from '@/components/ui/Button';
 import LocalitySelector from '@/components/localities/LocalitySelector';
 import RequireVerification from '@/components/common/RequireVerification';
+import { ProjectRolesManager } from '@/components/project/roles';
 
 export default function CreateProjectForm() {
   // Handler para el selector de provincia
@@ -44,6 +45,7 @@ export default function CreateProjectForm() {
     image: null,
     skills: [],
     dates: { startDate: '', endDate: '' },
+    roles: [], // Nuevo: roles del proyecto
   });
 
   const [errors, setErrors] = useState({});
@@ -88,6 +90,11 @@ export default function CreateProjectForm() {
 
   const handleSkillsChange = (skills) => {
     setForm((prev) => ({ ...prev, skills }));
+  };
+
+  const handleRolesChange = (roles) => {
+    setForm((prev) => ({ ...prev, roles }));
+    if (touched['roles']) validateField('roles', roles);
   };
 
   const handleBlur = (field) => {
@@ -140,11 +147,18 @@ export default function CreateProjectForm() {
       }
     }
 
+    // Validación para roles: debe tener al menos un rol
+    if (field === 'roles') {
+      if (!value || value.length === 0) {
+        error = 'Debe definir al menos un rol para el proyecto';
+      }
+    }
+
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
   const validateAll = () => {
-    const fields = ['title', 'description', 'category', 'collaborationType', 'contractType', 'dates'];
+    const fields = ['title', 'description', 'category', 'collaborationType', 'contractType', 'dates', 'roles'];
     const newTouched = {};
     let isValid = true;
 
@@ -277,6 +291,15 @@ export default function CreateProjectForm() {
         <div className="min-h-[110px]">
           <RubroSkillsSelector selectedSkills={form.skills} onSkillsChange={handleSkillsChange} />
         </div>
+      </div>
+
+      {/* Roles del proyecto */}
+      <div className="md:col-span-2">
+        <ProjectRolesManager
+          roles={form.roles}
+          onChange={handleRolesChange}
+          error={touched.roles && errors.roles}
+        />
       </div>
 
       {/* Fechas */}
