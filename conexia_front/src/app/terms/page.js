@@ -170,7 +170,7 @@ export default function TermsOfService() {
             <h2 className="text-2xl font-bold text-gray-800 mb-4">6. Limitación de Responsabilidad</h2>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-gray-700 leading-relaxed text-sm">
-                CONEXIA proporciona la plataforma "tal cual" y no garantiza resultados específicos. 
+                CONEXIA proporciona la plataforma &quot;tal cual&quot; y no garantiza resultados específicos. 
                 No somos responsables de disputas entre usuarios, calidad de servicios prestados, 
                 o daños derivados del uso de la plataforma, salvo lo establecido por la ley aplicable.
               </p>
