@@ -63,10 +63,10 @@ export default function HeroHome() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center py-6">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
+      <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center py-8 lg:py-8">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start w-full">
           {/* Left Column - Hero Text */}
-          <div className="text-white space-y-5">
+          <div className="text-white space-y-5 lg:mt-12">
             <div className="space-y-3">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
                 Conectamos <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">talentos</span><br />con oportunidades
@@ -104,21 +104,22 @@ export default function HeroHome() {
           </div>
 
           {/* Right Column - Feature Cards */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-48 lg:mt-12">
             {features.map((feature, idx) => {
               const isFlipped = flippedCard === idx;
               
               return (
                 <div 
                   key={idx}
-                  className="h-56 cursor-pointer"
+                  className="h-44 cursor-pointer"
+                  style={{ perspective: '1000px' }}
                   onClick={() => handleCardClick(idx)}
                 >
-                  {!isFlipped ? (
-                    /* Front of card */
-                    <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 h-full">
-                      <div className="p-6 flex flex-col h-full justify-between">
-                        <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center shadow-lg text-4xl self-start`}>
+                  <div className={`relative w-full h-full transition-transform duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+                    {/* Front of card */}
+                    <div className="absolute inset-0 backface-hidden bg-white/95 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                      <div className="p-5 flex flex-col h-full justify-between">
+                        <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-full flex items-center justify-center shadow-lg text-3xl`}>
                           {feature.emoji}
                         </div>
                         <div>
@@ -131,22 +132,20 @@ export default function HeroHome() {
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    /* Back of card */
-                    <div className="bg-gradient-to-br from-conexia-green to-[#0d2d28] rounded-xl shadow-lg h-full animate-fadeIn">
-                      <div className="p-6 flex flex-col h-full justify-between">
-                        <div>
-                          <div className="text-3xl mb-3">{feature.emoji}</div>
-                          <h3 className="text-lg font-bold text-white mb-3">
-                            {feature.title}
-                          </h3>
-                          <p className="text-white/90 text-sm leading-relaxed">
-                            {feature.backContent}
-                          </p>
-                        </div>
+                    
+                    {/* Back of card */}
+                    <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-conexia-green to-[#0d2d28] rounded-xl shadow-lg rotate-y-180">
+                      <div className="p-5 flex flex-col h-full">
+                        <div className="w-12 h-12 flex items-center justify-center text-3xl mb-3">{feature.emoji}</div>
+                        <h3 className="text-lg font-bold text-white mb-3">
+                          {feature.title}
+                        </h3>
+                        <p className="text-white/90 text-sm leading-relaxed">
+                          {feature.backContent}
+                        </p>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
