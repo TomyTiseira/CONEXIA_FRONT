@@ -46,7 +46,35 @@ module.exports = {
       zIndex: {
         '45': '45',
       },
+      transformStyle: {
+        '3d': 'preserve-3d',
+      },
+      backfaceVisibility: {
+        hidden: 'hidden',
+      },
+      rotate: {
+        'y-180': 'rotateY(180deg)',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addUtilities }) {
+      const newUtilities = {
+        '.transform-style-3d': {
+          'transform-style': 'preserve-3d',
+        },
+        '.backface-hidden': {
+          'backface-visibility': 'hidden',
+          '-webkit-backface-visibility': 'hidden',
+        },
+        '.rotate-y-180': {
+          transform: 'rotateY(180deg)',
+        },
+        '.perspective-1000': {
+          perspective: '1000px',
+        },
+      }
+      addUtilities(newUtilities)
+    }
+  ],
 };

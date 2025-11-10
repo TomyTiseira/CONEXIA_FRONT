@@ -1,10 +1,12 @@
+import Link from 'next/link';
+
 export function Footer() {
   const links = [
-    "Condiciones de uso",
-    "Políticas de privacidad",
-    "Política de cookies",
-    "Política de derechos",
-    "Centro de ayuda",
+    { label: "Condiciones de uso", href: "/terms" },
+    { label: "Políticas de privacidad", href: "/privacy" },
+    { label: "Política de cookies", href: "/cookies" },
+    { label: "Política de derechos", href: "/rights" },
+    { label: "Centro de ayuda", href: "/help" },
   ];
 
   return (
@@ -15,8 +17,12 @@ export function Footer() {
           <span className="text-xs md:text-sm">© {new Date().getFullYear()}</span>
         </div>
         <ul className="flex flex-wrap justify-center gap-3 md:gap-3 text-xs md:text-sm">
-          {links.map(l => (
-            <li key={l}><a href="#" className="hover:underline whitespace-nowrap">{l}</a></li>
+          {links.map(link => (
+            <li key={link.label}>
+              <Link href={link.href} className="hover:underline whitespace-nowrap">
+                {link.label}
+              </Link>
+            </li>
           ))}
         </ul>
       </div>
