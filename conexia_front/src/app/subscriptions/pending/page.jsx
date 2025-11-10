@@ -182,7 +182,7 @@ function PendingContent() {
                   onClick={handleGoToMyPlan}
                   className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
-                  Ver planes
+                  Explorar planes
                 </button>
                 <button
                   onClick={handleGoHome}

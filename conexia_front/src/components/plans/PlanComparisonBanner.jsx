@@ -144,7 +144,7 @@ export default function PlanComparisonBanner({
               }
             `}
           >
-            Ver planes
+            Explorar planes
             <FiArrowRight className="w-5 h-5" />
           </Link>
         </div>

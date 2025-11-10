@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { usePlans } from '@/hooks/plans/usePlans';
 import { useUserPlan } from '@/hooks/memberships';
 import { useSubscriptionContract } from '@/hooks/plans/useSubscriptionContract';
@@ -18,6 +19,7 @@ import useSessionTimeout from '@/hooks/useSessionTimeout';
 
 export default function MyPlanPage() {
   useSessionTimeout();
+  const searchParams = useSearchParams();
   const { plans, loading, error, refetch } = usePlans();
   const { data: currentUserPlanData } = useUserPlan();
   const { handleContractPlan, loading: contracting, error: contractError } = useSubscriptionContract();
@@ -29,6 +31,28 @@ export default function MyPlanPage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [planToContract, setPlanToContract] = useState(null);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
+
+  // Efecto para hacer scroll a la sección cuando viene desde hash
+  useEffect(() => {
+    // Verificar si hay hash en la URL
+    const hash = window.location.hash;
+    if (hash) {
+      // Esperar un momento para que el DOM esté listo
+      setTimeout(() => {
+        const element = document.querySelector(hash);
+        if (element) {
+          // Calcular la posición con un offset adicional para mejor visualización
+          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+          const offsetPosition = elementPosition;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+    }
+  }, []);
 
   // Determinar si el usuario puede contratar planes
   const canContractPlans = roleName === ROLES.USER;
@@ -113,7 +137,7 @@ export default function MyPlanPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Mi Plan
+          Mi plan
         </h1>
         <p className="text-gray-600">
           Gestiona tu suscripción y explora planes para desbloquear más beneficios
@@ -128,9 +152,9 @@ export default function MyPlanPage() {
       )}
 
       {/* Divider */}
-      <div className="mb-8 border-t border-gray-200 pt-8">
+      <div id="explorar-planes" className="mb-8 border-t border-gray-200 pt-8 scroll-mt-20">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Explorar Planes
+          Explorar planes
         </h2>
         <p className="text-gray-600">
           Elige el plan perfecto para ti y desbloquea todo el potencial de Conexia

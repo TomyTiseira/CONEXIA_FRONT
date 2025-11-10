@@ -18,7 +18,7 @@ export default function UpgradeBanner({
   const { data: userPlanData, isLoading } = useUserPlan();
 
   const handleUpgrade = () => {
-    router.push('/settings/my-plan');
+    router.push('/settings/my-plan#explorar-planes');
   };
 
   if (variant === 'compact') {
@@ -59,7 +59,7 @@ export default function UpgradeBanner({
               onClick={handleUpgrade}
               className="w-full px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors"
             >
-              Ver planes
+              Explorar planes
             </button>
           )}
         </div>

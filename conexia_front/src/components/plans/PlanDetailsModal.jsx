@@ -176,7 +176,7 @@ export default function PlanDetailsModal({
             Cerrar
           </Button>
           
-          {!isCurrentPlan && canContract && (
+          {!isCurrentPlan && canContract && !isFree && (
             <Button
               onClick={() => {
                 onContractClick?.(plan.id);
@@ -184,7 +184,7 @@ export default function PlanDetailsModal({
               }}
               className="flex-1 !bg-gradient-to-r !from-conexia-green !to-[#1a7a66] hover:!from-[#1a7a66] hover:!to-conexia-green !text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              {isFree ? 'Comenzar Gratis' : 'Contratar Plan'}
+              Contratar Plan
             </Button>
           )}
         </div>
