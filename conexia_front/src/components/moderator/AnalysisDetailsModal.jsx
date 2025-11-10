@@ -1,10 +1,13 @@
 'use client';
 
-import { X, AlertTriangle, Ban, FileText, Calendar, User } from 'lucide-react';
+import { useState } from 'react';
+import { X, AlertTriangle, Ban, FileText, Calendar, User, List } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ActionButtons from './ActionButtons';
+import AnalyzedReportsModal from './AnalyzedReportsModal';
 import Link from 'next/link';
+import Button from '@/components/ui/Button';
 
 /**
  * Modal de detalles de un análisis de moderación
@@ -15,6 +18,8 @@ export default function AnalysisDetailsModal({
   onResolve, 
   loading = false 
 }) {
+  const [showReportsModal, setShowReportsModal] = useState(false);
+
   if (!analysis) return null;
 
   return (
@@ -103,15 +108,25 @@ export default function AnalysisDetailsModal({
             </p>
           </div>
 
-          {/* Fecha del Análisis */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Calendar className="w-4 h-4" />
-            <span>
-              Analizado el{' '}
-              {format(new Date(analysis.createdAt), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", {
-                locale: es,
-              })}
-            </span>
+          {/* Fecha del Análisis y Botón de Reportes */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Calendar className="w-4 h-4" />
+              <span>
+                Analizado el{' '}
+                {format(new Date(analysis.createdAt), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", {
+                  locale: es,
+                })}
+              </span>
+            </div>
+            <Button
+              onClick={() => setShowReportsModal(true)}
+              variant="informative"
+              className="flex items-center gap-2 px-4 py-2 text-sm"
+            >
+              <List className="w-4 h-4" />
+              Reportes analizados
+            </Button>
           </div>
 
           {/* Separador */}
@@ -136,6 +151,16 @@ export default function AnalysisDetailsModal({
           </button>
         </div>
       </div>
+
+      {/* Modal de Reportes Analizados */}
+      {showReportsModal && (
+        <AnalyzedReportsModal
+          analysisId={analysis.id}
+          userId={analysis.userId}
+          classification={analysis.classification}
+          onClose={() => setShowReportsModal(false)}
+        />
+      )}
     </div>
   );
 }
