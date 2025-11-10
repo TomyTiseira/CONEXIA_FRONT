@@ -134,7 +134,7 @@ export default function PlanCard({
           >
             Plan Actual
           </Button>
-        ) : canContract ? (
+        ) : canContract && !isFree ? (
           <Button 
             onClick={() => onContractClick?.(plan.id)}
             className={`
@@ -146,9 +146,9 @@ export default function PlanCard({
               !text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300
             `}
           >
-            {isFree ? 'Comenzar Gratis' : 'Contratar Plan'}
+            Contratar Plan
           </Button>
-        ) : (
+        ) : !canContract ? (
           <Button 
             variant="outline"
             disabled
@@ -156,7 +156,7 @@ export default function PlanCard({
           >
             No disponible
           </Button>
-        )}
+        ) : null}
 
         {onDetailsClick && (
           <button
