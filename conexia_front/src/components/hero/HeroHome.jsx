@@ -111,15 +111,15 @@ export default function HeroHome() {
               return (
                 <div 
                   key={idx}
-                  className="h-44 cursor-pointer"
+                  className="h-48 cursor-pointer"
                   style={{ perspective: '1000px' }}
                   onClick={() => handleCardClick(idx)}
                 >
                   <div className={`relative w-full h-full transition-transform duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                     {/* Front of card */}
                     <div className="absolute inset-0 backface-hidden bg-white/95 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                      <div className="p-5 flex flex-col h-full justify-between">
-                        <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-full flex items-center justify-center shadow-lg text-3xl`}>
+                      <div className="p-6 flex flex-col h-full justify-between">
+                        <div className={`w-16 h-16 min-w-[4rem] min-h-[4rem] bg-gradient-to-br ${feature.color} rounded-lg flex items-center justify-center shadow-lg text-4xl self-start flex-shrink-0`}>
                           {feature.emoji}
                         </div>
                         <div>
