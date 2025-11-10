@@ -104,7 +104,7 @@ export default function HeroHome() {
           </div>
 
           {/* Right Column - Feature Cards */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-48 lg:mt-12">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-48 lg:mt-8">
             {features.map((feature, idx) => {
               const isFlipped = flippedCard === idx;
               
