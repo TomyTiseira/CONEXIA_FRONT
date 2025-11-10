@@ -1,7 +1,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { fetchMyProjects } from '@/service/projects/projectsFetch';
 import ProjectList from '@/components/project/search/ProjectList';
 import Button from '@/components/ui/Button';
@@ -10,7 +10,7 @@ import { MdFolderOpen } from 'react-icons/md';
 
 export default function UserCollaborativeProjects({ userId }) {
   const { user: authUser } = useAuth();
-  const router = useRouter();
+  
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +70,7 @@ export default function UserCollaborativeProjects({ userId }) {
         </div>
         {projects.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-center sm:justify-end mt-4">
-            <a
+            <Link
               href={`/projects/user/${userId}`}
               className="w-full sm:w-auto flex items-center gap-1.5 px-5 py-2 rounded-lg font-semibold shadow bg-[#eef6f6] text-conexia-green hover:bg-[#e0f0f0] text-base border border-[#c6e3e4] justify-center text-center"
               style={{ minHeight: '40px' }}
@@ -80,7 +80,7 @@ export default function UserCollaborativeProjects({ userId }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m4-4H8" />
               </svg>
               <span className="w-full text-center">Ver más…</span>
-            </a>
+            </Link>
           </div>
         )}
       </div>

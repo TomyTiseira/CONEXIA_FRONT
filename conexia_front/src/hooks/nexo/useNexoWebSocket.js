@@ -7,6 +7,7 @@ import { getNexoSocket, disconnectNexoSocket, reconnectNexoSocket } from '@/lib/
 export function useNexoWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState(null);
+  const [tokenRefreshed, setTokenRefreshed] = useState(null);
   const socketRef = useRef(null);
   const listenersRef = useRef({});
 
@@ -18,16 +19,14 @@ export function useNexoWebSocket() {
 
       // Event: connect
       socket.on('connect', () => {
-        console.log('✅ NEXO WebSocket conectado');
         setIsConnected(true);
         setError(null);
       });
 
       // Event: disconnect
       socket.on('disconnect', (reason) => {
-        console.log('❌ NEXO WebSocket desconectado:', reason);
         setIsConnected(false);
-        
+
         if (reason === 'io server disconnect') {
           // Server desconectó (probablemente auth error)
           setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
@@ -44,7 +43,51 @@ export function useNexoWebSocket() {
       // Event: error
       socket.on('error', (errorData) => {
         console.error('Error en NEXO:', errorData);
-        setError(errorData.message || 'Error desconocido');
+        // Keep error as an object when possible so callers can react to codes
+        setError(
+          typeof errorData === 'string'
+            ? { message: errorData }
+            : errorData || { message: 'Error desconocido' },
+        );
+      });
+
+      // Custom event: connected (server may send auth info)
+      socket.on('connected', (data) => {
+        if (data && data.tokenRefreshed) {
+          setTokenRefreshed(data);
+        }
+        // clear previous auth errors
+        setError(null);
+      });
+
+      // Custom event: token_refreshed -> actualizar cookie en cliente
+      socket.on('token_refreshed', (data) => {
+        try {
+          if (data && data.accessToken) {
+            const expiresIn = data.expiresIn || 3600;
+            const expires = new Date();
+            expires.setSeconds(expires.getSeconds() + expiresIn);
+
+            // Actualizar cookie de access_token
+            document.cookie = `access_token=${data.accessToken}; path=/; expires=${expires.toUTCString()}; secure; samesite=strict`;
+
+            setTokenRefreshed(data);
+            // clear any auth error
+            setError(null);
+          }
+        } catch (err) {
+          console.error('Error handling token_refreshed:', err);
+        }
+      });
+
+      // Custom event: auth_error -> surface structured error so UI can react
+      socket.on('auth_error', (err) => {
+        console.error('NEXO auth_error:', err);
+        if (typeof err === 'string') {
+          setError({ code: 'auth_error', message: err });
+        } else {
+          setError({ code: err?.code || 'auth_error', message: err?.message || 'Error de autenticación' });
+        }
       });
 
     } catch (err) {
@@ -60,6 +103,9 @@ export function useNexoWebSocket() {
       socketRef.current.off('disconnect');
       socketRef.current.off('connect_error');
       socketRef.current.off('error');
+      socketRef.current.off('connected');
+      socketRef.current.off('token_refreshed');
+      socketRef.current.off('auth_error');
       
       // Limpiar todos los listeners registrados
       Object.keys(listenersRef.current).forEach(event => {
@@ -123,6 +169,7 @@ export function useNexoWebSocket() {
   return {
     isConnected,
     error,
+    tokenRefreshed,
     connect,
     disconnect,
     emit,

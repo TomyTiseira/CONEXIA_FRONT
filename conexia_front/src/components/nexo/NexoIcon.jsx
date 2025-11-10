@@ -5,11 +5,11 @@ export default function NexoIcon({ onClick, hasNewMessage, isMinimized }) {
     <button
       onClick={onClick}
       className="group relative"
-      title="Abrir NEXO - Asistente Virtual"
+      aria-label="Abrir Nexo"
     >
       {/* Botón principal con fondo de humo y verde CONEXIA */}
       <div 
-        className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-lg hover:shadow-xl 
+        className="relative flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 rounded-full shadow-lg hover:shadow-xl 
                    transition-all duration-300 hover:scale-110 active:scale-95 animate-breathing 
                    border-2 border-conexia-green overflow-hidden"
         style={{ 
@@ -28,25 +28,25 @@ export default function NexoIcon({ onClick, hasNewMessage, isMinimized }) {
         }} />
         
         {/* Zorro */}
-        <span className="relative text-3xl z-10">🦊</span>
+        <span className="relative text-xl sm:text-3xl z-10">🦊</span>
       </div>
       
       {/* Badge de conexión/estado - fuera del overflow-hidden */}
-      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-md" />
+      <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white shadow-md" />
       
       {/* Badge de notificación */}
       {hasNewMessage && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full border-2 border-white 
+        <div className="absolute -top-2 -right-2 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full border-2 border-white 
                         flex items-center justify-center animate-pulse shadow-md">
-          <span className="text-xs text-white font-bold">!</span>
+          <span className="text-[10px] sm:text-xs text-white font-bold">!</span>
         </div>
       )}
       
-      {/* Tooltip */}
+      {/* Tooltip: always show a single short label */}
       <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs 
                       rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap
                       pointer-events-none z-30">
-        {isMinimized ? 'Restaurar NEXO' : 'Abrir NEXO'}
+        Abrir Nexo
         <div className="absolute top-full right-4 w-2 h-2 bg-gray-900 transform rotate-45 -mt-1" />
       </div>
       

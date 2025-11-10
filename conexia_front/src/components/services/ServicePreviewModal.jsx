@@ -132,11 +132,11 @@ export default function ServicePreviewModal({
           </Button>
           <Button
             variant="primary"
-            onClick={onConfirm}
+            onClick={onClose}
             disabled={loading}
             className="flex-1"
           >
-            {loading ? 'Publicando...' : 'Confirmar y publicar'}
+            Confirmar
           </Button>
         </div>
       </div>
