@@ -164,7 +164,7 @@ export default function PaymentSuccessPage() {
               className="flex-1 flex items-center justify-center gap-2"
             >
               <FileText size={16} />
-              Ver Mis Solicitudes
+              Ver Mis solicitudes
             </Button>
             <Button
               variant="cancel"

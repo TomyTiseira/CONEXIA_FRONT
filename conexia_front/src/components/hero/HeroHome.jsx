@@ -18,7 +18,7 @@ export default function HeroHome() {
   const features = [
     { 
       icon: Users, 
-      title: "Red Profesional", 
+      title: "Red profesional", 
       desc: "Conecta con talento verificado",
       emoji: "👥",
       color: "from-blue-400 to-blue-600",
@@ -26,7 +26,7 @@ export default function HeroHome() {
     },
     { 
       icon: Briefcase, 
-      title: "Servicios y Proyectos", 
+      title: "Servicios y proyectos", 
       desc: "Encuentra oportunidades laborales",
       emoji: "💼",
       color: "from-purple-400 to-purple-600",
@@ -34,7 +34,7 @@ export default function HeroHome() {
     },
     { 
       icon: TrendingUp, 
-      title: "Crece Profesionalmente", 
+      title: "Crece profesionalmente", 
       desc: "Desarrolla tu carrera",
       emoji: "📈",
       color: "from-green-400 to-green-600",
@@ -42,7 +42,7 @@ export default function HeroHome() {
     },
     { 
       icon: Shield, 
-      title: "Pagos Seguros", 
+      title: "Pagos seguros", 
       desc: "Transacciones protegidas",
       emoji: "🛡️",
       color: "from-amber-400 to-amber-600",
