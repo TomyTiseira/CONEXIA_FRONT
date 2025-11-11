@@ -11,7 +11,7 @@ export const DashboardHeader = ({ title, subtitle, timestamp }) => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mb-8 relative"
+      className="mb-2 relative"
     >
       {/* Fondo decorativo con gradiente Conexia */}
       <div className="absolute -left-4 -top-2 w-1 h-24 bg-gradient-to-b from-[#48a6a7] via-[#35ba5b] to-transparent rounded-full" />
@@ -57,7 +57,7 @@ export const DashboardHeader = ({ title, subtitle, timestamp }) => {
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ delay: 0.3, duration: 0.6 }}
-        className="mt-6 h-1 bg-gradient-to-r from-[#48a6a7] via-[#35ba5b] to-transparent rounded-full origin-left"
+        className="mt-4 h-1 bg-gradient-to-r from-[#48a6a7] via-[#35ba5b] to-transparent rounded-full origin-left"
       />
     </motion.div>
   );

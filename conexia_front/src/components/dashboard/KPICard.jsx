@@ -80,6 +80,7 @@ export const KPICard = ({
         relative overflow-hidden rounded-xl border-2 ${colors.border}
         bg-white shadow-lg ${colors.hover}
         transition-all duration-300 p-6
+        h-full min-h-[180px] flex flex-col
       `}
       role="article"
       aria-label={`${title}: ${value}`}
