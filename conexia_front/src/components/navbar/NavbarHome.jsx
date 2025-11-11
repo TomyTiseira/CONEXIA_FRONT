@@ -36,7 +36,7 @@ export default function NavbarHome() {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="px-5 py-2 bg-gray-100 text-conexia-green font-semibold hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-5 py-2 bg-gray-200 text-conexia-green font-semibold hover:bg-gray-300 rounded-lg transition-colors"
             >
               Iniciar sesión
             </Link>
@@ -57,7 +57,7 @@ export default function NavbarHome() {
             <li className="pt-3">
               <Link
                 href="/login"
-                className="block px-4 py-2.5 text-center bg-gray-100 text-conexia-green font-semibold hover:bg-gray-200 rounded-lg transition-colors"
+                className="block px-4 py-2.5 text-center bg-gray-200 text-conexia-green font-semibold hover:bg-gray-300 rounded-lg transition-colors"
                 onClick={() => setOpen(false)}
               >
                 Iniciar sesión
