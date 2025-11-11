@@ -13,6 +13,7 @@ import {
   Briefcase,
   Layers,
   ChevronDown,
+  BarChart3,
 } from 'lucide-react';
 import { HiUserGroup } from 'react-icons/hi';
 import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
@@ -127,6 +128,7 @@ export default function NavbarCommunity() {
     { label: 'Servicios', href: '/services', icon: Briefcase },
     { label: 'Proyectos', href: "/project/search", icon: Layers },
     { label: 'Conexiones', href: '/connections', icon: HiUserGroup, showDot: connectionRequestsCount > 0 },
+    { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   ];
 
   return (

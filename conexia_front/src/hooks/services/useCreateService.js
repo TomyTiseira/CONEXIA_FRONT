@@ -31,8 +31,14 @@ export function useCreateService() {
       const result = await createService(formData);
       return result;
     } catch (err) {
-      setError(err.message || 'Error al publicar el servicio');
-      throw err;
+      // Crear un objeto de error con información adicional
+      const errorObj = {
+        message: err.message || 'Error al publicar el servicio',
+        statusCode: err.statusCode || null,
+        isLimitExceeded: err.statusCode === 403 || err.message?.includes('límite'),
+      };
+      setError(errorObj);
+      throw errorObj;
     } finally {
       setLoading(false);
     }

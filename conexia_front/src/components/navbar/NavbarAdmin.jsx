@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Users,
   CreditCard,
+  BarChart3,
 } from 'lucide-react';
 import DropdownInternalUserMenu from '@/components/navbar/DropdownInternalUserMenu';
 import { config } from '@/config';
@@ -43,6 +44,7 @@ export default function NavbarAdmin() {
 
   const navItems = [
   { label: 'Inicio', href: '/', icon: Home },
+  { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { label: 'Servicios', href: '/services', icon: Briefcase },
   { label: 'Proyectos', href: '/project/search', icon: Layers },
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },

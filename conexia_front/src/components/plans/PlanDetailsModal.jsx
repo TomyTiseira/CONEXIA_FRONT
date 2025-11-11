@@ -3,6 +3,7 @@
 import React from 'react';
 import { FiX, FiCheck, FiStar } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
+import { isBenefitActive, formatBenefitValue } from '@/utils/planFormatters';
 
 /**
  * Modal para mostrar detalles completos de un plan
@@ -23,14 +24,9 @@ export default function PlanDetailsModal({
     ? parseFloat(plan.monthlyPrice)
     : parseFloat(plan.annualPrice);
 
-  // Agrupar beneficios por tipo
-  const activeBenefits = plan.benefits?.filter(b => 
-    b.value === true || (typeof b.value === 'number' && b.value > 0)
-  ) || [];
-  
-  const inactiveBenefits = plan.benefits?.filter(b => 
-    b.value === false || (typeof b.value === 'number' && b.value === 0)
-  ) || [];
+  // Agrupar beneficios por tipo usando la función helper
+  const activeBenefits = plan.benefits?.filter(b => isBenefitActive(b.value)) || [];
+  const inactiveBenefits = plan.benefits?.filter(b => !isBenefitActive(b.value)) || [];
 
   return (
     <div 
@@ -113,6 +109,9 @@ export default function PlanDetailsModal({
               <div className="space-y-3">
                 {activeBenefits.map((benefit, index) => {
                   const isNumeric = typeof benefit.value === 'number';
+                  const isString = typeof benefit.value === 'string';
+                  const formattedValue = isString ? formatBenefitValue(benefit.key, benefit.value) : null;
+                  
                   return (
                     <div 
                       key={index}
@@ -127,6 +126,11 @@ export default function PlanDetailsModal({
                           {isNumeric && benefit.value > 0 && (
                             <span className="ml-2 px-2 py-0.5 bg-conexia-green text-white text-xs font-bold rounded-full">
                               {benefit.value}
+                            </span>
+                          )}
+                          {isString && formattedValue && (
+                            <span className="ml-2 px-2 py-0.5 bg-conexia-green text-white text-xs font-bold rounded-full">
+                              {formattedValue}
                             </span>
                           )}
                         </p>

@@ -3,6 +3,7 @@
 import React from 'react';
 import Button from '@/components/ui/Button';
 import { FiCheck, FiX, FiStar } from 'react-icons/fi';
+import { isBenefitActive, formatBenefitValue } from '@/utils/planFormatters';
 
 /**
  * Componente de tarjeta para mostrar un plan de suscripción
@@ -87,8 +88,10 @@ export default function PlanCard({
       {/* Beneficios */}
       <div className="space-y-3 mb-6 flex-grow">
         {plan.benefits && plan.benefits.map((benefit, index) => {
-          const isActive = benefit.value === true || (typeof benefit.value === 'number' && benefit.value > 0);
+          const isActive = isBenefitActive(benefit.value);
           const isNumeric = typeof benefit.value === 'number';
+          const isString = typeof benefit.value === 'string';
+          const formattedValue = isString ? formatBenefitValue(benefit.key, benefit.value) : null;
           
           return (
             <div 
@@ -116,6 +119,11 @@ export default function PlanCard({
                 {isNumeric && benefit.value > 0 && (
                   <span className="ml-1 font-bold text-conexia-green">
                     ({benefit.value})
+                  </span>
+                )}
+                {isString && formattedValue && (
+                  <span className="ml-1 font-bold text-conexia-green">
+                    ({formattedValue})
                   </span>
                 )}
               </span>

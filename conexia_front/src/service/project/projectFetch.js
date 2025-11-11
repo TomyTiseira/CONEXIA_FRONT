@@ -47,7 +47,10 @@ export async function createProject(formData) {
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(json?.message || 'Error al crear el proyecto');
+    const error = new Error(json?.message || 'Error al crear el proyecto');
+    error.statusCode = res.status;
+    error.status = json?.status;
+    throw error;
   }
 
   return json;

@@ -93,7 +93,7 @@ export default function PaymentPendingPage() {
               className="flex-1 flex items-center justify-center gap-2"
             >
               <RefreshCw size={16} />
-              Verificar Ahora
+              Verificar ahora
             </Button>
             <Button
               variant="cancel"
@@ -101,7 +101,7 @@ export default function PaymentPendingPage() {
               className="flex-1 flex items-center justify-center gap-2"
             >
               <FileText size={16} />
-              Ver Mis Solicitudes
+              Ver Mis solicitudes
             </Button>
           </div>
 
@@ -113,7 +113,7 @@ export default function PaymentPendingPage() {
               className="w-full flex items-center justify-center gap-2"
             >
               <ArrowLeft size={16} />
-              Volver a Servicios
+              Volver a servicios
             </Button>
           </div>
 

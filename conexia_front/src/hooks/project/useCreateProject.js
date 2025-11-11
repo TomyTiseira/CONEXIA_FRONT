@@ -53,12 +53,18 @@ export function useCreateProject() {
 
       await createProject(formData);
     } catch (err) {
-      setError(err.message || 'Error al publicar el proyecto');
-      throw err;
+      // Crear un objeto de error con información adicional
+      const errorObj = {
+        message: err.message || 'Error al publicar el proyecto',
+        statusCode: err.statusCode || null,
+        isLimitExceeded: err.statusCode === 403 || err.message?.includes('límite'),
+      };
+      setError(errorObj);
+      throw errorObj;
     } finally {
       setLoading(false);
     }
   };
 
-  return { publishProject, loading, error };
+  return { publishProject, loading, error };
 }

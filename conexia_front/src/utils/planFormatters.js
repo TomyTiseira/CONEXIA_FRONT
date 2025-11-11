@@ -168,3 +168,69 @@ export const formatPaymentMethodType = (type) => {
   
   return typeNames[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
+
+/**
+ * Formatea valores de beneficios tipo enum a texto legible
+ * @param {string} key - Clave del beneficio
+ * @param {*} value - Valor del beneficio (puede ser string, number, boolean)
+ * @returns {string} - Valor formateado
+ */
+export const formatBenefitValue = (key, value) => {
+  // Si es boolean o number, no hay que formatear el display especial aquí
+  if (typeof value === 'boolean' || typeof value === 'number') {
+    return null; // Se maneja directamente en los componentes
+  }
+
+  // Para valores tipo string (enums)
+  if (typeof value === 'string') {
+    // Mapeo específico para search_visibility
+    if (key === 'search_visibility') {
+      const visibilityMap = {
+        'estandar': 'Estándar',
+        'alta': 'Alta',
+        'prioridad_maxima': 'Prioridad Máxima'
+      };
+      return visibilityMap[value] || value.replace(/_/g, ' ');
+    }
+
+    // Mapeo genérico para otros enums
+    if (key === 'metrics_access') {
+      const metricsMap = {
+        'basico': 'Básico',
+        'avanzado': 'Avanzado',
+        'completo': 'Completo'
+      };
+      return metricsMap[value] || value.replace(/_/g, ' ');
+    }
+
+    // Por defecto, reemplazar guiones bajos y capitalizar
+    return value.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  return value;
+};
+
+/**
+ * Determina si un beneficio está activo/disponible
+ * @param {*} value - Valor del beneficio
+ * @returns {boolean} - true si el beneficio está activo
+ */
+export const isBenefitActive = (value) => {
+  // Boolean true = activo
+  if (typeof value === 'boolean') {
+    return value === true;
+  }
+  
+  // Number > 0 = activo
+  if (typeof value === 'number') {
+    return value > 0;
+  }
+  
+  // String no vacío = activo (para enums)
+  if (typeof value === 'string') {
+    return value.trim().length > 0;
+  }
+  
+  // Por defecto inactivo
+  return false;
+};

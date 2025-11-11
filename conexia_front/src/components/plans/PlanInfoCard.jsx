@@ -12,7 +12,9 @@ import PaymentMethodCard from './PaymentMethodCard';
 import { 
   formatMemberSince, 
   formatCurrency, 
-  formatPaymentDate 
+  formatPaymentDate,
+  isBenefitActive,
+  formatBenefitValue
 } from '@/utils/planFormatters';
 
 /**
@@ -141,15 +143,34 @@ export default function PlanInfoCard({ className = '' }) {
               Beneficios incluidos
             </h3>
             <ul className="space-y-2">
-              {plan.benefits.map((benefit, index) => (
-                <li 
-                  key={benefit.id || benefit.key || index}
-                  className="flex items-start gap-3 text-gray-700"
-                >
-                  <FiCheckCircle className="w-5 h-5 text-conexia-green flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">{benefit.name || benefit.description || benefit.key}</span>
-                </li>
-              ))}
+              {plan.benefits.map((benefit, index) => {
+                const isActive = isBenefitActive(benefit.value);
+                const isNumeric = typeof benefit.value === 'number';
+                const isString = typeof benefit.value === 'string';
+                const formattedValue = isString ? formatBenefitValue(benefit.key, benefit.value) : null;
+                
+                return (
+                  <li 
+                    key={benefit.id || benefit.key || index}
+                    className="flex items-start gap-3 text-gray-700"
+                  >
+                    <FiCheckCircle className="w-5 h-5 text-conexia-green flex-shrink-0 mt-0.5" />
+                    <span className="text-sm">
+                      {benefit.name || benefit.description || benefit.key}
+                      {isNumeric && benefit.value > 0 && (
+                        <span className="ml-2 px-2 py-0.5 bg-conexia-green text-white text-xs font-bold rounded-full">
+                          {benefit.value}
+                        </span>
+                      )}
+                      {isString && formattedValue && (
+                        <span className="ml-2 px-2 py-0.5 bg-conexia-green text-white text-xs font-bold rounded-full">
+                          {formattedValue}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

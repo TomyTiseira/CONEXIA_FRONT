@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { FiArrowRight, FiCheck } from 'react-icons/fi';
 import { useUserPlan } from '@/hooks/memberships';
+import { usePlans } from '@/hooks/plans';
 
 /**
  * Banner de comparación de planes
@@ -16,7 +17,10 @@ export default function PlanComparisonBanner({
   context = 'general',
   className = '' 
 }) {
-  const { data, isLoading } = useUserPlan();
+  const { data, isLoading: userPlanLoading } = useUserPlan();
+  const { plans, loading: plansLoading } = usePlans();
+
+  const isLoading = userPlanLoading || plansLoading;
 
   if (isLoading) {
     return (
@@ -29,6 +33,38 @@ export default function PlanComparisonBanner({
 
   const planName = data?.plan?.name || 'Free';
   const isFreePlan = data?.isFreePlan ?? true;
+  
+  // Obtener el plan siguiente (Basic si es Free, Premium si es Basic)
+  const targetPlanName = planName === 'Free' ? 'Basic' : 'Premium';
+  const targetPlan = plans.find(p => p.name === targetPlanName);
+  
+  // Helper para obtener beneficios específicos del plan
+  const getPlanBenefits = (plan) => {
+    if (!plan?.benefits) return [];
+    
+    const benefitNames = {
+      publish_services: 'Publicar servicios digitales',
+      publish_projects: 'Publicar proyectos colaborativos',
+      verified_reviews: 'Sistema de reseñas verificadas',
+      search_visibility: 'Visibilidad en búsquedas',
+      priority_support: 'Soporte prioritario',
+      public_profile: 'Perfil público profesional'
+    };
+    
+    return plan.benefits
+      .filter(b => b.value !== false && b.value !== 0)
+      .map(b => {
+        const name = benefitNames[b.key] || b.name;
+        const value = b.value;
+        
+        // Formatear el valor
+        if (value === true) return name;
+        if (value === -1 || value === '-1') return `${name}: Ilimitado`;
+        if (typeof value === 'number') return `${name}: ${value}`;
+        return `${name}: ${value}`;
+      })
+      .slice(0, 3); // Mostrar máximo 3 beneficios
+  };
 
   // Mensajes personalizados según el contexto
   const messages = {
@@ -75,8 +111,13 @@ export default function PlanComparisonBanner({
     return null;
   }
 
+  // Obtener beneficios reales del plan objetivo
+  const targetBenefits = targetPlan ? getPlanBenefits(targetPlan) : [];
+  
   const message = messages[context]?.[planName] || messages.general[planName];
-  const targetPlan = planName === 'Free' ? 'Basic' : 'Premium';
+  
+  // Usar los beneficios reales si están disponibles, si no, usar los hardcodeados
+  const displayBenefits = targetBenefits.length > 0 ? targetBenefits : message.benefits;
 
   // Configuración del icono y badge del plan actual
   const planBadge = {
@@ -119,7 +160,7 @@ export default function PlanComparisonBanner({
             {message.description}
           </p>
           <ul className="space-y-1">
-            {message.benefits.map((benefit, idx) => (
+            {displayBenefits.map((benefit, idx) => (
               <li key={idx} className={`
                 flex items-center gap-2 text-sm
                 ${planName === 'Free' ? 'text-blue-800' : 'text-amber-800'}
