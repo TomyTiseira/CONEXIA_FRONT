@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreateService, useServiceCategories } from '@/hooks/services';
+import { useSubscriptionLimits } from '@/hooks/memberships';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
 import Button from '@/components/ui/Button';
@@ -10,6 +11,7 @@ import RequireVerification from '@/components/common/RequireVerification';
 import ImageUploadZone from '@/components/services/ImageUploadZone';
 import ImageCarousel from '@/components/services/ImageCarousel';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
+import LimitReachedModal from '@/components/common/LimitReachedModal';
 import { validateImageFiles } from '@/utils/imageValidation';
 import { getTimeUnitOptions } from '@/utils/timeUnit';
 
@@ -17,6 +19,15 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
   const router = useRouter();
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useServiceCategories();
   const { publishService, loading } = useCreateService();
+  
+  // Estados para control de límites
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const { 
+    servicesLimit, 
+    validateCanPublishService, 
+    planName,
+    isLoading: limitsLoading 
+  } = useSubscriptionLimits();
 
   const [form, setForm] = useState({
     title: '',
@@ -175,6 +186,14 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
     if (!isValid) return;
 
     try {
+      // Validación preventiva de límites
+      const validation = await validateCanPublishService();
+      if (!validation.canPublish) {
+        onClosePreview(); // Cerrar modal de preview
+        setShowLimitModal(true); // Mostrar modal de límite
+        return;
+      }
+
       await publishService(form);
       
       // Cerrar modal inmediatamente
@@ -201,6 +220,12 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
     } catch (err) {
       // Cerrar modal inmediatamente
       onClosePreview();
+      
+      // Manejo de error 403 (límite alcanzado)
+      if (err.statusCode === 403 || err.isLimitExceeded) {
+        setShowLimitModal(true);
+        return;
+      }
       
       // Mostrar toast de error usando la función del padre
       if (onShowToast) {
@@ -439,6 +464,16 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
         </div>
 
       </form>
+
+      {/* Modal de límite alcanzado */}
+      <LimitReachedModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        type="service"
+        current={servicesLimit.current}
+        limit={servicesLimit.limit}
+        planName={planName}
+      />
 
     </div>
   );
