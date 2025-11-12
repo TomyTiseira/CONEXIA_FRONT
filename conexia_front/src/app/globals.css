@@ -6,6 +6,91 @@
 /* stylelint-enable at-rule-no-unknown */
 
 /* ========================================
+   Swapy Dashboard Drag & Drop Styles
+   ======================================== */
+
+/* Estilos base para slots - Sin fondo visible, bordes redondeados */
+[data-swapy-slot] {
+  position: relative;
+  min-height: 100px;
+  background: transparent !important;
+  border-radius: 16px !important;
+  overflow: visible !important;
+}
+
+/* Estilos para items arrastrables - Sin transición mientras se arrastra */
+[data-swapy-item] {
+  cursor: grab;
+  transition: none;
+  user-select: none;
+  touch-action: none;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  background: transparent !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  transform-origin: center center;
+}
+
+[data-swapy-item]:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+[data-swapy-item]:active {
+  cursor: grabbing;
+}
+
+/* Mientras se arrastra - Respuesta inmediata sin transición */
+.swapy-item.is-dragging,
+[data-swapy-item].is-dragging {
+  opacity: 0.92 !important;
+  transform: scale(1.01) !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2), 
+              0 0 0 1px rgba(72, 166, 167, 0.15) !important;
+  cursor: grabbing !important;
+  z-index: 9999 !important;
+  transition: none !important;
+  border-radius: 16px !important;
+  transform-origin: center center !important;
+}
+
+/* Slot objetivo cuando se arrastra encima - Muy sutil y redondeado */
+[data-swapy-slot].swapy-highlighted {
+  background: rgba(72, 166, 167, 0.03) !important;
+  border-radius: 16px !important;
+  border: 2px dashed rgba(72, 166, 167, 0.25);
+  animation: slotPulse 2s ease-in-out infinite;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slotPulse {
+  0%, 100% { 
+    background: rgba(72, 166, 167, 0.03) !important;
+    border-color: rgba(72, 166, 167, 0.25);
+    transform: scale(1);
+  }
+  50% { 
+    background: rgba(53, 186, 91, 0.05) !important;
+    border-color: rgba(53, 186, 91, 0.3);
+    transform: scale(1.003);
+  }
+}
+
+/* Animación ultra suave al soltar - Misma velocidad que el arrastre */
+.swapy-item.is-dropping,
+[data-swapy-item].is-dropping {
+  animation: none !important;
+  transition: transform 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+              opacity 0.8s ease !important;
+  border-radius: 16px !important;
+  transform-origin: center center !important;
+  transform: scale(1) !important;
+  opacity: 1 !important;
+}
+
+/* ========================================
    Plan Styles (Free, Basic, Premium)
    ======================================== */
 

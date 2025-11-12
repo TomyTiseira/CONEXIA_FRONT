@@ -11,6 +11,7 @@ import ImageZoomModal from '@/components/services/ImageZoomModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Toast from '@/components/ui/Toast';
 import Navbar from '@/components/navbar/Navbar';
+import SubscriptionLimitsIndicator from '@/components/common/SubscriptionLimitsIndicator';
 import { ArrowLeft } from 'lucide-react';
 
 export default function CreateServicePage() {
@@ -96,28 +97,34 @@ export default function CreateServicePage() {
 
         {/* Contenedor para centrar el formulario */}
         <div className="flex-1 flex items-center justify-center relative z-10 pt-8 md:pt-24 pb-8">
-          <section className="w-full max-w-3xl bg-white/90 border border-conexia-green/30 rounded-xl shadow-lg px-6 py-10 flex flex-col animate-fadeIn backdrop-blur-sm">
-            <div className="mb-8 text-center">
-              <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight leading-tight">
-                Publica tu servicio
-              </h1>
-              <p className="text-conexia-green-dark mt-2 text-base md:text-lg">
-                Ofrece tus habilidades a la comunidad
-              </p>
-            </div>
-            <div className="w-full flex-1 flex flex-col justify-center">
-              <CreateServiceForm 
-                onShowPreview={handleShowPreview}
-                onClosePreview={handleClosePreview}
-                onShowImageZoom={handleShowImageZoom}
-                showPreview={showPreview}
-                onConfirmPublish={confirmPublishRef}
-                onShowToast={handleShowToast}
-                onShowClearConfirm={handleShowClearConfirm}
-                onConfirmClear={confirmClearRef}
-              />
-            </div>
-          </section>
+          <div className="w-full max-w-4xl px-4 flex flex-col gap-6">
+            {/* Indicador de límites - Arriba */}
+            <SubscriptionLimitsIndicator showOnly="services" />
+
+            {/* Formulario principal */}
+            <section className="w-full bg-white/90 border border-conexia-green/30 rounded-xl shadow-lg px-6 py-10 flex flex-col animate-fadeIn backdrop-blur-sm">
+              <div className="mb-8 text-center">
+                <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight leading-tight">
+                  Publica tu servicio
+                </h1>
+                <p className="text-conexia-green-dark mt-2 text-base md:text-lg">
+                  Ofrece tus habilidades a la comunidad
+                </p>
+              </div>
+              <div className="w-full flex-1 flex flex-col justify-center">
+                <CreateServiceForm 
+                  onShowPreview={handleShowPreview}
+                  onClosePreview={handleClosePreview}
+                  onShowImageZoom={handleShowImageZoom}
+                  showPreview={showPreview}
+                  onConfirmPublish={confirmPublishRef}
+                  onShowToast={handleShowToast}
+                  onShowClearConfirm={handleShowClearConfirm}
+                  onConfirmClear={confirmClearRef}
+                />
+              </div>
+            </section>
+          </div>
         </div>
       </div>
       

@@ -90,7 +90,7 @@ export default function LoginForm() {
             </label>
             <input
               type="email"
-              placeholder="Correo electrónico"
+              placeholder="user@gmail.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}

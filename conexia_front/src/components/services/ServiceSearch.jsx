@@ -133,7 +133,7 @@ export default function ServiceSearch() {
                   className="bg-[#367d7d] text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-[#2b6a6a] transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full sm:w-auto order-2 sm:order-none"
                 >
                   <FileText size={16} />
-                  <span>Mis Solicitudes</span>
+                  <span>Mis solicitudes</span>
                 </button>
               )}
             </div>

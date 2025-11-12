@@ -58,10 +58,10 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
 
   const sortOptions = [
     { value: '', label: 'Predeterminado' },
-    { value: 'price_asc', label: 'Precio: Menor a Mayor' },
-    { value: 'price_desc', label: 'Precio: Mayor a Menor' },
-    { value: 'newest', label: 'Más Recientes' },
-    { value: 'oldest', label: 'Más Antiguos' }
+    { value: 'price_asc', label: 'Precio: Menor a mayor' },
+    { value: 'price_desc', label: 'Precio: Mayor a menor' },
+    { value: 'newest', label: 'Más recientes' },
+    { value: 'oldest', label: 'Más antiguos' }
   ];
 
   const handleFilterChange = (key, value) => {

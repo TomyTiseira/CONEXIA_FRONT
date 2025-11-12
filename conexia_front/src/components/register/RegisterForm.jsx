@@ -116,7 +116,7 @@ export default function RegisterForm() {
             </label>
             <InputField
               type="email"
-              placeholder="Correo electrónico"
+              placeholder="user@gmail.com"
               value={form.email}
               onChange={(e) => handleChange("email", e.target.value)}
               onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}

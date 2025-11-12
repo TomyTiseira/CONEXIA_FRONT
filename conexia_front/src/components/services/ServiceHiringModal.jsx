@@ -236,7 +236,7 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
               }}
               className="flex-1"
             >
-              Ver Mis Solicitudes
+              Ver Mis solicitudes
             </Button>
           </div>
         </div>

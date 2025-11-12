@@ -284,7 +284,7 @@ export default function MyServiceHiringsPage() {
             >
               <ArrowLeft size={24} className="text-conexia-green" />
             </button>
-            <h1 className="text-3xl font-bold text-conexia-green">Mis Solicitudes</h1>
+            <h1 className="text-3xl font-bold text-conexia-green">Mis solicitudes</h1>
           </div>
 
           {/* Filtros */}
