@@ -13,7 +13,7 @@ import ReviewReportModal from './ReviewReportModal';
 import ResponseDeleteModal from './ResponseDeleteModal';
 import Toast from '@/components/ui/Toast';
 
-export default function ServiceReviewsSection({ serviceId }) {
+export default function ServiceReviewsSection({ serviceId, isOwner = false }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { roleName } = useUserStore();
@@ -425,13 +425,37 @@ export default function ServiceReviewsSection({ serviceId }) {
   }
 
   if (!reviewsData || reviewsData.total === 0) {
+    // Mensajes personalizados según el rol del usuario
+    const getEmptyMessage = () => {
+      if (isOwner) {
+        return {
+          main: "Aún no hay reseñas de tu servicio",
+          sub: null
+        };
+      } else if (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
+        return {
+          main: "Aún no hay reseñas para este servicio",
+          sub: null
+        };
+      } else {
+        return {
+          main: "Aún no hay reseñas para este servicio",
+          sub: "Sé el primero en dejar tu opinión"
+        };
+      }
+    };
+
+    const emptyMessage = getEmptyMessage();
+
     return (
       <>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Reseñas del Servicio</h2>
         <div className="text-center py-8 bg-gray-50 rounded-lg">
           <Star size={48} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500">Aún no hay reseñas para este servicio</p>
-          <p className="text-sm text-gray-400 mt-2">Sé el primero en dejar tu opinión</p>
+          <p className="text-gray-500">{emptyMessage.main}</p>
+          {emptyMessage.sub && (
+            <p className="text-sm text-gray-400 mt-2">{emptyMessage.sub}</p>
+          )}
         </div>
       </>
     );
@@ -439,7 +463,8 @@ export default function ServiceReviewsSection({ serviceId }) {
 
   const { reviews, total, averageRating, ratingDistribution } = reviewsData;
 
-  // Verificar si el usuario puede reportar (no puede si es admin o moderador)
+  // Verificar si el usuario puede reportar (puede si es USER, incluyendo dueños de servicio)
+  // Admin y moderador no pueden reportar
   const canReport = roleName === ROLES.USER;
   
   // Verificar si el usuario puede ver la reseña reportada (solo ADMIN o MODERATOR)
@@ -742,7 +767,7 @@ export default function ServiceReviewsSection({ serviceId }) {
                           </button>
                         </>
                       ) : review.isServiceOwner ? (
-                        // Opciones para el dueño del servicio (solo responder, no puede reportar su propia reseña)
+                        // Opciones para el dueño del servicio (puede responder y reportar)
                         <>
                           {!review.ownerResponse && (
                             <button
@@ -750,9 +775,16 @@ export default function ServiceReviewsSection({ serviceId }) {
                               className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green"
                             >
                               <Edit2 size={16} />
-                              <span>Responder</span>
+                              <span>Responder reseña</span>
                             </button>
                           )}
+                          <button
+                            onClick={() => handleReportReview(review)}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
+                          >
+                            <Flag size={16} />
+                            <span>Reportar reseña</span>
+                          </button>
                         </>
                       ) : (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) ? (
                         // Opciones para admin/moderador

@@ -499,7 +499,8 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
 
   const { total = 0, averageRating = 0, ratingDistribution = {} } = summaryData || initialData || {};
 
-  // Verificar si el usuario puede reportar (no puede si es admin o moderador)
+  // Verificar si el usuario puede reportar (puede si es USER, incluyendo dueños de servicio)
+  // Admin y moderador no pueden reportar
   const canReport = roleName === ROLES.USER;
 
   const modalContent = (
@@ -704,7 +705,7 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                   </button>
                                 </>
                               ) : review.isServiceOwner ? (
-                                // Opciones para el dueño del servicio (solo responder, no puede reportar su propia reseña)
+                                // Opciones para el dueño del servicio (puede responder y reportar)
                                 <>
                                   {!review.ownerResponse && (
                                     <button
@@ -712,9 +713,16 @@ export default function AllReviewsModal({ serviceId, isOpen, onClose, initialDat
                                       className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-conexia-green"
                                     >
                                       <Edit2 size={16} />
-                                      <span>Responder</span>
+                                      <span>Responder reseña</span>
                                     </button>
                                   )}
+                                  <button
+                                    onClick={() => handleReportReview(review)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-orange-600"
+                                  >
+                                    <Flag size={16} />
+                                    <span>Reportar reseña</span>
+                                  </button>
                                 </>
                               ) : (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) ? (
                                 // Opciones para admin/moderador

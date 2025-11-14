@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import { fetchReviewReports } from '@/service/reports/reviewReportsFetch';
 import Pagination from '@/components/common/Pagination';
@@ -17,7 +18,11 @@ export default function ReviewReportsList() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [toast, setToast] = useState(null);
-  // Removed delete action for reviews in reports view per request
+
+  // Obtener parámetros de retorno desde la URL
+  const returnFilter = searchParams?.get('filter') || 'reviews';
+  const returnOrder = searchParams?.get('order') || 'reportCount';
+  const returnPage = searchParams?.get('returnPage') || '1';
 
   // Get review ID from URL
   useEffect(() => {
@@ -40,9 +45,10 @@ export default function ReviewReportsList() {
         const reportsData = response.data?.reports || [];
         setReports(reportsData);
         setPagination(response.data?.pagination || null);
-        // Guardar datos de la reseña del primer reporte (todos tienen la misma reseña)
-        if (reportsData.length > 0 && reportsData[0].userReview) {
-          setReviewData(reportsData[0].userReview);
+        // Guardar datos de la reseña - puede venir en el primer reporte o directamente en response.data
+        const reviewInfo = response.data?.userReview || (reportsData.length > 0 ? reportsData[0].userReview : null);
+        if (reviewInfo) {
+          setReviewData(reviewInfo);
         }
       })
       .catch(err => {
@@ -89,58 +95,52 @@ export default function ReviewReportsList() {
     return labels[reason] || reason;
   };
 
+  const handleViewReview = () => {
+    // El endpoint devuelve reviewedUserId directamente en cada reporte
+    let profileId = null;
+    
+    if (reports.length > 0) {
+      // Usar reviewedUserId del primer reporte (todos tienen el mismo reviewedUserId)
+      profileId = reports[0].reviewedUserId;
+    }
+    
+    if (profileId) {
+      // Pasar parámetros para que el botón volver sea dinámico
+      router.push(`/profile/${profileId}/reviews?highlightReviewId=${reviewId}&from=reports&returnFilter=${returnFilter}&returnOrder=${returnOrder}&returnPage=${returnPage}`);
+    } else {
+      setToast({ type: 'warning', message: 'No se pudo determinar el perfil del usuario.' });
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto pt-8 pb-24">
       <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative mb-6 mx-4 md:mx-0">
-        <h2 className="text-2xl font-bold text-conexia-green text-center">Reportes de Reseñas</h2>
+        <h2 className="text-2xl font-bold text-conexia-green text-center">Reportes de la Reseña de Usuario</h2>
+        {/* Botón en desktop a la derecha */}
+        <div className="hidden sm:block absolute right-6 top-1/2 -translate-y-1/2">
+          <Button
+            variant="add"
+            className="px-4 py-2 text-sm"
+            onClick={handleViewReview}
+            disabled={loading || reports.length === 0}
+          >
+            Ver reseña en perfil
+          </Button>
+        </div>
+        {/* Botón en mobile abajo */}
+        <div className="sm:hidden mt-4 flex justify-center">
+          <Button
+            variant="add"
+            className="px-4 py-2 text-sm"
+            onClick={handleViewReview}
+            disabled={loading || reports.length === 0}
+          >
+            Ver reseña en perfil
+          </Button>
+        </div>
       </div>
 
-      {!reviewId ? (
-        <div className="bg-white rounded-xl shadow-sm mx-4 md:mx-0 p-8">
-          <p className="text-center text-gray-500">
-            No se especificó una reseña para ver los reportes.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative mb-6 mx-4 md:mx-0">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Reseña ID: {reviewId}
-                </h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Total de reportes: {pagination?.total || reports.length}
-                </p>
-                {reviewData && (
-                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-xs text-gray-500 mb-1">Mensaje de la reseña:</p>
-                    <p className="text-sm text-gray-800 italic line-clamp-3">
-                      &quot;{reviewData.description || reviewData.comment || 'Sin mensaje'}&quot;
-                    </p>
-                    <div className="mt-3 flex items-center gap-3">
-                      <button
-                        onClick={() => {
-                          // Navegar al listado de reseñas del usuario y resaltar esta reseña
-                          const profileId = reviewData.reviewedUser?.id || reviewData.reviewedProfileId || reviewData.reviewedUserId;
-                          if (profileId) {
-                            router.push(`/profile/${profileId}/reviews?highlightReviewId=${reviewId}`);
-                          } else {
-                            setToast({ type: 'warning', message: 'No se pudo determinar el perfil del usuario.' });
-                          }
-                        }}
-                        className="text-sm px-3 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50 text-conexia-green"
-                      >
-                        Ver reseña en perfil
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border p-0 overflow-x-auto mx-4 md:mx-0">
+      <div className="bg-white rounded-xl shadow-sm border p-0 overflow-x-auto mx-4 md:mx-0">
             <table className="min-w-full table-auto text-sm mb-0">
               <colgroup>
                 <col className="w-[160px] md:w-[180px]" />
@@ -172,7 +172,7 @@ export default function ReviewReportsList() {
                     <tr key={`report-${report.id}-${index}`} className="border-b hover:bg-gray-50 h-auto align-top">
                       <td className="p-4 align-top break-words max-w-[180px] text-left">
                         <Link 
-                          href={`/profile/${report.reporterId}`}
+                          href={`/profile/userProfile/${report.reporterId}`}
                           className="text-conexia-green hover:underline font-medium text-sm"
                         >
                           {report.reporter?.name} {report.reporter?.lastName}
@@ -201,7 +201,7 @@ export default function ReviewReportsList() {
                 )}
               </tbody>
             </table>
-            {pagination && pagination.totalPages > 1 && (
+            {pagination && (
               <div className="pt-4 pb-6 flex justify-center">
                 <Pagination
                   page={page}
@@ -215,21 +215,21 @@ export default function ReviewReportsList() {
             )}
           </div>
 
-          <div className="mx-4 md:mx-0 mt-4">
-            <BackButton text="Volver a los reportes" onClick={() => window.location.href = '/reports'} />
-          </div>
-        </>
-      )}
+      <div className="mx-4 md:mx-0 mt-4">
+        <BackButton 
+          text="Volver a los reportes" 
+          onClick={() => router.push(`/reports?filter=${returnFilter}&order=${returnOrder}&page=${returnPage}`)} 
+        />
+      </div>
 
       {toast && (
         <Toast
           type={toast.type}
           message={toast.message}
           onClose={() => setToast(null)}
+          isVisible
         />
       )}
-
-      {/* Delete action removed: no modal shown */}
     </div>
   );
 }

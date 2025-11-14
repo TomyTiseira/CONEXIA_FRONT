@@ -155,7 +155,7 @@ export default function ServiceSearch() {
               <div className="mb-6">
                 {!loading && services.length > 0 && (
                   <p className="text-gray-600 text-sm">
-                    Mostrando {services.length} de {pagination.total} servicio{pagination.total !== 1 ? 's' : ''}
+                    Mostrando {services.length} de {pagination.totalItems} servicio{pagination.totalItems !== 1 ? 's' : ''}
                     {searchFilters.title && ` para "${searchFilters.title}"`}
                   </p>
                 )}
@@ -177,10 +177,10 @@ export default function ServiceSearch() {
               <div className="mt-8 flex justify-center">
                 {!loading && (
                   <Pagination
-                    currentPage={pagination.page || 1}
+                    currentPage={pagination.currentPage || 1}
                     totalPages={pagination.totalPages || 1}
-                    hasNextPage={pagination.hasNext || false}
-                    hasPreviousPage={pagination.hasPrev || false}
+                    hasNextPage={pagination.hasNextPage || false}
+                    hasPreviousPage={pagination.hasPreviousPage || false}
                     onPageChange={handlePageChange}
                   />
                 )}

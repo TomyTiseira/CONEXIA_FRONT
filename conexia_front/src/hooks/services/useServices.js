@@ -7,12 +7,12 @@ import { fetchServices } from '@/service/services/servicesFetch';
 export function useServices() {
   const [services, setServices] = useState([]); // Servicios de la página actual
   const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 12,
-    total: 0,
+    currentPage: 1,
+    itemsPerPage: 12,
+    totalItems: 0,
     totalPages: 1,
-    hasNext: false,
-    hasPrev: false
+    hasNextPage: false,
+    hasPreviousPage: false
   });
   const [filters, setFilters] = useState({
     title: '',
@@ -134,22 +134,22 @@ export function useServices() {
 
         setServices(pageSlice);
         setPagination({
-          page: currentPage,
-          limit: currentLimit,
-          total,
+          currentPage: currentPage,
+          itemsPerPage: currentLimit,
+          totalItems: total,
           totalPages,
-          hasNext: currentPage < totalPages,
-          hasPrev: currentPage > 1,
+          hasNextPage: currentPage < totalPages,
+          hasPreviousPage: currentPage > 1,
         });
       } else {
         // Usar paginación del backend
         const paginationData = response.data?.pagination || response.pagination || {
-          page: searchFilters.page || 1,
-          limit: searchFilters.limit || 12,
-          total: servicesData.length,
+          currentPage: searchFilters.page || 1,
+          itemsPerPage: searchFilters.limit || 12,
+          totalItems: servicesData.length,
           totalPages: Math.ceil(servicesData.length / (searchFilters.limit || 12)),
-          hasNext: false,
-          hasPrev: false
+          hasNextPage: false,
+          hasPreviousPage: false
         };
 
         setServices(servicesData);
@@ -161,12 +161,12 @@ export function useServices() {
       setError(err.message);
       setServices([]);
       setPagination({
-        page: 1,
-        limit: 12,
-        total: 0,
+        currentPage: 1,
+        itemsPerPage: 12,
+        totalItems: 0,
         totalPages: 1,
-        hasNext: false,
-        hasPrev: false
+        hasNextPage: false,
+        hasPreviousPage: false
       });
     } finally {
       loadingRef.current = false;

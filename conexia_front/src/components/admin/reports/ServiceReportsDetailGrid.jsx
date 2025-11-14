@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchServiceReportsDetail } from '@/service/reports/fetchServiceReportsDetail';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/common/Pagination';
@@ -10,6 +11,13 @@ export default function ServiceReportsDetailGrid({ serviceId }) {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Obtener parámetros de retorno desde la URL
+  const returnFilter = searchParams?.get('filter') || 'services';
+  const returnOrder = searchParams?.get('order') || 'reportCount';
+  const returnPage = searchParams?.get('returnPage') || '1';
 
   useEffect(() => {
     setLoading(true);
@@ -113,7 +121,10 @@ export default function ServiceReportsDetailGrid({ serviceId }) {
 
       {/* Botón volver atrás debajo de la tabla */}
       <div className="mx-4 md:mx-0 mt-4">
-        <BackButton text="Volver a los reportes" onClick={() => window.location.href = '/reports?filter=services'} />
+        <BackButton 
+          text="Volver a los reportes" 
+          onClick={() => router.push(`/reports?filter=${returnFilter}&order=${returnOrder}&page=${returnPage}`)} 
+        />
       </div>
     </div>
   );

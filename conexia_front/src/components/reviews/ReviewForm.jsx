@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { createReview, editReview } from '@/service/reviews/reviewsFetch';
 import Button from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
+import InputField from '@/components/form/InputField';
 
 export default function ReviewForm({ initial = null, reviewedUserId, onClose, onSaved }) {
   const [relationship, setRelationship] = useState(initial?.relationship || '');
@@ -44,26 +45,72 @@ export default function ReviewForm({ initial = null, reviewedUserId, onClose, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold mb-4">{initial ? 'Editar reseña' : 'Agregar reseña'}</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block font-medium">Relación <span className="text-sm text-gray-500">(Indique la relación laboral que tuvieron)</span></label>
-            <input value={relationship} onChange={e => setRelationship(e.target.value)} maxLength={30} className="w-full border rounded px-3 py-2" />
-            {errors.relationship && <p className="text-red-500 text-sm mt-1">{errors.relationship}</p>}
-          </div>
-          <div>
-            <label className="block font-medium">Descripción</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full border rounded px-3 py-2 resize-none overflow-y-auto" />
-            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-          </div>
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center overflow-auto">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[95vh] overflow-hidden flex flex-col" style={{ borderRadius: '1rem' }}>
+        {/* Header fijo */}
+        <div className="sticky top-0 z-10 bg-white border-b px-6 py-4 rounded-t-xl">
+          <h2 className="text-xl font-bold text-center text-conexia-green">
+            {initial ? 'Editar reseña' : 'Agregar reseña'}
+          </h2>
+        </div>
 
-          <div className="flex gap-2 justify-end mt-4">
-            <Button variant="outline" type="button" onClick={onClose}>Cancelar</Button>
-            <Button type="submit" disabled={loading}>{loading ? 'Procesando...' : 'Aceptar'}</Button>
-          </div>
-        </form>
+        {/* Contenido scrollable */}
+        <div className="flex-1 overflow-auto px-6 py-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-conexia-green font-semibold mb-2">
+                Relación <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-gray-600 mb-2">Indique la relación laboral que tuvieron</p>
+              <InputField
+                type="text"
+                placeholder="Máximo 30 caracteres"
+                value={relationship}
+                onChange={(e) => setRelationship(e.target.value)}
+                name="relationship"
+                maxLength={30}
+                showCharCount={true}
+                error={errors.relationship}
+              />
+            </div>
+            <div>
+              <label className="block text-conexia-green font-semibold mb-2">
+                Descripción <span className="text-red-500">*</span>
+              </label>
+              <InputField
+                multiline
+                rows={4}
+                placeholder="Describe tu experiencia trabajando con esta persona..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                name="description"
+                maxLength={500}
+                showCharCount={true}
+                error={errors.description}
+              />
+            </div>
+          </form>
+        </div>
+
+        {/* Footer fijo */}
+        <div className="sticky bottom-0 z-10 bg-white border-t px-6 py-4 rounded-b-xl flex justify-end gap-2">
+          <Button 
+            type="button" 
+            variant="primary" 
+            onClick={handleSubmit} 
+            disabled={loading}
+          >
+            {loading ? 'Procesando...' : 'Aceptar'}
+          </Button>
+          <Button
+            type="button"
+            variant="cancel"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+        </div>
 
         {toast && <Toast type={toast.type} message={toast.message} isVisible onClose={() => setToast(null)} position="top-center" />}
       </div>
