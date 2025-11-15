@@ -80,14 +80,16 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
         await loadMercadoPagoSDK();
         
         // Inicializar con configuración de Argentina
+        // ⚠️ CRÍTICO: Incluir siteId para forzar el país (MLA = Argentina)
         const mercadoPago = new window.MercadoPago(config.MERCADOPAGO_PUBLIC_KEY, { 
-          locale: 'es-AR' // Configuración específica para Argentina
+          locale: 'es-AR',  // Configuración específica para Argentina
+          siteId: 'MLA'     // ✅ SOLUCIÓN: Forzar site_id de Argentina
         });
         setMp(mercadoPago);
         setSdkInitialized(true);
         
         console.log('✅ SDK de MercadoPago (CDN v2) inicializado exitosamente');
-        console.log('✅ País: Argentina (locale: es-AR)');
+        console.log('✅ País: Argentina (locale: es-AR, siteId: MLA)');
         console.log('════════════════════════════════════════════════════════');
       } catch (error) {
         console.error('❌ ERROR al inicializar MercadoPago:', error);
