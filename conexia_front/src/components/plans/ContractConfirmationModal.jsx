@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FiX, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { calculateNextRenewalDate, formatDate } from '@/utils/planUtils';
 import CardTokenForm from './CardTokenForm';
+import Toast from '@/components/ui/Toast';
 
 /**
  * Modal de confirmación antes de contratar un plan con formulario de tarjeta
@@ -13,9 +14,11 @@ export default function ContractConfirmationModal({
   billingCycle,
   onConfirm,
   loading = false,
+  backendError = null,
 }) {
   const [cardToken, setCardToken] = useState(null);
   const [cardError, setCardError] = useState(null);
+  const [toast, setToast] = useState(null);
 
   if (!isOpen || !plan) return null;
 
@@ -33,12 +36,21 @@ export default function ContractConfirmationModal({
     maximumFractionDigits: 2,
   });
 
-  const handleTokenGenerated = (token) => {
+  const handleTokenGenerated = async (token) => {
     setCardToken(token);
     setCardError(null);
     
-    // Llamar a onConfirm con el token de la tarjeta
-    onConfirm(plan.id, billingCycle, token);
+    try {
+      // Llamar a onConfirm con el token de la tarjeta
+      await onConfirm(plan.id, billingCycle, token);
+    } catch (error) {
+      // Mostrar error del backend en un toast
+      setToast({
+        type: 'error',
+        message: error?.message || 'Error al procesar la suscripción. Por favor intenta nuevamente.',
+        isVisible: true
+      });
+    }
   };
 
   const handleCardError = (error) => {
@@ -156,6 +168,18 @@ export default function ContractConfirmationModal({
           </button>
         </div>
       </div>
+
+      {/* Toast de notificaciones */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={7000}
+        />
+      )}
     </div>
   );
 }
