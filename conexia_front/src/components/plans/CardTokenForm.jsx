@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { config } from '@/config';
 import { FiCreditCard, FiAlertCircle } from 'react-icons/fi';
+import Toast from '@/components/ui/Toast';
 
 // ✅ Función para cargar el SDK oficial de MercadoPago desde CDN
 const loadMercadoPagoSDK = () => {
@@ -38,6 +39,7 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
   });
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const amount = billingCycle === 'monthly' ? parseFloat(plan.monthlyPrice) : parseFloat(plan.annualPrice);
 
@@ -168,7 +170,17 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
       console.error('❌ ERROR al generar token:', error);
       console.error('Error completo:', error);
       console.error('════════════════════════════════════════════════════════');
-      setErrors({ submit: error.message || 'Error al procesar la tarjeta' });
+      
+      const errorMessage = error.message || 'Error al procesar la tarjeta';
+      setErrors({ submit: errorMessage });
+      
+      // Mostrar toast de error
+      setToast({
+        type: 'error',
+        message: errorMessage,
+        isVisible: true
+      });
+      
       onError?.(error);
     } finally {
       setProcessing(false);
@@ -305,6 +317,18 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
         <p>✓ MercadoPago procesará los pagos de forma segura</p>
         <p>✓ Puedes cancelar la suscripción en cualquier momento</p>
       </div>
+
+      {/* Toast de notificaciones */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={6000}
+        />
+      )}
     </form>
   );
 }
