@@ -26,19 +26,49 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
   useEffect(() => {
     async function initSDK() {
       try {
+        // 🔍 DEBUG: Verificar environment y Public Key
+        console.log('════════════════════════════════════════════════════════');
+        console.log('🔍 DEBUG: Inicialización de MercadoPago SDK');
+        console.log('════════════════════════════════════════════════════════');
+        console.log('📌 NODE_ENV:', process.env.NODE_ENV);
+        console.log('📌 NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY desde process.env:', 
+          process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY?.substring(0, 25) + '...');
+        console.log('📌 Public Key desde config:', config.MERCADOPAGO_PUBLIC_KEY?.substring(0, 25) + '...');
+        console.log('📌 Public Key COMPLETO:', config.MERCADOPAGO_PUBLIC_KEY);
+        console.log('════════════════════════════════════════════════════════');
+        
         if (!config.MERCADOPAGO_PUBLIC_KEY) {
           throw new Error('MercadoPago Public Key no configurada');
         }
         
-        // Usar locale 'es-AR' para asegurar que el token sea compatible con Argentina
+        // Validar que el Public Key NO sea el placeholder de desarrollo
+        if (config.MERCADOPAGO_PUBLIC_KEY.includes('TEST-xxxxxxxx')) {
+          throw new Error('⚠️ CRÍTICO: Usando Public Key de placeholder. Verificar .env.local');
+        }
+        
+        // Validar que sea un Public Key de Argentina (APP_USR- o TEST- pero válido)
+        if (!config.MERCADOPAGO_PUBLIC_KEY.startsWith('APP_USR-') && 
+            !config.MERCADOPAGO_PUBLIC_KEY.startsWith('TEST-')) {
+          throw new Error('⚠️ Public Key inválido. Debe comenzar con APP_USR- o TEST-');
+        }
+        
+        console.log('✅ Public Key validado correctamente');
+        console.log('🌍 Inicializando SDK con locale: es-AR (Argentina)');
+        
+        // ✅ IMPORTANTE: Inicializar SDK con Public Key de Argentina
+        // El Public Key debe obtenerse de: https://www.mercadopago.com.ar/settings/account/credentials
         await loadMercadoPago();
         const mercadoPago = new window.MercadoPago(config.MERCADOPAGO_PUBLIC_KEY, { 
           locale: 'es-AR' // Configuración específica para Argentina
         });
         setMp(mercadoPago);
         setSdkInitialized(true);
+        
+        console.log('✅ SDK de MercadoPago inicializado exitosamente');
+        console.log('════════════════════════════════════════════════════════');
       } catch (error) {
-        console.error('Error al inicializar MercadoPago:', error);
+        console.error('❌ ERROR al inicializar MercadoPago:', error);
+        console.error('Error completo:', error);
         setInitError(error.message);
         onError?.(error);
       }
@@ -79,6 +109,15 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
     if (!validateForm()) return;
     setProcessing(true);
     try {
+      console.log('════════════════════════════════════════════════════════');
+      console.log('🔄 Generando token de tarjeta...');
+      console.log('════════════════════════════════════════════════════════');
+      console.log('📋 Datos de la tarjeta:');
+      console.log('   - Número de tarjeta: ****', formData.cardNumber.slice(-4));
+      console.log('   - Tipo de documento:', formData.identificationType);
+      console.log('   - País esperado: Argentina (MLA)');
+      console.log('   - Public Key usado:', config.MERCADOPAGO_PUBLIC_KEY?.substring(0, 25) + '...');
+      
       // ✅ Crear token de tarjeta con datos válidos para Argentina
       // Este token será enviado al backend que debe usar credenciales del mismo país
       // Tipos de identificación válidos para Argentina: DNI, CI, LE, LC, Otro
@@ -91,10 +130,23 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
         identificationType: formData.identificationType, // Debe ser: DNI, CI, LE, LC o Otro
         identificationNumber: formData.identificationNumber
       });
+      
+      console.log('════════════════════════════════════════════════════════');
+      console.log('✅ TOKEN GENERADO EXITOSAMENTE');
+      console.log('════════════════════════════════════════════════════════');
+      console.log('🎫 Card Token ID:', cardToken.id);
+      console.log('🔍 Token completo:', JSON.stringify(cardToken, null, 2));
+      console.log('⚠️  IMPORTANTE: Verificar que el token tenga site_id = "MLA" (Argentina)');
+      console.log('════════════════════════════════════════════════════════');
+      
       if (!cardToken || !cardToken.id) throw new Error('No se pudo generar el token de la tarjeta');
+      
       onTokenGenerated(cardToken.id);
     } catch (error) {
-      console.error('Error al generar token:', error);
+      console.error('════════════════════════════════════════════════════════');
+      console.error('❌ ERROR al generar token:', error);
+      console.error('Error completo:', error);
+      console.error('════════════════════════════════════════════════════════');
       setErrors({ submit: error.message || 'Error al procesar la tarjeta' });
       onError?.(error);
     } finally {

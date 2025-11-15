@@ -4,7 +4,8 @@ const ENV = {
     API_URL: 'http://localhost:8080/api',
     IMAGE_URL: 'http://localhost:8080/uploads',
     DOCUMENT_URL: 'http://localhost:8080',
-    MERCADOPAGO_PUBLIC_KEY: process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || 'TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+    // El Public Key DEBE estar en .env.local y ser de Argentina
+    MERCADOPAGO_PUBLIC_KEY: process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY
   },
   production: {
     API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
