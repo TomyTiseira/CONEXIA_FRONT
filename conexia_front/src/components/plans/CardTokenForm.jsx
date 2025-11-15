@@ -29,8 +29,12 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
         if (!config.MERCADOPAGO_PUBLIC_KEY) {
           throw new Error('MercadoPago Public Key no configurada');
         }
+        
+        // Usar locale 'es-AR' para asegurar que el token sea compatible con Argentina
         await loadMercadoPago();
-        const mercadoPago = new window.MercadoPago(config.MERCADOPAGO_PUBLIC_KEY, { locale: 'es-AR' });
+        const mercadoPago = new window.MercadoPago(config.MERCADOPAGO_PUBLIC_KEY, { 
+          locale: 'es-AR' // Configuración específica para Argentina
+        });
         setMp(mercadoPago);
         setSdkInitialized(true);
       } catch (error) {
@@ -75,13 +79,16 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
     if (!validateForm()) return;
     setProcessing(true);
     try {
+      // ✅ Crear token de tarjeta con datos válidos para Argentina
+      // Este token será enviado al backend que debe usar credenciales del mismo país
+      // Tipos de identificación válidos para Argentina: DNI, CI, LE, LC, Otro
       const cardToken = await mp.createCardToken({
         cardNumber: formData.cardNumber.replace(/\s/g, ''),
         cardholderName: formData.cardholderName.toUpperCase(),
         cardExpirationMonth: formData.expirationMonth,
         cardExpirationYear: formData.expirationYear,
         securityCode: formData.securityCode,
-        identificationType: formData.identificationType,
+        identificationType: formData.identificationType, // Debe ser: DNI, CI, LE, LC o Otro
         identificationNumber: formData.identificationNumber
       });
       if (!cardToken || !cardToken.id) throw new Error('No se pudo generar el token de la tarjeta');
@@ -185,8 +192,10 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
             <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
             <select name="identificationType" value={formData.identificationType} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent" disabled={processing || loading}>
               <option value="DNI">DNI</option>
-              <option value="CUIL">CUIL</option>
-              <option value="CUIT">CUIT</option>
+              <option value="CI">CI</option>
+              <option value="LE">LE</option>
+              <option value="LC">LC</option>
+              <option value="Otro">Otro</option>
             </select>
           </div>
           <div className="col-span-2">
