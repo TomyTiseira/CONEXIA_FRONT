@@ -25,6 +25,7 @@ export default function PostulationDemoPage() {
         description: 'Buscamos un desarrollador con experiencia en React y Node.js para desarrollar la plataforma web principal.',
         vacancies: 2,
         applicationType: APPLICATION_TYPES.CV_ONLY,
+        skills: [], // Las habilidades se cargarán desde la BD
       },
       {
         id: 2,
@@ -32,6 +33,7 @@ export default function PostulationDemoPage() {
         description: 'Necesitamos un diseñador creativo para crear interfaces intuitivas y atractivas.',
         vacancies: 1,
         applicationType: APPLICATION_TYPES.CUSTOM_QUESTIONS,
+        skills: [], // Las habilidades se cargarán desde la BD
         questions: [
           {
             question: '¿Cuál es tu experiencia previa en diseño de plataformas educativas?',

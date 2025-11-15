@@ -45,14 +45,21 @@ export default function ProjectRoles({ roles = [], onApply, isOwner = false }) {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
                   <h4 className="font-semibold text-gray-900 text-lg">{role.title}</h4>
-                  <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-conexia-green/10 text-conexia-green">
-                    <FiUsers className="w-3 h-3 inline mr-1" />
-                    {role.vacancies} {role.vacancies === 1 ? 'vacante' : 'vacantes'}
-                  </span>
+                  {role.vacancies && (
+                    <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-conexia-green/10 text-conexia-green">
+                      <FiUsers className="w-3 h-3 inline mr-1" />
+                      {role.vacancies} {role.vacancies === 1 ? 'vacante' : 'vacantes'}
+                    </span>
+                  )}
                 </div>
-                <p className="text-sm text-gray-600">
-                  Postulación: {APPLICATION_TYPE_LABELS[role.applicationType]}
-                </p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  <span className="text-sm text-gray-600 font-medium">Postulación:</span>
+                  {(role.applicationTypes || [role.applicationType]).map((type, idx) => (
+                    <span key={idx} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                      {APPLICATION_TYPE_LABELS[type]}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
@@ -79,14 +86,42 @@ export default function ProjectRoles({ roles = [], onApply, isOwner = false }) {
             {expandedRoles[index] && (
               <div className="p-4 border-t border-gray-200 bg-white">
                 <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                      Descripción del rol
-                    </label>
-                    <p className="text-sm text-gray-800 mt-1.5 leading-relaxed">
-                      {role.description}
-                    </p>
-                  </div>
+                  {/* Tipo de colaboración y contratación */}
+                  {(role.collaborationType || role.contractType) && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {role.collaborationType && (
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                            Tipo de colaboración
+                          </label>
+                          <p className="text-sm text-gray-800 mt-1.5">
+                            {role.collaborationType.name || role.collaborationType}
+                          </p>
+                        </div>
+                      )}
+                      {role.contractType && (
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                            Tipo de contratación
+                          </label>
+                          <p className="text-sm text-gray-800 mt-1.5">
+                            {role.contractType.name || role.contractType}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {role.description && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                        Descripción del rol
+                      </label>
+                      <p className="text-sm text-gray-800 mt-1.5 leading-relaxed">
+                        {role.description}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Detalles según tipo de postulación */}
                   {role.questions && role.questions.length > 0 && (

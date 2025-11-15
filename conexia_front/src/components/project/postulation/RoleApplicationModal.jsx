@@ -88,17 +88,23 @@ export default function RoleApplicationModal({
                             <h3 className="font-semibold text-gray-900 group-hover:text-conexia-green transition-colors">
                               {role.title}
                             </h3>
-                            <span className="px-2 py-1 text-xs rounded-full bg-conexia-green/10 text-conexia-green">
-                              {role.vacancies} {role.vacancies === 1 ? 'vacante' : 'vacantes'}
-                            </span>
+                            {role.vacancies && (
+                              <span className="px-2 py-1 text-xs rounded-full bg-conexia-green/10 text-conexia-green">
+                                {role.vacancies} {role.vacancies === 1 ? 'vacante' : 'vacantes'}
+                              </span>
+                            )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                            {role.description}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <span className="px-2 py-1 bg-gray-100 rounded">
-                              {APPLICATION_TYPE_LABELS[role.applicationType]}
-                            </span>
+                          {role.description && (
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                              {role.description}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                            {(role.applicationTypes || [role.applicationType]).map((type, idx) => (
+                              <span key={idx} className="px-2 py-1 bg-gray-100 rounded">
+                                {APPLICATION_TYPE_LABELS[type]}
+                              </span>
+                            ))}
                           </div>
                         </div>
                         <ChevronRight className="text-gray-400 group-hover:text-conexia-green transition-colors mt-1" size={20} />

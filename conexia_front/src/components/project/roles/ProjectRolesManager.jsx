@@ -37,13 +37,19 @@ function RoleCard({ role, index, onEdit, onDelete, onToggle, isExpanded }) {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h4 className="font-semibold text-gray-900">{role.title}</h4>
-            <span className="px-2 py-1 text-xs rounded-full bg-conexia-green/10 text-conexia-green">
-              {role.vacancies} {role.vacancies === 1 ? 'vacante' : 'vacantes'}
-            </span>
+            {role.vacancies && (
+              <span className="px-2 py-1 text-xs rounded-full bg-conexia-green/10 text-conexia-green">
+                {role.vacancies} {role.vacancies === 1 ? 'vacante' : 'vacantes'}
+              </span>
+            )}
           </div>
-          <p className="text-sm text-gray-600 mt-1">
-            {APPLICATION_TYPE_LABELS[role.applicationType]}
-          </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {(role.applicationTypes || [role.applicationType]).map((type, idx) => (
+              <span key={idx} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                {APPLICATION_TYPE_LABELS[type]}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -81,10 +87,30 @@ function RoleCard({ role, index, onEdit, onDelete, onToggle, isExpanded }) {
       {isExpanded && (
         <div className="p-4 border-t border-gray-200">
           <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-gray-600">Descripción</label>
-              <p className="text-sm text-gray-900 mt-1">{role.description}</p>
-            </div>
+            {/* Tipo de colaboración y contratación */}
+            {(role.collaborationType || role.contractType) && (
+              <div className="flex gap-4">
+                {role.collaborationType && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Tipo de colaboración</label>
+                    <p className="text-sm text-gray-900 mt-1">{role.collaborationType.name || role.collaborationType}</p>
+                  </div>
+                )}
+                {role.contractType && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Tipo de contratación</label>
+                    <p className="text-sm text-gray-900 mt-1">{role.contractType.name || role.contractType}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {role.description && (
+              <div>
+                <label className="text-xs font-medium text-gray-600">Descripción</label>
+                <p className="text-sm text-gray-900 mt-1">{role.description}</p>
+              </div>
+            )}
 
             {/* Mostrar detalles según tipo de postulación */}
             {role.applicationType === APPLICATION_TYPES.CUSTOM_QUESTIONS && role.questions?.length > 0 && (
@@ -195,6 +221,7 @@ export default function ProjectRolesManager({ roles = [], onChange, error }) {
   const [expandedRoles, setExpandedRoles] = useState({});
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [draftRole, setDraftRole] = useState(null); // Borrador del rol en edición
 
   const handleToggleExpand = (index) => {
     setExpandedRoles(prev => ({
@@ -210,6 +237,7 @@ export default function ProjectRolesManager({ roles = [], onChange, error }) {
 
   const handleEditRole = (index) => {
     setEditingIndex(index);
+    setDraftRole(null); // Limpiar draft cuando editamos un rol existente
     setShowRoleModal(true);
   };
 
@@ -232,6 +260,15 @@ export default function ProjectRolesManager({ roles = [], onChange, error }) {
     }
     setShowRoleModal(false);
     setEditingIndex(null);
+    setDraftRole(null); // Limpiar draft después de guardar
+  };
+
+  const handleCancelRole = (currentData) => {
+    // Guardar el draft solo si estamos agregando un nuevo rol (no editando)
+    if (editingIndex === null) {
+      setDraftRole(currentData);
+    }
+    setShowRoleModal(false);
   };
 
   return (
@@ -286,12 +323,9 @@ export default function ProjectRolesManager({ roles = [], onChange, error }) {
       {/* Modal de rol */}
       {showRoleModal && (
         <RoleFormModal
-          role={editingIndex !== null ? roles[editingIndex] : null}
+          role={editingIndex !== null ? roles[editingIndex] : draftRole}
           onSave={handleSaveRole}
-          onCancel={() => {
-            setShowRoleModal(false);
-            setEditingIndex(null);
-          }}
+          onCancel={handleCancelRole}
         />
       )}
     </div>

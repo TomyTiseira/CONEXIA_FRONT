@@ -4,15 +4,11 @@ import { useRef, useState } from 'react';
 import Toast from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useSkills } from '@/hooks/useSkills';
 import { useProjectCategories } from '@/hooks/project/useProjectCategories';
-import { useCollaborationTypes } from '@/hooks/project/useCollaborationTypes';
-import { useContractTypes } from '@/hooks/project/useContractTypes';
 import { useCreateProject } from '@/hooks/project/useCreateProject';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
 import DateRangePicker from '@/components/form/DateRangePicker';
-import RubroSkillsSelector from '@/components/skills/RubroSkillsSelector';
 import Button from '@/components/ui/Button';
 import LocalitySelector from '@/components/localities/LocalitySelector';
 import RequireVerification from '@/components/common/RequireVerification';
@@ -39,24 +35,19 @@ export default function CreateProjectForm() {
     locationId: '', // id de la provincia seleccionada
     locationName: '', // nombre para mostrar en el input
     category: '',
-    contractType: '',
-    collaborationType: '',
     maxCollaborators: '',
     image: null,
-    skills: [],
     dates: { startDate: '', endDate: '' },
-    roles: [], // Nuevo: roles del proyecto
+    roles: [], // Nuevo: roles del proyecto (ahora incluyen collaborationType y contractType)
+    needsPartners: false, // Indica si el proyecto necesita socios
+    needsInvestors: false, // Indica si el proyecto necesita inversores
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [imgError, setImgError] = useState('');
   const [isIndefinite, setIsIndefinite] = useState(false);
-
-  const { skills } = useSkills();
   const { data: categories } = useProjectCategories();
-  const { data: collaborationTypes } = useCollaborationTypes();
-  const { data: contractTypes } = useContractTypes();
   const { publishProject, loading } = useCreateProject();
 
   const handleChange = (field, value) => {
@@ -86,10 +77,6 @@ export default function CreateProjectForm() {
         },
       }));
     }
-  };
-
-  const handleSkillsChange = (skills) => {
-    setForm((prev) => ({ ...prev, skills }));
   };
 
   const handleRolesChange = (roles) => {
@@ -124,7 +111,7 @@ export default function CreateProjectForm() {
       }
     }
 
-    if (['category', 'collaborationType', 'contractType'].includes(field) && !value) {
+    if (field === 'category' && !value) {
       error = 'Este campo es obligatorio';
     }
 
@@ -158,7 +145,7 @@ export default function CreateProjectForm() {
   };
 
   const validateAll = () => {
-    const fields = ['title', 'description', 'category', 'collaborationType', 'contractType', 'dates', 'roles'];
+    const fields = ['title', 'description', 'category', 'dates', 'roles'];
     const newTouched = {};
     let isValid = true;
 
@@ -195,7 +182,7 @@ export default function CreateProjectForm() {
     e.preventDefault();
     const isValid = validateAll();
     // Validar campos obligatorios manualmente
-    const requiredFields = ['title', 'description', 'category', 'collaborationType', 'contractType'];
+    const requiredFields = ['title', 'description', 'category'];
     let missing = false;
     requiredFields.forEach((field) => {
       if (!form[field] || (typeof form[field] === 'string' && form[field].trim() === '')) {
@@ -248,8 +235,8 @@ export default function CreateProjectForm() {
         />
       </div>
 
-      {/* Descripción */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5 -mt-6">
+      {/* Descripción e Imagen - lado a lado */}
+      <div className="md:col-span-1 flex flex-col justify-start min-h-[72px] gap-1.5 -mt-6">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Descripción del proyecto
         </label>
@@ -257,7 +244,7 @@ export default function CreateProjectForm() {
           name="description"
           placeholder="Describí brevemente tu idea"
           multiline
-          rows={4}
+          rows={7}
           value={form.description}
           onChange={(e) => handleChange('description', e.target.value)}
           onBlur={() => handleBlur('description')}
@@ -266,6 +253,72 @@ export default function CreateProjectForm() {
           showCharCount={true}
           maxLength={1000}
         />
+      </div>
+
+      {/* Imagen representativa */}
+      <div className="md:col-span-1 flex flex-col justify-start gap-1.5 -mt-6">
+        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
+          Imagen representativa del proyecto (Opcional)
+        </label>
+
+        {/* Estructura idéntica al InputField para alineación */}
+        <div className="min-h-[64px] relative">
+          {/* Contenedor con borde similar a los inputs */}
+          <div className="border border-gray-300 rounded-lg p-3 bg-white h-[182px] flex flex-col justify-between">
+            {/* Vista previa de la imagen */}
+            <div className="flex flex-col items-center justify-center flex-1 mb-2">
+              <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden">
+                {form.image ? (
+                  <Image
+                    src={URL.createObjectURL(form.image)}
+                    alt="Vista previa"
+                    width={200}
+                    height={128}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <span className="text-sm text-gray-400 block">Sin imagen</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Botón de selección y eliminación */}
+            <div className="flex flex-col gap-1.5">
+              <input
+                type="file"
+                accept="image/jpeg, image/png"
+                ref={imageInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+                id="image-upload"
+              />
+              <label
+                htmlFor="image-upload"
+                className="cursor-pointer inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-[#367d7d] rounded-lg hover:bg-[#2b6a6a] transition-colors"
+              >
+                Seleccionar archivo
+              </label>
+              
+              {form.image && (
+                <button
+                  type="button"
+                  className="text-red-600 text-sm hover:underline text-center"
+                  onClick={handleRemoveImage}
+                >
+                  Eliminar imagen
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* Leyendas fuera del contenedor, estructura idéntica al InputField */}
+          <span className="text-xs text-gray-500 block mt-2">
+            Formato permitido: JPG, PNG. Máx. 1 archivo y hasta 5MB.
+          </span>
+          <p className="text-xs text-red-600 mt-1 text-left h-[30px]">{imgError}</p>
+        </div>
       </div>
 
       {/* Ubicación */}
@@ -283,16 +336,6 @@ export default function CreateProjectForm() {
         )}
       </div>
 
-      {/* Habilidades */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
-        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          Habilidades requeridas (Opcional)
-        </label>
-        <div className="min-h-[110px]">
-          <RubroSkillsSelector selectedSkills={form.skills} onSkillsChange={handleSkillsChange} />
-        </div>
-      </div>
-
       {/* Roles del proyecto */}
       <div className="md:col-span-2">
         <ProjectRolesManager
@@ -300,6 +343,37 @@ export default function CreateProjectForm() {
           onChange={handleRolesChange}
           error={touched.roles && errors.roles}
         />
+      </div>
+
+      {/* Checkboxes para socios e inversores */}
+      <div className="md:col-span-2 w-full flex flex-col md:flex-row gap-8 mb-2">
+        <div className="w-full md:w-1/2">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={form.needsPartners}
+              onChange={(e) => handleChange('needsPartners', e.target.checked)}
+              className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green focus:ring-2 cursor-pointer"
+            />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-conexia-green transition-colors">
+              El proyecto necesita socios
+            </span>
+          </label>
+        </div>
+
+        <div className="w-full md:w-1/2">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={form.needsInvestors}
+              onChange={(e) => handleChange('needsInvestors', e.target.checked)}
+              className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green focus:ring-2 cursor-pointer"
+            />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-conexia-green transition-colors">
+              El proyecto necesita inversores
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* Fechas */}
@@ -317,34 +391,6 @@ export default function CreateProjectForm() {
           errorStart={''}
           errorEnd={errors.dates || ''}
           containerClassName="gap-8"
-        />
-      </div>
-
-      {/* Tipo de colaboración */}
-      <div className="flex flex-col justify-center min-h-[120px] gap-1.5 -mt-10">
-        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          Tipo de colaboración
-        </label>
-        <SelectField
-          name="collaborationType"
-          options={collaborationTypes?.map((t) => ({ value: t.id, label: t.name })) || []}
-          value={form.collaborationType}
-          onChange={(e) => handleChange('collaborationType', e.target.value)}
-          error={touched.collaborationType && errors.collaborationType}
-        />
-      </div>
-
-      {/* Tipo de contrato */}
-      <div className="flex flex-col justify-center min-h-[120px] gap-1.5 -mt-10">
-        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          Tipo de contrato
-        </label>
-        <SelectField
-          name="contractType"
-          options={contractTypes?.map((t) => ({ value: t.id, label: t.name })) || []}
-          value={form.contractType}
-          onChange={(e) => handleChange('contractType', e.target.value)}
-          error={touched.contractType && errors.contractType}
         />
       </div>
 
@@ -377,58 +423,6 @@ export default function CreateProjectForm() {
           error={touched.maxCollaborators && errors.maxCollaborators}
         />
       </div>
-
-      {/* Imagen representativa */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
-        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          Imagen representativa del proyecto (Opcional)
-        </label>
-
-        <div className="flex items-center gap-4">
-          <div className="w-[120px] h-[80px] border rounded bg-gray-100 flex items-center justify-center overflow-hidden">
-            {form.image ? (
-              <Image
-                src={URL.createObjectURL(form.image)}
-                alt="Vista previa"
-                width={120}
-                height={80}
-                className="object-cover"
-              />
-            ) : (
-              <span className="text-xs text-gray-500">Sin imagen</span>
-            )}
-          </div>
-
-          {form.image && (
-            <button
-              type="button"
-              className="text-red-600 text-sm hover:underline"
-              onClick={handleRemoveImage}
-            >
-              Eliminar imagen
-            </button>
-          )}
-        </div>
-
-        <input
-          type="file"
-          accept="image/jpeg, image/png"
-          ref={imageInputRef}
-          onChange={handleImageChange}
-          className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-[#367d7d] file:text-white
-                    hover:file:bg-[#2b6a6a]"
-        />
-        <span className="text-xs text-gray-500 mt-1 block">
-          Formato permitido: JPG, PNG. Máx. 1 archivo y hasta 5MB.
-        </span>
-        <p className="text-xs text-red-600 mt-1 min-h-[20px]">
-          {imgError || '\u00A0'}
-        </p>
-      </div>
-
 
       {/* Botones */}
       <div className="md:col-span-2 flex justify-end gap-4 pt-4">
