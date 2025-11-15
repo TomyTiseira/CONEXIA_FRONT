@@ -231,7 +231,7 @@ export default function CreateProjectForm() {
 
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="w-full grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+    <form onSubmit={handleSubmit} noValidate className="w-full grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
       {/* Título del proyecto */}
       <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
@@ -249,7 +249,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Descripción */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5 -mt-6">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Descripción del proyecto
         </label>
@@ -269,7 +269,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Ubicación */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[120px] gap-1.5">
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[120px] gap-1.5 -mt-8">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Ubicación del proyecto (Opcional)
         </label>
@@ -303,26 +303,25 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Fechas */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[75px] gap-1.5">
+      <div className="md:col-span-2 flex flex-col min-h-[75px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Plazo estimado de ejecución (Opcional)
         </label>
-        <div className="w-full flex flex-row justify-center gap-3">
-          <DateRangePicker
-            start={form.dates.startDate}
-            end={form.dates.endDate}
-            onStartChange={(e) => handleDateChange('startDate', e.target.value)}
-            onEndChange={(e) => handleDateChange('endDate', e.target.value)}
-            isIndefinite={isIndefinite}
-            onIndefiniteChange={handleIndefiniteChange}
-            errorStart={''}
-            errorEnd={errors.dates || ''}
-          />
-        </div>
+        <DateRangePicker
+          start={form.dates.startDate}
+          end={form.dates.endDate}
+          onStartChange={(e) => handleDateChange('startDate', e.target.value)}
+          onEndChange={(e) => handleDateChange('endDate', e.target.value)}
+          isIndefinite={isIndefinite}
+          onIndefiniteChange={handleIndefiniteChange}
+          errorStart={''}
+          errorEnd={errors.dates || ''}
+          containerClassName="gap-8"
+        />
       </div>
 
       {/* Tipo de colaboración */}
-      <div className="flex flex-col justify-center min-h-[120px] gap-1.5">
+      <div className="flex flex-col justify-center min-h-[120px] gap-1.5 -mt-10">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Tipo de colaboración
         </label>
@@ -336,7 +335,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Tipo de contrato */}
-      <div className="flex flex-col justify-center min-h-[120px] gap-1.5">
+      <div className="flex flex-col justify-center min-h-[120px] gap-1.5 -mt-10">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Tipo de contrato
         </label>
@@ -350,7 +349,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Categoría */}
-      <div className="flex flex-col justify-center min-h-[72px] gap-1.5">
+      <div className="flex flex-col justify-center min-h-[72px] gap-1.5 -mt-6">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Categoría del proyecto
         </label>
@@ -364,7 +363,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Máximo de colaboradores */}
-      <div className="flex flex-col justify-center min-h-[72px] gap-1.5">
+      <div className="flex flex-col justify-center min-h-[72px] gap-1.5 -mt-6">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           N° máximo de colaboradores (Opcional)
         </label>

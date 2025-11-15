@@ -94,6 +94,16 @@ function RoleCard({ role, index, onEdit, onDelete, onToggle, isExpanded }) {
                   {role.questions.map((q, idx) => (
                     <li key={idx} className="text-sm text-gray-700">
                       {idx + 1}. {q.question} <span className="text-xs text-gray-500">({q.type === 'open' ? 'Abierta' : 'Opción múltiple'})</span>
+                      {/* Mostrar opciones si es de opción múltiple */}
+                      {q.type === 'multiple' && q.options?.length > 0 && (
+                        <ul className="ml-4 mt-1 space-y-0.5">
+                          {q.options.map((opt, optIdx) => (
+                            <li key={optIdx} className="text-xs text-gray-600">
+                              {opt.isCorrect ? '✓' : '○'} {opt.text}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -116,17 +126,59 @@ function RoleCard({ role, index, onEdit, onDelete, onToggle, isExpanded }) {
             )}
 
             {role.applicationType === APPLICATION_TYPES.MIXED && (
-              <div>
-                <label className="text-xs font-medium text-gray-600">Configuración mixta</label>
-                <div className="flex gap-2 mt-1">
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">CV incluido</span>
-                  {role.questions?.length > 0 && (
-                    <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">{role.questions.length} preguntas</span>
-                  )}
-                  {role.evaluation && (
-                    <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">Evaluación técnica</span>
-                  )}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Configuración mixta</label>
+                  <div className="flex gap-2 mt-1">
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">CV incluido</span>
+                    {role.questions?.length > 0 && (
+                      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">{role.questions.length} preguntas</span>
+                    )}
+                    {role.evaluation && (
+                      <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">Evaluación técnica</span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Mostrar preguntas si existen */}
+                {role.questions?.length > 0 && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Preguntas ({role.questions.length})</label>
+                    <ul className="mt-1 space-y-1">
+                      {role.questions.map((q, idx) => (
+                        <li key={idx} className="text-sm text-gray-700">
+                          {idx + 1}. {q.question} <span className="text-xs text-gray-500">({q.type === 'open' ? 'Abierta' : 'Opción múltiple'})</span>
+                          {/* Mostrar opciones si es de opción múltiple */}
+                          {q.type === 'multiple' && q.options?.length > 0 && (
+                            <ul className="ml-4 mt-1 space-y-0.5">
+                              {q.options.map((opt, optIdx) => (
+                                <li key={optIdx} className="text-xs text-gray-600">
+                                  {opt.isCorrect ? '✓' : '○'} {opt.text}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Mostrar evaluación técnica si existe */}
+                {role.evaluation && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Evaluación técnica</label>
+                    <p className="text-sm text-gray-700 mt-1">{role.evaluation.description}</p>
+                    {role.evaluation.file && (
+                      <p className="text-xs text-blue-600 mt-1">📎 Archivo adjunto</p>
+                    )}
+                    {role.evaluation.link && (
+                      <a href={role.evaluation.link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline mt-1 block">
+                        🔗 {role.evaluation.link}
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

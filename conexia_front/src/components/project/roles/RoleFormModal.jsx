@@ -134,10 +134,10 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-4 space-y-3">
+          <div className="px-6 py-4 space-y-1">
             {/* Título del rol */}
             <div>
-              <label className="block text-sm font-semibold text-conexia-green-dark mb-1.5">
+              <label className="block text-sm font-semibold text-conexia-green-dark mb-1">
                 Título del rol <span className="text-red-600">*</span>
               </label>
               <InputField
@@ -152,7 +152,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
 
             {/* Descripción del rol */}
             <div>
-              <label className="block text-sm font-semibold text-conexia-green-dark mb-1.5">
+              <label className="block text-sm font-semibold text-conexia-green-dark mb-1">
                 Descripción <span className="text-red-600">*</span>
               </label>
               <InputField
@@ -171,7 +171,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
 
             {/* Número de vacantes */}
             <div>
-              <label className="block text-sm font-semibold text-conexia-green-dark mb-1.5">
+              <label className="block text-sm font-semibold text-conexia-green-dark mb-1">
                 Número de vacantes <span className="text-red-600">*</span>
               </label>
               <InputField
@@ -188,7 +188,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
 
             {/* Tipo de postulación */}
             <div>
-              <label className="block text-sm font-semibold text-conexia-green-dark mb-1.5">
+              <label className="block text-sm font-semibold text-conexia-green-dark mb-1">
                 Tipo de postulación <span className="text-red-600">*</span>
               </label>
               <SelectField
