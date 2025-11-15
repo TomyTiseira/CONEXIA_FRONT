@@ -154,7 +154,7 @@ export async function fetchUsers({ search = '', page = 1, limit = 3 } = {}) {
  * @returns {Promise<Object>} - Plan, suscripción y flag isFreePlan
  */
 export async function getUserPlan() {
-  const response = await fetchWithRefresh(`${config.API_URL}/users/me/plan`, {
+  const response = await fetchWithRefresh(`${config.API_URL}/memberships/me/plan`, {
     method: 'GET',
     credentials: 'include',
   });

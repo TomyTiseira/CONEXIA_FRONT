@@ -22,7 +22,7 @@ export default function RegisterForm() {
     repeatPwd: "",
   });
 
-  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
   const [focused, setFocused] = useState({});
   const [msg, setMsg] = useState(null);
   const [captchaValue, setCaptchaValue] = useState(null);
@@ -30,8 +30,10 @@ export default function RegisterForm() {
   const [showRepeatPwd, setShowRepeatPwd] = useState(false);
 
   const getError = (field) => {
+    // Solo mostrar errores después del submit y cuando el campo no está enfocado
+    if (!submitted || focused[field]) return "";
+
     const value = form[field];
-    if (!touched[field]) return "";
 
     if (field === "repeatPwd") {
       return validateRepeatPwd(form.password, form.repeatPwd);
@@ -45,19 +47,15 @@ export default function RegisterForm() {
 
   const handleBlur = (field) => {
     setFocused((prev) => ({ ...prev, [field]: false }));
-    setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (touched[field]) {
-      setTouched((prev) => ({ ...prev, [field]: true }));
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ email: true, password: true, repeatPwd: true });
+    setSubmitted(true);
 
     const emailError = validateEmail(form.email);
     const passwordError = validatePassword(form.password);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { requestPasswordReset } from "@/service/auth/recoveryService";
@@ -12,20 +11,20 @@ import ConexiaLogo from "@/components/ui/ConexiaLogo";
 
 export default function EmailForm() {
   const [email, setEmail] = useState("");
-  const [touched, setTouched] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [focused, setFocused] = useState(false);
   const [msg, setMsg] = useState(null);
   const setGlobalEmail = useResetPasswordStore((state) => state.setEmail);
   const router = useRouter();
 
   const getError = () => {
-    if (!touched) return "";
+    if (!submitted || focused) return "";
     return validateEmail(email);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched(true);
+    setSubmitted(true);
 
     const error = validateEmail(email);
     if (error) return;
@@ -56,58 +55,59 @@ export default function EmailForm() {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full md:w-[40%] px-6 py-10 bg-conexia-soft">
-      <div className="flex justify-center mb-4">
-        <ConexiaLogo width={80} height={32} />
-      </div>
+    <div className="w-full max-w-md">
+      {/* Card principal */}
+      <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10">
+        {/* Logo y header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <ConexiaLogo width={100} height={40} />
+          </div>
+          <h1 className="text-3xl font-bold text-conexia-green mb-2">Recupera tu contraseña</h1>
+          <p className="text-sm text-gray-600">
+            Ingresa el correo asociado a tu cuenta y te enviaremos un código para validar tu identidad.
+          </p>
+        </div>
 
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-conexia-green mb-4">Recupera tu contraseña</h1>
-        <p className="mb-5 text-sm text-conexia-green/90">
-          Ingresa el correo asociado a tu cuenta y te enviaremos un código para validar tu identidad.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
-          <InputField
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (touched) setTouched(true);
-            }}
-            onFocus={() => setFocused(true)}
-            onBlur={() => {
-              setFocused(false);
-              setTouched(true);
-            }}
-            error={getError()}
-          />
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Correo electrónico
+            </label>
+            <InputField
+              type="email"
+              placeholder="Correo electrónico"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              error={getError()}
+            />
+          </div>
 
           <button
             type="submit"
-            className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"
+            className="w-full bg-conexia-green text-white py-3 rounded-lg font-semibold hover:bg-conexia-green/90 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             Enviar código
           </button>
         </form>
 
-        <div className="mt-3 text-center">
-          <Link
-            href="/login"
-            className="text-conexia-green font-semibold text-sm hover:underline"
-          >
+        {/* Link volver a login */}
+        <div className="mt-6 text-center text-sm text-gray-600">
+          <Link href="/login" className="text-conexia-coral hover:underline font-semibold">
             Volver al inicio de sesión
           </Link>
         </div>
-        <div className="min-h-[40px] mt-4 text-center text-sm">
-          {msg && (
-            <p className={msg.ok ? "text-green-600" : "text-red-600"}>
+
+        {/* Mensaje de éxito/error */}
+        {msg && (
+          <div className="mt-4 text-center">
+            <p className={`text-sm font-medium ${msg.ok ? "text-green-600" : "text-red-600"}`}>
               {msg.text}
             </p>
-          )}
-        </div>
-
+          </div>
+        )}
       </div>
     </div>
   );

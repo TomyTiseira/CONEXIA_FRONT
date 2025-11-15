@@ -1,10 +1,9 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { deleteReview } from '@/service/reviews/reviewsFetch';
 import { createReviewReport } from '@/service/reports/reviewReportsFetch';
-import { fetchReviewReports } from '@/service/reports/reviewReportsFetch';
 import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal';
 import ReportReviewModal from './ReportReviewModal';
 import Toast from '@/components/ui/Toast';
@@ -23,14 +22,13 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
   const [toast, setToast] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [localReview, setLocalReview] = useState(review);
-  const [hasReportsFromServer, setHasReportsFromServer] = useState(false);
 
   const isOwner = user?.id === localReview.reviewerUserId;
   const isProfileOwner = user?.id === profileOwnerId;
   // Solo los usuarios regulares pueden reportar reseñas. Moderadores/administradores no deben ver esta opción.
   const canReport = user && !isOwner && roleName === 'user';
 
-  // Para moderadores/administradores, si la reseña tiene reportes, mostrar opción de "Ver reportes"
+  // Para moderadores/administradores, SIEMPRE mostrar opción de "Ver reportes"
   // Los roles pueden venir en inglés o español según el backend
   const canModerate = user && (roleName === 'admin' || roleName === 'moderator' || roleName === 'administrador' || roleName === 'moderador');
   const hasReports = (localReview.reportCount && localReview.reportCount > 0) || (localReview.reports && localReview.reports.length > 0);
@@ -38,33 +36,6 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
   // If this review is the one highlighted via query param (prop), treat it as having reports for admins
   const isHighlighted = highlighted;
   const reviewId = localReview.id || localReview.userReviewId;
-  
-  // Para moderadores/administradores: mostrar opción si tiene reportes, está resaltada, o si consultamos al servidor
-  const hasReportsEffective = canModerate && (hasReports || Boolean(isHighlighted) || hasReportsFromServer);
-
-  // Si es moderador/administrador y la reseña está resaltada (viene desde reportes), 
-  // consultar al servidor para confirmar que tiene reportes
-  useEffect(() => {
-    let mounted = true;
-    // Solo consultar si: es admin/moderador, está resaltada, y aún no sabemos si tiene reportes
-    const shouldCheck = canModerate && isHighlighted && !hasReports && !hasReportsFromServer && reviewId;
-    if (!shouldCheck) return;
-
-    fetchReviewReports(reviewId, 1)
-      .then(resp => {
-        if (!mounted) return;
-        const reports = resp?.data?.reports || resp?.reports || [];
-        if (Array.isArray(reports) && reports.length > 0) {
-          setHasReportsFromServer(true);
-        }
-      })
-      .catch(err => {
-        // silently ignore — absence of data means no server-side reports visible or error
-        console.debug('Error al verificar reportes de reseña:', err);
-      });
-
-    return () => { mounted = false; };
-  }, [canModerate, isHighlighted, hasReports, hasReportsFromServer, reviewId]);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -82,6 +53,13 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
 
   const handleReportClick = () => {
     setMenuOpen(false);
+    
+    // No permitir reportar si es admin o moderador
+    if (!canReport) {
+      setToast({ type: 'warning', message: 'No tienes permisos para reportar reseñas' });
+      return;
+    }
+    
     // Verificar si ya fue reportado antes de abrir el modal
     if (localReview.hasReported) {
       setToast({ type: 'warning', message: 'Ya has reportado esta reseña' });
@@ -146,10 +124,10 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
     ? `${config.IMAGE_URL}/${review.reviewerUser.profilePicture}`
     : '/images/default-avatar.png';
 
-  // Navegar al perfil del reviewer
+  // Navegar al perfil del reviewer usando reviewerUserId
   const handleProfileClick = () => {
-    if (review.reviewerUser?.profileId) {
-      router.push(`/profile/${review.reviewerUser.profileId}`);
+    if (review.reviewerUserId) {
+      router.push(`/profile/userProfile/${review.reviewerUserId}`);
     }
   };
 
@@ -186,8 +164,8 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
               >
                 {review.reviewerUser?.name} {review.reviewerUser?.lastName}
               </span>
-              <span className="text-sm text-gray-500">·</span>
-              <span className="text-sm text-gray-600">{review.relationship}</span>
+              <span className="text-sm text-gray-700 font-bold">·</span>
+              <span className="text-sm text-gray-700 font-medium">{review.relationship}</span>
             </div>
             <div className="text-xs text-gray-500 mt-1">
               {new Date(review.createdAt).toLocaleDateString('es-AR', { 
@@ -205,7 +183,7 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
         </div>
 
         {/* Botones de acción */}
-  {(isOwner || canReport || (canModerate && hasReportsEffective)) && (
+        {(isOwner || canReport || canModerate) && (
           <div className="relative flex items-start">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -258,13 +236,14 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
                     </>
                   )}
 
-                  {/* Opción para reportar (cualquier usuario autenticado que no sea el autor) */}
-                  {canModerate && hasReportsEffective && (
+                  {/* Opción "Ver reportes" para moderadores/administradores - SIEMPRE visible */}
+                  {canModerate && (
                     <>
+                      {(isOwner || isProfileOwner) && <div className="border-t my-1" />}
                       <button
                         onClick={() => {
                           setMenuOpen(false);
-                          // Redirigir a la vista de reportes para esta reseña (mismo patrón usado en ReportsList)
+                          // Redirigir a la vista de reportes para esta reseña
                           router.push(`/reports/review?reviewId=${localReview.id || localReview.userReviewId}`);
                         }}
                         className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"

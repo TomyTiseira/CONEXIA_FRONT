@@ -1095,7 +1095,7 @@ ${messageText.trim()}`;
         {/* Contenedor separado para reseñas: aparece debajo de todo el detalle del servicio */}
         <div className="container mx-auto px-4 py-6">
           <div id="reviews-section" className="bg-white rounded-lg shadow p-6">
-            <ServiceReviewsSection serviceId={serviceId} />
+            <ServiceReviewsSection serviceId={serviceId} isOwner={isOwner} />
           </div>
         </div>
 

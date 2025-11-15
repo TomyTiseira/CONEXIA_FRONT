@@ -293,10 +293,10 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
     }
   }, [publicationId]);
 
-  // Si recibimos un commentId en searchParams, abrimos la sección de comentarios,
+  // Si recibimos un commentId o highlightCommentId en searchParams, abrimos la sección de comentarios,
   // cargamos todos los comentarios y hacemos scroll hacia el comentario objetivo.
   useEffect(() => {
-    const targetCommentId = searchParams?.commentId;
+    const targetCommentId = searchParams?.commentId || searchParams?.highlightCommentId;
     if (!targetCommentId || !publicationId) return;
 
     // Intentar cargar todos los comentarios y abrir la vista
@@ -321,7 +321,7 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
       }
     })();
 
-  }, [searchParams?.commentId, publicationId]);
+  }, [searchParams?.commentId, searchParams?.highlightCommentId, publicationId]);
 
   // Avatar, nombre, profesión y privacidad desde publication.owner
   const avatar = publication.owner?.profilePicture

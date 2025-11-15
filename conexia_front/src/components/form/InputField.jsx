@@ -39,14 +39,16 @@ export default function InputField({
             error
               ? "border-red-500 ring-red-300"
               : "border-gray-300 focus:ring-conexia-green/40"
-          } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""} ${className}`}
+          } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""} ${
+            showCharCount ? "pb-8" : ""
+          } ${className}`}
         />
         {showCharCount && (
           <div className="absolute right-3 bottom-2 text-xs text-gray-500 pointer-events-none">
-            {value.length}{maxLength ? ` / ${maxLength}` : ''} caracteres
+            {value.length}{maxLength ? ` / ${maxLength}` : ''}
           </div>
         )}
-        <p className="text-xs text-red-600 mt-1 text-left h-[30px]">{error}</p>
+        {error && <p className="text-xs text-red-600 mt-1 text-left">{error}</p>}
       </div>
     );
   }
@@ -63,7 +65,10 @@ export default function InputField({
         onBlur={onBlur}
         disabled={disabled}
         required={required}
-        className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring pr-10 ${
+        maxLength={maxLength}
+        className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring ${
+          showToggle ? "pr-10" : showCharCount ? "pr-28" : ""
+        } ${
           error
             ? "border-red-500 ring-red-300"
             : "border-gray-300 focus:ring-conexia-green/40"
@@ -78,7 +83,12 @@ export default function InputField({
           {show ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
       )}
-      <p className="text-xs text-red-600 mt-1 text-left h-[30px]">{error}</p>
+      {showCharCount && !showToggle && (
+        <div className="absolute right-3 top-2.5 text-xs text-gray-500 pointer-events-none">
+          {value.length}{maxLength ? ` / ${maxLength}` : ''}
+        </div>
+      )}
+      {error && <p className="text-xs text-red-600 mt-1 text-left">{error}</p>}
     </div>
   );
 }

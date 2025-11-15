@@ -3,16 +3,22 @@ import Button from "@/components/ui/Button";
 import Pagination from '@/components/common/Pagination';
 import BackButton from '@/components/ui/BackButton';
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { fetchProjectReports } from '@/service/reports/reportsFetch';
 
 export default function ProjectReportsGrid({ projectId }) {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+
+  // Obtener parámetros de retorno desde la URL
+  const returnFilter = searchParams?.get('filter') || 'projects';
+  const returnOrder = searchParams?.get('order') || 'reportCount';
+  const returnPage = searchParams?.get('returnPage') || '1';
 
   useEffect(() => {
     if (!projectId) return;
@@ -101,7 +107,10 @@ export default function ProjectReportsGrid({ projectId }) {
       </div>
       {/* Botón volver atrás debajo de la tabla */}
       <div className="mx-4 md:mx-0 mt-4">
-        <BackButton text="Volver a los reportes" onClick={() => window.location.href = '/reports'} />
+        <BackButton 
+          text="Volver a los reportes" 
+          onClick={() => router.push(`/reports?filter=${returnFilter}&order=${returnOrder}&page=${returnPage}`)} 
+        />
       </div>
     </div>
   );

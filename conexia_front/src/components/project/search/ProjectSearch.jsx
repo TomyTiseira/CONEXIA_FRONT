@@ -325,7 +325,7 @@ export default function ProjectSearch() {
                             </div>
                             <div className="mt-8 flex justify-center">
                               <Pagination
-                                page={page}
+                                currentPage={page}
                                 hasPreviousPage={page > 1}
                                 hasNextPage={allProjectsList.length > page * pageSize}
                                 onPageChange={setPage}
@@ -358,7 +358,7 @@ export default function ProjectSearch() {
                       </div>
                       <div className="mt-8 flex justify-center">
                         <Pagination
-                          page={page}
+                          currentPage={page}
                           hasPreviousPage={page > 1}
                           hasNextPage={allProjectsList.length > page * pageSize}
                           onPageChange={setPage}
@@ -397,7 +397,7 @@ export default function ProjectSearch() {
                     </div>
                     <div className="mt-8 flex justify-center">
                       <Pagination
-                        page={pagination.currentPage}
+                        currentPage={pagination.currentPage}
                         hasPreviousPage={pagination.hasPreviousPage}
                         hasNextPage={pagination.hasNextPage}
                         onPageChange={setPage}

@@ -241,14 +241,14 @@ export default function ReportsList() {
                           <Button
                             variant="add"
                             className="px-3 py-1 text-xs"
-                            onClick={() => window.location.href = `/reports/project/${p.projectId}`}
+                            onClick={() => router.push(`/reports/project/${p.projectId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
                             className="px-3 py-1 text-xs"
-                            onClick={() => window.location.href = `/project/${p.projectId}?from=reports`}
+                            onClick={() => router.push(`/project/${p.projectId}?from=reports`)}
                           >
                             Ver proyecto
                           </Button>
@@ -279,14 +279,14 @@ export default function ReportsList() {
                           <Button
                             variant="add"
                             className="px-3 py-1 text-xs"
-                            onClick={() => window.location.href = `/reports/publication/${pub.publicationId}`}
+                            onClick={() => router.push(`/reports/publication/${pub.publicationId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
                             className="px-3 py-1 text-xs"
-                            onClick={() => window.location.href = `/publication/${pub.publicationId}?from=reports`}
+                            onClick={() => router.push(`/publication/${pub.publicationId}?from=reports`)}
                           >
                             Ver publicación
                           </Button>
@@ -315,7 +315,7 @@ export default function ReportsList() {
                           <Button
                             variant="add"
                             className="px-3 py-1 text-xs"
-                            onClick={() => router.push(`/reports/comment/${comment.commentId}`)}
+                            onClick={() => router.push(`/reports/comment/${comment.commentId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
@@ -324,8 +324,6 @@ export default function ReportsList() {
                             className="px-3 py-1 text-xs"
                             onClick={() => {
                               if (comment.publicationId) {
-                                // Añadimos parámetros para indicar que venimos desde la pantalla de reportes
-                                // y pasamos el commentId para que la publicación pueda (si lo soporta) resaltar/ir al comentario
                                 router.push(`/publication/${comment.publicationId}?from=reports&fromReportsPublicationId=${comment.publicationId}&commentId=${comment.commentId}`);
                               }
                             }}
@@ -360,14 +358,14 @@ export default function ReportsList() {
                           <Button
                             variant="add"
                             className="px-3 py-1 text-xs"
-                            onClick={() => window.location.href = `/reports/service/${s.serviceId}`}
+                            onClick={() => router.push(`/reports/service/${s.serviceId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
                             className="px-3 py-1 text-xs"
-                            onClick={() => window.location.href = `/services/${s.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`}
+                            onClick={() => router.push(`/services/${s.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`)}
                           >
                             Ver servicio
                           </Button>
@@ -388,9 +386,6 @@ export default function ReportsList() {
                     <tr key={`review-${review.id || review.userReviewId}`} className="border-b hover:bg-gray-50 h-auto align-top">
                       <td className="p-4 align-top max-w-[300px]">
                         <div className="text-conexia-green font-semibold">
-                          <div className="text-xs text-gray-500 mb-1">
-                            {review.reviewerUser?.firstName} {review.reviewerUser?.lastName} → {review.reviewedUser?.firstName} {review.reviewedUser?.lastName}
-                          </div>
                           <div className="line-clamp-2 break-words overflow-hidden text-ellipsis text-sm" title={review.description}>
                             {review.description}
                           </div>
@@ -403,7 +398,7 @@ export default function ReportsList() {
                           <Button
                             variant="add"
                             className="px-3 py-1 text-xs"
-                            onClick={() => router.push(`/reports/review?reviewId=${review.id || review.userReviewId}`)}
+                            onClick={() => router.push(`/reports/review?reviewId=${review.id || review.userReviewId}&filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
@@ -441,7 +436,7 @@ export default function ReportsList() {
                           <Button
                             variant="add"
                             className="px-3 py-1 text-xs"
-                            onClick={() => router.push(`/reports/service-review/${review.serviceReviewId}?filter=${filter}&order=${order}&page=${page}`)}
+                            onClick={() => router.push(`/reports/service-review/${review.serviceReviewId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>

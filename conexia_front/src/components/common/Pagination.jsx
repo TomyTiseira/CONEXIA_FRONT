@@ -8,8 +8,8 @@ export default function Pagination({
   onPageChange, 
   totalPages 
 }) {
-  // Usar currentPage si está disponible, sino usar page
-  const activePage = currentPage || page;
+  // Usar currentPage como prioridad, sino usar page (por compatibilidad)
+  const activePage = currentPage !== undefined ? currentPage : (page || 1);
   
   // Función para manejar el cambio de página con scroll-to-top
   const handlePageChange = (newPage) => {
