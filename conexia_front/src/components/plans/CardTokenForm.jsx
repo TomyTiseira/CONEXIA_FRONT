@@ -1,9 +1,27 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { loadMercadoPago } from '@mercadopago/sdk-js';
 import { config } from '@/config';
 import { FiCreditCard, FiAlertCircle } from 'react-icons/fi';
+
+// ✅ Función para cargar el SDK oficial de MercadoPago desde CDN
+const loadMercadoPagoSDK = () => {
+  return new Promise((resolve, reject) => {
+    // Verificar si ya está cargado
+    if (window.MercadoPago) {
+      resolve(window.MercadoPago);
+      return;
+    }
+    
+    // Cargar el script del SDK oficial
+    const script = document.createElement('script');
+    script.src = 'https://sdk.mercadopago.com/js/v2';
+    script.async = true;
+    script.onload = () => resolve(window.MercadoPago);
+    script.onerror = () => reject(new Error('Error al cargar el SDK de MercadoPago'));
+    document.head.appendChild(script);
+  });
+};
 
 export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, onError, loading = false }) {
   const [mp, setMp] = useState(null);
@@ -53,18 +71,21 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
         }
         
         console.log('✅ Public Key validado correctamente');
-        console.log('🌍 Inicializando SDK con locale: es-AR (Argentina)');
+        console.log('🌍 Cargando SDK oficial de MercadoPago desde CDN...');
         
-        // ✅ IMPORTANTE: Inicializar SDK con Public Key de Argentina
+        // ✅ IMPORTANTE: Cargar SDK oficial desde CDN (más actualizado que npm)
         // El Public Key debe obtenerse de: https://www.mercadopago.com.ar/settings/account/credentials
-        await loadMercadoPago();
+        await loadMercadoPagoSDK();
+        
+        // Inicializar con configuración de Argentina
         const mercadoPago = new window.MercadoPago(config.MERCADOPAGO_PUBLIC_KEY, { 
           locale: 'es-AR' // Configuración específica para Argentina
         });
         setMp(mercadoPago);
         setSdkInitialized(true);
         
-        console.log('✅ SDK de MercadoPago inicializado exitosamente');
+        console.log('✅ SDK de MercadoPago (CDN v2) inicializado exitosamente');
+        console.log('✅ País: Argentina (locale: es-AR)');
         console.log('════════════════════════════════════════════════════════');
       } catch (error) {
         console.error('❌ ERROR al inicializar MercadoPago:', error);
