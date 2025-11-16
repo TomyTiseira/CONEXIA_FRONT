@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { FiX, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { calculateNextRenewalDate, formatDate } from '@/utils/planUtils';
-import CardTokenForm from './CardTokenForm';
+import ContractPlanButton from './ContractPlanButton';
 import Toast from '@/components/ui/Toast';
 
 /**
- * Modal de confirmación antes de contratar un plan con formulario de tarjeta
+ * ✅ ACTUALIZADO: Modal de confirmación con Redirect Flow
+ * Ya no genera tokens, redirige a MercadoPago
  */
 export default function ContractConfirmationModal({
   isOpen,
@@ -16,8 +17,6 @@ export default function ContractConfirmationModal({
   loading = false,
   backendError = null,
 }) {
-  const [cardToken, setCardToken] = useState(null);
-  const [cardError, setCardError] = useState(null);
   const [toast, setToast] = useState(null);
 
   if (!isOpen || !plan) return null;
@@ -36,32 +35,16 @@ export default function ContractConfirmationModal({
     maximumFractionDigits: 2,
   });
 
-  const handleTokenGenerated = async (token) => {
-    setCardToken(token);
-    setCardError(null);
-    
-    try {
-      // Llamar a onConfirm con el token de la tarjeta
-      await onConfirm(plan.id, billingCycle, token);
-    } catch (error) {
-      // Mostrar error del backend en un toast
-      setToast({
-        type: 'error',
-        message: error?.message || 'Error al procesar la suscripción. Por favor intenta nuevamente.',
-        isVisible: true
-      });
-    }
-  };
-
-  const handleCardError = (error) => {
-    setCardError(error?.message || 'Error al procesar la tarjeta');
-    setCardToken(null);
+  const handleError = (error) => {
+    setToast({
+      type: 'error',
+      message: error?.message || 'Error al procesar la suscripción. Por favor intenta nuevamente.',
+      isVisible: true
+    });
   };
 
   const handleClose = () => {
     if (!loading) {
-      setCardToken(null);
-      setCardError(null);
       onClose();
     }
   };
@@ -128,32 +111,13 @@ export default function ContractConfirmationModal({
             </div>
           </div>
 
-          {/* Formulario de Tarjeta - NUEVO */}
+          {/* Botón de contratación con Redirect Flow */}
           <div className="border-t border-gray-200 pt-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">
-              Datos de tu tarjeta
-            </h3>
-            
-            <CardTokenForm
+            <ContractPlanButton
               plan={plan}
               billingCycle={billingCycle}
-              onTokenGenerated={handleTokenGenerated}
-              onError={handleCardError}
-              loading={loading}
+              onError={handleError}
             />
-
-            {/* Error de tarjeta */}
-            {cardError && (
-              <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
-                <div className="flex items-start gap-2">
-                  <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-red-700">
-                    <p className="font-medium">Error al procesar la tarjeta</p>
-                    <p>{cardError}</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

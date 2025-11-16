@@ -2,28 +2,47 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FiCheckCircle, FiStar, FiArrowRight } from 'react-icons/fi';
+import { FiCheckCircle, FiStar, FiArrowRight, FiCheck } from 'react-icons/fi';
 import useSessionTimeout from '@/hooks/useSessionTimeout';
+import { useAuth } from '@/context/AuthContext';
+import { getPlanById } from '@/service/plans/plansService';
+import { isBenefitActive } from '@/utils/planFormatters';
 
 function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [subscriptionData, setSubscriptionData] = useState(null);
+  const [planDetails, setPlanDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Obtener datos de la suscripción desde localStorage
-    const stored = localStorage.getItem('pendingSubscription');
-    if (stored) {
+    const fetchData = async () => {
       try {
-        const data = JSON.parse(stored);
-        setSubscriptionData(data);
-        // Actualizar status a completado
-        const updated = { ...data, status: 'completed' };
-        localStorage.setItem('pendingSubscription', JSON.stringify(updated));
+        // Obtener datos de la suscripción desde localStorage
+        const stored = localStorage.getItem('pendingSubscription');
+        if (stored) {
+          const data = JSON.parse(stored);
+          setSubscriptionData(data);
+          
+          // Obtener detalles del plan desde el backend
+          if (data.planId) {
+            const plan = await getPlanById(data.planId);
+            setPlanDetails(plan);
+          }
+          
+          // Actualizar status a completado
+          const updated = { ...data, status: 'completed' };
+          localStorage.setItem('pendingSubscription', JSON.stringify(updated));
+        }
       } catch (err) {
-        console.error('Error al parsear datos de suscripción:', err);
+        console.error('Error al cargar datos de suscripción:', err);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchData();
 
     // Confetti animation (opcional - se puede agregar una librería)
     // import confetti from 'canvas-confetti';
@@ -31,7 +50,11 @@ function SuccessContent() {
   }, []);
 
   const handleGoToProfile = () => {
-    router.push('/profile');
+    if (user?.id) {
+      router.push(`/profile/userProfile/${user.id}`);
+    } else {
+      router.push('/profile');
+    }
   };
 
   const handleGoToMyPlan = () => {
@@ -86,40 +109,65 @@ function SuccessContent() {
               </div>
             </div>
 
-            {/* Benefits Highlight */}
+            {/* Benefits Highlight - Mostrar beneficios del plan adquirido */}
             <div className="bg-gradient-to-br from-conexia-soft to-white border border-conexia-green/20 rounded-xl p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                ¿Qué puedes hacer ahora?
+                {planDetails ? `Beneficios del plan` : '¿Qué puedes hacer ahora?'}
               </h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="bg-conexia-green/10 rounded-full p-1.5 mt-0.5">
-                    <FiCheckCircle className="w-4 h-4 text-conexia-green" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Publicaciones ilimitadas</p>
-                    <p className="text-sm text-gray-600">Crea todos los proyectos y servicios que necesites</p>
+              
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green"></div>
+                </div>
+              ) : planDetails?.benefits && planDetails.benefits.length > 0 ? (
+                <div className="space-y-3">
+                  {planDetails.benefits
+                    .filter(benefit => isBenefitActive(benefit.value))
+                    .map((benefit, index) => {
+                      const isNumeric = typeof benefit.value === 'number';
+                      const isUnlimited = benefit.value === 'UNLIMITED' || benefit.value === -1;
+                      
+                      return (
+                        <div key={index} className="flex items-start gap-3">
+                          <div className="bg-conexia-green/10 rounded-full p-1.5 mt-0.5 flex-shrink-0">
+                            <FiCheck className="w-4 h-4 text-conexia-green" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">
+                              {benefit.name || benefit.key}
+                              {isUnlimited && (
+                                <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                                  ILIMITADO
+                                </span>
+                              )}
+                              {isNumeric && benefit.value > 0 && !isUnlimited && (
+                                <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">
+                                  {benefit.value}
+                                </span>
+                              )}
+                            </p>
+                            {benefit.description && (
+                              <p className="text-sm text-gray-600 mt-0.5">{benefit.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              ) : (
+                // Fallback a beneficios genéricos si no se pueden cargar
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-conexia-green/10 rounded-full p-1.5 mt-0.5">
+                      <FiCheck className="w-4 h-4 text-conexia-green" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Acceso completo</p>
+                      <p className="text-sm text-gray-600">Disfruta de todas las funcionalidades de tu plan</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="bg-conexia-green/10 rounded-full p-1.5 mt-0.5">
-                    <FiCheckCircle className="w-4 h-4 text-conexia-green" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Conexiones prioritarias</p>
-                    <p className="text-sm text-gray-600">Destaca tu perfil y obtén más visibilidad</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="bg-conexia-green/10 rounded-full p-1.5 mt-0.5">
-                    <FiCheckCircle className="w-4 h-4 text-conexia-green" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Soporte prioritario</p>
-                    <p className="text-sm text-gray-600">Atención preferencial en todos tus consultas</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Payment Info */}
