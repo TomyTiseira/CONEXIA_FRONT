@@ -577,3 +577,38 @@ div[class*="grid-cols-1"][class*="md:grid-cols-2"][class*="gap-6"][class*="items
   transform-style: preserve-3d;
 }
 
+/* Animated gradient for CONEXIA hero borders */
+@keyframes gradient-xy {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-xy {
+  background-size: 200% 200%;
+  animation: gradient-xy 3s ease infinite;
+}
+
+/* Efecto de resplandor pulsante tipo Google para el CTA */
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Gradiente cónico para efectos especiales */
+.bg-gradient-conic {
+  background: conic-gradient(from 0deg, #48a6a7, #d6ecec, #48a6a7, #367d7d, #48a6a7);
+}

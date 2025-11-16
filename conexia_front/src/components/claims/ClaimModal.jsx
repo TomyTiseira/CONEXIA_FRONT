@@ -10,6 +10,7 @@ import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { useClaimForm, useEvidenceUpload } from '@/hooks/claims';
 import { createClaim } from '@/service/claims';
 import { ClaimEvidenceUpload } from './ClaimEvidenceUpload';
+import InputField from '@/components/form/InputField';
 import {
   CLIENT_CLAIM_TYPE_LABELS,
   PROVIDER_CLAIM_TYPE_LABELS,
@@ -53,17 +54,19 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Marcar todos los campos como touched para mostrar errores visuales
+    setFieldTouched('claimType');
+    setFieldTouched('description');
+
     // Validar formulario
     const isValid = validateForm();
     if (!isValid) {
-      setToast({ isVisible: true, type: 'error', message: 'Por favor completa todos los campos requeridos' });
       return;
     }
 
     // Validar campo "Otro" si corresponde
     const isOther = formData.claimType === 'client_other' || formData.claimType === 'provider_other';
     if (isOther && !otherReason.trim()) {
-      setToast({ isVisible: true, type: 'error', message: 'Debes especificar el motivo cuando seleccionas "Otro"' });
       return;
     }
 
@@ -108,7 +111,10 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
   const isOtherSelected = formData.claimType === 'client_other' || formData.claimType === 'provider_other';
   
   // Validar si el formulario está completo para habilitar el botón
-  const isFormValid = characterCount.isValid && (!isOtherSelected || otherReason.trim().length > 0);
+  const isFormValid = 
+    formData.claimType && 
+    characterCount.isValid && 
+    (!isOtherSelected || otherReason.trim().length > 0);
 
   if (!isOpen) return null;
 
@@ -141,7 +147,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
                 <div className="flex-1">
                   <p className="text-sm font-medium text-yellow-800 mb-1">IMPORTANTE</p>
                   <p className="text-sm text-yellow-700">
-                    Al crear un reclamo, el servicio y los pagos quedarán congelados hasta que un
+                    Al crear un reclamo, el servicioo quedará pausado hasta que un
                     moderador lo resuelva. Ambas partes serán notificadas por email.
                   </p>
                 </div>
@@ -181,23 +187,20 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
                 <label htmlFor="otherReason" className="block text-sm font-medium text-gray-700 mb-2">
                   Especifica el motivo <span className="text-red-500">*</span>
                 </label>
-                <input
+                <InputField
                   type="text"
-                  id="otherReason"
+                  name="otherReason"
+                  placeholder="Escribe el motivo..."
                   value={otherReason}
                   onChange={(e) => {
                     if (e.target.value.length <= 30) {
                       setOtherReason(e.target.value);
                     }
                   }}
-                  placeholder="Escribe el motivo... (máx. 30 caracteres)"
                   maxLength={30}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors"
                   disabled={isSubmitting}
+                  showCharCount={true}
                 />
-                <div className="mt-2 text-xs text-gray-600">
-                  Máximo 30 caracteres. {otherReason.length}/30
-                </div>
               </div>
             )}
 
@@ -206,27 +209,23 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                 Descripción detallada del problema <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <textarea
-                  id="description"
-                  rows={6}
-                  value={formData.description}
-                  onChange={(e) => setField('description', e.target.value)}
-                  onBlur={() => setFieldTouched('description')}
-                  placeholder="Explica con detalle la situación. Mínimo 50 caracteres..."
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-conexia-green focus:border-transparent hover:border-conexia-green/60 outline-none transition-colors resize-none ${
-                    touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  disabled={isSubmitting}
-                />
-              </div>
-              {/* Contador y guía de caracteres debajo del campo */}
-              <div className="mt-2 text-xs text-gray-600">
-                Mínimo {characterCount.min} caracteres. {characterCount.current}/{characterCount.max}
-              </div>
-              {touched.description && errors.description && (
-                <p className="mt-1 text-xs text-red-600">{errors.description}</p>
-              )}
+              <InputField
+                multiline
+                rows={6}
+                name="description"
+                placeholder="Explica con detalle la situación..."
+                value={formData.description}
+                onChange={(e) => setField('description', e.target.value)}
+                onBlur={() => setFieldTouched('description')}
+                maxLength={characterCount.max}
+                disabled={isSubmitting}
+                showCharCount={true}
+                error={touched.description ? errors.description : ''}
+              />
+              {/* Guía de caracteres mínimos */}
+              <p className="mt-1 text-xs text-gray-600">
+                Mínimo {characterCount.min} caracteres
+              </p>
             </div>
 
             {/* Evidencias */}
@@ -243,6 +242,8 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
                 onAddFiles={addFiles}
                 onRemoveFile={removeFile}
                 errors={uploadErrors}
+                maxFiles={CLAIM_VALIDATION.MAX_EVIDENCE_FILES}
+                existingFilesCount={0}
               />
             </div>
           </form>

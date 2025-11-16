@@ -11,11 +11,13 @@ import ImageZoomModal from '@/components/services/ImageZoomModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Toast from '@/components/ui/Toast';
 import Navbar from '@/components/navbar/Navbar';
-import SubscriptionLimitsIndicator from '@/components/common/SubscriptionLimitsIndicator';
+import { PublicationLimitBanner } from '@/components/plans';
+import { useSubscriptionLimits } from '@/hooks/memberships';
 import { ArrowLeft } from 'lucide-react';
 
 export default function CreateServicePage() {
   const router = useRouter();
+  const { servicesLimit, planName, isLoading: limitsLoading } = useSubscriptionLimits();
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -95,11 +97,17 @@ export default function CreateServicePage() {
 
         </div>
 
-        {/* Contenedor para centrar el formulario */}
-        <div className="flex-1 flex items-center justify-center relative z-10 pt-8 md:pt-24 pb-8">
+      {/* Contenedor para centrar el formulario */}
+      <div className="flex-1 flex items-center justify-center relative z-10 pt-20 sm:pt-24 pb-8">
           <div className="w-full max-w-4xl px-4 flex flex-col gap-6">
-            {/* Indicador de límites - Arriba */}
-            <SubscriptionLimitsIndicator showOnly="services" />
+            {/* Indicador de límites - Nuevo estilo */}
+            <PublicationLimitBanner 
+              type="service"
+              current={servicesLimit.current}
+              limit={servicesLimit.limit}
+              planName={planName}
+              isLoading={limitsLoading}
+            />
 
             {/* Formulario principal */}
             <section className="w-full bg-white/90 border border-conexia-green/30 rounded-xl shadow-lg px-6 py-10 flex flex-col animate-fadeIn backdrop-blur-sm">

@@ -252,7 +252,7 @@ export default function MyServiceHiringsPage() {
 
   // Función para verificar si puede crear claim
   const canCreateClaim = (hiring) => {
-    const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered'];
+    const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered', 'completed'];
     const isInClaimAllowedState = ALLOWED_CLAIM_STATES.includes(hiring.status?.code);
     
     if (!isInClaimAllowedState) return false;

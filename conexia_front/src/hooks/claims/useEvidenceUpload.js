@@ -19,15 +19,18 @@ export const useEvidenceUpload = () => {
    */
   const addFiles = useCallback(
     (newFiles) => {
-      // Validar archivos nuevos
-      const validation = validateFiles([...files, ...Array.from(newFiles)]);
+      const newFilesArray = Array.from(newFiles);
+      
+      // Validar que no se exceda el límite
+      const validation = validateFiles([...files, ...newFilesArray]);
 
       if (!validation.valid) {
         setErrors(validation.errors);
         return false;
       }
 
-      setFiles((prev) => [...prev, ...Array.from(newFiles)]);
+      // Si la validación es exitosa, agregar los archivos
+      setFiles((prev) => [...prev, ...newFilesArray]);
       setErrors([]);
       return true;
     },

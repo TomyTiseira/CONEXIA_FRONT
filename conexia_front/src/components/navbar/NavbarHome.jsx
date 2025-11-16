@@ -19,7 +19,13 @@ export default function NavbarHome() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 select-none hover:opacity-80 transition-opacity">
           <Image src="/logo.png" alt="Conexia" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9" />
-          <span className="text-xl font-bold text-conexia-green hidden sm:block">CONEXIA</span>
+          <Image 
+            src="/images/conexia-text-logo.png" 
+            alt="CONEXIA" 
+            width={120} 
+            height={30} 
+            className="h-6 w-auto hidden sm:block"
+          />
         </Link>
 
         {/* Mobile menu toggle */}
