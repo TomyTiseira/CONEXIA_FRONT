@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, Settings, Briefcase, FileText, Users } from 'lucide-react';
+import { LogOut, Settings, Briefcase, FileText, Users, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
@@ -182,6 +182,17 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
 
       {/* Acciones */}
       <div className="border-t pt-1 mt-1">
+        {/* Dashboard solo para usuarios USER */}
+        {roleName === ROLES.USER && (
+          <Link
+            href="/dashboard"
+            onClick={handleClose}
+            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+          >
+            <BarChart3 size={16} />
+            Dashboard
+          </Link>
+        )}
         <Link
           href="/settings"
           onClick={handleClose}

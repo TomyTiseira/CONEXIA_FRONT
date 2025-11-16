@@ -29,13 +29,19 @@ const getFileIcon = (file) => {
   }
 };
 
-export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = [] }) => {
+export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = [], maxFiles, existingFilesCount = 0 }) => {
   const fileInputRef = useRef(null);
+
+  // Usar maxFiles si se proporciona, sino usar el máximo por defecto
+  const maxFilesAllowed = maxFiles !== undefined ? maxFiles : CLAIM_VALIDATION.MAX_EVIDENCE_FILES;
+  const canAddMore = files.length < maxFilesAllowed;
+  const filesRemaining = maxFilesAllowed - files.length;
 
   const handleFileSelect = (e) => {
     const selectedFiles = e.target.files;
     if (selectedFiles && selectedFiles.length > 0) {
-      onAddFiles(selectedFiles);
+      const result = onAddFiles(selectedFiles);
+      // Si hay errores, se mostrarán automáticamente en el componente
     }
     // Reset input para permitir seleccionar el mismo archivo de nuevo
     if (fileInputRef.current) {
@@ -47,15 +53,14 @@ export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = 
     e.preventDefault();
     const droppedFiles = e.dataTransfer.files;
     if (droppedFiles && droppedFiles.length > 0) {
-      onAddFiles(droppedFiles);
+      const result = onAddFiles(droppedFiles);
+      // Si hay errores, se mostrarán automáticamente en el componente
     }
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
   };
-
-  const canAddMore = files.length < CLAIM_VALIDATION.MAX_EVIDENCE_FILES;
 
   return (
     <div className="space-y-4">
@@ -75,8 +80,7 @@ export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = 
             JPG, PNG, GIF, PDF, DOCX, MP4 (máx. 10 MB por archivo)
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            Máximo {CLAIM_VALIDATION.MAX_EVIDENCE_FILES} archivos ({files.length}/
-            {CLAIM_VALIDATION.MAX_EVIDENCE_FILES})
+            Puedes subir hasta {filesRemaining} archivo(s) más. ({files.length + existingFilesCount}/{CLAIM_VALIDATION.MAX_EVIDENCE_FILES})
           </p>
           <input
             ref={fileInputRef}
@@ -133,7 +137,7 @@ export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = 
       {!canAddMore && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
           <p className="text-sm text-yellow-800">
-            Has alcanzado el máximo de {CLAIM_VALIDATION.MAX_EVIDENCE_FILES} archivos
+            Has alcanzado el máximo de archivos permitidos ({files.length + existingFilesCount}/{CLAIM_VALIDATION.MAX_EVIDENCE_FILES})
           </p>
         </div>
       )}

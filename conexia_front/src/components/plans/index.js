@@ -9,3 +9,5 @@ export { default as PlanComparisonBanner } from './PlanComparisonBanner';
 export { default as PlanInfoCard } from './PlanInfoCard';
 export { default as SubscriptionStatusBadge } from './SubscriptionStatusBadge';
 export { default as PaymentMethodCard, PaymentMethodListItem } from './PaymentMethodCard';
+export { default as UpgradePlanButton } from './UpgradePlanButton';
+export { default as PublicationLimitBanner } from './PublicationLimitBanner';

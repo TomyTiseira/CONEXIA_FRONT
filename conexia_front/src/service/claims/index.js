@@ -61,6 +61,7 @@ export const createClaim = async (claimData) => {
 /**
  * Obtiene lista de reclamos (admin/moderador)
  * @param {Object} filters - Filtros
+ * @param {string} filters.searchTerm - Buscar por ID del reclamo (completo o parcial)
  * @param {number} filters.hiringId - Filtrar por contratación
  * @param {string} filters.status - Filtrar por estado
  * @param {string} filters.claimantRole - Filtrar por rol del reclamante
@@ -72,6 +73,7 @@ export const getClaims = async (filters = {}) => {
   try {
     const queryParams = new URLSearchParams();
 
+    if (filters.searchTerm) queryParams.append('searchTerm', filters.searchTerm);
     if (filters.hiringId) queryParams.append('hiringId', filters.hiringId);
     if (filters.status) queryParams.append('status', filters.status);
     if (filters.claimantRole) queryParams.append('claimantRole', filters.claimantRole);
@@ -239,10 +241,10 @@ export const addObservations = async (claimId, observationsData) => {
 };
 
 /**
- * Subsana un reclamo (actualiza descripción y/o agrega evidencias)
+ * Subsana un reclamo (agrega respuesta a observaciones y/o nuevas evidencias)
  * Solo puede hacerlo el denunciante cuando el reclamo está en estado "pending_clarification"
  * @param {string} claimId - ID del reclamo
- * @param {FormData} formData - FormData con description (opcional) y/o evidence (archivos, opcional)
+ * @param {FormData} formData - FormData con clarificationResponse (obligatorio) y/o evidence (archivos, opcional)
  * @returns {Promise<Object>} - Reclamo actualizado con estado "open"
  */
 export const updateClaim = async (claimId, formData) => {

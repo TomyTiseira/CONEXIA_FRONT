@@ -13,7 +13,7 @@ import { config } from '@/config';
 import Navbar from '@/components/navbar/Navbar';
 import RequireVerification from '@/components/common/RequireVerification';
 import Pagination from '@/components/common/Pagination';
-import { PlanComparisonBanner } from '@/components/plans';
+import { UpgradePlanButton } from '@/components/plans';
 import Toast from '@/components/ui/Toast';
 
 export default function MyServicesPage() {
@@ -214,9 +214,9 @@ export default function MyServicesPage() {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
-          {/* Plan Comparison Banner */}
+          {/* Banner Mejorar Plan */}
           <div className="mb-6">
-            <PlanComparisonBanner context="services" />
+            <UpgradePlanButton context="services" />
           </div>
 
           {/* Header */}
