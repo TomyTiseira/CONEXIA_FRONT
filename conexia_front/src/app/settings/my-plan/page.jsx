@@ -16,6 +16,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
 import { FiAlertCircle, FiX } from 'react-icons/fi';
 import useSessionTimeout from '@/hooks/useSessionTimeout';
+import Toast from '@/components/ui/Toast';
 
 export default function MyPlanPage() {
   useSessionTimeout();
@@ -31,6 +32,7 @@ export default function MyPlanPage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [planToContract, setPlanToContract] = useState(null);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [toast, setToast] = useState(null);
 
   // Efecto para hacer scroll a la sección cuando viene desde hash
   useEffect(() => {
@@ -83,6 +85,14 @@ export default function MyPlanPage() {
     } catch (err) {
       console.error('Error al contratar plan:', err);
       setShowErrorAlert(true);
+      
+      // Mostrar toast de error para notificar al usuario
+      setToast({
+        type: 'error',
+        message: contractError?.message || 'Error al procesar la suscripción. Por favor intenta nuevamente.',
+        isVisible: true
+      });
+      
       // No cerrar el modal para que el usuario vea el error
     }
   };
@@ -249,6 +259,18 @@ export default function MyPlanPage() {
         onConfirm={handleConfirmContract}
         loading={contracting}
       />
+
+      {/* Toast de notificaciones */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={7000}
+        />
+      )}
     </div>
   );
 }

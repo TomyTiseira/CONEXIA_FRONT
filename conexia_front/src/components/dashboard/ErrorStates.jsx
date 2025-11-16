@@ -3,9 +3,50 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, BarChart3, RefreshCcw } from 'lucide-react';
 
 /**
+ * Convierte mensajes de error técnicos en mensajes amigables
+ */
+const getFriendlyErrorMessage = (technicalMessage) => {
+  if (!technicalMessage) {
+    return 'No pudimos cargar la información. Por favor, intenta nuevamente.';
+  }
+
+  const message = technicalMessage.toLowerCase();
+
+  // Errores de red o conexión
+  if (message.includes('cannot get') || message.includes('network') || message.includes('fetch')) {
+    return 'No pudimos conectarnos con el servidor. Por favor, verifica tu conexión a internet e intenta nuevamente.';
+  }
+
+  // Errores de autenticación
+  if (message.includes('unauthorized') || message.includes('401')) {
+    return 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
+  }
+
+  // Errores de permisos
+  if (message.includes('forbidden') || message.includes('403')) {
+    return 'No tienes permisos para acceder a esta información.';
+  }
+
+  // Errores de servidor
+  if (message.includes('500') || message.includes('internal server')) {
+    return 'Estamos experimentando problemas técnicos. Por favor, intenta más tarde.';
+  }
+
+  // Errores de timeout
+  if (message.includes('timeout')) {
+    return 'La solicitud tardó demasiado tiempo. Por favor, intenta nuevamente.';
+  }
+
+  // Si el mensaje ya es amigable, devolverlo tal cual
+  return technicalMessage;
+};
+
+/**
  * Estado de error con opción de reintentar
  */
 export const ErrorState = ({ message, onRetry }) => {
+  const friendlyMessage = getFriendlyErrorMessage(message);
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -21,7 +62,7 @@ export const ErrorState = ({ message, onRetry }) => {
       </h3>
       
       <p className="text-gray-600 text-center mb-8 max-w-md">
-        {message || 'No pudimos obtener los datos del dashboard. Por favor, intenta nuevamente.'}
+        {friendlyMessage}
       </p>
       
         {onRetry && (
