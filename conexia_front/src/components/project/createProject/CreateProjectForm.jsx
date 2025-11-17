@@ -264,17 +264,17 @@ export default function CreateProjectForm() {
         {/* Estructura idéntica al InputField para alineación */}
         <div className="min-h-[64px] relative">
           {/* Contenedor con borde similar a los inputs */}
-          <div className="border border-gray-300 rounded-lg p-3 bg-white h-[182px] flex flex-col justify-between">
+          <div className="border border-gray-300 rounded-lg p-3 bg-white h-[184px] flex flex-col">
             {/* Vista previa de la imagen */}
-            <div className="flex flex-col items-center justify-center flex-1 mb-2">
+            <div className="flex-1 mb-3 min-h-0">
               <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden">
                 {form.image ? (
                   <Image
                     src={URL.createObjectURL(form.image)}
                     alt="Vista previa"
                     width={200}
-                    height={128}
-                    className="object-cover w-full h-full"
+                    height={120}
+                    className="object-contain max-w-full max-h-full"
                   />
                 ) : (
                   <div className="text-center">
@@ -285,7 +285,7 @@ export default function CreateProjectForm() {
             </div>
 
             {/* Botón de selección y eliminación */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2 flex-shrink-0">
               <input
                 type="file"
                 accept="image/jpeg, image/png"
@@ -296,7 +296,7 @@ export default function CreateProjectForm() {
               />
               <label
                 htmlFor="image-upload"
-                className="cursor-pointer inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-[#367d7d] rounded-lg hover:bg-[#2b6a6a] transition-colors"
+                className="cursor-pointer inline-flex items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#367d7d] rounded-lg hover:bg-[#2b6a6a] transition-colors"
               >
                 Seleccionar archivo
               </label>
@@ -304,7 +304,7 @@ export default function CreateProjectForm() {
               {form.image && (
                 <button
                   type="button"
-                  className="text-red-600 text-sm hover:underline text-center"
+                  className="text-red-600 text-xs hover:underline text-center py-1"
                   onClick={handleRemoveImage}
                 >
                   Eliminar imagen

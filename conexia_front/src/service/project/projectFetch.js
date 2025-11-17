@@ -36,18 +36,98 @@ export async function fetchContractTypes() {
   return response.data;
 }
 
+export async function fetchApplicationTypes() {
+  const res = await fetch(`${config.API_URL}/projects/application-types`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('No se pudieron obtener los tipos de postulación');
+  const response = await res.json();
+  if (!response.success) throw new Error('Error en la respuesta de tipos de postulación');
+  return response.data;
+}
+
 
 export async function createProject(formData) {
-  const res = await fetch(`${config.API_URL}/projects/publish`, {
-    method: 'POST',
-    credentials: 'include',
-    body: formData,
-  });
+  console.log('🚀 Enviando proyecto al backend...');
+  console.log('📍 URL:', `${config.API_URL}/projects/publish`);
+  
+  // Debug: mostrar contenido del FormData
+  console.log('📤 Contenido del FormData:');
+  for (let [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
+    } else {
+      console.log(`${key}:`, value);
+    }
+  }
 
-  const json = await res.json();
+  let res;
+  try {
+    res = await fetch(`${config.API_URL}/projects/publish`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+  } catch (networkError) {
+    console.error('❌ Error de red:', networkError);
+    throw new Error(`Error de conexión: ${networkError.message}`);
+  }
+
+  console.log('📊 Status de respuesta:', res.status, res.statusText);
+  console.log('📋 Headers de respuesta:', Object.fromEntries(res.headers.entries()));
+
+  // Primero obtener el texto completo de la respuesta
+  let responseText;
+  try {
+    responseText = await res.text();
+    console.log('📄 Respuesta completa (texto):', responseText);
+  } catch (textError) {
+    console.error('❌ Error al leer texto de respuesta:', textError);
+    throw new Error(`Error al leer respuesta del servidor (${res.status})`);
+  }
+
+  // Intentar parsear como JSON
+  let json;
+  try {
+    json = JSON.parse(responseText);
+  } catch (parseError) {
+    console.error('❌ Error al parsear respuesta JSON:', parseError);
+    console.error('📄 Texto de respuesta no válido:', responseText);
+    throw new Error(`Error del servidor: ${res.status} ${res.statusText}. Respuesta: ${responseText.substring(0, 200)}`);
+  }
+
+  console.log('📥 Respuesta del backend (JSON):', json);
 
   if (!res.ok) {
-    throw new Error(json?.message || 'Error al crear el proyecto');
+    console.error('❌ Error del backend:', {
+      status: res.status,
+      statusText: res.statusText,
+      response: json
+    });
+    
+    // Extraer mensaje más detallado del backend
+    let errorMessage = 'Error al crear el proyecto';
+    let errorDetails = '';
+    
+    if (json?.message) {
+      errorMessage = json.message;
+    } else if (json?.error) {
+      errorMessage = json.error;
+    } else if (json?.errors && Array.isArray(json.errors)) {
+      errorDetails = json.errors.map(e => typeof e === 'string' ? e : e.message || JSON.stringify(e)).join(', ');
+      errorMessage = errorDetails || 'Errores de validación del backend';
+    } else if (json?.errors && typeof json.errors === 'object') {
+      // Si errors es un objeto (validación de campos)
+      errorDetails = Object.entries(json.errors)
+        .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+        .join(' | ');
+      errorMessage = errorDetails || 'Error de validación';
+    }
+    
+    const fullError = errorDetails ? `${errorMessage} - ${errorDetails}` : errorMessage;
+    throw new Error(`${fullError} (${res.status})`);
   }
 
   return json;

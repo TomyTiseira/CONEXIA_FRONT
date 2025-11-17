@@ -6,24 +6,18 @@ import Button from '@/components/ui/Button';
 import RoleFormModal from './RoleFormModal';
 
 /**
- * Tipos de postulación disponibles
+ * Tipos de postulación disponibles (actualizado según la API)
  */
 export const APPLICATION_TYPES = {
-  CV_ONLY: 'cv_only',
-  CUSTOM_QUESTIONS: 'custom_questions',
-  TECHNICAL_EVALUATION: 'technical_evaluation',
-  MIXED: 'mixed',
-  INVESTOR: 'investor',
-  PARTNER: 'partner',
+  CV: 'CV',
+  QUESTIONS: 'QUESTIONS', 
+  EVALUATION: 'EVALUATION'
 };
 
 export const APPLICATION_TYPE_LABELS = {
-  [APPLICATION_TYPES.CV_ONLY]: 'Solo CV',
-  [APPLICATION_TYPES.CUSTOM_QUESTIONS]: 'Preguntas personalizadas',
-  [APPLICATION_TYPES.TECHNICAL_EVALUATION]: 'Evaluación técnica',
-  [APPLICATION_TYPES.MIXED]: 'Mixto (CV + Preguntas/Evaluación)',
-  [APPLICATION_TYPES.INVESTOR]: 'Inversor / Financiamiento',
-  [APPLICATION_TYPES.PARTNER]: 'Socio / Cofundador',
+  [APPLICATION_TYPES.CV]: 'CV',
+  [APPLICATION_TYPES.QUESTIONS]: 'Preguntas',
+  [APPLICATION_TYPES.EVALUATION]: 'Evaluación Técnica'
 };
 
 /**

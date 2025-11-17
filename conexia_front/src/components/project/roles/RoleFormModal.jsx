@@ -8,6 +8,7 @@ import SelectField from '@/components/form/SelectField';
 import RubroSkillsSelector from '@/components/skills/RubroSkillsSelector';
 import { useCollaborationTypes } from '@/hooks/project/useCollaborationTypes';
 import { useContractTypes } from '@/hooks/project/useContractTypes';
+import { useApplicationTypes } from '@/hooks/project/useApplicationTypes';
 import { APPLICATION_TYPES, APPLICATION_TYPE_LABELS } from './ProjectRolesManager';
 
 /**
@@ -29,9 +30,10 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   
-  // Cargar tipos de colaboración y contratación
+  // Cargar tipos de colaboración, contratación y aplicación
   const { data: collaborationTypes } = useCollaborationTypes();
   const { data: contractTypes } = useContractTypes();
+  const { data: applicationTypes } = useApplicationTypes();
 
   // Cargar datos si estamos editando
   useEffect(() => {
@@ -137,13 +139,13 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
     }
 
     // Validaciones específicas por tipo de postulación
-    if (formData.applicationTypes?.includes(APPLICATION_TYPES.CUSTOM_QUESTIONS) && formData.questions.length === 0) {
+    if (formData.applicationTypes?.includes(APPLICATION_TYPES.QUESTIONS) && formData.questions.length === 0) {
       setErrors(prev => ({ ...prev, questions: 'Debe agregar al menos una pregunta' }));
       isValid = false;
     }
 
-    if (formData.applicationTypes?.includes(APPLICATION_TYPES.TECHNICAL_EVALUATION) && !formData.evaluation) {
-      setErrors(prev => ({ ...prev, evaluation: 'Debe configurar la evaluación técnica' }));
+    if (formData.applicationTypes?.includes(APPLICATION_TYPES.EVALUATION) && (!formData.evaluation || !formData.evaluation.description?.trim())) {
+      setErrors(prev => ({ ...prev, evaluation: 'Debe agregar una descripción para la evaluación técnica' }));
       isValid = false;
     }
 
@@ -353,8 +355,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
             </div>
 
             {/* Sección de preguntas personalizadas */}
-            {(formData.applicationTypes?.includes(APPLICATION_TYPES.CUSTOM_QUESTIONS) || 
-              formData.applicationTypes?.includes(APPLICATION_TYPES.MIXED)) && (
+            {formData.applicationTypes?.includes(APPLICATION_TYPES.QUESTIONS) && (
               <QuestionBuilder
                 questions={formData.questions}
                 onChange={(questions) => {
@@ -366,8 +367,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
             )}
 
             {/* Sección de evaluación técnica */}
-            {(formData.applicationTypes?.includes(APPLICATION_TYPES.TECHNICAL_EVALUATION) || 
-              formData.applicationTypes?.includes(APPLICATION_TYPES.MIXED)) && (
+            {formData.applicationTypes?.includes(APPLICATION_TYPES.EVALUATION) && (
               <EvaluationBuilder
                 evaluation={formData.evaluation}
                 onChange={(evaluation) => {
@@ -403,9 +403,9 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
  * Componente para construir preguntas personalizadas
  */
 function QuestionBuilder({ questions, onChange, error }) {
-  const [newQuestion, setNewQuestion] = useState({ 
-    question: '', 
-    type: 'open', 
+  const [newQuestion, setNewQuestion] = useState({
+    questionText: '', 
+    questionType: 'OPEN', 
     options: [], 
     hasCorrectAnswers: true // Por defecto, las preguntas tienen respuestas correctas
   });
@@ -413,9 +413,9 @@ function QuestionBuilder({ questions, onChange, error }) {
   const [editingIndex, setEditingIndex] = useState(null);
 
   const handleAddQuestion = () => {
-    if (newQuestion.question.trim()) {
+    if (newQuestion.questionText.trim()) {
       // Validar que si es opción múltiple tenga al menos 2 opciones
-      if (newQuestion.type === 'multiple') {
+      if (newQuestion.questionType === 'MULTIPLE_CHOICE') {
         if (newQuestion.options.length < 2) {
           return; // No agregar si no hay suficientes opciones
         }
@@ -436,7 +436,7 @@ function QuestionBuilder({ questions, onChange, error }) {
         onChange([...questions, { ...newQuestion }]);
       }
       
-      setNewQuestion({ question: '', type: 'open', options: [], hasCorrectAnswers: true });
+      setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
       setNewOption('');
     }
   };
@@ -446,7 +446,7 @@ function QuestionBuilder({ questions, onChange, error }) {
     // Si estábamos editando esta pregunta, cancelar la edición
     if (editingIndex === index) {
       setEditingIndex(null);
-      setNewQuestion({ question: '', type: 'open', options: [], hasCorrectAnswers: true });
+      setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
       setNewOption('');
     }
   };
@@ -459,7 +459,7 @@ function QuestionBuilder({ questions, onChange, error }) {
 
   const handleCancelEdit = () => {
     setEditingIndex(null);
-    setNewQuestion({ question: '', type: 'open', options: [], hasCorrectAnswers: true });
+    setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
     setNewOption('');
   };
 
@@ -493,14 +493,14 @@ function QuestionBuilder({ questions, onChange, error }) {
     const newType = e.target.value;
     setNewQuestion(prev => ({ 
       ...prev, 
-      type: newType,
-      options: newType === 'open' ? [] : prev.options 
+      questionType: newType,
+      options: newType === 'OPEN' ? [] : prev.options 
     }));
   };
 
   const canAddQuestion = () => {
-    if (!newQuestion.question.trim()) return false;
-    if (newQuestion.type === 'multiple') {
+    if (!newQuestion.questionText.trim()) return false;
+    if (newQuestion.questionType === 'MULTIPLE_CHOICE') {
       // Debe tener al menos 2 opciones
       if (newQuestion.options.length < 2) return false;
       // Solo validar respuesta correcta si hasCorrectAnswers es true
@@ -524,10 +524,10 @@ function QuestionBuilder({ questions, onChange, error }) {
           {questions.map((q, index) => (
             <div key={index} className={`flex items-start gap-2 p-3 rounded-lg ${editingIndex === index ? 'bg-blue-50 border-2 border-blue-300' : 'bg-gray-50'}`}>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{q.question}</p>
+                <p className="text-sm font-medium text-gray-900">{q.questionText}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-xs text-gray-600">
-                    Tipo: {q.type === 'open' ? 'Respuesta abierta' : 'Opción múltiple'}
+                    Tipo: {q.questionType === 'OPEN' ? 'Respuesta abierta' : 'Opción múltiple'}
                   </p>
                   {q.type === 'multiple' && q.hasCorrectAnswers === false && (
                     <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">
@@ -535,7 +535,7 @@ function QuestionBuilder({ questions, onChange, error }) {
                     </span>
                   )}
                 </div>
-                {q.type === 'multiple' && q.options?.length > 0 && (
+                {q.questionType === 'MULTIPLE_CHOICE' && q.options?.length > 0 && (
                   <div className="mt-2 space-y-1">
                     {q.options.map((opt, optIdx) => (
                       <div key={optIdx} className="flex items-center gap-2 text-xs">
@@ -588,20 +588,20 @@ function QuestionBuilder({ questions, onChange, error }) {
         )}
         <InputField
           placeholder="Escribe tu pregunta"
-          value={newQuestion.question}
-          onChange={(e) => setNewQuestion(prev => ({ ...prev, question: e.target.value }))}
+          value={newQuestion.questionText}
+          onChange={(e) => setNewQuestion(prev => ({ ...prev, questionText: e.target.value }))}
         />
         <SelectField
           options={[
-            { value: 'open', label: 'Respuesta abierta' },
-            { value: 'multiple', label: 'Opción múltiple' },
+            { value: 'OPEN', label: 'Respuesta abierta' },
+            { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
           ]}
-          value={newQuestion.type}
+          value={newQuestion.questionType}
           onChange={handleTypeChange}
         />
 
         {/* Opciones para preguntas de opción múltiple */}
-        {newQuestion.type === 'multiple' && (
+        {newQuestion.questionType === 'MULTIPLE_CHOICE' && (
           <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
             {/* Checkbox para indicar si tiene respuestas correctas */}
             <div className="mb-3 pb-3 border-b border-gray-200">
@@ -727,12 +727,15 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
   const [formData, setFormData] = useState(evaluation || {
     description: '',
     link: '',
+    days: 7,
     file: null,
   });
 
   useEffect(() => {
-    if (formData.description || formData.link || formData.file) {
+    if (formData.description && formData.description.trim()) {
       onChange(formData);
+    } else if (!formData.description || !formData.description.trim()) {
+      onChange(null); // No hay evaluación válida sin descripción
     }
   }, [formData]);
 
@@ -765,6 +768,33 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
             value={formData.link}
             onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
           />
+        </div>
+
+        <div className="-mt-4">
+          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+            Días para completar la evaluación
+          </label>
+          <InputField
+            type="number"
+            min="1"
+            max="30"
+            placeholder="7"
+            value={formData.days}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '' || value === null) {
+                setFormData(prev => ({ ...prev, days: '' }));
+              } else {
+                const numValue = parseInt(value);
+                if (!isNaN(numValue) && numValue >= 1 && numValue <= 30) {
+                  setFormData(prev => ({ ...prev, days: numValue }));
+                }
+              }
+            }}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Entre 1 y 30 días (por defecto: 7 días)
+          </p>
         </div>
 
         <div>
