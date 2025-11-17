@@ -12,6 +12,7 @@ import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 import { FaRegLightbulb } from 'react-icons/fa';
 import { PlanBadge } from '@/components/plans';
+import { useUserPlan } from '@/hooks/memberships';
 
 const defaultAvatar = '/images/default-avatar.png';
 
@@ -25,6 +26,9 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
   const [error, setError] = useState(null);
   const { user } = useAuth();
   const userId = user?.id;
+  
+  // Obtener información del plan solo si es USER
+  const { data: userPlan, error: planError } = roleName === ROLES.USER ? useUserPlan() : { data: null, error: null };
 
   useEffect(() => {
     // Si es admin o moderador, no buscar perfil
@@ -121,8 +125,8 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
         </div>
       </div>
 
-      {/* Plan del usuario (solo para rol USER) */}
-      {roleName === ROLES.USER && (
+      {/* Plan del usuario (solo para rol USER y si hay datos del plan) */}
+      {roleName === ROLES.USER && userPlan && !planError && (
         <div className="px-4 py-3 border-b">
           <PlanBadge 
             useCurrentPlan={true}
@@ -135,7 +139,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
       {/* Servicios (solo para usuarios con rol USER) */}
       {roleName === ROLES.USER && (
         <>
-          <div className="border-t pt-1 mt-1">
+          <div className="pt-1 mt-1">
             <div className="px-4 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
               Servicios
             </div>
@@ -145,7 +149,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
             >
               <FileText size={16} />
-              Mis Solicitudes
+              Mis solicitudes
             </Link>
             <Link
               href="/services/my-services"
@@ -153,7 +157,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
             >
               <Briefcase size={16} />
-              Mis Servicios
+              Mis servicios
             </Link>
           </div>
           <div className="border-t pt-1 mt-1">
@@ -166,7 +170,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
             >
               <FileText size={16} />
-              Mis Postulaciones
+              Mis postulaciones
             </Link>
             <Link
               href={`/projects/user/${userId}`}
@@ -174,7 +178,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
             >
               <FaRegLightbulb size={16} />
-              Mis Proyectos
+              Mis proyectos
             </Link>
           </div>
         </>
@@ -190,7 +194,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
             className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
           >
             <BarChart3 size={16} />
-            Dashboard
+            Métricas
           </Link>
         )}
         <Link

@@ -23,9 +23,9 @@ export default function PlanBadge({
   const router = useRouter();
   
   // Si useCurrentPlan es true, obtener el plan del usuario autenticado
-  const { data: currentUserPlan, isLoading: loadingUserPlan } = useCurrentPlan 
+  const { data: currentUserPlan, isLoading: loadingUserPlan, error: userPlanError } = useCurrentPlan 
     ? useUserPlan() 
-    : { data: null, isLoading: false };
+    : { data: null, isLoading: false, error: null };
   
   // Si se pasa planId, obtener el plan del hook
   const { plan: fetchedPlan, loading: loadingPlanById } = planId && !useCurrentPlan
@@ -33,6 +33,16 @@ export default function PlanBadge({
     : { plan: null, loading: false };
   
   const loading = loadingUserPlan || loadingPlanById;
+  
+  // Si hay error al cargar el plan del usuario, no mostrar nada
+  if (useCurrentPlan && userPlanError) {
+    return null;
+  }
+
+  // Si está cargando el plan del usuario y no hay datos, no mostrar nada
+  if (useCurrentPlan && loadingUserPlan && !currentUserPlan) {
+    return null;
+  }
   
   // Determinar el nombre del plan
   let displayPlanName = planName;

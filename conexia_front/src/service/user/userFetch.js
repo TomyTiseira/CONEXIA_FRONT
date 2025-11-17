@@ -150,20 +150,37 @@ export async function fetchUsers({ search = '', page = 1, limit = 3 } = {}) {
 }
 
 /**
- * Obtener el plan activo del usuario autenticado
- * @returns {Promise<Object>} - Plan, suscripción y flag isFreePlan
+ * Obtiene el plan activo del usuario autenticado
+ * @returns {Promise<Object>} Información del plan y suscripción del usuario
  */
 export async function getUserPlan() {
-  const response = await fetchWithRefresh(`${config.API_URL}/memberships/me/plan`, {
-    method: 'GET',
-    credentials: 'include',
-  });
+  try {
+    const response = await fetchWithRefresh(`${config.API_URL}/memberships/me/plan`, {
+      method: 'GET',
+      credentials: 'include',
+    });
 
-  const data = await response.json();
+    // Si no hay respuesta o es un error de red, lanzar error silencioso
+    if (!response) {
+      const error = new Error('No se pudo conectar con el servidor');
+      error.silent = true; // Marcar como error silencioso
+      throw error;
+    }
 
-  if (!response.ok) {
-    throw new Error(data.message || 'No se pudo obtener el plan del usuario');
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = new Error(data.message || 'No se pudo obtener el plan del usuario');
+      error.silent = true; // Marcar como error silencioso
+      throw error;
+    }
+
+    return data.data;
+  } catch (error) {
+    // Si es un error de red o conexión, marcarlo como silencioso
+    if (error.message.includes('fetch') || error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+      error.silent = true;
+    }
+    throw error;
   }
-
-  return data.data;
 }

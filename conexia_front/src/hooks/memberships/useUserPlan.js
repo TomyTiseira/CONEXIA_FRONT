@@ -47,13 +47,19 @@ export function useUserPlan() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastFetch, setLastFetch] = useState(0);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const CACHE_TIME = 5 * 60 * 1000; // 5 minutos
 
   const fetchUserPlan = useCallback(async (forceRefresh = false) => {
     // Si no ha pasado el tiempo de cache y no es force refresh, no hacer fetch
     const now = Date.now();
-    if (!forceRefresh && data && (now - lastFetch < CACHE_TIME)) {
+    if (!forceRefresh && hasFetched && (now - lastFetch < CACHE_TIME)) {
+      return;
+    }
+
+    // Si ya falló una vez y no es force refresh, no reintentar
+    if (!forceRefresh && error && hasFetched) {
       return;
     }
 
@@ -64,33 +70,33 @@ export function useUserPlan() {
       const planData = await getUserPlan();
       setData(planData);
       setLastFetch(now);
+      setHasFetched(true);
     } catch (err) {
       const errorMessage = err.message || 'Error al cargar el plan del usuario';
       setError(errorMessage);
-      console.error('Error fetching user plan:', err);
       
-      // Fallback: Si falla, asumir plan Free
-      setData({
-        plan: {
-          id: 1,
-          name: 'Free',
-          description: 'Plan básico gratuito',
-          monthlyPrice: 0,
-          annualPrice: 0,
-          benefits: []
-        },
-        isFreePlan: true
-      });
+      // Solo mostrar el error en consola si no es un error silencioso (esperado)
+      if (!err.silent) {
+        console.error('Error fetching user plan:', err);
+      }
+      
+      // Si falla, no establecer datos fallback para que el componente pueda decidir no mostrarse
+      setData(null);
+      setHasFetched(true);
     } finally {
       setIsLoading(false);
     }
-  }, [data, lastFetch, CACHE_TIME]);
+  }, [hasFetched, lastFetch, error, CACHE_TIME]);
 
   useEffect(() => {
-    fetchUserPlan();
-  }, [fetchUserPlan]);
+    // Solo ejecutar una vez al montar o cuando hasFetched cambia
+    if (!hasFetched) {
+      fetchUserPlan();
+    }
+  }, [hasFetched, fetchUserPlan]);
 
   const refetch = useCallback(() => {
+    setHasFetched(false);
     fetchUserPlan(true);
   }, [fetchUserPlan]);
 
