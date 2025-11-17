@@ -43,8 +43,12 @@ export default function UserActivity({ userId, isOwner }) {
     if (!loading && hasMore) setPage(prev => prev + 1);
   };
 
-  if (loading && publications.length === 0) return <LoadingSpinner message="Cargando actividad..." fullScreen={false} />;
-  if (error) return <div className="text-center text-red-500 mt-4">{error}</div>;
+  // No mostrar nada mientras carga o si hay error
+  if (loading && publications.length === 0) return null;
+  if (error) return null;
+  
+  // No mostrar la sección si no hay publicaciones
+  if (publications.length === 0) return null;
 
   return <ActivityFeed publications={publications} isOwner={isOwner} userId={userId} />;
 }

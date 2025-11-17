@@ -105,19 +105,22 @@ const handlePaste = (e) => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full md:w-[40%] px-6 py-10 bg-conexia-soft">
-      <div className="flex justify-center mb-4">
-        <ConexiaLogo width={80} height={32} />
-      </div>
-
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-conexia-green mb-4">Verifica tu cuenta</h1>
-        <p className="text-sm text-conexia-green mb-6">
-          Ingresa el código que te enviamos a <strong>{email}</strong>.
-        </p>
+    <div className="w-full max-w-md">
+      {/* Card principal */}
+      <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10">
+        {/* Logo y header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <ConexiaLogo width={100} height={40} />
+          </div>
+          <h1 className="text-3xl font-bold text-conexia-green mb-2">Verifica tu cuenta</h1>
+          <p className="text-sm text-gray-600">
+            Ingresa el código que te enviamos a <strong className="text-conexia-green">{email}</strong>
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex justify-center gap-2 flex-wrap">
+          <div className="flex justify-center gap-2">
             {code.map((digit, i) => (
               <input
                 key={i}
@@ -129,14 +132,14 @@ const handlePaste = (e) => {
                 onChange={(e) => handleChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, i)}
                 onPaste={(e) => handlePaste(e)}
-                className="w-8 h-8 text-center border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-conexia-green sm:w-10 sm:h-10 sm:text-lg md:w-12 md:h-12"
+                className="w-12 h-12 text-center border border-gray-300 rounded-lg text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-conexia-green/40 focus:border-conexia-green transition-all"
               />
             ))}
           </div>
 
           <button
             type="submit"
-            className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"
+            className="w-full bg-conexia-green text-white py-3 rounded-lg font-semibold hover:bg-conexia-green/90 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             Verificar
           </button>
@@ -148,13 +151,13 @@ const handlePaste = (e) => {
           onResend={() => setMsg({ ok: true, text: "Te reenviamos un nuevo código a tu correo." })}
         />
 
-        <div className="min-h-[40px] mt-4 text-center text-sm">
-          {msg && (
-            <p className={msg.ok ? "text-green-600" : "text-red-600"}>
+        {msg && (
+          <div className="mt-4 text-center">
+            <p className={`text-sm font-medium ${msg.ok ? "text-green-600" : "text-red-600"}`}>
               {msg.text}
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

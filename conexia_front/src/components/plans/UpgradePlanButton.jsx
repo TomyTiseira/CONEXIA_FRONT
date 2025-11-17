@@ -81,7 +81,7 @@ export default function UpgradePlanButton({ context = 'general', className = '' 
 
     if (context === 'projects') {
       const highlight = projectsLimit 
-        ? `Publica hasta ${projectsLimit} proyectos.`
+        ? `Publica hasta ${projectsLimit} proyectos`
         : `Mejora a ${targetPlanName}`;
       
       const description = 'Aumenta tu visibilidad y oportunidades de colaboración';

@@ -42,11 +42,11 @@ export default function NavbarModerator() {
 
   const navItems = [
   { label: 'Inicio', href: '/', icon: Home },
-  { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { label: 'Servicios', href: '/services', icon: Briefcase },
   { label: 'Proyectos', href: '/project/search', icon: Layers },
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },
   { label: 'Reclamos', href: '/admin/claims', icon: AlertCircle },
+  { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';
