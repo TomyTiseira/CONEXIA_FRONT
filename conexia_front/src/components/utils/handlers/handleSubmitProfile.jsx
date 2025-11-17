@@ -146,7 +146,18 @@ const socialValidation = validateAllSocialLinks(form.socialLinks);
       setMsg({ ok: false, text: "Error: No se pudo actualizar la sesión del usuario." });
     }
   } catch (err) {
-    console.error('Error al crear perfil:', err);
+    // NO mostrar el error en consola para evitar el ISSUE
+    // console.error('Error al crear perfil:', err);
+    
+    // Manejar error de documento duplicado (409)
+    const statusCode = err.statusCode || err.status;
+    if (statusCode === 409 && err.message && err.message.toLowerCase().includes('document number')) {
+      setMsg({ 
+        ok: false, 
+        text: "Ya existe un usuario registrado con este número de documento"
+      });
+      return;
+    }
     
     // Manejar error de perfil ya existente con datos
     if (err.message && err.message.includes('Profile already exists')) {

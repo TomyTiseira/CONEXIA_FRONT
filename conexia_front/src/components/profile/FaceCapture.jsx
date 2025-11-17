@@ -15,6 +15,19 @@ export default function FaceCapture({ onFileSelect, selectedFile }) {
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Sincronizar preview con selectedFile cuando cambia
+  useEffect(() => {
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setPreview(null);
+    }
+  }, [selectedFile]);
+
   const validateFile = (file) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
       return 'Solo se permiten imágenes en formato JPEG o PNG.';

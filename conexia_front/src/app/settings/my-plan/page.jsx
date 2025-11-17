@@ -15,6 +15,7 @@ import { PlanInfoCard } from '@/components/plans';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
 import { FiAlertCircle, FiX } from 'react-icons/fi';
+import { Zap, TrendingUp, Users, Briefcase } from 'lucide-react';
 import useSessionTimeout from '@/hooks/useSessionTimeout';
 import Toast from '@/components/ui/Toast';
 
@@ -61,6 +62,7 @@ export default function MyPlanPage() {
 
   // Obtener el plan actual del usuario desde el nuevo hook
   const currentPlanId = currentUserPlanData?.plan?.id || profile?.planId || 1;
+  const currentPlanName = currentUserPlanData?.plan?.name || profile?.planName || 'Free';
 
   // Handlers
   const handleInitiateContract = (planId) => {
@@ -144,15 +146,7 @@ export default function MyPlanPage() {
 
   return (
     <div className="w-full">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Mi plan
-        </h1>
-        <p className="text-gray-600">
-          Gestiona tu suscripción y explora planes para desbloquear más beneficios
-        </p>
-      </div>
+
 
       {/* Plan Info Card - Mostrar info del plan actual del usuario */}
       {canContractPlans && (
@@ -161,79 +155,91 @@ export default function MyPlanPage() {
         </div>
       )}
 
-      {/* Divider */}
-      <div id="explorar-planes" className="mb-8 border-t border-gray-200 pt-8 scroll-mt-20">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Explorar planes
-        </h2>
-        <p className="text-gray-600">
-          Elige el plan perfecto para ti y desbloquea todo el potencial de Conexia
-        </p>
-        
-        {/* Mensaje especial para admin/moderador */}
-        {!canContractPlans && (
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
-            <FiAlertCircle className="w-4 h-4" />
-            Como {roleName}, puedes visualizar los planes pero no contratarlos
+      {/* Tarjeta Explorar Planes - Similar a PlanInfoCard */}
+      <div id="explorar-planes" className="mb-8 scroll-mt-20">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* Header con gradiente CONEXIA */}
+          <div className="bg-gradient-to-r from-[#48a6a7] to-[#419596] p-6 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-2xl font-bold">Explorar planes</h2>
+            </div>
+            <p className="text-white/90 text-base">
+              Elige el plan perfecto para ti y desbloquea todo el potencial de Conexia
+            </p>
           </div>
-        )}
+          
+          {/* Contenido de la tarjeta */}
+          <div className="p-6">
+            {/* Mensaje especial para admin/moderador */}
+            {!canContractPlans && (
+              <div className="mb-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
+                <FiAlertCircle className="w-4 h-4" />
+                Como {roleName}, puedes visualizar los planes pero no contratarlos
+              </div>
+            )}
 
-        {/* Alerta de error al contratar */}
-        {showErrorAlert && contractError && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 flex-1">
-                <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-red-900 mb-1">
-                    {contractError.title || 'Error al contratar plan'}
-                  </h3>
-                  <p className="text-sm text-red-700">
-                    {contractError.message || 'Ocurrió un error al procesar tu solicitud'}
-                  </p>
+            {/* Alerta de error al contratar */}
+            {showErrorAlert && contractError && (
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1">
+                    <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-red-900 mb-1">
+                        {contractError.title || 'Error al contratar plan'}
+                      </h3>
+                      <p className="text-sm text-red-700">
+                        {contractError.message || 'Ocurrió un error al procesar tu solicitud'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowErrorAlert(false)}
+                    className="text-red-400 hover:text-red-600 transition-colors"
+                    aria-label="Cerrar alerta"
+                  >
+                    <FiX className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={() => setShowErrorAlert(false)}
-                className="text-red-400 hover:text-red-600 transition-colors"
-                aria-label="Cerrar alerta"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
+            )}
+            
+            {/* Pricing Toggle */}
+            <div className="mb-6 flex justify-center">
+              <PricingToggle 
+                value={billingCycle}
+                onChange={setBillingCycle}
+              />
+            </div>
+
+            {/* Plans Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {plans.map((plan) => (
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  isCurrentPlan={plan.id === currentPlanId}
+                  isMostPopular={plan.name === mostPopularPlanName}
+                  billingCycle={billingCycle}
+                  canContract={canContractPlans}
+                  currentPlanName={currentPlanName}
+                  onContractClick={handleInitiateContract}
+                  onDetailsClick={handleViewDetails}
+                />
+              ))}
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Pricing Toggle */}
-      <div className="mb-8 flex justify-center">
-        <PricingToggle 
-          value={billingCycle}
-          onChange={setBillingCycle}
-        />
-      </div>
-
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-        {plans.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            isCurrentPlan={plan.id === currentPlanId}
-            isMostPopular={plan.name === mostPopularPlanName}
-            billingCycle={billingCycle}
-            canContract={canContractPlans}
-            onContractClick={handleInitiateContract}
-            onDetailsClick={handleViewDetails}
-          />
-        ))}
+        </div>
       </div>
 
       {/* Footer Info */}
       <div className="text-center space-y-4 pt-8 border-t border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">
-          ¿Tienes preguntas sobre nuestros planes?
-        </h3>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Users className="w-6 h-6 text-conexia-green" />
+          <h3 className="text-lg font-semibold text-gray-900">
+            ¿Tienes preguntas sobre nuestros planes?
+          </h3>
+        </div>
         <p className="text-gray-600 text-sm">
           Contáctanos y te ayudaremos a elegir el mejor plan para tus necesidades
         </p>

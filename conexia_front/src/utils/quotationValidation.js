@@ -151,6 +151,16 @@ export function prepareQuotationData(formData, modality) {
     data.isBusinessDays = Boolean(formData.isBusinessDays);
   }
 
+  // Agregar horas por día si están definidas
+  if (formData.hoursPerDay && formData.hoursPerDay !== '') {
+    data.hoursPerDay = parseFloat(formData.hoursPerDay);
+  }
+
+  // Agregar campo de trabajo solo días hábiles si está definido
+  if (formData.workOnBusinessDaysOnly !== undefined) {
+    data.workOnBusinessDaysOnly = Boolean(formData.workOnBusinessDaysOnly);
+  }
+
   // Agregar notas si existen
   if (formData.quotationNotes?.trim()) {
     data.quotationNotes = formData.quotationNotes.trim();

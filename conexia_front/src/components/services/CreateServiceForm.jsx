@@ -325,7 +325,7 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
           </div>
 
           {/* Categoría */}
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
               Categoría del servicio *
             </label>

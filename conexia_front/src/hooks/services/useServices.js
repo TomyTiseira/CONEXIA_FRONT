@@ -205,6 +205,17 @@ export function useServices() {
       if (ids.length > 0) backendParams.categoryIds = ids;
     }
 
+    // Agregar minRating si existe y es mayor a 1 (número entre 2-5)
+    // minRating = 1 es el valor por defecto y equivale a no filtrar
+    if (updatedFilters.minRating !== null && updatedFilters.minRating !== undefined) {
+      const rating = typeof updatedFilters.minRating === 'string' 
+        ? parseFloat(updatedFilters.minRating) 
+        : updatedFilters.minRating;
+      if (Number.isFinite(rating) && rating >= 2 && rating <= 5) {
+        backendParams.minRating = rating;
+      }
+    }
+
     // Nota: El backend no maneja priceMin, priceMax, ni sortBy según el DTO
     // Estos filtros se aplicarán en el frontend si es necesario
 

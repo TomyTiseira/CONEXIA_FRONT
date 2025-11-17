@@ -26,20 +26,12 @@ export default function UserServices({ userId }) {
     }
   };
 
+  // No mostrar nada mientras carga
   if (loading) {
-    return (
-      <div className="mt-8">
-        <div className="bg-white border border-[#e0e0e0] rounded-xl shadow-md p-4 md:p-6 flex flex-col gap-2">
-          <div className="flex items-center gap-2 mb-1">
-            <Briefcase className="w-6 h-6 text-conexia-green" />
-            <h3 className="text-base md:text-lg font-bold text-conexia-green">Servicios</h3>
-          </div>
-          <div className="text-gray-500 text-sm md:text-base">Cargando servicios...</div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
+  // No mostrar la sección si no hay servicios
   if (!services || services.length === 0) {
     return null;
   }

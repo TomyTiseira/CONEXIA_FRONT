@@ -1,25 +1,13 @@
 import VerifyForm from "@/components/verify-account/VerifyForm";
-import { Footer } from "@/components/Footer";
-import HeroPanel from "@/components/hero/HeroPanel";
 import { Suspense } from "react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function VerifyAccountPage() {
   return (
-    <main className="min-h-screen flex flex-col">
-      <section className="flex flex-col md:flex-row flex-grow min-h-[720px] bg-conexia-soft md:bg-transparent">
-        <HeroPanel
-            title="¡Crea tu cuenta y súmate!"
-            subtitle="Conecta con talentos, proyectos y oportunidades reales."
-        />
-        <Suspense fallback={
-          <div className="flex items-center justify-center w-full h-full">
-            <div className="loader"></div>
-          </div>
-        }>
-          <VerifyForm />
-        </Suspense>
-      </section>
-      <Footer />
+    <main className="min-h-screen bg-gradient-to-br from-conexia-green via-conexia-green/95 to-[#0d2d28] flex items-center justify-center p-4">
+      <Suspense fallback={<LoadingSpinner message="Cargando..." />}>
+        <VerifyForm />
+      </Suspense>
     </main>
   );
 }

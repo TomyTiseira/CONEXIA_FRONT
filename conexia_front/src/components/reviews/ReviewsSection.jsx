@@ -57,6 +57,11 @@ export default function ReviewsSection({ profileUserId }) {
   const isOwner = user && user.id === Number(profileUserId);
   const canAdd = user && roleName === 'user' && !isOwner && !hasUserReview;
 
+  // Si es el dueño y no tiene reseñas, no mostrar la sección
+  if (isOwner && (!reviewsData.reviews || reviewsData.reviews.length === 0) && !loading) {
+    return null;
+  }
+
   const onSaved = async () => {
     setFormOpen(false);
     setEditReview(null);

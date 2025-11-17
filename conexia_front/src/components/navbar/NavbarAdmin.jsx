@@ -44,13 +44,13 @@ export default function NavbarAdmin() {
 
   const navItems = [
   { label: 'Inicio', href: '/', icon: Home },
-  { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { label: 'Servicios', href: '/services', icon: Briefcase },
   { label: 'Proyectos', href: '/project/search', icon: Layers },
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },
   { label: 'Reclamos', href: '/admin/claims', icon: AlertCircle },
   { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
   { label: 'Planes', href: '/admin/plans', icon: CreditCard },
+
   ];
 
   const defaultAvatar = '/images/default-avatar.png';

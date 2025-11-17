@@ -76,7 +76,7 @@ export default function EmailForm() {
             </label>
             <InputField
               type="email"
-              placeholder="Correo electrónico"
+              placeholder="user@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onFocus={() => setFocused(true)}
