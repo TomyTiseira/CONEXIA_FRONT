@@ -45,10 +45,24 @@ function PendingContent() {
     router.push('/settings/my-plan');
   };
 
-  const handleRefreshStatus = () => {
-    // TODO: Implementar verificación de estado del pago
-    alert('Verificando estado del pago...');
-    router.refresh();
+  const handleRefreshStatus = async () => {
+    const subscriptionId = searchParams.get('external_reference');
+    const preapprovalId = searchParams.get('preapproval_id');
+    
+    if (subscriptionId && preapprovalId) {
+      // Si tenemos los parámetros, intentar confirmar
+      try {
+        const { confirmSubscription } = await import('@/service/memberships/membershipService');
+        await confirmSubscription(subscriptionId, preapprovalId);
+        router.push(`/subscriptions/success?preapproval_id=${preapprovalId}&external_reference=${subscriptionId}&status=approved`);
+      } catch (error) {
+        console.error('Error al verificar estado:', error);
+        alert('No se pudo verificar el estado. Por favor, intenta más tarde.');
+      }
+    } else {
+      // Simplemente recargar la página
+      router.refresh();
+    }
   };
 
   return (

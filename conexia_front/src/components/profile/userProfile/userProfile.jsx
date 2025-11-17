@@ -503,7 +503,7 @@ export default function UserProfile() {
                   )}
                 </div>
                 {user.profession && (
-                  <p className="text-conexia-coral font-medium text-lg mt-1">
+                  <p className="text-conexia-green font-semibold text-lg mt-1">
                     {user.profession}
                   </p>
                 )}
@@ -511,10 +511,11 @@ export default function UserProfile() {
                   <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
                 )}
                 {/* Badge del plan (solo para el dueño del perfil) */}
-                {isOwner && (
+                {isOwner && profile.plan && (
                   <div className="mt-2 flex justify-center sm:justify-start">
                     <PlanBadge 
-                      planId={user.planId || 1} 
+                      planId={profile.plan.id} 
+                      planName={profile.plan.name}
                       variant="compact"
                     />
                   </div>
