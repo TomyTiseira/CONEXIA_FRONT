@@ -198,7 +198,7 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
         <div className="flex items-start gap-3">
           <FiCreditCard className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="font-medium text-blue-900 mb-1">💳 Cobro automático recurrente</p>
+            <p className="font-medium text-blue-900 mb-1">Cobro automático recurrente</p>
             <p className="text-blue-700">
               Esta tarjeta será cargada automáticamente cada <strong>{billingCycle === 'monthly' ? 'mes' : 'año'}</strong> por <strong>{amount.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</strong>. Puedes cancelar en cualquier momento desde tu panel de usuario.
             </p>

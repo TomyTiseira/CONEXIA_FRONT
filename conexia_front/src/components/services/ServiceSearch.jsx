@@ -29,6 +29,7 @@ export default function ServiceSearch() {
     priceMin: '',
     priceMax: '',
     sortBy: '',
+    minRating: 1,
     page: 1,
     limit: 12
   });

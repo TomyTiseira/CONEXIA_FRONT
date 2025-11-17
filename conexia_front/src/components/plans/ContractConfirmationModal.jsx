@@ -51,9 +51,9 @@ export default function ContractConfirmationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col">
+        {/* Header - Fixed */}
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-xl font-bold text-gray-900">
             Confirmar contratación
           </h2>
@@ -67,8 +67,8 @@ export default function ContractConfirmationModal({
           </button>
         </div>
 
-        {/* Content */}
-        <div className="px-6 py-4 space-y-4">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* Plan Info */}
           <div className="bg-gradient-to-br from-conexia-soft to-white border border-conexia-green/20 rounded-xl p-4">
             <h3 className="text-lg font-bold text-gray-900 mb-1">
@@ -121,8 +121,8 @@ export default function ContractConfirmationModal({
           </div>
         </div>
 
-        {/* Footer - Solo botón de cancelar */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-3 rounded-b-2xl">
+        {/* Footer - Fixed */}
+        <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-6 py-3 rounded-b-2xl">
           <button
             onClick={handleClose}
             disabled={loading}

@@ -23,14 +23,15 @@ export default function PublicationLimitBanner({
   isLoading = false,
   className = '' 
 }) {
-  // No mostrar si tiene Premium o está cargando
-  if (planName === 'Premium' || isLoading) {
+  // No mostrar si está cargando
+  if (isLoading) {
     return null;
   }
 
   const isService = type === 'service';
   const Icon = isService ? Briefcase : FolderKanban;
   const label = isService ? 'servicios' : 'proyectos';
+  const isPremium = planName === 'Premium';
   
   // Calcular porcentaje usado
   const percentage = limit > 0 ? Math.round((current / limit) * 100) : 0;
@@ -53,6 +54,20 @@ export default function PublicationLimitBanner({
         
         <div className="relative px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex flex-col gap-2.5 sm:gap-3">
+            {/* Badge del plan (para todos los usuarios) */}
+            <div className="flex items-center gap-2">
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${
+                isPremium 
+                  ? 'bg-gradient-to-r from-[#48a6a7] to-[#419596]'
+                  : planName === 'Basic'
+                  ? 'bg-gradient-to-r from-[#419596] to-[#367d7d]'
+                  : 'bg-gradient-to-r from-[#367d7d] to-[#2b6a6a]'
+              }`}>
+                <FiStar className="w-3.5 h-3.5 text-white" />
+                <span className="text-xs font-bold text-white">Plan {planName}</span>
+              </div>
+            </div>
+
             {/* Información del límite */}
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Icono */}
@@ -64,10 +79,7 @@ export default function PublicationLimitBanner({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1.5">
                   <p className="text-xs sm:text-sm font-bold text-gray-800">
-                    Tus {label} disponibles
-                  </p>
-                  <p className={`text-xs sm:text-sm font-bold ${getStatusColor()}`}>
-                    {current} / {limit}
+                    {current} de {limit} {label} publicados
                   </p>
                 </div>
                 
@@ -87,44 +99,49 @@ export default function PublicationLimitBanner({
               </div>
             </div>
 
-            {/* Mensaje de estado */}
-            {!isAtLimit && (
-              <div className="flex items-start gap-2">
-                <FiTrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#367d7d] mt-0.5 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-gray-700 leading-tight">
-                  {isNearLimit 
-                    ? <span className="font-semibold">Estás cerca del límite. Mejora tu plan para publicar más {label}.</span>
-                    : <><span className="font-bold">Puedes publicar {limit - current} {label} más con tu plan {planName}.</span></>
-                  }
-                </p>
-              </div>
-            )}
-
-            {/* Mensaje de límite alcanzado */}
-            {isAtLimit && (
-              <div className="flex items-start gap-2">
-                <FiZap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-red-700 font-bold leading-tight">
-                  Has alcanzado el límite de {label}. Mejora tu plan para publicar más.
-                </p>
-              </div>
-            )}
-
-            {/* Botón Mejorar plan */}
-            <div className="relative mt-1">
-              {/* Resplandor dinámico detrás del botón */}
-              <div className="absolute -inset-2 bg-gradient-to-r from-[#48a6a7]/30 via-[#419596]/40 to-[#367d7d]/30 rounded-xl blur-xl opacity-60 animate-pulse"></div>
-              
-              {/* Link como botón para permitir click derecho */}
-              <Link
-                href="/settings/my-plan"
-                className="relative w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-[0_4px_15px_rgba(72,166,167,0.4)] hover:shadow-[0_6px_20px_rgba(65,149,150,0.5)] transform hover:scale-105 group"
-              >
-                {/* Icono estrella con animación */}
-                <FiStar className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:rotate-12 transition-transform duration-300" />
-                <span>Mejorar plan</span>
-              </Link>
+            {/* Mensaje de estado unificado */}
+            <div className="flex items-start gap-2">
+              <FiTrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#367d7d] mt-0.5 flex-shrink-0" />
+              <p className="text-xs sm:text-sm text-gray-700 leading-tight">
+                {isAtLimit ? (
+                  <span className="font-bold text-red-700">
+                    Has alcanzado el límite de {label}. {!isPremium && 'Mejora tu plan para publicar más.'}
+                  </span>
+                ) : (
+                  <span className="font-bold">
+                    Te quedan {limit - current} {label} disponibles para publicar.
+                  </span>
+                )}
+              </p>
             </div>
+
+            {/* Mensaje adicional para usuarios cerca del límite (Free/Basic) */}
+            {!isPremium && isNearLimit && !isAtLimit && (
+              <div className="flex items-start gap-2">
+                <FiZap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs sm:text-sm text-amber-700 leading-tight">
+                  <span className="font-semibold">Estás cerca del límite. Mejora tu plan para publicar más {label}.</span>
+                </p>
+              </div>
+            )}
+
+            {/* Botón Mejorar plan (solo para Free/Basic) */}
+            {!isPremium && (
+              <div className="relative mt-1">
+                {/* Resplandor dinámico detrás del botón */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-[#48a6a7]/30 via-[#419596]/40 to-[#367d7d]/30 rounded-xl blur-xl opacity-60 animate-pulse"></div>
+                
+                {/* Link como botón para permitir click derecho */}
+                <Link
+                  href="/settings/my-plan#explorar-planes"
+                  className="relative w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-[0_4px_15px_rgba(72,166,167,0.4)] hover:shadow-[0_6px_20px_rgba(65,149,150,0.5)] transform hover:scale-105 group"
+                >
+                  {/* Icono estrella con animación */}
+                  <FiStar className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:rotate-12 transition-transform duration-300" />
+                  <span>Mejorar plan</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

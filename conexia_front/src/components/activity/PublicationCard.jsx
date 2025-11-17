@@ -45,12 +45,48 @@ const getMediaUrl = (mediaUrl) => {
 
 
 
-function PublicationCard({ publication, isGridItem = false, onShowToast, searchParams }) {
+function PublicationCard({ publication, isGridItem = false, onShowToast, searchParams, sentConnectionRequests = new Set(), onConnectionRequestSent }) {
   const { sendRequest, loading: connectLoading, success: connectSuccess, error: connectError } = useSendConnectionRequest();
   const { user } = useAuth();
   const { roleName } = useUserStore();
   const router = useRouter();
   const publicationId = publication?.id;
+  
+  // Extraer datos del owner ANTES de usarlos en hooks (mejores prácticas)
+  const ownerId = publication.owner?.id;
+  const ownerProfilePicture = publication.owner?.profilePicture;
+  const ownerName = publication.owner?.name;
+  const ownerLastName = publication.owner?.lastName;
+  const ownerProfession = publication.owner?.profession;
+  
+  // Avatar del owner
+  const avatar = ownerProfilePicture
+    ? (ownerProfilePicture.startsWith('http')
+        ? ownerProfilePicture
+        : `${config.IMAGE_URL}${ownerProfilePicture.startsWith('/') ? '' : '/'}${ownerProfilePicture}`)
+    : '/images/default-avatar.png';
+  
+  // Nombres para display
+  let displayName = 'Usuario';
+  let displayNameMobile = 'Usuario';
+  
+  if (ownerName && ownerLastName) {
+    displayName = `${ownerName} ${ownerLastName}`;
+    displayNameMobile = `${ownerName} ${ownerLastName}`;
+  } else if (ownerName) {
+    displayName = ownerName;
+    displayNameMobile = ownerName;
+  }
+  
+  const profession = ownerProfession || '';
+  
+  // Verificar lógica de permisos
+  const isOwner = user && publication.userId && String(user.id) === String(publication.userId);
+  const isAdmin = roleName === ROLES.ADMIN;
+  const isModerator = roleName === ROLES.MODERATOR;
+  
+  // Verificar si ya se envió solicitud a este usuario
+  const hasRequestBeenSent = sentConnectionRequests.has(ownerId) || connectSuccess;
   
   // Función de utilidad para manejar eventos de forma segura
   const safelyHandleTooltip = (element, action, tooltipClass) => {
@@ -207,6 +243,13 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
   
+  // Notificar al padre cuando se envía exitosamente una solicitud de conexión
+  useEffect(() => {
+    if (connectSuccess && ownerId && onConnectionRequestSent) {
+      onConnectionRequestSent(ownerId);
+    }
+  }, [connectSuccess, ownerId, onConnectionRequestSent]);
+  
   // Inicializar datos de reacciones y comentarios al montar
   useEffect(() => {
     if (publication.userReaction) {
@@ -323,27 +366,6 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
 
   }, [searchParams?.commentId, searchParams?.highlightCommentId, publicationId]);
 
-  // Avatar, nombre, profesión y privacidad desde publication.owner
-  const avatar = publication.owner?.profilePicture
-    ? (publication.owner.profilePicture.startsWith('http')
-        ? publication.owner.profilePicture
-        : `${config.IMAGE_URL}${publication.owner.profilePicture.startsWith('/') ? '' : '/'}${publication.owner.profilePicture}`)
-    : '/images/default-avatar.png';
-  const ownerId = publication.owner?.id;
-  // Combinar name + lastName del backend
-  let displayName = 'Usuario';
-  let displayNameMobile = 'Usuario';
-  
-  if (publication.owner?.name && publication.owner?.lastName) {
-    displayName = `${publication.owner.name} ${publication.owner.lastName}`;
-    displayNameMobile = `${publication.owner.name} ${publication.owner.lastName}`;
-  } else if (publication.owner?.name) {
-    displayName = publication.owner.name;
-    displayNameMobile = publication.owner.name;
-  }
-  
-  const profession = publication.owner?.profession || '';
-
   // Fecha relativa o absoluta
   function getRelativeOrAbsoluteDate(dateString) {
     const now = new Date();
@@ -391,13 +413,6 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
   } else if (publication.privacy === 'onlyFriends' || publication.privacy === 'contacts') {
     privacyIcon = <FaUsers size={16} className="inline text-conexia-green ml-1 align-text-bottom" title="Solo amigos" />;
   }
-
-  // Lógica de edición y borrado
-  const isOwner = user && publication.userId && String(user.id) === String(publication.userId);
-
-  // Lógica de menú: admin/moderador solo ve "Ver reportes", usuario general ve "Reportar publicación", dueño ve editar/eliminar
-  const isAdmin = roleName === ROLES.ADMIN;
-  const isModerator = roleName === ROLES.MODERATOR;
   
   // Estados para reacciones
   const [userReaction, setUserReaction] = useState(publication.userReaction || null);
@@ -1157,21 +1172,21 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
             {( !publication.isContact && publication.connectionStatus == null && !isOwner && !isAdmin && !isModerator) && (
               <button
                 onClick={async () => {
-                  if (connectSuccess || connectLoading) return;
+                  if (hasRequestBeenSent || connectLoading) return;
                   try {
                     await sendRequest(publication.owner?.id);
                   } catch {}
                 }}
                 className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                  (connectSuccess || connectLoading)
+                  (hasRequestBeenSent || connectLoading)
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                     : 'bg-conexia-green/10 text-conexia-green hover:bg-conexia-green hover:text-white hover:scale-110'
                 }`}
-                disabled={connectSuccess || connectLoading}
-                title={(connectSuccess || connectLoading) ? 'Solicitud enviada' : 'Conectar'}
+                disabled={hasRequestBeenSent || connectLoading}
+                title={(hasRequestBeenSent || connectLoading) ? 'Solicitud enviada' : 'Conectar'}
                 type="button"
               >
-                {(connectSuccess || connectLoading) ? <Check size={18} /> : <UserPlus size={18} />}
+                {(hasRequestBeenSent || connectLoading) ? <Check size={18} /> : <UserPlus size={18} />}
               </button>
             )}
             <button className="p-1 rounded-full focus:outline-none" style={{background: 'transparent'}} onClick={() => setMenuOpen((v) => !v)}>
@@ -2385,12 +2400,11 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
 
 
 PublicationCard.propTypes = {
-  publication: PropTypes.object.isRequired
-};
-PublicationCard.propTypes = {
   publication: PropTypes.object.isRequired,
   isGridItem: PropTypes.bool,
-  onShowToast: PropTypes.func
+  onShowToast: PropTypes.func,
+  sentConnectionRequests: PropTypes.instanceOf(Set),
+  onConnectionRequestSent: PropTypes.func
 };
 
 // Componente auxiliar para truncar descripción y mostrar 'ver más'

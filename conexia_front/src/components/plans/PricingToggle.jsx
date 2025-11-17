@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { TrendingUp } from 'lucide-react';
 
 /**
  * Toggle para cambiar entre ciclo de facturación mensual y anual
@@ -40,8 +41,9 @@ export default function PricingToggle({ value = 'monthly', onChange }) {
       </div>
       
       {value === 'annual' && (
-        <p className="text-sm text-gray-600 animate-fade-in">
-          🎉 ¡Ahorra hasta un 17% con el plan anual!
+        <p className="text-sm text-gray-600 animate-fade-in flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-green-500" />
+          ¡Ahorra hasta un 17% con el plan anual!
         </p>
       )}
     </div>

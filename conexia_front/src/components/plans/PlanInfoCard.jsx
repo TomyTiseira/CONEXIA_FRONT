@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { FiCalendar, FiCheckCircle, FiAlertCircle, FiCreditCard, FiUser, FiDollarSign } from 'react-icons/fi';
+import { Zap, TrendingUp, Crown } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useUserPlan } from '@/hooks/memberships';
@@ -73,23 +74,14 @@ export default function PlanInfoCard({ className = '' }) {
 
   return (
     <div className={`bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
-      {/* Header con gradiente según el plan */}
-      <div className={`
-        p-6 text-white
-        ${plan.name === 'Premium' ? 'bg-gradient-to-r from-amber-500 to-amber-600' : 
-          plan.name === 'Basic' ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 
-          'bg-gradient-to-r from-gray-500 to-gray-600'}
-      `}>
+      {/* Header con gradiente CONEXIA - igual que Explorar Planes */}
+      <div className="bg-gradient-to-r from-[#48a6a7] to-[#419596] p-6 text-white">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold">Mi plan</h2>
-          {plan.name === 'Premium' && <span className="text-3xl">👑</span>}
-          {plan.name === 'Basic' && <span className="text-3xl">⚡</span>}
-          {plan.name === 'Free' && <span className="text-3xl">⭐</span>}
         </div>
-        <p className="text-lg font-semibold">{plan.name}</p>
-        {plan.description && (
-          <p className="text-sm opacity-90 mt-1">{plan.description}</p>
-        )}
+        <p className="text-white/90 text-base">
+          Gestiona tu suscripción actual y accede a todos los beneficios de tu plan {plan.name}
+        </p>
       </div>
 
       {/* Contenido */}
@@ -313,22 +305,24 @@ export default function PlanInfoCard({ className = '' }) {
           </>
         )}
 
-        {/* Plan Free - Llamada a la acción mejorada */}
+        {/* Plan Free - Llamada a la acción mejorada con estilo del botón mejorar plan */}
         {isFreePlan && (
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-5">
-            <div className="flex items-start gap-3 mb-0">
-              <div className="flex-shrink-0 w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">⚡</span>
+          <div className="relative bg-gradient-to-r from-[#367d7d]/5 via-[#48a6a7]/8 to-[#367d7d]/5 border-2 border-[#48a6a7]/30 rounded-lg p-5 overflow-hidden">
+            {/* Patrón de fondo sutil */}
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSg3MiwxNjYsMTY3LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30"></div>
+            <div className="relative flex items-start gap-3 mb-0">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#48a6a7]/20 to-[#367d7d]/20 border border-[#48a6a7]/30 rounded-lg flex items-center justify-center">
+                <Zap className="w-6 h-6 text-[#367d7d]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-blue-900 text-lg mb-1">
+                <h3 className="font-bold text-[#367d7d] text-lg mb-1">
                   Desbloquea más funcionalidades
                 </h3>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-gray-700">
                   Actualiza tu plan y accede a beneficios exclusivos
                 </p>
-                <p className="text-sm text-blue-600/70 mt-4">
-                  Tu plan actual: <span className="font-semibold">Free ⭐</span>
+                <p className="text-sm text-gray-600 mt-4">
+                  Tu plan actual: <span className="font-semibold text-[#367d7d]">Free</span>
                 </p>
               </div>
             </div>
@@ -340,14 +334,17 @@ export default function PlanInfoCard({ className = '' }) {
           <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-200 rounded-lg p-5">
             <div className="flex items-start justify-between mb-0">
               <div className="flex-1">
-                <h3 className="font-bold text-amber-900 text-lg mb-1">
-                  👑 Desbloquea todo el potencial
-                </h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <Crown className="w-6 h-6 text-amber-600" />
+                  <h3 className="font-bold text-amber-900 text-lg">
+                    Desbloquea todo el potencial
+                  </h3>
+                </div>
                 <p className="text-sm text-amber-700">
                   Actualiza a Premium y accede a beneficios exclusivos
                 </p>
                 <p className="text-sm text-amber-600/70 mt-4">
-                  Tu plan actual: <span className="font-semibold">{plan.name} ⚡</span>
+                  Tu plan actual: <span className="font-semibold">{plan.name}</span>
                 </p>
               </div>
             </div>

@@ -12,7 +12,16 @@ import { getUnitLabel } from '@/utils/timeUnit';
 export default function QuotationDisplay({ quotation, compact = false }) {
   if (!quotation) return null;
 
-  const { paymentModality, quotedPrice, estimatedHours, estimatedTimeUnit, quotationNotes, deliverables } = quotation;
+  const { 
+    paymentModality, 
+    quotedPrice, 
+    estimatedHours, 
+    estimatedTimeUnit, 
+    quotationNotes, 
+    deliverables,
+    hoursPerDay,
+    workOnBusinessDaysOnly 
+  } = quotation;
 
   // Badge de estado para entregables
   const getDeliverableStatusBadge = (status) => {
@@ -72,6 +81,35 @@ export default function QuotationDisplay({ quotation, compact = false }) {
           <p className="text-lg font-semibold text-gray-900">
             {estimatedHours} {getUnitLabel(estimatedTimeUnit, estimatedHours)}
           </p>
+          
+          {/* Información adicional de horas por día y días hábiles */}
+          {(hoursPerDay || workOnBusinessDaysOnly) && (
+            <div className="mt-3 pt-3 border-t border-gray-300 space-y-2">
+              {hoursPerDay && (
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-blue-600" />
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">{hoursPerDay} horas</span> de trabajo por día
+                  </p>
+                </div>
+              )}
+              {workOnBusinessDaysOnly && (
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-blue-600" />
+                  <p className="text-sm text-gray-700">
+                    Trabaja solo días hábiles (lunes a viernes)
+                  </p>
+                </div>
+              )}
+              {hoursPerDay && estimatedHours && estimatedTimeUnit && (
+                <div className="mt-2 bg-blue-50 border border-blue-200 rounded p-2">
+                  <p className="text-xs text-blue-800">
+                    <strong>Total aproximado:</strong> {hoursPerDay * estimatedHours} horas de trabajo
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Precio (solo para pago total) */}

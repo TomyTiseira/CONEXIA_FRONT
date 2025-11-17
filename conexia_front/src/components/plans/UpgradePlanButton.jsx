@@ -109,7 +109,7 @@ export default function UpgradePlanButton({ context = 'general', className = '' 
   return (
     <div className={`w-full ${className}`}>
       {/* Banner compacto con diseño horizontal */}
-      <div className="relative bg-gradient-to-r from-[#367d7d]/5 via-[#48a6a7]/8 to-[#367d7d]/5 border border-[#48a6a7]/20 rounded-xl overflow-hidden">
+      <div className="relative bg-gradient-to-r from-[#367d7d]/15 via-[#48a6a7]/20 to-[#367d7d]/15 border-2 border-[#48a6a7]/40 rounded-xl overflow-hidden shadow-md">
         {/* Efectos de fondo sutiles */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSg3MiwxNjYsMTY3LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30"></div>
         
@@ -124,10 +124,13 @@ export default function UpgradePlanButton({ context = 'general', className = '' 
               
               {/* Texto */}
               <div className="flex-1 text-center sm:text-left">
+                <p className="text-xs sm:text-sm font-semibold text-[#2b6a6a] mb-1">
+                  Suscribite a {targetPlanName}
+                </p>
                 <p className="text-sm sm:text-base font-bold text-[#367d7d] leading-tight">
                   {getMessage.highlight}
                 </p>
-                <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
+                <p className="text-xs sm:text-sm text-gray-700 mt-0.5">
                   {getMessage.description}
                 </p>
               </div>
@@ -140,7 +143,7 @@ export default function UpgradePlanButton({ context = 'general', className = '' 
               
               {/* Link como botón para permitir click derecho */}
               <Link
-                href="/settings/my-plan"
+                href="/settings/my-plan#explorar-planes"
                 className="relative inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-[0_4px_15px_rgba(72,166,167,0.4)] hover:shadow-[0_6px_20px_rgba(65,149,150,0.5)] transform hover:scale-105 group whitespace-nowrap"
               >
                 {/* Icono estrella con animación */}

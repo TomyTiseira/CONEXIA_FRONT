@@ -42,6 +42,8 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
     quotationNotes: '',
     quotationValidityDays: '',
     isBusinessDays: false,
+    hoursPerDay: '',
+    workOnBusinessDaysOnly: false,
     deliverables: []
   });
   const [errors, setErrors] = useState({});
@@ -64,6 +66,8 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
         quotationNotes: isEditing && hiring.quotationNotes ? hiring.quotationNotes : '',
         quotationValidityDays: isEditing && hiring.quotationValidityDays ? hiring.quotationValidityDays.toString() : '',
         isBusinessDays: isEditing && hiring.isBusinessDays ? hiring.isBusinessDays : false,
+        hoursPerDay: isEditing && hiring.hoursPerDay ? hiring.hoursPerDay.toString() : '',
+        workOnBusinessDaysOnly: isEditing && hiring.workOnBusinessDaysOnly ? hiring.workOnBusinessDaysOnly : false,
         deliverables: isEditing && hiring.deliverables ? hiring.deliverables.map(d => ({
           title: d.title,
           description: d.description,
@@ -293,12 +297,12 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                             disabled={loading}
                           />
                         </div>
-                        <div>
+                        <div className="relative">
                           <select
                             id="estimatedTimeUnit"
                             value={formData.estimatedTimeUnit}
                             onChange={(e) => handleInputChange('estimatedTimeUnit', e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green text-base appearance-none ${
+                            className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green text-base appearance-none ${
                               errors.estimatedTimeUnit ? 'border-red-300' : 'border-gray-300'
                             }`}
                             style={{ 
@@ -315,6 +319,11 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                               </option>
                             ))}
                           </select>
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
                         </div>
                       </div>
                       {(errors.estimatedHours || errors.estimatedTimeUnit) && (
@@ -330,6 +339,51 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                       <p className="text-xs text-gray-500 mt-1">
                         Tiempo aproximado que te tomará completar el trabajo
                       </p>
+                    </div>
+
+                    {/* Horas por día (opcional) */}
+                    <div>
+                      <label htmlFor="hoursPerDay" className="block text-sm font-medium text-gray-700 mb-2">
+                        <Clock size={16} className="inline mr-1" />
+                        Horas de trabajo por día (opcional)
+                      </label>
+                      <input
+                        type="number"
+                        id="hoursPerDay"
+                        min="1"
+                        max="24"
+                        step="0.5"
+                        value={formData.hoursPerDay}
+                        onChange={(e) => handleInputChange('hoursPerDay', e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
+                          errors.hoursPerDay ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                        placeholder="Ej: 2, 4, 8"
+                        disabled={loading}
+                      />
+                      {errors.hoursPerDay && (
+                        <p className="text-sm text-red-600 mt-1">{errors.hoursPerDay}</p>
+                      )}
+                      <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-xs text-blue-800 leading-relaxed">
+                          <strong>💡 Transparencia para el cliente:</strong> Indicar las horas diarias ayuda al cliente a comparar cotizaciones de manera más inteligente. Por ejemplo, si dos proveedores cotizan 5 días pero uno trabaja 2 horas/día y otro 8 horas/día, el cliente puede evaluar mejor el valor real del servicio.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Checkbox de días hábiles de trabajo */}
+                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                      <input
+                        type="checkbox"
+                        id="workOnBusinessDaysOnly"
+                        checked={formData.workOnBusinessDaysOnly}
+                        onChange={(e) => handleInputChange('workOnBusinessDaysOnly', e.target.checked)}
+                        className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green cursor-pointer"
+                        disabled={loading}
+                      />
+                      <label htmlFor="workOnBusinessDaysOnly" className="text-sm text-gray-700 cursor-pointer select-none">
+                        Trabajo solo días hábiles (lunes a viernes)
+                      </label>
                     </div>
 
                     {/* Vigencia de la cotización */}

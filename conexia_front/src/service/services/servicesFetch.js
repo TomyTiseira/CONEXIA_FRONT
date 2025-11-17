@@ -54,7 +54,7 @@ export async function fetchServiceCategories() {
  * @returns {Promise<Object>} Lista de servicios con paginación
  */
 export async function fetchServices(filters = {}) {
-  const { search, categoryIds, page = 1, limit = 12, includeInactive = false } = filters;
+  const { search, categoryIds, minRating, page = 1, limit = 12, includeInactive = false } = filters;
   
   const params = new URLSearchParams();
   
@@ -66,6 +66,9 @@ export async function fetchServices(filters = {}) {
     const ids = categoryIds.map((id) => id.toString());
     const toSend = ids.length === 1 ? [ids[0], ids[0]] : ids;
     toSend.forEach((id) => params.append('categoryIds', id));
+  }
+  if (minRating !== undefined && minRating !== null) {
+    params.append('minRating', minRating.toString());
   }
   if (includeInactive) params.append('includeInactive', 'true');
   
