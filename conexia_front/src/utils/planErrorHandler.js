@@ -15,7 +15,14 @@ export function handlePlanError(error) {
 
   // 1. Error de sincronización con MercadoPago
   if (errorCode === 'MERCADOPAGO_SYNC_ERROR' || errorMessage.includes('MercadoPago')) {
-    
+    // Si el mensaje contiene la frase en inglés y MercadoPago, forzar el mensaje limpio
+    if (errorMessage.includes('Cannot pay an amount lower than') && errorMessage.includes('MercadoPago')) {
+      return {
+        title: 'Error al crear plan de suscripción',
+        message: 'Los precios deben ser mayores o iguales a $15 ARS para planes mensuales y anuales.',
+        type: 'error',
+      };
+    }
     // Caso 1: CVV no validado
     if (errorMessage.includes('cvv') || errorMessage.includes('CVV') || 
         errorMessage.includes('security code')) {
@@ -25,14 +32,13 @@ export function handlePlanError(error) {
         type: 'error',
       };
     }
-    
     // Caso 2: Precio menor al mínimo
     if (errorMessage.includes('Cannot pay an amount lower than') || 
         errorMessage.includes('mínimo $15')) {
       return {
-        title: 'Precio inválido',
-        message: 'Los precios deben ser mayores o iguales a $15 ARS. MercadoPago no acepta montos menores.',
-        type: 'warning',
+        title: 'Error al crear plan de suscripción',
+        message: 'Los precios deben ser mayores o iguales a $15 ARS para planes mensuales y anuales.',
+        type: 'error',
       };
     }
     
@@ -81,7 +87,6 @@ export function handlePlanError(error) {
       type: 'error',
     };
   }
-
   // 4. Suscripción ya existente
   if (errorStatus === 409 || errorMessage.includes('ya tienes una suscripción')) {
     return {
@@ -92,15 +97,6 @@ export function handlePlanError(error) {
   }
 
   // 5. Error de validación general (400)
-  if (errorStatus === 400) {
-    return {
-      title: 'Datos inválidos',
-      message: errorMessage || 'Los datos proporcionados son inválidos. Verifica e intenta nuevamente.',
-      type: 'warning',
-    };
-  }
-
-  // 6. Error de tokenización de tarjeta
   if (errorMessage.includes('cardToken') || errorMessage.includes('tarjeta')) {
     return {
       title: 'Error en los datos de la tarjeta',

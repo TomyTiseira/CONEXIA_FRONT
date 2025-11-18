@@ -195,18 +195,6 @@ export default function CreateProjectForm() {
 
     const handleSubmit = async (e) => {
     e.preventDefault();
-    const isValid = validateAll();
-    // Validar campos obligatorios manualmente
-    const requiredFields = ['title', 'description', 'category'];
-    let missing = false;
-    requiredFields.forEach((field) => {
-      if (!form[field] || (typeof form[field] === 'string' && form[field].trim() === '')) {
-        missing = true;
-        setErrors((prev) => ({ ...prev, [field]: 'Este campo es obligatorio' }));
-      }
-    });
-    // Bloquear envío si maxCollaborators tiene error y no está vacío
-    if ((form.maxCollaborators !== '' && errors.maxCollaborators) || !isValid || missing) return;
 
     try {
       // Validación preventiva de límites (antes de validar el formulario)
@@ -221,7 +209,7 @@ export default function CreateProjectForm() {
       // Ahora validar el formulario
       const isValid = validateAll();
       // Validar campos obligatorios manualmente
-      const requiredFields = ['title', 'description', 'category', 'collaborationType', 'contractType'];
+      const requiredFields = ['title', 'description', 'category'];
       let missing = false;
       requiredFields.forEach((field) => {
         if (!form[field] || (typeof form[field] === 'string' && form[field].trim() === '')) {
@@ -393,30 +381,36 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Checkboxes para socios e inversores */}
-      <div className="md:col-span-2 w-full flex flex-col md:flex-row gap-8 mb-2">
-        <div className="w-full md:w-1/2">
-          <label className="flex items-center gap-2 cursor-pointer group">
+      <div className="md:col-span-2 w-full flex flex-col md:flex-row gap-4 md:gap-8 mb-2">
+        <div className="flex-1">
+          <label className="flex items-start gap-3 cursor-pointer group p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
             <input
               type="checkbox"
               checked={form.needsPartners}
               onChange={(e) => handleChange('needsPartners', e.target.checked)}
-              className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green focus:ring-2 cursor-pointer"
+              className="w-5 h-5 mt-0.5 text-[#2b6a6a] bg-white border-2 border-gray-300 rounded focus:ring-2 focus:ring-[#2b6a6a] focus:ring-offset-0 cursor-pointer transition-colors checked:bg-[#2b6a6a] checked:border-[#2b6a6a] hover:border-[#2b6a6a]"
+              style={{
+                accentColor: '#2b6a6a'
+              }}
             />
-            <span className="text-sm font-medium text-gray-700 group-hover:text-conexia-green transition-colors">
+            <span className="text-sm font-medium text-gray-700 group-hover:text-[#2b6a6a] transition-colors select-none">
               El proyecto necesita socios
             </span>
           </label>
         </div>
 
-        <div className="w-full md:w-1/2">
-          <label className="flex items-center gap-2 cursor-pointer group">
+        <div className="flex-1">
+          <label className="flex items-start gap-3 cursor-pointer group p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
             <input
               type="checkbox"
               checked={form.needsInvestors}
               onChange={(e) => handleChange('needsInvestors', e.target.checked)}
-              className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green focus:ring-2 cursor-pointer"
+              className="w-5 h-5 mt-0.5 text-[#2b6a6a] bg-white border-2 border-gray-300 rounded focus:ring-2 focus:ring-[#2b6a6a] focus:ring-offset-0 cursor-pointer transition-colors checked:bg-[#2b6a6a] checked:border-[#2b6a6a] hover:border-[#2b6a6a]"
+              style={{
+                accentColor: '#2b6a6a'
+              }}
             />
-            <span className="text-sm font-medium text-gray-700 group-hover:text-conexia-green transition-colors">
+            <span className="text-sm font-medium text-gray-700 group-hover:text-[#2b6a6a] transition-colors select-none">
               El proyecto necesita inversores
             </span>
           </label>

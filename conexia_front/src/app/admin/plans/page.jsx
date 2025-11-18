@@ -38,16 +38,16 @@ export default function PlansManagementPage() {
       setShowCreateModal(false);
       refetch();
     } catch (error) {
-      const rawMsg = (error && (error.message || error.msg)) || '';
-      const status = error && (error.status || error.code || error.response?.status);
-      const isDuplicate =
-        String(rawMsg).toLowerCase().includes('already exists') ||
-        String(rawMsg).toLowerCase().includes('ya existe') ||
-        String(rawMsg).toLowerCase().includes('duplicate') ||
-        String(status) === '409' || String(status) === '400';
+      // Procesar el error con handlePlanError
+      let errorInfo;
+      try {
+        errorInfo = require('@/utils/planErrorHandler').handlePlanError(error);
+      } catch {
+        errorInfo = { type: 'error', message: error.message || 'Error al crear el plan' };
+      }
       setToast({
-        type: isDuplicate ? 'warning' : 'error',
-        message: isDuplicate ? 'Ya existe un plan con este nombre.' : (rawMsg || 'Error al crear el plan'),
+        type: errorInfo.type || 'error',
+        message: errorInfo.message || 'Error al crear el plan',
         position: 'top-center',
       });
     }
