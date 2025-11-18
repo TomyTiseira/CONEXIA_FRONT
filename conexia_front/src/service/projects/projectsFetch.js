@@ -36,6 +36,10 @@ export async function fetchProjectById(id) {
     isOwner: p.isOwner,
     isApplied: p.isApplied || false, // Agregar isApplied desde el backend
     hasReported: p.hasReported || false, // Agregar hasReported desde el backend
+    roles: p.roles || [], // Agregar roles desde el backend
+    applicationTypes: p.applicationTypes || [], // Agregar tipos de aplicación
+    questions: p.questions || [], // Agregar preguntas
+    evaluation: p.evaluation || null, // Agregar evaluación
   };
   
   return result;

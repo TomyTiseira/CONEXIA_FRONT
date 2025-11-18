@@ -81,7 +81,7 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
           <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0 mx-auto">
             {project.image ? (
               <Image
-                src={`${config.IMAGE_URL}/${project.image}`}
+                src={`${config.IMAGE_URL}/projects/images/${project.image}`}
                 alt={project.title}
                 fill
                 className="object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm"

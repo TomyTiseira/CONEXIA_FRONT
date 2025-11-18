@@ -36,27 +36,70 @@ export async function fetchContractTypes() {
   return response.data;
 }
 
+export async function fetchApplicationTypes() {
+  const res = await fetch(`${config.API_URL}/projects/application-types`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('No se pudieron obtener los tipos de postulación');
+  const response = await res.json();
+  if (!response.success) throw new Error('Error en la respuesta de tipos de postulación');
+  return response.data;
+}
 
 export async function createProject(formData) {
-  const res = await fetch(`${config.API_URL}/projects/publish`, {
-    method: 'POST',
-    credentials: 'include',
-    body: formData,
-  });
+  let res;
+  try {
+    res = await fetch(`${config.API_URL}/projects/publish`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+  } catch (networkError) {
+    console.error('❌ Error de red:', networkError);
+    throw new Error(`Error de conexión: ${networkError.message}`);
+  }
 
-  const json = await res.json();
+  let responseText;
+  try {
+    responseText = await res.text();
+  } catch (textError) {
+    throw new Error(`Error al leer respuesta del servidor (${res.status})`);
+  }
+
+  let json;
+  try {
+    json = JSON.parse(responseText);
+  } catch (parseError) {
+    throw new Error(`Error del servidor: ${res.status} ${res.statusText}. Respuesta: ${responseText.substring(0, 200)}`);
+  }
 
   if (!res.ok) {
-    const error = new Error(json?.message || 'Error al crear el proyecto');
-    error.statusCode = res.status;
-    error.status = json?.status;
-    throw error;
+    let errorMessage = 'Error al crear el proyecto';
+    let errorDetails = '';
+    
+    if (json?.message) {
+      errorMessage = json.message;
+    } else if (json?.error) {
+      errorMessage = json.error;
+    } else if (json?.errors && Array.isArray(json.errors)) {
+      errorDetails = json.errors.map(e => typeof e === 'string' ? e : e.message || JSON.stringify(e)).join(', ');
+      errorMessage = errorDetails || 'Errores de validación del backend';
+    } else if (json?.errors && typeof json.errors === 'object') {
+      errorDetails = Object.entries(json.errors)
+        .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+        .join(' | ');
+      errorMessage = errorDetails || 'Error de validación';
+    }
+    
+    const fullError = errorDetails ? `${errorMessage} - ${errorDetails}` : errorMessage;
+    throw new Error(`${fullError} (${res.status})`);
   }
 
   return json;
 }
 
-// Función para eliminar un proyecto por ID
 export async function deleteProjectById(projectId, motivo) {
   try {
     const res = await fetch(`${config.API_URL}/projects/${projectId}`, {
@@ -77,14 +120,12 @@ export async function deleteProjectById(projectId, motivo) {
       throw new Error(errorMessage);
     }
 
-    // Verificar si hay contenido en la respuesta
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await res.json();
       return data;
     }
 
-    // Si no hay contenido JSON, devolver un objeto de éxito
     return { success: true, message: 'Proyecto eliminado correctamente' };
   } catch (error) {
     throw error;
