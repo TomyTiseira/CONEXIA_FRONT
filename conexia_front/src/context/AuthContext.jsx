@@ -105,6 +105,10 @@ export const AuthProvider = ({ children }) => {
     // Marcar que estamos cerrando sesión para evitar validaciones y refresh
     isLoggingOut.current = true;
     setLoggingOut(true);
+    // Variable global para que el home detecte el estado
+    if (typeof window !== 'undefined') {
+      window.__CONEXIA_LOGGING_OUT__ = true;
+    }
     
     try {
       // Primero limpiar el estado local para evitar solicitudes subsecuentes
@@ -150,11 +154,13 @@ export const AuthProvider = ({ children }) => {
         useMessagingStore.getState().disconnect(); 
       } catch {}
     } finally {
-      // Resetear el flag después de un pequeño delay
-      setTimeout(() => {
-        isLoggingOut.current = false;
-        setLoggingOut(false);
-      }, 1000);
+      // Resetear el flag y redirigir al home inmediatamente
+      isLoggingOut.current = false;
+      setLoggingOut(false);
+      if (typeof window !== 'undefined') {
+        window.__CONEXIA_LOGGING_OUT__ = false;
+        window.location.replace('/');
+      }
     }
   }, [clearUserStore]);
 

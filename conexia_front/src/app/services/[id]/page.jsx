@@ -3,6 +3,7 @@
 import React, { use } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { NotFound } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
 import ServiceDetail from '@/components/services/ServiceDetail';
 import { useUserStore } from '@/store/userStore';
@@ -29,10 +30,15 @@ export default function ServiceDetailPage({ params, searchParams }) {
     ? `${config.IMAGE_URL}/${profile.profilePicture}`
     : '/images/default-avatar.png';
 
+  // Detectar si está en proceso de logout
+  let isLoggingOut = false;
+  if (typeof window !== 'undefined') {
+    isLoggingOut = window.__CONEXIA_LOGGING_OUT__ === true;
+  }
   return (
     <ProtectedRoute
       allowedRoles={allowedRoles}
-      fallbackComponent={<NotFound />}
+      fallbackComponent={isLoggingOut ? <LoadingSpinner message="Cerrando sesión..." size="large" /> : <NotFound />}
     >
       <>
         <ServiceDetail serviceId={resolvedParams.id} />
