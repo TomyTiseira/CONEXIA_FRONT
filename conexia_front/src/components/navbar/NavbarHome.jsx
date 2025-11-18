@@ -24,7 +24,7 @@ export default function NavbarHome() {
             alt="CONEXIA" 
             width={120} 
             height={30} 
-            className="h-6 w-auto hidden sm:block"
+            className="h-6 w-auto"
           />
         </Link>
 
