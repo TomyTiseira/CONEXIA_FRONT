@@ -38,9 +38,9 @@ function ProtectedRouteContent({
     role
   } = useRoleValidation();
 
-  // Si hay parámetro logout=true, forzar contenido público independientemente del estado de autenticación
-  if (isForceLogout && publicContent) {
-    return publicContent;
+  // Si hay parámetro logout=true, mostrar spinner de cierre de sesión
+  if (isForceLogout) {
+    return <LoadingSpinner message="Cerrando sesión..." size="large" />;
   }
 
   // Estado de carga inicial
@@ -50,14 +50,11 @@ function ProtectedRouteContent({
 
   // Error de autenticación o rol
   if (hasError) {
-    return (
-      <ErrorDisplay 
-        error={error || roleError}
-        message="Error de autenticación"
-        showRetry={true}
-        redirectTo="/login"
-      />
-    );
+    // Mostrar spinner y redirigir al home
+    if (typeof window !== "undefined") {
+      window.location.replace("/");
+    }
+    return <LoadingSpinner message="Cerrando sesión..." size="large" />;
   }
 
   // Usuario no autenticado

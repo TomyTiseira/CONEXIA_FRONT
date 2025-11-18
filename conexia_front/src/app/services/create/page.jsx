@@ -81,10 +81,17 @@ export default function CreateServicePage() {
     setShowClearConfirm(false);
   };
 
+  // Detectar si la URL tiene ?logout=true
+  let isForceLogout = false;
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    isForceLogout = params.get('logout') === 'true';
+  }
+
   return (
     <ProtectedRoute
       allowedRoles={[ROLES.USER]}
-      fallbackComponent={<NotFound />}
+      fallbackComponent={isForceLogout ? <LoadingSpinner message="Cerrando sesión..." size="large" /> : <NotFound />}
     >
       <div className="relative min-h-screen w-full bg-conexia-soft overflow-hidden flex flex-col">
         {/* Navbar fijo arriba */}

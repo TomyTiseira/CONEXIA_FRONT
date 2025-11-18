@@ -1,4 +1,5 @@
 "use client";
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import React from 'react';
 import ServiceDetail from '@/components/services/ServiceDetail';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -18,8 +19,13 @@ export default function ServiceDetailPage({ params, searchParams }) {
   const allowedRoles = isFromReports
     ? [ROLES.ADMIN, ROLES.MODERATOR]
     : [ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR];
+  // Detectar si está en proceso de logout
+  let isLoggingOut = false;
+  if (typeof window !== 'undefined') {
+    isLoggingOut = window.__CONEXIA_LOGGING_OUT__ === true;
+  }
   return (
-    <ProtectedRoute allowedRoles={allowedRoles} fallbackComponent={<NotFound />}>
+    <ProtectedRoute allowedRoles={allowedRoles} fallbackComponent={isLoggingOut ? <LoadingSpinner message="Cerrando sesión..." size="large" /> : <NotFound />}>
       <ServiceDetail serviceId={id} />
     </ProtectedRoute>
   );

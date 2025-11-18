@@ -9,6 +9,7 @@ import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { NotFound } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
