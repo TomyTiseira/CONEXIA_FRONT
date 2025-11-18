@@ -50,7 +50,7 @@ export default function SettingsLayout({ children }) {
 
           {/* Zona de contenido que se actualiza dinámicamente */}
           <main className="flex-1 flex justify-center px-4 py-6">
-            <div className="bg-white rounded-xl shadow p-6 w-full max-w-2xl">
+            <div className="bg-white rounded-xl shadow p-6 w-full max-w-6xl">
               {children}
             </div>
           </main>

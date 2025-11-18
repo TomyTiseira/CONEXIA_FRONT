@@ -80,6 +80,7 @@ export async function createProject(formData) {
   }
 
   if (!res.ok) {
+<<<<<<< HEAD
     
     // Extraer mensaje más detallado del backend
     let errorMessage = 'Error al crear el proyecto';
@@ -102,6 +103,12 @@ export async function createProject(formData) {
     
     const fullError = errorDetails ? `${errorMessage} - ${errorDetails}` : errorMessage;
     throw new Error(`${fullError} (${res.status})`);
+=======
+    const error = new Error(json?.message || 'Error al crear el proyecto');
+    error.statusCode = res.status;
+    error.status = json?.status;
+    throw error;
+>>>>>>> develop
   }
 
   return json;

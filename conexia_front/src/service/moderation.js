@@ -103,3 +103,29 @@ export async function resolveAnalysis(id, data) {
     throw error;
   }
 }
+
+/**
+ * Obtiene todos los reportes analizados por la IA para un análisis específico
+ * @param {number} analysisId - ID del análisis de moderación
+ * @returns {Promise<Object>} Detalles completos del análisis con reportes clasificados
+ */
+export async function getAnalyzedReports(analysisId) {
+  try {
+    const response = await fetchWithRefresh(`${API_URL}/moderation/analyzed-reports/${analysisId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error al obtener reportes analizados');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error en getAnalyzedReports:', error);
+    throw error;
+  }
+}

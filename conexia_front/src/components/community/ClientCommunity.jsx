@@ -36,6 +36,9 @@ export default function ClientCommunity() {
   const { user: userStore } = useUserStore();
   const [toast, setToast] = useState(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  
+  // Estado para trackear solicitudes de conexión enviadas
+  const [sentConnectionRequests, setSentConnectionRequests] = useState(new Set());
 
   // Hook para recomendaciones
   const { 
@@ -51,9 +54,26 @@ export default function ClientCommunity() {
       await sendConnectionRequest(userId);
       // Actualizar las recomendaciones para remover el usuario conectado
       refetchRecommendations();
+      // Agregar al set de solicitudes enviadas (solo si no existe)
+      setSentConnectionRequests(prev => {
+        if (prev.has(userId)) return prev; // No crear nuevo Set si ya existe
+        const newSet = new Set(prev);
+        newSet.add(userId);
+        return newSet;
+      });
     } catch (err) {
       console.error('Error al enviar solicitud de conexión:', err);
     }
+  };
+  
+  // Función para notificar cuando se envía una solicitud desde una PublicationCard
+  const handleConnectionRequestSent = (userId) => {
+    setSentConnectionRequests(prev => {
+      if (prev.has(userId)) return prev; // ✅ Evitar loop: no actualizar si ya existe
+      const newSet = new Set(prev);
+      newSet.add(userId);
+      return newSet;
+    });
   };
 
 
@@ -235,6 +255,8 @@ export default function ClientCommunity() {
                     key={publicationComplete.id} 
                     publication={publicationComplete} 
                     onShowToast={(t)=> setToast(t)}
+                    sentConnectionRequests={sentConnectionRequests}
+                    onConnectionRequestSent={handleConnectionRequestSent}
                   />
                 );
               })}

@@ -9,7 +9,8 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
     category: currentFilters.category || [],
     priceMin: currentFilters.priceMin || '',
     priceMax: currentFilters.priceMax || '',
-    sortBy: currentFilters.sortBy || ''
+    sortBy: currentFilters.sortBy || '',
+    minRating: currentFilters.minRating || 1
   });
   // Estados locales de inputs de precio para permitir tipear varios dígitos
   const [priceMinInput, setPriceMinInput] = useState(currentFilters.priceMin || '');
@@ -20,6 +21,7 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
   const [showSort, setShowSort] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showPrice, setShowPrice] = useState(false);
+  const [showRating, setShowRating] = useState(false);
 
   // Detectar tamaño de pantalla y establecer estado inicial
   useEffect(() => {
@@ -31,11 +33,13 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
         setShowSort(true);
         setShowCategories(true);
         setShowPrice(true);
+        setShowRating(true);
       } else {
         // En mobile, mantener todo colapsado
         setShowSort(false);
         setShowCategories(false);
         setShowPrice(false);
+        setShowRating(false);
       }
     };
 
@@ -50,7 +54,8 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
       category: currentFilters.category || [],
       priceMin: currentFilters.priceMin || '',
       priceMax: currentFilters.priceMax || '',
-      sortBy: currentFilters.sortBy || ''
+      sortBy: currentFilters.sortBy || '',
+      minRating: currentFilters.minRating !== undefined ? currentFilters.minRating : 1
     });
     setPriceMinInput(currentFilters.priceMin || '');
     setPriceMaxInput(currentFilters.priceMax || '');
@@ -58,10 +63,10 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
 
   const sortOptions = [
     { value: '', label: 'Predeterminado' },
-    { value: 'price_asc', label: 'Precio: Menor a Mayor' },
-    { value: 'price_desc', label: 'Precio: Mayor a Menor' },
-    { value: 'newest', label: 'Más Recientes' },
-    { value: 'oldest', label: 'Más Antiguos' }
+    { value: 'price_asc', label: 'Precio: Menor a mayor' },
+    { value: 'price_desc', label: 'Precio: Mayor a menor' },
+    { value: 'newest', label: 'Más recientes' },
+    { value: 'oldest', label: 'Más antiguos' }
   ];
 
   const handleFilterChange = (key, value) => {
@@ -100,23 +105,25 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
   };
 
   const clearFilters = () => {
-    const emptyFilters = {
+    const clearedFilters = {
       category: [],
       priceMin: '',
       priceMax: '',
-      sortBy: ''
+      sortBy: '',
+      minRating: 1
     };
-    setFilters(emptyFilters);
+    setFilters(clearedFilters);
     setPriceMinInput('');
     setPriceMaxInput('');
-    onFiltersChange(emptyFilters);
+    onFiltersChange(clearedFilters);
   };
 
   const hasActiveFilters = 
     filters.category.length > 0 || 
     filters.priceMin || 
     filters.priceMax || 
-    filters.sortBy;
+    filters.sortBy ||
+    filters.minRating !== null && filters.minRating !== undefined;
 
   return (
     <div className="bg-white rounded-xl shadow p-5 mb-4">
@@ -212,8 +219,158 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
         </div>
       </div>
 
+      {/* Filtro por Calificaciones */}
+      <div className="mb-6">
+        <button
+          className="flex items-center justify-between w-full mb-3 cursor-pointer"
+          onClick={() => setShowRating(!showRating)}
+        >
+          <h3 className="text-base font-medium text-conexia-green">Calificaciones</h3>
+          <div>
+            {showRating ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
+        </button>
+        
+        <div className={`space-y-2 ${showRating ? 'block' : 'hidden'}`}>
+          {/* Solo 5 estrellas */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.minRating === 5}
+              onChange={() => handleFilterChange('minRating', filters.minRating === 5 ? 1 : 5)}
+              className="accent-conexia-green"
+            />
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-sm text-conexia-green">Solo 5</span>
+            </div>
+          </label>
+
+          {/* 4 o más estrellas */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.minRating === 4}
+              onChange={() => handleFilterChange('minRating', filters.minRating === 4 ? 1 : 4)}
+              className="accent-conexia-green"
+            />
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center">
+                {[1, 2, 3, 4].map((star) => (
+                  <svg
+                    key={star}
+                    className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+                <svg className="w-3.5 h-3.5 fill-gray-300 text-gray-300" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              </div>
+              <span className="text-sm text-conexia-green">4 o más</span>
+            </div>
+          </label>
+
+          {/* 3 o más estrellas */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.minRating === 3}
+              onChange={() => handleFilterChange('minRating', filters.minRating === 3 ? 1 : 3)}
+              className="accent-conexia-green"
+            />
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center">
+                {[1, 2, 3].map((star) => (
+                  <svg
+                    key={star}
+                    className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+                {[4, 5].map((star) => (
+                  <svg key={star} className="w-3.5 h-3.5 fill-gray-300 text-gray-300" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-sm text-conexia-green">3 o más</span>
+            </div>
+          </label>
+
+          {/* 2 o más estrellas */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.minRating === 2}
+              onChange={() => handleFilterChange('minRating', filters.minRating === 2 ? 1 : 2)}
+              className="accent-conexia-green"
+            />
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center">
+                {[1, 2].map((star) => (
+                  <svg
+                    key={star}
+                    className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+                {[3, 4, 5].map((star) => (
+                  <svg key={star} className="w-3.5 h-3.5 fill-gray-300 text-gray-300" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-sm text-conexia-green">2 o más</span>
+            </div>
+          </label>
+
+          {/* 1 o más estrellas (por defecto) */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.minRating === 1}
+              onChange={() => handleFilterChange('minRating', 1)}
+              className="accent-conexia-green"
+            />
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center">
+                <svg
+                  className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                {[2, 3, 4, 5].map((star) => (
+                  <svg key={star} className="w-3.5 h-3.5 fill-gray-300 text-gray-300" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-sm text-conexia-green">1 o más</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
       {/* Rango de Precio */}
-      <div className="mb-0">
+      <div className="mb-6">
         <button
           className="flex items-center justify-between w-full mb-3 cursor-pointer"
           onClick={() => setShowPrice(!showPrice)}

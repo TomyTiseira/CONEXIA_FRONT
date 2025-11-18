@@ -7,8 +7,10 @@ import { useRouter } from 'next/navigation';
 import { Search, FileText } from 'lucide-react';
 import { Briefcase } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import RequireVerification from '@/components/common/RequireVerification';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
+import { PlanComparisonBanner, UpgradePlanButton } from '@/components/plans';
 import ServiceFilters from './ServiceFilters';
 import ServiceList from './ServiceList';
 import ServiceSearchBar from './ServiceSearchBar';
@@ -27,6 +29,7 @@ export default function ServiceSearch() {
     priceMin: '',
     priceMax: '',
     sortBy: '',
+    minRating: 1,
     page: 1,
     limit: 12
   });
@@ -91,6 +94,11 @@ export default function ServiceSearch() {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
         <div className="w-full max-w-7xl flex flex-col gap-6">
+          {/* Banner Mejorar plan - Solo para usuarios con rol USER */}
+          {canCreateService && (
+            <UpgradePlanButton context="services" />
+          )}
+
           {/* Header: título, buscador y botón */}
           <div className="flex flex-col md:flex-row md:items-center md:gap-6 mb-2 w-full">
             <div className="flex flex-col md:flex-row md:items-center w-full">
@@ -107,14 +115,16 @@ export default function ServiceSearch() {
             </div>
             <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
               {canCreateService && (
-                <Link href="/services/create" className="w-full sm:w-auto order-1 sm:order-none">
-                  <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
-                    <span className="flex items-center justify-center gap-2 w-full">
-                      <Briefcase size={16} className="text-base" />
-                      <span>Publica tu servicio</span>
-                    </span>
-                  </button>
-                </Link>
+                <RequireVerification action="publicar un servicio">
+                  <Link href="/services/create" className="w-full sm:w-auto order-1 sm:order-none">
+                    <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
+                      <span className="flex items-center justify-center gap-2 w-full">
+                        <Briefcase size={16} className="text-base" />
+                        <span>Publica tu servicio</span>
+                      </span>
+                    </button>
+                  </Link>
+                </RequireVerification>
               )}
               {canViewHirings && (
                 <button 
@@ -122,7 +132,7 @@ export default function ServiceSearch() {
                   className="bg-[#367d7d] text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-[#2b6a6a] transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full sm:w-auto order-2 sm:order-none"
                 >
                   <FileText size={16} />
-                  <span>Mis Solicitudes</span>
+                  <span>Mis solicitudes</span>
                 </button>
               )}
             </div>
@@ -144,7 +154,7 @@ export default function ServiceSearch() {
               <div className="mb-6">
                 {!loading && services.length > 0 && (
                   <p className="text-gray-600 text-sm">
-                    Mostrando {services.length} de {pagination.total} servicio{pagination.total !== 1 ? 's' : ''}
+                    Mostrando {services.length} de {pagination.totalItems} servicio{pagination.totalItems !== 1 ? 's' : ''}
                     {searchFilters.title && ` para "${searchFilters.title}"`}
                   </p>
                 )}
@@ -166,10 +176,10 @@ export default function ServiceSearch() {
               <div className="mt-8 flex justify-center">
                 {!loading && (
                   <Pagination
-                    currentPage={pagination.page || 1}
+                    currentPage={pagination.currentPage || 1}
                     totalPages={pagination.totalPages || 1}
-                    hasNextPage={pagination.hasNext || false}
-                    hasPreviousPage={pagination.hasPrev || false}
+                    hasNextPage={pagination.hasNextPage || false}
+                    hasPreviousPage={pagination.hasPreviousPage || false}
                     onPageChange={handlePageChange}
                   />
                 )}

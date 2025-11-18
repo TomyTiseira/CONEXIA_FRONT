@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { X, CheckCircle, XCircle, Loader2, User, Briefcase, HandshakeIcon } from 'lucide-react';
 import { resolveClaim } from '@/service/claims';
 import { CLAIM_VALIDATION, CLAIM_RESOLUTION_TYPES, CLAIM_RESOLUTION_CONFIG } from '@/constants/claims';
+import InputField from '@/components/form/InputField';
 
 export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showToast }) => {
   const [action, setAction] = useState('resolve');
@@ -106,11 +107,13 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50">
       <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={handleClose} />
+      
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+          {/* Header (estático) */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-semibold text-gray-900">
               {action === 'resolve' ? 'Resolver Reclamo' : 'Rechazar Reclamo'}
             </h2>
@@ -122,7 +125,9 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
               <X size={24} />
             </button>
           </div>
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+
+          {/* Content (solo esta sección hace scroll) */}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
               <p className="text-sm text-gray-600">
                 <span className="font-medium">Reclamo:</span> {claim.claimTypeLabel || claim.claimType}
@@ -133,6 +138,13 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
                   ? `${claim.claimantFirstName} ${claim.claimantLastName}`
                   : claim.claimantName || 'N/A'}{' '}
                 ({claim.claimantRole === 'client' ? 'Cliente' : 'Proveedor'})
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-medium">Reclamado:</span>{' '}
+                {claim.claimedUserFirstName && claim.claimedUserLastName
+                  ? `${claim.claimedUserFirstName} ${claim.claimedUserLastName}`
+                  : claim.claimedUserName || 'N/A'}{' '}
+                ({claim.claimantRole === 'client' ? 'Proveedor' : 'Cliente'})
               </p>
               <p className="text-sm text-gray-600 mt-1">
                 <span className="font-medium">Servicio:</span>{' '}
@@ -288,22 +300,24 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
 
                 {/* Campo adicional para acuerdo parcial */}
                 {resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT && (
-                  <div className="mt-4 ml-8">
+                  <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
                     <label htmlFor="partialAgreementDetails" className="block text-sm font-medium text-gray-700 mb-2">
                       Detalles del acuerdo (opcional)
                     </label>
-                    <textarea
-                      id="partialAgreementDetails"
+                    <p className="text-xs text-gray-600 mb-3">
+                      Especifica los términos del acuerdo parcial entre las partes
+                    </p>
+                    <InputField
+                      multiline
+                      rows={3}
+                      name="partialAgreementDetails"
+                      placeholder="Ej: El cliente pagará el 70% del monto acordado, el proveedor realizará ajustes menores..."
                       value={partialAgreementDetails}
                       onChange={(e) => setPartialAgreementDetails(e.target.value)}
-                      placeholder="Ej: El cliente pagará el 70% del monto acordado, el proveedor realizará ajustes menores..."
-                      rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                      maxLength={CLAIM_VALIDATION.PARTIAL_AGREEMENT_MAX_LENGTH}
                       disabled={isSubmitting}
+                      showCharCount={true}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {partialAgreementDetails.trim().length} / {CLAIM_VALIDATION.PARTIAL_AGREEMENT_MAX_LENGTH} caracteres
-                    </p>
                   </div>
                 )}
               </div>
@@ -322,87 +336,74 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
             )}
 
             {/* Campo de resolución/explicación */}
-            <div>
+            <div className="pt-4 border-t border-gray-200">
               <label htmlFor="resolution" className="block text-sm font-medium text-gray-700 mb-2">
                 {action === 'resolve' ? 'Resolución / Explicación' : 'Motivo del rechazo'}{' '}
                 <span className="text-red-500">*</span>
               </label>
-              <textarea
-                id="resolution"
-                value={resolution}
-                onChange={(e) => {
-                  setResolution(e.target.value);
-                  setError(null);
-                }}
+              <InputField
+                multiline
+                rows={8}
+                name="resolution"
                 placeholder={
                   action === 'resolve'
                     ? 'Explica detalladamente la resolución del reclamo, qué se decidió y por qué...'
                     : 'Explica por qué se rechaza el reclamo. Sé específico y profesional...'
                 }
-                rows={8}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
-                  error ? 'border-red-500' : 'border-gray-300'
-                }`}
+                value={resolution}
+                onChange={(e) => {
+                  setResolution(e.target.value);
+                  setError(null);
+                }}
+                maxLength={maxLength}
                 disabled={isSubmitting}
+                showCharCount={true}
+                error={error}
               />
-
-              {/* Contador de caracteres */}
-              <div className="flex items-center justify-between mt-2">
-                <p
-                  className={`text-sm ${
-                    characterCount < minLength
-                      ? 'text-gray-500'
-                      : characterCount > maxLength
-                      ? 'text-red-600 font-medium'
-                      : 'text-green-600'
-                  }`}
-                >
-                  {characterCount} / {maxLength} caracteres
-                  {characterCount < minLength && ` (mínimo ${minLength})`}
-                </p>
-              </div>
-
-              {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
-            </div>
-
-            {/* Botones */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={handleClose}
-                disabled={isSubmitting}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={!isValid || isSubmitting}
-                className={`px-6 py-2 rounded-lg text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium ${
-                  action === 'resolve'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-red-600 hover:bg-red-700'
-                }`}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Procesando...
-                  </>
-                ) : action === 'resolve' ? (
-                  <>
-                    <CheckCircle size={18} />
-                    Resolver reclamo
-                  </>
-                ) : (
-                  <>
-                    <XCircle size={18} />
-                    Rechazar reclamo
-                  </>
-                )}
-              </button>
+              <p className="mt-1 text-xs text-gray-600">
+                Mínimo {minLength} caracteres
+              </p>
             </div>
           </form>
+
+          {/* Footer (estático) */}
+          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={!isValid || isSubmitting}
+              className={`px-6 py-2 rounded-lg text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium ${
+                action === 'resolve'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-red-600 hover:bg-red-700'
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Procesando...
+                </>
+              ) : action === 'resolve' ? (
+                <>
+                  <CheckCircle size={18} />
+                  Resolver reclamo
+                </>
+              ) : (
+                <>
+                  <XCircle size={18} />
+                  Rechazar reclamo
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -15,6 +15,8 @@ import { ClaimEvidenceViewer } from '@/components/claims/ClaimEvidenceViewer';
 import { ClaimResolutionModal } from '@/components/claims/ClaimResolutionModal';
 import { AddObservationsModal } from '@/components/claims/AddObservationsModal';
 import { SubsanarClaimModal } from '@/components/claims/SubsanarClaimModal';
+import Navbar from '@/components/navbar/Navbar';
+import BackButton from '@/components/ui/BackButton';
 import {
   CLIENT_CLAIM_TYPE_LABELS,
   PROVIDER_CLAIM_TYPE_LABELS,
@@ -23,6 +25,7 @@ import {
 import { useClaimPermissions } from '@/hooks/claims';
 import Toast from '@/components/ui/Toast';
 import { useUserStore } from '@/store/userStore';
+import NotFoundPage from '@/app/not-found';
 
 export default function ClaimDetailPage({ params }) {
   const router = useRouter();
@@ -105,6 +108,11 @@ export default function ClaimDetailPage({ params }) {
     setToast({ isVisible: true, type, message });
   };
 
+  // Check authentication - if no user, show not found
+  if (!user) {
+    return <NotFoundPage />;
+  }
+
   // Loading
   if (loading) {
     return (
@@ -164,21 +172,15 @@ export default function ClaimDetailPage({ params }) {
   const canSubsanar = isClaimant && claim.status === CLAIM_STATUS.PENDING_CLARIFICATION;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
-      >
-        <ArrowLeft size={20} />
-        Volver
-      </button>
+    <>
+      <Navbar />
+      <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
+        {/* Título con franja blanca */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4 mb-6">
+          <h1 className="text-2xl font-bold text-center text-gray-900">Reclamo #{claim.id}</h1>
+        </div>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Reclamo #{claim.id.slice(0, 8)}</h1>
-      </div>
-
-      {/* Información del Reclamo */}
+        {/* Información del Reclamo */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Información del Reclamo</h2>
@@ -209,6 +211,14 @@ export default function ClaimDetailPage({ params }) {
             </p>
           </div>
           <div>
+            <p className="text-sm text-gray-500 mb-1">Persona Reclamada</p>
+            <p className="font-medium text-gray-900">
+              {claim.claimedUserFirstName && claim.claimedUserLastName
+                ? `${claim.claimedUserFirstName} ${claim.claimedUserLastName}`
+                : claim.claimedUserName || 'N/A'} ({claim.claimantRole === 'client' ? 'Proveedor' : 'Cliente'})
+            </p>
+          </div>
+          <div>
             <p className="text-sm text-gray-500 mb-1">Motivo</p>
             <p className="font-medium text-gray-900">
               {claim.otherReason 
@@ -221,7 +231,7 @@ export default function ClaimDetailPage({ params }) {
             <p className="text-sm text-gray-500 mb-1">Fecha de creación</p>
             <p className="font-medium text-gray-900 flex items-center gap-1">
               <Calendar size={16} />
-              {new Date(claim.createdAt).toLocaleString('es-AR')}
+              {new Date(claim.createdAt).toLocaleString('es-AR', { timeZone: 'UTC' })}
             </p>
           </div>
         </div>
@@ -253,7 +263,7 @@ export default function ClaimDetailPage({ params }) {
               <p className="text-sm text-gray-500 mb-1">Fecha</p>
               <p className="font-medium text-gray-900 flex items-center gap-1">
                 <Calendar size={16} />
-                {new Date(claim.observationsAt).toLocaleString('es-AR')}
+                {new Date(claim.observationsAt).toLocaleString('es-AR', { timeZone: 'UTC' })}
               </p>
             </div>
             <div>
@@ -278,6 +288,24 @@ export default function ClaimDetailPage({ params }) {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Respuesta de Subsanación (si existe) */}
+      {claim.clarificationResponse && (
+        <div className="bg-green-50 rounded-lg shadow-sm border border-green-200 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <AlertCircle size={20} className="text-green-600" />
+            Respuesta del Reclamante
+          </h2>
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Respuesta a las observaciones</p>
+              <p className="text-gray-700 whitespace-pre-wrap bg-white p-4 rounded border border-gray-200">
+                {claim.clarificationResponse}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -332,20 +360,46 @@ export default function ClaimDetailPage({ params }) {
             <ClaimStatusBadge status={claim.status} />
           </h2>
           
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Resuelto por</p>
-              <p className="font-medium text-gray-900">{claim.resolvedByUser?.name || 'N/A'}</p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Resuelto por</p>
+                <p className="font-medium text-gray-900 flex items-center gap-1">
+                  <User size={16} />
+                  {claim.resolvedByName || claim.resolvedByEmail || 'N/A'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Fecha de resolución</p>
+                <p className="font-medium text-gray-900 flex items-center gap-1">
+                  <Calendar size={16} />
+                  {new Date(claim.resolvedAt).toLocaleString('es-AR', { timeZone: 'UTC' })}
+                </p>
+              </div>
             </div>
+
+            {claim.status === CLAIM_STATUS.RESOLVED && claim.resolutionType && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Tipo de resolución</p>
+                <p className="font-medium text-gray-900">
+                  {claim.resolutionType === 'client_favor' && '✓ A favor del cliente'}
+                  {claim.resolutionType === 'provider_favor' && '✓ A favor del proveedor'}
+                  {claim.resolutionType === 'partial_agreement' && '✓ Acuerdo parcial'}
+                </p>
+              </div>
+            )}
+
+            {claim.partialAgreementDetails && (
+              <div className="bg-white p-4 rounded-lg border border-green-300">
+                <p className="text-sm font-medium text-gray-700 mb-2">Detalles del acuerdo parcial</p>
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {claim.partialAgreementDetails}
+                </p>
+              </div>
+            )}
+
             <div>
-              <p className="text-sm text-gray-500 mb-1">Fecha de resolución</p>
-              <p className="font-medium text-gray-900 flex items-center gap-1">
-                <Calendar size={16} />
-                {new Date(claim.resolvedAt).toLocaleString('es-AR')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Explicación</p>
+              <p className="text-sm text-gray-500 mb-1">Explicación de la resolución</p>
               <p className="text-gray-700 whitespace-pre-wrap bg-white p-4 rounded border border-gray-200">
                 {claim.resolution}
               </p>
@@ -387,14 +441,20 @@ export default function ClaimDetailPage({ params }) {
         />
       )}
 
-      {/* Toast */}
-      <Toast
-        type={toast.type}
-        message={toast.message}
-        isVisible={toast.isVisible}
-        onClose={() => setToast({ ...toast, isVisible: false })}
-        position="top-center"
-      />
-    </div>
+        {/* Toast */}
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toast.isVisible}
+          onClose={() => setToast({ ...toast, isVisible: false })}
+          position="top-center"
+        />
+
+        {/* Botón Volver */}
+        <div className="mt-8 mb-4">
+          <BackButton onClick={() => router.back()} text="Volver" />
+        </div>
+      </div>
+    </>
   );
 }

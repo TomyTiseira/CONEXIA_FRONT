@@ -15,6 +15,7 @@ import { useUserStore } from '@/store/userStore';
 import Navbar from '@/components/navbar/Navbar';
 import { ROLES } from '@/constants/roles';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import Pagination from '@/components/common/Pagination';
 
 function AdminClaimsContent() {
   const router = useRouter();
@@ -29,10 +30,11 @@ function AdminClaimsContent() {
   });
 
   const [filters, setFilters] = useState({
+    searchTerm: '',
     status: null,
     claimantRole: null,
     page: 1,
-    limit: 20,
+    limit: 12, // 12 reclamos por página
   });
 
   // Cargar reclamos
@@ -69,10 +71,11 @@ function AdminClaimsContent() {
 
   const handleClearFilters = () => {
     setFilters({
+      searchTerm: '',
       status: null,
       claimantRole: null,
       page: 1,
-      limit: 20,
+      limit: 12,
     });
   };
 
@@ -87,135 +90,81 @@ function AdminClaimsContent() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <AlertCircle size={32} className="text-red-600" />
-              <h1 className="text-3xl font-bold text-gray-900">Gestión de Reclamos</h1>
-            </div>
-            <p className="text-gray-600">
-              Revisa y gestiona todos los reclamos de la plataforma
-            </p>
-          </div>
-
-          {/* Filtros */}
-          <div className="mb-6">
-            <ClaimsFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={handleClearFilters}
-            />
-          </div>
-
-          {/* Stats rápidas */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{pagination.total}</p>
-                <p className="text-sm text-gray-600">Total de reclamos</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {claims.filter((c) => c.status === 'open').length}
-                </p>
-                <p className="text-sm text-gray-600">Abiertos</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-blue-600">
-                  {claims.filter((c) => c.status === 'in_review').length}
-                </p>
-                <p className="text-sm text-gray-600">En revisión</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-green-600">
-                  {claims.filter((c) => c.status === 'resolved').length}
-                </p>
-                <p className="text-sm text-gray-600">Resueltos</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading */}
-          {loading && (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <Loader2 size={48} className="animate-spin text-blue-600 mx-auto mb-4" />
-              <p className="text-gray-600">Cargando reclamos...</p>
-            </div>
-          )}
-
-          {/* Error */}
-          {error && !loading && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-              <AlertCircle size={48} className="mx-auto text-red-500 mb-3" />
-              <h3 className="text-lg font-semibold text-red-900 mb-2">Error al cargar</h3>
-              <p className="text-red-700 mb-4">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Reintentar
-              </button>
-            </div>
-          )}
-
-          {/* Lista de reclamos */}
-          {!loading && !error && (
-            <>
-              {claims.length === 0 ? (
-                <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                  <AlertTriangle size={64} className="mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No hay reclamos
-                  </h3>
-                  <p className="text-gray-600">
-                    {filters.status || filters.claimantRole
-                      ? 'No se encontraron reclamos con los filtros aplicados'
-                      : 'Aún no se han creado reclamos en la plataforma'}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    {claims.map((claim) => (
-                      <ClaimsListItem key={claim.id} claim={claim} />
-                    ))}
-                  </div>
-
-                  {/* Paginación */}
-                  {pagination.pages > 1 && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600">
-                          Página {pagination.currentPage} de {pagination.pages} ({pagination.total}{' '}
-                          reclamos totales)
-                        </p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handlePageChange(pagination.currentPage - 1)}
-                            disabled={pagination.currentPage === 1}
-                            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                          >
-                            Anterior
-                          </button>
-                          <button
-                            onClick={() => handlePageChange(pagination.currentPage + 1)}
-                            disabled={pagination.currentPage === pagination.pages}
-                            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                          >
-                            Siguiente
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </>
-          )}
+      <main className="bg-[#eaf5f2] min-h-screen p-8 space-y-6 max-w-7xl mx-auto pb-24">
+        {/* Header */}
+        <div className="bg-white px-6 py-4 rounded-xl shadow-sm">
+          <h1 className="text-2xl font-bold text-conexia-green text-center">
+            Gestión de Reclamos
+          </h1>
         </div>
-      </div>
+
+        {/* Filtros */}
+        <ClaimsFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+        />
+
+        {/* Loading */}
+        {loading && (
+          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+            <Loader2 size={48} className="animate-spin text-conexia-green mx-auto mb-4" />
+            <p className="text-gray-600">Cargando reclamos...</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+            <AlertCircle size={48} className="mx-auto text-red-500 mb-3" />
+            <h3 className="text-lg font-semibold text-red-900 mb-2">Error al cargar</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {/* Lista de reclamos */}
+        {!loading && !error && (
+          <>
+            {claims.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+                <AlertTriangle size={64} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No hay reclamos
+                </h3>
+                <p className="text-gray-600">
+                  {filters.status || filters.claimantRole || filters.searchTerm
+                    ? 'No se encontraron reclamos con los filtros aplicados'
+                    : 'Aún no se han creado reclamos en la plataforma'}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Grid de reclamos */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {claims.map((claim) => (
+                    <ClaimsListItem key={claim.id} claim={claim} />
+                  ))}
+                </div>
+
+                {/* Paginación - siempre visible */}
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.pages}
+                  hasNextPage={pagination.currentPage < pagination.pages}
+                  hasPreviousPage={pagination.currentPage > 1}
+                  onPageChange={handlePageChange}
+                />
+              </>
+            )}
+          </>
+        )}
+      </main>
     </>
   );
 }

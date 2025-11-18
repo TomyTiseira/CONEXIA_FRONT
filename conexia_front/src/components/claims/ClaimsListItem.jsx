@@ -33,7 +33,7 @@ export const ClaimsListItem = ({ claim }) => {
   return (
     <div
       onClick={handleClick}
-      className="bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer"
+      className="bg-white border border-gray-200 rounded-lg p-4 hover:border-conexia-green hover:shadow-md transition-all cursor-pointer"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
@@ -44,7 +44,7 @@ export const ClaimsListItem = ({ claim }) => {
             <ClaimStatusBadge status={claim.status} />
           </div>
           <p className="text-xs text-gray-500">
-            Reclamo #{claim.id.slice(0, 8)}
+            Reclamo #{claim.id}
           </p>
         </div>
         <ChevronRight className="text-gray-400 flex-shrink-0" size={20} />
@@ -54,12 +54,22 @@ export const ClaimsListItem = ({ claim }) => {
         <div className="flex items-center text-gray-600">
           <User size={14} className="mr-2 flex-shrink-0" />
           <span className="truncate">
-            <span className="font-medium">
-              {claim.claimantFirstName && claim.claimantLastName
-                ? `${claim.claimantFirstName} ${claim.claimantLastName}`
-                : claim.claimantName || claim.claimantUser?.name || 'Usuario'}
-            </span>
+            <span className="font-medium">Reclamante:</span>{' '}
+            {claim.claimantFirstName && claim.claimantLastName
+              ? `${claim.claimantFirstName} ${claim.claimantLastName}`
+              : claim.claimantName || claim.claimantUser?.name || 'Usuario'}
             {' '}({claim.claimantRole === 'client' ? 'Cliente' : 'Proveedor'})
+          </span>
+        </div>
+
+        <div className="flex items-center text-gray-600">
+          <User size={14} className="mr-2 flex-shrink-0" />
+          <span className="truncate">
+            <span className="font-medium">Reclamado:</span>{' '}
+            {claim.claimedUserFirstName && claim.claimedUserLastName
+              ? `${claim.claimedUserFirstName} ${claim.claimedUserLastName}`
+              : claim.claimedUserName || 'N/A'}
+            {' '}({claim.claimantRole === 'client' ? 'Proveedor' : 'Cliente'})
           </span>
         </div>
 

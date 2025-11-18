@@ -3,6 +3,7 @@
 import React from 'react';
 import Button from '@/components/ui/Button';
 import { FiCheck, FiX, FiStar } from 'react-icons/fi';
+import { isBenefitActive, formatBenefitValue } from '@/utils/planFormatters';
 
 /**
  * Componente de tarjeta para mostrar un plan de suscripción
@@ -15,6 +16,7 @@ export default function PlanCard({
   canContract = true,
   onContractClick,
   onDetailsClick,
+  currentPlanName = 'Free', // Nombre del plan actual del usuario
 }) {
   // Determinar si es plan gratuito
   const isFree = parseFloat(plan.monthlyPrice) === 0;
@@ -24,6 +26,22 @@ export default function PlanCard({
     ? parseFloat(plan.monthlyPrice)
     : parseFloat(plan.annualPrice);
 
+  // Función para obtener el nivel jerárquico de un plan
+  const getPlanTier = (planName) => {
+    const tiers = {
+      'Free': 1,
+      'Basic': 2,
+      'Premium': 3
+    };
+    return tiers[planName] || 0;
+  };
+
+  // Determinar si el plan actual es superior a este plan (downgrade no permitido)
+  const isDowngrade = getPlanTier(currentPlanName) > getPlanTier(plan.name);
+  
+  // No permitir contratar planes inferiores
+  const canContractThisPlan = canContract && !isDowngrade;
+
   return (
     <div 
       className={`
@@ -31,16 +49,18 @@ export default function PlanCard({
         ${isCurrentPlan 
           ? 'border-conexia-green bg-gradient-to-br from-conexia-soft/30 via-white to-white shadow-xl' 
           : isMostPopular
-          ? 'border-blue-500 bg-gradient-to-br from-blue-50 via-white to-white shadow-lg hover:shadow-xl hover:scale-[1.02]'
+          ? 'border-[#48a6a7] bg-gradient-to-br from-[#367d7d]/5 via-[#48a6a7]/8 to-white shadow-[0_8px_30px_rgba(72,166,167,0.3)] hover:shadow-[0_10px_40px_rgba(72,166,167,0.4)] hover:scale-[1.02]'
+          : plan.name === 'Premium'
+          ? 'border-[#367d7d] bg-gradient-to-br from-[#48a6a7]/10 via-[#edf6f6] to-white shadow-[0_8px_30px_rgba(54,125,125,0.25)] hover:shadow-[0_10px_40px_rgba(54,125,125,0.35)] hover:scale-[1.02]'
           : 'border-gray-200 bg-white hover:border-conexia-green/50 hover:shadow-lg hover:scale-[1.02]'
         }
       `}
     >
       {/* Badges superiores */}
-      {(isMostPopular || isCurrentPlan) && (
+      {(isMostPopular || isCurrentPlan || plan.name === 'Premium') && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 flex gap-2">
           {isMostPopular && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs font-bold rounded-full shadow-md">
+            <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white text-xs font-bold rounded-full shadow-[0_4px_15px_rgba(72,166,167,0.4)]">
               <FiStar className="w-3 h-3" />
               MÁS POPULAR
             </span>
@@ -51,19 +71,20 @@ export default function PlanCard({
               TU PLAN ACTUAL
             </span>
           )}
+          {plan.name === 'Premium' && !isCurrentPlan && !isMostPopular && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-[#367d7d] to-[#2b6a6a] text-white text-xs font-bold rounded-full shadow-[0_4px_15px_rgba(54,125,125,0.4)]">
+              <FiStar className="w-3 h-3" />
+              PREMIUM
+            </span>
+          )}
         </div>
       )}
 
       {/* Nombre del plan */}
       <div className="text-center mt-2 mb-4">
-        <h3 className="text-2xl font-bold text-gray-900 mb-1 min-h-[64px] flex items-center justify-center">
+        <h3 className="text-2xl font-bold text-gray-900">
           {plan.name}
         </h3>
-        {plan.description && (
-          <p className="text-gray-600 text-xs min-h-[32px]">
-            {plan.description}
-          </p>
-        )}
       </div>
 
       {/* Precio */}
@@ -92,8 +113,10 @@ export default function PlanCard({
       {/* Beneficios */}
       <div className="space-y-3 mb-6 flex-grow">
         {plan.benefits && plan.benefits.map((benefit, index) => {
-          const isActive = benefit.value === true || (typeof benefit.value === 'number' && benefit.value > 0);
+          const isActive = isBenefitActive(benefit.value);
           const isNumeric = typeof benefit.value === 'number';
+          const isString = typeof benefit.value === 'string';
+          const formattedValue = isString ? formatBenefitValue(benefit.key, benefit.value) : null;
           
           return (
             <div 
@@ -123,6 +146,11 @@ export default function PlanCard({
                     ({benefit.value})
                   </span>
                 )}
+                {isString && formattedValue && (
+                  <span className="ml-1 font-bold text-conexia-green">
+                    ({formattedValue})
+                  </span>
+                )}
               </span>
             </div>
           );
@@ -139,21 +167,26 @@ export default function PlanCard({
           >
             Plan Actual
           </Button>
-        ) : canContract ? (
+        ) : canContractThisPlan && !isFree ? (
           <Button 
             onClick={() => onContractClick?.(plan.id)}
             className={`
               w-full !py-2.5
               ${isMostPopular 
-                ? '!bg-gradient-to-r !from-blue-600 !to-blue-500 hover:!from-blue-700 hover:!to-blue-600' 
+                ? '!bg-gradient-to-r !from-[#48a6a7] !to-[#419596] hover:!from-[#419596] hover:!to-[#367d7d]' 
+                : plan.name === 'Premium'
+                ? '!bg-gradient-to-r !from-[#367d7d] !to-[#2b6a6a] hover:!from-[#2b6a6a] hover:!to-[#204b4b]'
                 : '!bg-gradient-to-r !from-conexia-green !to-[#1a7a66] hover:!from-[#1a7a66] hover:!to-conexia-green'
               }
               !text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300
             `}
           >
-            {isFree ? 'Comenzar Gratis' : 'Contratar Plan'}
+            Contratar Plan
           </Button>
-        ) : (
+        ) : !canContractThisPlan && isDowngrade ? (
+          // Mostrar solo el botón de ver detalles si es un downgrade
+          null
+        ) : !canContract ? (
           <Button 
             variant="outline"
             disabled
@@ -161,7 +194,7 @@ export default function PlanCard({
           >
             No disponible
           </Button>
-        )}
+        ) : null}
 
         {onDetailsClick && (
           <button

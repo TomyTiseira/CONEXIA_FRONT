@@ -4,25 +4,55 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { FiStar, FiZap, FiAward } from 'react-icons/fi';
 import { usePlan } from '@/hooks/plans/usePlans';
+import { useUserPlan } from '@/hooks/memberships';
 
 /**
  * Badge para mostrar el plan actual del usuario
  * Puede usarse en navbar, perfil, etc.
+ * 
+ * Ahora soporta: Free, Basic, Premium
  */
 export default function PlanBadge({ 
   planId,
   planName,
   variant = 'default', // 'default' | 'compact' | 'icon-only'
   showUpgradeLink = true,
-  className = ''
+  className = '',
+  useCurrentPlan = false, // Si es true, obtiene el plan del usuario autenticado
 }) {
   const router = useRouter();
   
+  // Si useCurrentPlan es true, obtener el plan del usuario autenticado
+  const { data: currentUserPlan, isLoading: loadingUserPlan, error: userPlanError } = useCurrentPlan 
+    ? useUserPlan() 
+    : { data: null, isLoading: false, error: null };
+  
   // Si se pasa planId, obtener el plan del hook
-  const { plan: fetchedPlan, loading } = planId ? usePlan(planId) : { plan: null, loading: false };
+  const { plan: fetchedPlan, loading: loadingPlanById } = planId && !useCurrentPlan
+    ? usePlan(planId) 
+    : { plan: null, loading: false };
+  
+  const loading = loadingUserPlan || loadingPlanById;
+  
+  // Si hay error al cargar el plan del usuario, no mostrar nada
+  if (useCurrentPlan && userPlanError) {
+    return null;
+  }
+
+  // Si está cargando el plan del usuario y no hay datos, no mostrar nada
+  if (useCurrentPlan && loadingUserPlan && !currentUserPlan) {
+    return null;
+  }
   
   // Determinar el nombre del plan
-  const displayPlanName = planName || fetchedPlan?.name || 'Free';
+  let displayPlanName = planName;
+  if (!displayPlanName && useCurrentPlan && currentUserPlan?.plan) {
+    displayPlanName = currentUserPlan.plan.name;
+  } else if (!displayPlanName && fetchedPlan) {
+    displayPlanName = fetchedPlan.name;
+  } else if (!displayPlanName) {
+    displayPlanName = 'Free';
+  }
 
   const handleClick = () => {
     if (showUpgradeLink) {
@@ -40,49 +70,31 @@ export default function PlanBadge({
     );
   }
 
-  // Configuración de colores y estilos según el plan
+  // Configuración de colores y estilos según el plan (Free, Basic, Premium)
   const planConfig = {
     'Free': {
       icon: FiStar,
-      gradient: 'from-gray-500 to-gray-600',
-      bg: 'bg-gray-100',
+      gradient: 'from-gray-400 to-gray-500',
+      bg: 'bg-gray-50',
       text: 'text-gray-700',
-      border: 'border-gray-300'
-    },
-    'plan pro': {
-      icon: FiZap,
-      gradient: 'from-blue-500 to-blue-600',
-      bg: 'bg-blue-50',
-      text: 'text-blue-700',
-      border: 'border-blue-300'
-    },
-    'plan premium': {
-      icon: FiAward,
-      gradient: 'from-amber-500 to-amber-600',
-      bg: 'bg-amber-50',
-      text: 'text-amber-700',
-      border: 'border-amber-300'
+      border: 'border-gray-300',
+      emoji: '⭐'
     },
     'Basic': {
       icon: FiZap,
       gradient: 'from-blue-500 to-blue-600',
       bg: 'bg-blue-50',
       text: 'text-blue-700',
-      border: 'border-blue-300'
+      border: 'border-blue-300',
+      emoji: '⚡'
     },
     'Premium': {
       icon: FiAward,
       gradient: 'from-amber-500 to-amber-600',
       bg: 'bg-amber-50',
       text: 'text-amber-700',
-      border: 'border-amber-300'
-    },
-    'Pro': {
-      icon: FiAward,
-      gradient: 'from-purple-500 to-purple-600',
-      bg: 'bg-purple-50',
-      text: 'text-purple-700',
-      border: 'border-purple-300'
+      border: 'border-amber-300',
+      emoji: '👑'
     }
   };
 

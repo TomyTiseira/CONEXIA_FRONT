@@ -1,30 +1,23 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext } from 'react';
+import { useChatWidgetsStore } from '@/store/chatWidgetsStore';
 
 const ChatWidgetsContext = createContext();
 
+/**
+ * Proveedor de compatibilidad: anteriormente la aplicación usaba un React Context.
+ * Ahora la fuente de la verdad es el store de Zustand; este proveedor
+ * simplemente reexpone el estado y las acciones del store para que los
+ * consumidores existentes sigan funcionando sin cambios.
+ */
 export function ChatWidgetsProvider({ children }) {
-  const [nexoOpen, setNexoOpen] = useState(false);
-  const [messagingOpen, setMessagingOpen] = useState(false);
-
-  const openNexo = () => {
-    setNexoOpen(true);
-    setMessagingOpen(false); // Cerrar mensajería al abrir NEXO
-  };
-
-  const closeNexo = () => {
-    setNexoOpen(false);
-  };
-
-  const openMessaging = () => {
-    setMessagingOpen(true);
-    setNexoOpen(false); // Cerrar NEXO al abrir mensajería
-  };
-
-  const closeMessaging = () => {
-    setMessagingOpen(false);
-  };
+  const nexoOpen = useChatWidgetsStore((s) => s.nexoOpen);
+  const messagingOpen = useChatWidgetsStore((s) => s.messagingOpen);
+  const openNexo = useChatWidgetsStore((s) => s.openNexo);
+  const closeNexo = useChatWidgetsStore((s) => s.closeNexo);
+  const openMessaging = useChatWidgetsStore((s) => s.openMessaging);
+  const closeMessaging = useChatWidgetsStore((s) => s.closeMessaging);
 
   return (
     <ChatWidgetsContext.Provider

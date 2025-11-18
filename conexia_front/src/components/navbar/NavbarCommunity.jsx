@@ -13,11 +13,13 @@ import {
   Briefcase,
   Layers,
   ChevronDown,
+  BarChart3,
 } from 'lucide-react';
 import { HiUserGroup } from 'react-icons/hi';
 import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests';
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 import GlobalSearchBar from '@/components/common/GlobalSearchBar';
 import { useMessaging } from '@/hooks/messaging/useMessaging'; // ya importado
@@ -51,7 +53,7 @@ function MobileSearchBar() {
 export default function NavbarCommunity() {
   const { count: connectionRequestsCount } = useConnectionRequests();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { profile } = useUserStore();
+  const { profile, roleName } = useUserStore();
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
@@ -127,6 +129,11 @@ export default function NavbarCommunity() {
     { label: 'Servicios', href: '/services', icon: Briefcase },
     { label: 'Proyectos', href: "/project/search", icon: Layers },
     { label: 'Conexiones', href: '/connections', icon: HiUserGroup, showDot: connectionRequestsCount > 0 },
+    // Dashboard solo para admin y moderador
+    ...(roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR 
+      ? [{ label: 'Dashboard', href: '/dashboard', icon: BarChart3 }] 
+      : []
+    ),
   ];
 
   return (

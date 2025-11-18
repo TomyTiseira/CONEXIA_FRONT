@@ -19,15 +19,30 @@ export const validateFile = (file) => {
     return CLAIM_ERROR_MESSAGES.MAX_SIZE;
   }
 
-  // Validar tipo MIME
-  if (!CLAIM_VALIDATION.ALLOWED_FILE_TYPES.includes(file.type)) {
-    return CLAIM_ERROR_MESSAGES.INVALID_FORMAT;
-  }
-
-  // Validar extensión (backup)
+  // Validar extensión primero (más confiable)
   const extension = file.name.split('.').pop()?.toLowerCase();
   if (!CLAIM_VALIDATION.ALLOWED_FILE_EXTENSIONS.includes(extension)) {
     return CLAIM_ERROR_MESSAGES.INVALID_FORMAT;
+  }
+
+  // Validar tipo MIME solo si está presente y no está vacío
+  // Algunos navegadores no envían el tipo MIME correctamente para ciertos archivos
+  if (file.type && !CLAIM_VALIDATION.ALLOWED_FILE_TYPES.includes(file.type)) {
+    // Permitir si la extensión es válida pero el MIME type no coincide (común en PDFs)
+    const mimeExtensionMap = {
+      'pdf': 'application/pdf',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'mp4': 'video/mp4'
+    };
+    
+    // Si la extensión está en el mapa, permitir el archivo
+    if (!mimeExtensionMap[extension]) {
+      return CLAIM_ERROR_MESSAGES.INVALID_FORMAT;
+    }
   }
 
   return null;

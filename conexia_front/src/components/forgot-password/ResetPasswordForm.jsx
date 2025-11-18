@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useResetPasswordStore } from "@/store/useResetPasswordStore";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { resetPassword } from "@/service/auth/recoveryService";
 import InputField from "@/components/form/InputField";
 import { validatePassword, validateRepeatPwd } from "@/utils/validation";
@@ -18,7 +17,7 @@ export default function ResetPasswordForm() {
     confirmPassword: "",
   });
 
-  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
   const [focused, setFocused] = useState({});
   const [msg, setMsg] = useState(null);
   const [showPwd, setShowPwd] = useState(false);
@@ -26,19 +25,17 @@ export default function ResetPasswordForm() {
 
   const handleBlur = (field) => {
     setFocused((prev) => ({ ...prev, [field]: false }));
-    setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (touched[field]) {
-      setTouched((prev) => ({ ...prev, [field]: true }));
-    }
   };
 
   const getError = (field) => {
+    // Solo mostrar errores después del submit y cuando el campo no está enfocado
+    if (!submitted || focused[field]) return "";
+
     const value = form[field];
-    if (!touched[field]) return "";
 
     if (field === "confirmPassword") {
       return validateRepeatPwd(form.password, form.confirmPassword);
@@ -51,7 +48,7 @@ export default function ResetPasswordForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ password: true, confirmPassword: true });
+    setSubmitted(true);
 
     const passwordError = validatePassword(form.password);
     const confirmError = validateRepeatPwd(form.password, form.confirmPassword);
@@ -84,61 +81,76 @@ export default function ResetPasswordForm() {
     }
   };
 
-
   return (
-    <div className="flex flex-col justify-center items-center w-full md:w-[40%] px-6 py-10 bg-conexia-soft">
-      <div className="flex justify-center mb-4">
-        <ConexiaLogo width={80} height={32} />
-      </div>
+    <div className="w-full max-w-md">
+      {/* Card principal */}
+      <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10">
+        {/* Logo y header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <ConexiaLogo width={100} height={40} />
+          </div>
+          <h1 className="text-3xl font-bold text-conexia-green mb-2">Nueva contraseña</h1>
+          <p className="text-sm text-gray-600">
+            Crea una contraseña nueva y segura para proteger tu cuenta.
+          </p>
+        </div>
 
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-conexia-green mb-4">Nueva contraseña</h1>
-        <p className="mb-5 text-sm text-conexia-green/90">
-          Crea una contraseña nueva y segura para proteger tu cuenta.
-        </p>
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          {/* Campo Nueva Contraseña */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nueva contraseña
+            </label>
+            <InputField
+              type="password"
+              placeholder="Nueva contraseña"
+              value={form.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              onFocus={() => setFocused((prev) => ({ ...prev, password: true }))}
+              onBlur={() => handleBlur("password")}
+              error={getError("password")}
+              showToggle={true}
+              show={showPwd}
+              onToggle={() => setShowPwd(!showPwd)}
+            />
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
-          <InputField
-            type="password"
-            placeholder="Nueva contraseña"
-            value={form.password}
-            onChange={(e) => handleChange("password", e.target.value)}
-            onFocus={() => setFocused((prev) => ({ ...prev, password: true }))}
-            onBlur={() => handleBlur("password")}
-            error={getError("password")}
-            showToggle={true}
-            show={showPwd}
-            onToggle={() => setShowPwd(!showPwd)}
-          />
-
-          <InputField
-            type="password"
-            placeholder="Repetir contraseña"
-            value={form.confirmPassword}
-            onChange={(e) => handleChange("confirmPassword", e.target.value)}
-            onFocus={() => setFocused((prev) => ({ ...prev, confirmPassword: true }))}
-            onBlur={() => handleBlur("confirmPassword")}
-            error={getError("confirmPassword")}
-            showToggle={true}
-            show={showConfirmPwd}
-            onToggle={() => setShowConfirmPwd(!showConfirmPwd)}
-          />
+          {/* Campo Repetir Contraseña */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Repetir contraseña
+            </label>
+            <InputField
+              type="password"
+              placeholder="Repetir contraseña"
+              value={form.confirmPassword}
+              onChange={(e) => handleChange("confirmPassword", e.target.value)}
+              onFocus={() => setFocused((prev) => ({ ...prev, confirmPassword: true }))}
+              onBlur={() => handleBlur("confirmPassword")}
+              error={getError("confirmPassword")}
+              showToggle={true}
+              show={showConfirmPwd}
+              onToggle={() => setShowConfirmPwd(!showConfirmPwd)}
+            />
+          </div>
 
           <button
             type="submit"
-            className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90"
+            className="w-full bg-conexia-green text-white py-3 rounded-lg font-semibold hover:bg-conexia-green/90 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             Cambiar contraseña
           </button>
         </form>
 
-        <div className="min-h-[50px] mt-4 text-center text-sm transition-all duration-300">
-          {msg && (
-            <p className={msg.ok ? "text-green-600" : "text-red-600"}>
+        {/* Mensaje de éxito/error */}
+        {msg && (
+          <div className="mt-4 text-center">
+            <p className={`text-sm font-medium ${msg.ok ? "text-green-600" : "text-red-600"}`}>
               {msg.text}
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

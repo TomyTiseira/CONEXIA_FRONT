@@ -15,6 +15,7 @@ import {
   Briefcase,
   Layers,
   ChevronDown,
+  BarChart3,
 } from 'lucide-react';
 import DropdownInternalUserMenu from '@/components/navbar/DropdownInternalUserMenu';
 import { config } from '@/config';
@@ -45,6 +46,7 @@ export default function NavbarModerator() {
   { label: 'Proyectos', href: '/project/search', icon: Layers },
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },
   { label: 'Reclamos', href: '/admin/claims', icon: AlertCircle },
+  { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';

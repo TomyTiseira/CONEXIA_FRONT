@@ -1,13 +1,13 @@
 import CreateProfileForm from "@/components/profile/createProfile/createProfileForm";
-import { Footer } from "@/components/Footer";
+import { Suspense } from "react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function CreateProfilePage() {
   return (
-    <main className="min-h-screen flex flex-col bg-conexia-soft">
-      <div className="flex-grow flex flex-col items-center justify-center px-4 ">
+    <main className="min-h-screen bg-gradient-to-br from-conexia-green via-conexia-green/95 to-[#0d2d28] flex items-center justify-center p-4">
+      <Suspense fallback={<LoadingSpinner message="Cargando formulario..." />}>
         <CreateProfileForm />
-      </div>
-      <Footer />
+      </Suspense>
     </main>
   );
 }

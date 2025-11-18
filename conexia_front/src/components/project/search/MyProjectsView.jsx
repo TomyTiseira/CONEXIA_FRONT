@@ -5,6 +5,7 @@ import { fetchMyProjects } from '@/service/projects/projectsFetch';
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
 import NavbarAdmin from '@/components/navbar/NavbarAdmin';
 import NavbarModerator from '@/components/navbar/NavbarModerator';
+import { PlanComparisonBanner } from '@/components/plans';
 import ProjectList from './ProjectList';
 import Toast from '@/components/ui/Toast';
 
@@ -85,6 +86,13 @@ export default function MyProjectsView({ userId }) {
       {renderNavbar()}
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 pb-20 md:pb-8">
         <div className="container mx-auto px-4 py-4">
+          {/* Plan Comparison Banner - Solo para usuarios propietarios */}
+          {isOwner && authUser?.role === ROLES.USER && (
+            <div className="mb-6">
+              <PlanComparisonBanner context="projects" />
+            </div>
+          )}
+
           {/* Header */}
           <div className="mb-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

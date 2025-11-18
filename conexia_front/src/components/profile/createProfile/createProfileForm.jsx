@@ -191,15 +191,25 @@ export default function CreateProfileForm() {
       }
     }
     
+    // Validación de nombre y apellido: mínimo 3 letras
+    if ((field === "name" || field === "lastName") && value) {
+      const trimmedValue = value.trim();
+      // Contar solo letras (sin espacios, números ni caracteres especiales)
+      const letterCount = trimmedValue.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '').length;
+      if (letterCount < 3) {
+        return "Debe contener al menos 3 letras";
+      }
+    }
+    
     // Validación de número de documento según el tipo
     if (field === "documentNumber" && value && form.documentTypeId) {
       const docType = parseInt(form.documentTypeId);
       const docNumber = value.trim();
       
       if (docType === 1) {
-        // DNI: 7-8 dígitos numéricos
+        // DNI: 7-8 dígitos numéricos solamente
         if (!/^\d{7,8}$/.test(docNumber)) {
-          return "El DNI debe tener 7 u 8 dígitos";
+          return "El DNI debe tener 7 u 8 dígitos numéricos";
         }
       } else if (docType === 3) {
         // Pasaporte: 6-9 caracteres alfanuméricos
@@ -207,6 +217,11 @@ export default function CreateProfileForm() {
           return "El pasaporte debe tener entre 6 y 9 caracteres alfanuméricos";
         }
       }
+    }
+    
+    // Validación de descripción: máximo 500 caracteres
+    if (field === "description" && value && value.length > 500) {
+      return "Máximo 500 caracteres";
     }
     
     // Validación de mayor de 18 años para fecha de nacimiento
@@ -838,10 +853,21 @@ export default function CreateProfileForm() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-10">
-      <div className="flex justify-center mb-6">
-        <ConexiaLogo width={80} height={32} />
-      </div>
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded shadow">
+        {/* Header con logo y título dentro del formulario */}
+        <div className="text-center pb-6 border-b border-gray-200">
+          <div className="flex justify-center mb-4">
+            <ConexiaLogo width={120} height={48} />
+          </div>
+          <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight leading-tight">
+            Crea tu perfil profesional
+          </h1>
+          <p className="text-conexia-green-dark mt-2 text-base md:text-lg">
+            Completa tu información para comenzar a conectar con otros profesionales, publicar servicios y participar en proyectos colaborativos.
+          </p>
+        </div>
+
+        {/* Campos del formulario */}
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-conexia-green mb-1">Nombre</label>
@@ -924,8 +950,19 @@ export default function CreateProfileForm() {
             <label className="block text-sm font-medium text-conexia-green mb-1">Número de documento</label>
             <InputField
               name="documentNumber"
+              type="text"
+              inputMode={form.documentTypeId === "1" ? "numeric" : "text"}
+              pattern={form.documentTypeId === "1" ? "[0-9]*" : undefined}
               value={form.documentNumber}
-              onChange={e => handleChange("documentNumber", e.target.value)}
+              onChange={e => {
+                // Si es DNI, solo permitir números
+                if (form.documentTypeId === "1") {
+                  const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                  handleChange("documentNumber", numericValue);
+                } else {
+                  handleChange("documentNumber", e.target.value);
+                }
+              }}
               onBlur={() => handleBlur("documentNumber")}
               error={errors.documentNumber}
               placeholder={
@@ -946,103 +983,159 @@ export default function CreateProfileForm() {
             <InputField name="state" value={form.state} onChange={e => handleChange("state", e.target.value)} />
           </div>
         </div>
+        
+        {/* Profesión */}
         <div>
-          <label className="block text-sm font-medium text-conexia-green mb-1">Profesión</label>
+          <label className="block text-sm font-semibold text-conexia-green-dark mb-2">Profesión</label>
           <InputField
             name="profession"
             value={form.profession}
             onChange={e => handleChange("profession", e.target.value)}
             onBlur={() => handleBlur("profession")}
             error={errors.profession}
+            placeholder="Ej: Desarrollador Full Stack, Diseñador UX/UI..."
           />
         </div>
-        {/* Imágenes */}
-        <div className="flex flex-col gap-6">
+        
+        {/* Descripción del perfil */}
+        <div>
+          <label className="block text-sm font-semibold text-conexia-green-dark mb-2">Descripción de tu perfil (Opcional)</label>
+          <InputField
+            name="description"
+            multiline
+            rows={6}
+            value={form.description}
+            onChange={e => handleChange("description", e.target.value)}
+            placeholder="Describe tu experiencia, habilidades y lo que te hace único como profesional..."
+            maxLength={500}
+            showCharCount={true}
+          />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
           {/* Foto de perfil */}
-          <div className="flex flex-row items-start gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil (Opcional)</label>
-              <p className="text-xs text-gray-500 mb-1">
-                Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
-              </p>
-              <input
-                type="file"
-                accept="image/jpeg,image/png"
-                ref={profilePicRef}
-                onChange={e => handleImageChange(e, 'profilePicture')}
-                className="w-full mb-2"
-                style={{ color: 'transparent' }}
-              />
-              {form.profilePicture && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage('profilePicture')}
-                    className="text-red-500 text-xs hover:underline mb-1"
-                  >
-                    Eliminar
-                  </button>
-                  <span className="text-xs text-gray-700 mb-1 block">{form.profilePicture.name}</span>
-                </>
+          <div>
+            <label className="block text-sm font-semibold text-conexia-green-dark mb-2">Foto de perfil (Opcional)</label>
+            
+            {/* Zona de subida estilo ImageUploadZone */}
+            <div
+              onClick={() => !form.profilePicture && profilePicRef.current?.click()}
+              className={`
+                min-h-[280px] flex items-center justify-center
+                border-2 border-dashed rounded-lg p-4 text-center transition-colors
+                ${form.profilePicture 
+                  ? 'border-conexia-green bg-conexia-green/5' 
+                  : 'border-gray-300 hover:border-conexia-green hover:bg-conexia-green/5 cursor-pointer'
+                }
+              `}
+            >
+              {form.profilePicture ? (
+                <div className="space-y-3 w-full">
+                  <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md">
+                    <img
+                      src={URL.createObjectURL(form.profilePicture)}
+                      alt="Vista previa perfil"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-700 mb-2">{form.profilePicture.name}</p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveImage('profilePicture');
+                      }}
+                      className="text-red-500 text-sm hover:underline"
+                    >
+                      Eliminar imagen
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-6 w-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Haz clic para seleccionar</p>
+                    <p className="text-xs text-gray-500 mt-1">Máx. 1 imagen, JPG o PNG, 5MB</p>
+                  </div>
+                </div>
               )}
-              {imgErrors.profilePicture && <p className="text-xs text-red-600 mt-1 text-left">{imgErrors.profilePicture}</p>}
             </div>
-            {/* Previsualización a la derecha */}
-            {form.profilePicture && (
-              <div className="relative w-20 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md mt-6">
-                <img
-                  src={URL.createObjectURL(form.profilePicture)}
-                  alt="Vista previa perfil"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+            
+            <input
+              ref={profilePicRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              onChange={e => handleImageChange(e, 'profilePicture')}
+              className="hidden"
+            />
+            {imgErrors.profilePicture && <p className="text-xs text-red-600 mt-2">{imgErrors.profilePicture}</p>}
           </div>
 
           {/* Foto de portada */}
-          <div className="flex flex-row items-start gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada (Opcional)</label>
-              <p className="text-xs text-gray-500 mb-1">
-                Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
-              </p>
-              <input
-                type="file"
-                accept="image/jpeg,image/png"
-                ref={coverPicRef}
-                onChange={e => handleImageChange(e, 'coverPicture')}
-                className="w-full mb-2"
-                style={{ color: 'transparent' }}
-              />
-              {form.coverPicture && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage('coverPicture')}
-                    className="text-red-500 text-xs hover:underline mb-1"
-                  >
-                    Eliminar
-                  </button>
-                  <span className="text-xs text-gray-700 mb-1 block">{form.coverPicture.name}</span>
-                </>
+          <div>
+            <label className="block text-sm font-semibold text-conexia-green-dark mb-2">Foto de portada (Opcional)</label>
+            
+            {/* Zona de subida estilo ImageUploadZone */}
+            <div
+              onClick={() => !form.coverPicture && coverPicRef.current?.click()}
+              className={`
+                min-h-[280px] flex items-center justify-center
+                border-2 border-dashed rounded-lg p-4 text-center transition-colors
+                ${form.coverPicture 
+                  ? 'border-conexia-green bg-conexia-green/5' 
+                  : 'border-gray-300 hover:border-conexia-green hover:bg-conexia-green/5 cursor-pointer'
+                }
+              `}
+            >
+              {form.coverPicture ? (
+                <div className="space-y-3 w-full">
+                  <div className="relative w-full h-32 mx-auto rounded-lg overflow-hidden border-4 border-white shadow-md">
+                    <img
+                      src={URL.createObjectURL(form.coverPicture)}
+                      alt="Vista previa portada"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-700 mb-2">{form.coverPicture.name}</p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveImage('coverPicture');
+                      }}
+                      className="text-red-500 text-sm hover:underline"
+                    >
+                      Eliminar imagen
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-6 w-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Haz clic para seleccionar</p>
+                    <p className="text-xs text-gray-500 mt-1">Máx. 1 imagen, JPG o PNG, 5MB</p>
+                  </div>
+                </div>
               )}
-              {imgErrors.coverPicture && <p className="text-xs text-red-600 mt-1 text-left">{imgErrors.coverPicture}</p>}
             </div>
-            {/* Previsualización a la derecha */}
-            {form.coverPicture && (
-              <div className="relative w-32 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md mt-6">
-                <img
-                  src={URL.createObjectURL(form.coverPicture)}
-                  alt="Vista previa portada"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+            
+            <input
+              ref={coverPicRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              onChange={e => handleImageChange(e, 'coverPicture')}
+              className="hidden"
+            />
+            {imgErrors.coverPicture && <p className="text-xs text-red-600 mt-2">{imgErrors.coverPicture}</p>}
           </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-conexia-green mb-1">Descripción (Opcional)</label>
-          <TextArea name="description" value={form.description} onChange={e => handleChange("description", e.target.value)} />
         </div>
 
         {/* Habilidades por Rubro */}
@@ -1111,8 +1204,9 @@ export default function CreateProfileForm() {
                 value={exp.endDate}
                 onChange={e => handleExpChange(i, 'endDate', e.target.value)}
                 onBlur={() => handleExpBlur(i, 'endDate')}
-                disabled={exp.isCurrent || exp.confirmed}
+                disabled={exp.isCurrent || exp.confirmed || !exp.startDate}
                 onKeyDown={e => e.preventDefault()}
+                min={exp.startDate ? getNextDay(exp.startDate) : undefined}
                 max={getTodayDate()}
                 placeholder="dd/mm/yyyy"
               />
@@ -1129,7 +1223,7 @@ export default function CreateProfileForm() {
                   handleExpChange(i, 'isCurrent', e.target.checked);
                   if (e.target.checked) handleExpChange(i, 'endDate', '');
                 }}
-                disabled={exp.confirmed}
+                disabled={exp.confirmed || !exp.startDate}
               />
               Actualmente trabajo aquí
             </label>
@@ -1223,8 +1317,9 @@ export default function CreateProfileForm() {
                 value={edu.endDate}
                 onChange={e => handleEducationChange(i, 'endDate', e.target.value)}
                 onBlur={() => handleEducationBlur(i, 'endDate')}
-                disabled={edu.isCurrent || edu.confirmed}
+                disabled={edu.isCurrent || edu.confirmed || !edu.startDate}
                 onKeyDown={e => e.preventDefault()}
+                min={edu.startDate ? getNextDay(edu.startDate) : undefined}
                 max={getTodayDate()}
                 placeholder="dd/mm/yyyy"
               />
@@ -1241,7 +1336,7 @@ export default function CreateProfileForm() {
                   handleEducationChange(i, 'isCurrent', e.target.checked);
                   if (e.target.checked) handleEducationChange(i, 'endDate', '');
                 }}
-                disabled={edu.confirmed}
+                disabled={edu.confirmed || !edu.startDate}
               />
               Actualmente estudio aquí
             </label>
@@ -1409,9 +1504,18 @@ export default function CreateProfileForm() {
 
 
 
-        <button type="submit" className="w-full bg-conexia-green text-white py-2 rounded font-semibold hover:bg-conexia-green/90">
-          Crear perfil
-        </button>
+        {/* Botón de crear perfil con estilo mejorado */}
+        <div className="relative pt-4">
+          {/* Resplandor dinámico detrás del botón */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#48a6a7]/30 via-[#419596]/40 to-[#367d7d]/30 rounded-lg blur-xl opacity-60"></div>
+          
+          <button 
+            type="submit" 
+            className="relative w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-6 py-3 rounded-lg font-bold text-base hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-[0_4px_15px_rgba(72,166,167,0.4)] hover:shadow-[0_6px_20px_rgba(65,149,150,0.5)] transform hover:scale-[1.02] group"
+          >
+            <span>Crear perfil</span>
+          </button>
+        </div>
         {msg && (!msg.field && !msg.fields || msg.ok) && msg.text && typeof msg.text === 'string' && (
           <p className={`text-center mt-2 text-sm ${msg.ok ? "text-green-600" : "text-red-600"}`}>
             {msg.text}

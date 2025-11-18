@@ -252,7 +252,7 @@ export default function MyServiceHiringsPage() {
 
   // Función para verificar si puede crear claim
   const canCreateClaim = (hiring) => {
-    const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered'];
+    const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered', 'completed'];
     const isInClaimAllowedState = ALLOWED_CLAIM_STATES.includes(hiring.status?.code);
     
     if (!isInClaimAllowedState) return false;
@@ -284,7 +284,7 @@ export default function MyServiceHiringsPage() {
             >
               <ArrowLeft size={24} className="text-conexia-green" />
             </button>
-            <h1 className="text-3xl font-bold text-conexia-green">Mis Solicitudes</h1>
+            <h1 className="text-3xl font-bold text-conexia-green">Mis solicitudes</h1>
           </div>
 
           {/* Filtros */}

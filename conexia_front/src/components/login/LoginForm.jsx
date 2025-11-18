@@ -9,7 +9,7 @@ import ConexiaLogo from "@/components/ui/ConexiaLogo";
 
 export default function LoginForm() {
   const [form, setForm] = useState({ email: "", password: "" });
-  const [touched, setTouched] = useState({ email: false, password: false });
+  const [submitted, setSubmitted] = useState(false);
   const [focused, setFocused] = useState({ email: false, password: false });
   const [showPwd, setShowPwd] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -20,19 +20,19 @@ export default function LoginForm() {
     return "";
   };
 
-  const getEmailError = () =>
-    !touched.email || focused.email ? "" : validateEmail(form.email);
+  const getEmailError = () => {
+    if (!submitted || focused.email) return "";
+    return validateEmail(form.email);
+  };
 
-  const getPasswordError = () =>
-    !touched.password || focused.password
-      ? ""
-      : !form.password
-      ? "Ingrese una contraseña."
-      : "";
+  const getPasswordError = () => {
+    if (!submitted || focused.password) return "";
+    return !form.password ? "Ingrese una contraseña." : "";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ email: true, password: true });
+    setSubmitted(true);
 
     const emailError = validateEmail(form.email);
     const passwordError = !form.password ? "Ingrese una contraseña." : "";
@@ -56,9 +56,12 @@ export default function LoginForm() {
         friendlyMsg = "El correo ingresado no pertenece a ninguna cuenta registrada.";
       } else if (err.message.includes("The email is not valid")) {
       friendlyMsg = "El formato del correo electrónico no es válido.";
-      } else {
-        friendlyMsg = err.message;
-      }
+      } else if (err && err.message && /fetch|failed to fetch|network error/i.test(err.message)) {
+          friendlyMsg = 'Ocurrió un error inesperado. Intenta de nuevo más tarde.';
+        } else {
+          // Fallback: if server returned a message use it, otherwise generic
+          friendlyMsg = err && err.message ? err.message : 'Ocurrió un error inesperado. Intenta de nuevo más tarde.';
+        }
 
       setMsg({ ok: false, text: friendlyMsg });
     }
@@ -87,14 +90,11 @@ export default function LoginForm() {
             </label>
             <input
               type="email"
-              placeholder="juan2025@gmail.com"
+              placeholder="user@gmail.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               onFocus={() => setFocused((prev) => ({ ...prev, email: true }))}
-              onBlur={() => {
-                setFocused((prev) => ({ ...prev, email: false }));
-                setTouched((prev) => ({ ...prev, email: true }));
-              }}
+              onBlur={() => setFocused((prev) => ({ ...prev, email: false }))}
               className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
                 getEmailError()
                   ? "border-red-500 ring-2 ring-red-300"
@@ -118,10 +118,7 @@ export default function LoginForm() {
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 onFocus={() => setFocused((prev) => ({ ...prev, password: true }))}
-                onBlur={() => {
-                  setFocused((prev) => ({ ...prev, password: false }));
-                  setTouched((prev) => ({ ...prev, password: true }));
-                }}
+                onBlur={() => setFocused((prev) => ({ ...prev, password: false }))}
                 className={`w-full px-4 py-2.5 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all ${
                   getPasswordError()
                     ? "border-red-500 ring-2 ring-red-300"

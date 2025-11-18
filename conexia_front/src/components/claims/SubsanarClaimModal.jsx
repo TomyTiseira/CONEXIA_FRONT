@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { updateClaim } from '@/service/claims';
 import { CLAIM_VALIDATION, CLAIM_ERROR_MESSAGES } from '@/constants/claims';
-import { config } from '@/config/env';
+import { config } from '@/config';
+import InputField from '@/components/form/InputField';
+import { ClaimEvidenceUpload } from './ClaimEvidenceUpload';
+import { useEvidenceUpload } from '@/hooks/claims';
 
 /**
  * Modal para subsanar un reclamo cuando está en estado "pending_clarification"
@@ -16,15 +19,34 @@ export function SubsanarClaimModal({
   onSuccess,
   showToast,
 }) {
-  const [newDescription, setNewDescription] = useState('');
-  const [newFiles, setNewFiles] = useState([]);
+  const [clarificationResponse, setClarificationResponse] = useState('');
   const [showValidationError, setShowValidationError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  // Usar el hook de evidencias igual que en ClaimModal
+  const {
+    files,
+    errors: uploadErrors,
+    addFiles,
+    removeFile,
+    reset: resetUpload,
+  } = useEvidenceUpload();
 
   // Calcular cuántos archivos se pueden agregar
   const existingFilesCount = claim.evidenceUrls?.length || 0;
   const maxNewFiles = CLAIM_VALIDATION.MAX_EVIDENCE_FILES - existingFilesCount;
   const canAddMoreFiles = existingFilesCount < CLAIM_VALIDATION.MAX_EVIDENCE_FILES;
+
+  // Reset cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      setClarificationResponse('');
+      resetUpload();
+      setShowValidationError(false);
+      setUploadError('');
+    }
+  }, [isOpen, resetUpload]);
 
   /**
    * Formatea la fecha en formato legible
@@ -66,57 +88,38 @@ export function SubsanarClaimModal({
   };
 
   /**
-   * Maneja el cambio de archivos
+   * Maneja el cambio de archivos - permite agregar uno a uno
    */
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files || []);
-
-    // Validar cantidad de archivos
-    if (files.length > maxNewFiles) {
-      showToast('error', `Solo puedes agregar ${maxNewFiles} archivos más`);
-      return;
+  const handleAddFiles = (selectedFiles) => {
+    setUploadError('');
+    
+    // Validar que no se exceda el límite total
+    const totalFiles = existingFilesCount + files.length + selectedFiles.length;
+    if (totalFiles > CLAIM_VALIDATION.MAX_EVIDENCE_FILES) {
+      const filesRemaining = maxNewFiles - files.length;
+      setUploadError(`Solo puedes agregar ${filesRemaining} archivo(s) más. Ya tienes ${existingFilesCount} archivo(s) existente(s) y ${files.length} archivo(s) nuevo(s) seleccionado(s).`);
+      return false;
     }
 
-    // Validar tamaño de archivos
-    const oversizedFiles = files.filter((file) => file.size > CLAIM_VALIDATION.MAX_FILE_SIZE);
-    if (oversizedFiles.length > 0) {
-      showToast('error', CLAIM_ERROR_MESSAGES.MAX_SIZE);
-      return;
-    }
-
-    // Validar formato de archivos
-    const invalidFiles = files.filter((file) => !CLAIM_VALIDATION.ALLOWED_FILE_TYPES.includes(file.type));
-    if (invalidFiles.length > 0) {
-      showToast('error', CLAIM_ERROR_MESSAGES.INVALID_FORMAT);
-      return;
-    }
-
-    setNewFiles(files);
-    setShowValidationError(false);
-  };
-
-  /**
-   * Elimina un archivo de la lista
-   */
-  const removeFile = (index) => {
-    setNewFiles((prev) => prev.filter((_, i) => i !== index));
+    // Usar el hook de evidencias que ya valida tamaño y formato
+    const result = addFiles(selectedFiles);
+    return result;
   };
 
   /**
    * Valida y envía el formulario
    */
   const handleConfirm = async () => {
-    // Validar que la descripción sea obligatoria y tenga al menos 50 caracteres
-    const trimmedDescription = newDescription.trim();
+    // Validar que la respuesta sea obligatoria y tenga al menos 50 caracteres
+    const trimmedResponse = clarificationResponse.trim();
     
-    if (trimmedDescription.length === 0) {
+    if (trimmedResponse.length === 0) {
       setShowValidationError(true);
-      showToast('error', 'La descripción es obligatoria');
       return;
     }
 
-    if (trimmedDescription.length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH) {
-      showToast('error', CLAIM_ERROR_MESSAGES.DESCRIPTION_MIN_LENGTH);
+    if (trimmedResponse.length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH) {
+      setShowValidationError(true);
       return;
     }
 
@@ -125,12 +128,12 @@ export function SubsanarClaimModal({
     try {
       const formData = new FormData();
 
-      // Agregar descripción (obligatoria)
-      formData.append('description', trimmedDescription);
+      // Agregar respuesta de subsanación (obligatoria)
+      formData.append('clarificationResponse', trimmedResponse);
 
-      // Agregar archivos si se proporcionaron (opcional)
-      if (newFiles.length > 0) {
-        newFiles.forEach((file) => {
+      // Agregar archivos nuevos si se proporcionaron (opcional)
+      if (files.length > 0) {
+        files.forEach((file) => {
           formData.append('evidence', file);
         });
       }
@@ -155,9 +158,10 @@ export function SubsanarClaimModal({
    * Resetea el formulario
    */
   const resetForm = () => {
-    setNewDescription('');
-    setNewFiles([]);
+    setClarificationResponse('');
+    resetUpload();
     setShowValidationError(false);
+    setUploadError('');
   };
 
   /**
@@ -173,14 +177,14 @@ export function SubsanarClaimModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg">
+      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+        {/* Header - Estático */}
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg">
           <h2 className="text-2xl font-semibold text-gray-800">Subsanar Reclamo</h2>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-4 space-y-6">
+        {/* Body - Con scroll */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
           {/* Observaciones del Moderador */}
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
             <div className="flex items-start">
@@ -234,30 +238,29 @@ export function SubsanarClaimModal({
             </p>
           </div>
 
-          {/* Nueva Descripción (obligatoria) */}
+          {/* Respuesta de Subsanación (obligatoria) */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
-              Nueva Descripción <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Respuesta a las observaciones <span className="text-red-500">*</span>
             </label>
-            <textarea
-              value={newDescription}
+            <InputField
+              multiline
+              rows={6}
+              name="clarificationResponse"
+              placeholder="Proporciona la información adicional solicitada por el moderador..."
+              value={clarificationResponse}
               onChange={(e) => {
-                setNewDescription(e.target.value);
+                setClarificationResponse(e.target.value);
                 setShowValidationError(false);
               }}
-              placeholder="Actualiza la descripción de tu reclamo proporcionando la información solicitada por el moderador..."
-              className="w-full border border-gray-300 rounded-lg p-3 min-h-[150px] focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-y"
               maxLength={CLAIM_VALIDATION.DESCRIPTION_MAX_LENGTH}
               disabled={isSubmitting}
-              required
+              showCharCount={true}
+              error={showValidationError && clarificationResponse.trim().length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH ? CLAIM_ERROR_MESSAGES.DESCRIPTION_MIN_LENGTH : ''}
             />
-            <div className="flex justify-between mt-1">
-              <span className={`text-sm ${newDescription.length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH ? 'text-red-500' : 'text-gray-500'}`}>
-                {newDescription.length > 0
-                  ? `${newDescription.length}/${CLAIM_VALIDATION.DESCRIPTION_MAX_LENGTH} caracteres${newDescription.length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH ? ` (mínimo ${CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH})` : ''}`
-                  : `Mínimo ${CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH} caracteres (obligatorio)`}
-              </span>
-            </div>
+            <p className="mt-1 text-xs text-gray-600">
+              Mínimo {CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH} caracteres
+            </p>
           </div>
 
           {/* Evidencias Actuales */}
@@ -331,72 +334,34 @@ export function SubsanarClaimModal({
           {/* Nuevas Evidencias (opcional) */}
           {canAddMoreFiles && (
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Agregar Nuevas Evidencias (opcional)
               </label>
-              <p className="text-sm text-gray-600 mb-2">
-                Archivos actuales: {existingFilesCount}. Puedes agregar hasta {maxNewFiles} archivos
-                más.
+              <p className="text-sm text-gray-600 mb-3">
+                Archivos actuales: {existingFilesCount}. Puedes agregar hasta {maxNewFiles - files.length} archivo(s) más.
               </p>
-              <input
-                type="file"
-                multiple
-                accept=".jpg,.jpeg,.png,.gif,.pdf,.docx,.mp4"
-                onChange={handleFileChange}
-                disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-lg file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-primary-50 file:text-primary-700
-                  hover:file:bg-primary-100 file:cursor-pointer
-                  cursor-pointer hover:cursor-pointer
-                  disabled:opacity-50 disabled:cursor-not-allowed"
+              <ClaimEvidenceUpload
+                files={files}
+                onAddFiles={handleAddFiles}
+                onRemoveFile={removeFile}
+                errors={uploadErrors}
+                maxFiles={maxNewFiles}
+                existingFilesCount={existingFilesCount}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Formatos: JPG, PNG, GIF, PDF, DOCX, MP4 (máx. 10MB cada uno)
-              </p>
-              {newFiles.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  {newFiles.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded border border-gray-200"
-                    >
-                      <span className="truncate flex-1">{file.name}</span>
-                      <button
-                        onClick={() => removeFile(index)}
-                        disabled={isSubmitting}
-                        className="text-red-500 hover:text-red-700 ml-2 disabled:opacity-50"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+              {/* Error de límite de archivos */}
+              {uploadError && (
+                <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-600">• {uploadError}</p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Mensaje de validación */}
-          {showValidationError && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
-              <p className="text-sm text-red-700">
-                ⚠️ La descripción es obligatoria y debe tener al menos {CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH} caracteres
-              </p>
-            </div>
-          )}
+          {/* Mensaje de validación general - eliminado, ahora se muestra en InputField */}
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
+        {/* Footer - Estático */}
+        <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
           <button
             onClick={handleClose}
             disabled={isSubmitting}
@@ -406,7 +371,7 @@ export function SubsanarClaimModal({
           </button>
           <button
             onClick={handleConfirm}
-            disabled={isSubmitting}
+            disabled={isSubmitting || clarificationResponse.trim().length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH}
             className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
           >
             {isSubmitting ? (

@@ -8,7 +8,6 @@ import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { X, AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import RequireVerification from '@/components/common/RequireVerification';
 
 export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess }) {
   const { user, isAuthenticated } = useAuth();
@@ -237,7 +236,7 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
               }}
               className="flex-1"
             >
-              Ver Mis Solicitudes
+              Ver Mis solicitudes
             </Button>
           </div>
         </div>
@@ -316,15 +315,13 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
             >
               Cancelar
             </Button>
-            <RequireVerification action="solicitar una cotización">
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={loading || !description.trim() || description.trim().length < 10}
-              >
-                {loading ? 'Enviando...' : 'Solicitar Cotización'}
-              </Button>
-            </RequireVerification>
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={loading || !description.trim() || description.trim().length < 10}
+            >
+              {loading ? 'Enviando...' : 'Solicitar Cotización'}
+            </Button>
           </div>
         </form>
 

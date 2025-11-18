@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreateService, useServiceCategories } from '@/hooks/services';
+import { useSubscriptionLimits } from '@/hooks/memberships';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
 import Button from '@/components/ui/Button';
+import RequireVerification from '@/components/common/RequireVerification';
 import ImageUploadZone from '@/components/services/ImageUploadZone';
 import ImageCarousel from '@/components/services/ImageCarousel';
 import ServicePreviewModal from '@/components/services/ServicePreviewModal';
+import LimitReachedModal from '@/components/common/LimitReachedModal';
 import { validateImageFiles } from '@/utils/imageValidation';
 import { getTimeUnitOptions } from '@/utils/timeUnit';
 
@@ -16,6 +19,15 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
   const router = useRouter();
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useServiceCategories();
   const { publishService, loading } = useCreateService();
+  
+  // Estados para control de límites
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const { 
+    servicesLimit, 
+    validateCanPublishService, 
+    planName,
+    isLoading: limitsLoading 
+  } = useSubscriptionLimits();
 
   const [form, setForm] = useState({
     title: '',
@@ -169,7 +181,19 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
   };
 
   const handleConfirmPublish = async () => {
+    // Validar nuevamente antes de publicar (útil para botón directo en mobile)
+    const isValid = validateAll();
+    if (!isValid) return;
+
     try {
+      // Validación preventiva de límites
+      const validation = await validateCanPublishService();
+      if (!validation.canPublish) {
+        onClosePreview(); // Cerrar modal de preview
+        setShowLimitModal(true); // Mostrar modal de límite
+        return;
+      }
+
       await publishService(form);
       
       // Cerrar modal inmediatamente
@@ -196,6 +220,12 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
     } catch (err) {
       // Cerrar modal inmediatamente
       onClosePreview();
+      
+      // Manejo de error 403 (límite alcanzado)
+      if (err.statusCode === 403 || err.isLimitExceeded) {
+        setShowLimitModal(true);
+        return;
+      }
       
       // Mostrar toast de error usando la función del padre
       if (onShowToast) {
@@ -295,7 +325,7 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
           </div>
 
           {/* Categoría */}
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
               Categoría del servicio *
             </label>
@@ -322,12 +352,14 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
             </label>
             <InputField
               name="price"
-              type="text"
+              type="number"
               inputMode="numeric"
               pattern="[0-9]*"
               placeholder="Ej: 150"
+              min={1}
+              step={1}
               value={form.price}
-              onChange={(e) => handleChange('price', e.target.value)}
+              onChange={(e) => handleChange('price', String(e.target.value).replace(/[^0-9]/g, ''))}
               onBlur={() => handleBlur('price')}
               error={touched.price && errors.price}
               required
@@ -355,7 +387,7 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
         {/* Galería de Imágenes */}
         <div className="bg-white p-6 rounded-lg shadow-sm border mt-8">
           <h2 className="text-xl font-semibold text-conexia-green-dark mb-4 flex items-center gap-2">
-            Galería de Imágenes
+            Galería de imágenes
           </h2>
           
           <div className="space-y-4">
@@ -412,15 +444,36 @@ export default function CreateServiceForm({ onShowPreview, onClosePreview, showP
           </Button>
           <Button 
             type="submit" 
-            variant="primary" 
+            variant="neutral" 
             disabled={loading}
             className="sm:w-auto w-full"
           >
             Vista previa
           </Button>
+          <RequireVerification action="publicar un servicio">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleConfirmPublish}
+              disabled={loading}
+              className="sm:w-auto w-full"
+            >
+              Confirmar
+            </Button>
+          </RequireVerification>
         </div>
 
       </form>
+
+      {/* Modal de límite alcanzado */}
+      <LimitReachedModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        type="service"
+        current={servicesLimit.current}
+        limit={servicesLimit.limit}
+        planName={planName}
+      />
 
     </div>
   );

@@ -1,18 +1,23 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Toast from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useProjectCategories } from '@/hooks/project/useProjectCategories';
 import { useCreateProject } from '@/hooks/project/useCreateProject';
+import { useSubscriptionLimits } from '@/hooks/memberships';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
 import DateRangePicker from '@/components/form/DateRangePicker';
 import Button from '@/components/ui/Button';
-import LocalitySelector from '@/components/localities/LocalitySelector';
 import RequireVerification from '@/components/common/RequireVerification';
+<<<<<<< HEAD
 import { ProjectRolesManager } from '@/components/project/roles';
+=======
+import LocalitySelector from '@/components/localities/LocalitySelector';
+import LimitReachedModal from '@/components/common/LimitReachedModal';
+>>>>>>> develop
 
 export default function CreateProjectForm() {
   // Handler para el selector de provincia
@@ -28,6 +33,18 @@ export default function CreateProjectForm() {
   const imageInputRef = useRef(null);
   // Local toast state for error (success handled after redirect)
   const [toast, setToast] = useState({ visible: false, type: 'success', message: '' });
+  
+  // Estados para control de límites
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const { 
+    projectsLimit, 
+    validateCanPublishProject, 
+    planName,
+    isLoading: limitsLoading 
+  } = useSubscriptionLimits();
+  
+  console.log('CreateProjectForm - showLimitModal:', showLimitModal);
+  console.log('CreateProjectForm - projectsLimit:', projectsLimit);
 
   const [form, setForm] = useState({
     title: '',
@@ -180,6 +197,7 @@ export default function CreateProjectForm() {
 
     const handleSubmit = async (e) => {
     e.preventDefault();
+<<<<<<< HEAD
     const isValid = validateAll();
     // Validar campos obligatorios manualmente
     const requiredFields = ['title', 'description', 'category'];
@@ -193,7 +211,33 @@ export default function CreateProjectForm() {
     // Bloquear envío si maxCollaborators tiene error y no está vacío
     if ((form.maxCollaborators !== '' && errors.maxCollaborators) || !isValid || missing) return;
 
+=======
+    
+>>>>>>> develop
     try {
+      // Validación preventiva de límites (antes de validar el formulario)
+      const validation = await validateCanPublishProject();
+      console.log('Validation result:', validation);
+      if (!validation.canPublish) {
+        console.log('Opening limit modal - preventive validation');
+        setShowLimitModal(true);
+        return;
+      }
+      
+      // Ahora validar el formulario
+      const isValid = validateAll();
+      // Validar campos obligatorios manualmente
+      const requiredFields = ['title', 'description', 'category', 'collaborationType', 'contractType'];
+      let missing = false;
+      requiredFields.forEach((field) => {
+        if (!form[field] || (typeof form[field] === 'string' && form[field].trim() === '')) {
+          missing = true;
+          setErrors((prev) => ({ ...prev, [field]: 'Este campo es obligatorio' }));
+        }
+      });
+      // Bloquear envío si maxCollaborators tiene error y no está vacío
+      if ((form.maxCollaborators !== '' && errors.maxCollaborators) || !isValid || missing) return;
+
       const formToSend = { 
         ...form, 
         location: form.locationId,
@@ -212,7 +256,16 @@ export default function CreateProjectForm() {
       }
       router.push('/project/search');
     } catch (err) {
-      setToast({ visible: true, type: 'error', message: err.message || 'Error al publicar el proyecto' });
+      // Manejo de error 403 (límite alcanzado)
+      console.log('Error caught:', err);
+      console.log('Error statusCode:', err.statusCode);
+      console.log('Error isLimitExceeded:', err.isLimitExceeded);
+      if (err.statusCode === 403 || err.isLimitExceeded) {
+        console.log('Opening limit modal - error handler');
+        setShowLimitModal(true);
+      } else {
+        setToast({ visible: true, type: 'error', message: err.message || 'Error al publicar el proyecto' });
+      }
     }
   };
 
@@ -444,6 +497,16 @@ export default function CreateProjectForm() {
         onClose={() => setToast(t => ({ ...t, visible: false }))}
         position="top-center"
         duration={5000}
+      />
+
+      {/* Modal de límite alcanzado */}
+      <LimitReachedModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        type="project"
+        current={projectsLimit.current}
+        limit={projectsLimit.limit}
+        planName={planName}
       />
     </form>
   );
