@@ -12,23 +12,11 @@ import SelectField from '@/components/form/SelectField';
 import DateRangePicker from '@/components/form/DateRangePicker';
 import Button from '@/components/ui/Button';
 import RequireVerification from '@/components/common/RequireVerification';
-<<<<<<< HEAD
 import { ProjectRolesManager } from '@/components/project/roles';
-=======
 import LocalitySelector from '@/components/localities/LocalitySelector';
 import LimitReachedModal from '@/components/common/LimitReachedModal';
->>>>>>> develop
 
 export default function CreateProjectForm() {
-  // Handler para el selector de provincia
-  const handleLocalityChange = (locality) => {
-    setForm((prev) => ({
-      ...prev,
-      locationId: locality ? locality.id : '',
-      locationName: locality ? locality.name : '',
-    }));
-    if (touched['locationId']) validateField('locationId', locality ? locality.id : '');
-  };
   const router = useRouter();
   const imageInputRef = useRef(null);
   // Local toast state for error (success handled after redirect)
@@ -99,6 +87,16 @@ export default function CreateProjectForm() {
   const handleRolesChange = (roles) => {
     setForm((prev) => ({ ...prev, roles }));
     if (touched['roles']) validateField('roles', roles);
+  };
+
+  // Handler para el selector de provincia
+  const handleLocalityChange = (locality) => {
+    setForm((prev) => ({
+      ...prev,
+      locationId: locality ? locality.id : '',
+      locationName: locality ? locality.name : '',
+    }));
+    if (touched['locationId']) validateField('locationId', locality ? locality.id : '');
   };
 
   const handleBlur = (field) => {
@@ -197,7 +195,6 @@ export default function CreateProjectForm() {
 
     const handleSubmit = async (e) => {
     e.preventDefault();
-<<<<<<< HEAD
     const isValid = validateAll();
     // Validar campos obligatorios manualmente
     const requiredFields = ['title', 'description', 'category'];
@@ -211,9 +208,6 @@ export default function CreateProjectForm() {
     // Bloquear envío si maxCollaborators tiene error y no está vacío
     if ((form.maxCollaborators !== '' && errors.maxCollaborators) || !isValid || missing) return;
 
-=======
-    
->>>>>>> develop
     try {
       // Validación preventiva de límites (antes de validar el formulario)
       const validation = await validateCanPublishProject();

@@ -48,9 +48,7 @@ export async function fetchApplicationTypes() {
   return response.data;
 }
 
-
 export async function createProject(formData) {
-
   let res;
   try {
     res = await fetch(`${config.API_URL}/projects/publish`, {
@@ -63,7 +61,6 @@ export async function createProject(formData) {
     throw new Error(`Error de conexión: ${networkError.message}`);
   }
 
-  // Obtener el texto completo de la respuesta
   let responseText;
   try {
     responseText = await res.text();
@@ -71,7 +68,6 @@ export async function createProject(formData) {
     throw new Error(`Error al leer respuesta del servidor (${res.status})`);
   }
 
-  // Intentar parsear como JSON
   let json;
   try {
     json = JSON.parse(responseText);
@@ -80,9 +76,6 @@ export async function createProject(formData) {
   }
 
   if (!res.ok) {
-<<<<<<< HEAD
-    
-    // Extraer mensaje más detallado del backend
     let errorMessage = 'Error al crear el proyecto';
     let errorDetails = '';
     
@@ -94,7 +87,6 @@ export async function createProject(formData) {
       errorDetails = json.errors.map(e => typeof e === 'string' ? e : e.message || JSON.stringify(e)).join(', ');
       errorMessage = errorDetails || 'Errores de validación del backend';
     } else if (json?.errors && typeof json.errors === 'object') {
-      // Si errors es un objeto (validación de campos)
       errorDetails = Object.entries(json.errors)
         .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
         .join(' | ');
@@ -103,18 +95,11 @@ export async function createProject(formData) {
     
     const fullError = errorDetails ? `${errorMessage} - ${errorDetails}` : errorMessage;
     throw new Error(`${fullError} (${res.status})`);
-=======
-    const error = new Error(json?.message || 'Error al crear el proyecto');
-    error.statusCode = res.status;
-    error.status = json?.status;
-    throw error;
->>>>>>> develop
   }
 
   return json;
 }
 
-// Función para eliminar un proyecto por ID
 export async function deleteProjectById(projectId, motivo) {
   try {
     const res = await fetch(`${config.API_URL}/projects/${projectId}`, {
@@ -135,14 +120,12 @@ export async function deleteProjectById(projectId, motivo) {
       throw new Error(errorMessage);
     }
 
-    // Verificar si hay contenido en la respuesta
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await res.json();
       return data;
     }
 
-    // Si no hay contenido JSON, devolver un objeto de éxito
     return { success: true, message: 'Proyecto eliminado correctamente' };
   } catch (error) {
     throw error;
