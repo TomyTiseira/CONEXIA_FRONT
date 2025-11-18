@@ -50,18 +50,6 @@ export async function fetchApplicationTypes() {
 
 
 export async function createProject(formData) {
-  console.log('🚀 Enviando proyecto al backend...');
-  console.log('📍 URL:', `${config.API_URL}/projects/publish`);
-  
-  // Debug: mostrar contenido del FormData
-  console.log('📤 Contenido del FormData:');
-  for (let [key, value] of formData.entries()) {
-    if (value instanceof File) {
-      console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
-    } else {
-      console.log(`${key}:`, value);
-    }
-  }
 
   let res;
   try {
@@ -75,16 +63,11 @@ export async function createProject(formData) {
     throw new Error(`Error de conexión: ${networkError.message}`);
   }
 
-  console.log('📊 Status de respuesta:', res.status, res.statusText);
-  console.log('📋 Headers de respuesta:', Object.fromEntries(res.headers.entries()));
-
-  // Primero obtener el texto completo de la respuesta
+  // Obtener el texto completo de la respuesta
   let responseText;
   try {
     responseText = await res.text();
-    console.log('📄 Respuesta completa (texto):', responseText);
   } catch (textError) {
-    console.error('❌ Error al leer texto de respuesta:', textError);
     throw new Error(`Error al leer respuesta del servidor (${res.status})`);
   }
 
@@ -93,19 +76,10 @@ export async function createProject(formData) {
   try {
     json = JSON.parse(responseText);
   } catch (parseError) {
-    console.error('❌ Error al parsear respuesta JSON:', parseError);
-    console.error('📄 Texto de respuesta no válido:', responseText);
     throw new Error(`Error del servidor: ${res.status} ${res.statusText}. Respuesta: ${responseText.substring(0, 200)}`);
   }
 
-  console.log('📥 Respuesta del backend (JSON):', json);
-
   if (!res.ok) {
-    console.error('❌ Error del backend:', {
-      status: res.status,
-      statusText: res.statusText,
-      response: json
-    });
     
     // Extraer mensaje más detallado del backend
     let errorMessage = 'Error al crear el proyecto';

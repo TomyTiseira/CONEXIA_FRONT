@@ -11,7 +11,7 @@ import { useUserStore } from '@/store/userStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ROLES } from '@/constants/roles';
 import DeleteProjectModal from '@/components/project/deleteProject/DeleteProjectModal';
-import { PostulationButton } from '@/components/project/postulation';
+
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import { ProjectValidationStatus } from '@/components/project/validation';
@@ -22,6 +22,153 @@ import EmojiPicker from 'emoji-picker-react';
 import { IoCheckmarkCircleSharp } from 'react-icons/io5'; // <- NUEVO icono
 import MessagingWidget from '@/components/messaging/MessagingWidget';
 
+// Componente para mostrar cada rol individualmente
+function RoleCard({ role, project, isOwner, user, projectId }) {
+  const router = useRouter();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const getApplicationTypesText = (applicationTypes) => {
+    if (!applicationTypes || applicationTypes.length === 0) return 'No especificado';
+    
+    const typeLabels = {
+      'CV': 'CV',
+      'QUESTIONS': 'Preguntas',
+      'EVALUATION': 'Evaluación Técnica'
+    };
+    
+    return applicationTypes.map(type => typeLabels[type] || type).join(', ');
+  };
+
+  const handleApply = () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    
+    // Navegar a la página de postulación con el rol específico
+    router.push(`/project/${projectId}/apply/${role.id}`);
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg border border-gray-200 transition-all duration-200">
+      {/* Header del rol - siempre visible */}
+      <div className="flex items-center justify-between p-4">
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-conexia-green">{role.title}</h3>
+          {role.description && !isExpanded && (
+            <p className="text-gray-600 text-sm mt-1 line-clamp-1">{role.description}</p>
+          )}
+        </div>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-2 text-conexia-green hover:text-conexia-green/80 transition-colors font-medium text-sm"
+        >
+          {isExpanded ? 'Ocultar' : 'Ver detalles'}
+          <svg 
+            className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Contenido expandible */}
+      {isExpanded && (
+        <div className="px-4 pb-4 border-t border-gray-200">
+          <div className="pt-4">
+            {role.description && (
+              <div className="mb-4">
+                <p className="text-gray-700">{role.description}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="text-sm font-medium text-gray-600">Tipos de postulación</label>
+                <p className="text-sm text-gray-900">{getApplicationTypesText(role.applicationTypes)}</p>
+              </div>
+              
+              {role.maxCollaborators && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Máx. colaboradores</label>
+                  <p className="text-sm text-gray-900">{role.maxCollaborators}</p>
+                </div>
+              )}
+
+              {role.contractType && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Tipo de contrato</label>
+                  <p className="text-sm text-gray-900">{role.contractType.name || role.contractType}</p>
+                </div>
+              )}
+
+              {role.collaborationType && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Tipo de colaboración</label>
+                  <p className="text-sm text-gray-900">{role.collaborationType.name || role.collaborationType}</p>
+                </div>
+              )}
+            </div>
+
+            {role.skills && role.skills.length > 0 && (
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-600 block mb-2">Habilidades requeridas</label>
+                <div className="flex flex-wrap gap-2">
+                  {role.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-1 bg-conexia-green text-white rounded text-xs"
+                    >
+                      {skill.name || skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {role.evaluation && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <h4 className="font-medium text-blue-900 mb-2">Evaluación Técnica</h4>
+                <p className="text-blue-800 text-sm mb-2">{role.evaluation.description}</p>
+                {role.evaluation.link && (
+                  <p className="text-blue-700 text-xs mb-1">
+                    <span className="font-medium">Link:</span> 
+                    <a href={role.evaluation.link} target="_blank" rel="noopener noreferrer" className="hover:underline ml-1">
+                      {role.evaluation.link}
+                    </a>
+                  </p>
+                )}
+                {role.evaluation.fileUrl && (
+                  <p className="text-blue-700 text-xs mb-1">
+                    <span className="font-medium">Archivo:</span> {role.evaluation.fileName || 'Archivo adjunto'}
+                  </p>
+                )}
+                <p className="text-blue-700 text-xs">
+                  <span className="font-medium">Tiempo límite:</span> {role.evaluation.days} días
+                </p>
+              </div>
+            )}
+
+            {!isOwner && (
+              <div className="pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleApply}
+                  className="w-full bg-conexia-green text-white px-6 py-3 rounded-lg font-medium hover:bg-conexia-green/90 transition-colors"
+                >
+                  Postularme a este rol
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProjectDetail({ projectId }) {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +176,7 @@ export default function ProjectDetail({ projectId }) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [toast, setToast] = useState(null); // Toast para resultado de reporte
+  const [showRoles, setShowRoles] = useState(false); // Estado para mostrar/ocultar roles
   const [menuOpen, setMenuOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -108,9 +256,12 @@ ${messageText.trim()}`;
 
   // Helper para asegurar URLs absolutas
   const { config } = require('@/config');
-  const getImageUrl = (img) => {
+  const getImageUrl = (img, isProjectImage = false) => {
     if (!img) return null;
     if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) return img;
+    if (isProjectImage) {
+      return `${config.IMAGE_URL}/projects/images/${img}`;
+    }
     return `${config.IMAGE_URL}/${img}`;
   };
 
@@ -198,7 +349,7 @@ ${messageText.trim()}`;
               <div className="relative w-48 h-48 rounded-xl border-4 border-white bg-[#f3f9f8] overflow-hidden mb-2 shadow-sm">
                 {project.image ? (
                   <Image
-                    src={getImageUrl(project.image)}
+                    src={getImageUrl(project.image, true)}
                     alt={project.title}
                     fill
                     className="object-cover rounded-xl"
@@ -213,6 +364,47 @@ ${messageText.trim()}`;
                     sizes="192px"
                   />
                 )}
+              </div>
+              
+              {/* Dueño del proyecto */}
+              <div className="flex items-center gap-3 mt-3">
+                <div 
+                  className="relative w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    if (project.ownerId) {
+                      router.push(`/profile/userProfile/${project.ownerId}`);
+                    }
+                  }}
+                >
+                  {ownerImage ? (
+                    <Image
+                      src={getImageUrl(ownerImage)}
+                      alt={ownerName}
+                      fill
+                      className="object-cover rounded-full border"
+                      sizes="48px"
+                    />
+                  ) : (
+                    <Image
+                      src="/logo.png"
+                      alt="Sin imagen"
+                      fill
+                      className="object-contain rounded-full border bg-gray-200"
+                      sizes="48px"
+                    />
+                  )}
+                </div>
+                <div 
+                  className="flex flex-col cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                  onClick={() => {
+                    if (project.ownerId) {
+                      router.push(`/profile/userProfile/${project.ownerId}`);
+                    }
+                  }}
+                >
+                  <span className="text-conexia-green font-semibold text-sm break-words hover:underline">{ownerName}</span>
+                  <span className="text-xs text-gray-500">Dueño del proyecto</span>
+                </div>
               </div>
             </div>
             {/* Info principal */}
@@ -267,130 +459,11 @@ ${messageText.trim()}`;
                   <div className="text-sm text-gray-500 sm:ml-2">Fin: <span className="font-semibold text-gray-700">{new Date(project.endDate).toLocaleDateString()}</span></div>
                 )}
               </div>
-              {/* Dueño del proyecto */}
-              <div className="flex items-center gap-3 mt-4">
-                <div 
-                  className="relative w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => {
-                    if (project.ownerId) {
-                      router.push(`/profile/userProfile/${project.ownerId}`);
-                    }
-                  }}
-                >
-                  {ownerImage ? (
-                    <Image
-                      src={getImageUrl(ownerImage)}
-                      alt={ownerName}
-                      fill
-                      className="object-cover rounded-full border"
-                      sizes="40px"
-                    />
-                  ) : (
-                    <Image
-                      src="/logo.png"
-                      alt="Sin imagen"
-                      fill
-                      className="object-contain rounded-full border bg-gray-200"
-                      sizes="40px"
-                    />
-                  )}
-                </div>
-                <div 
-                  className="flex flex-col cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
-                  onClick={() => {
-                    if (project.ownerId) {
-                      router.push(`/profile/userProfile/${project.ownerId}`);
-                    }
-                  }}
-                >
-                  <span className="text-conexia-green font-semibold text-base break-words hover:underline">{ownerName}</span>
-                  <span className="text-xs text-gray-500">Dueño del proyecto</span>
-                </div>
-              </div>
 
-              {/* Mensaje al creador tipo Facebook mejorado y responsivo, alineado y compacto */}
-              {!isOwner && roleName !== ROLES.ADMIN && roleName !== ROLES.MODERATOR && (
-                <div className="mt-1 w-full">
-                  {/* Usar el mismo contenedor con altura mínima en ambos estados */}
-                  {messageSent ? (
-                    <div className="bg-[#f3f9f8] border border-conexia-green/30 rounded-lg p-4 shadow-sm min-h-[96px] flex items-center justify-center gap-3">
-                      <IoCheckmarkCircleSharp size={22} className="text-green-500 flex-shrink-0" />
-                      <span className="text-conexia-green font-semibold">
-                        Mensaje enviado al creador del proyecto
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-row items-center gap-2 shadow-sm min-h-[96px]" style={{boxShadow: '0 2px 8px 0 rgba(0,0,0,0.03)'}}>
-                      <div className="flex-1 w-full flex flex-col">
-                        <label htmlFor="mensajeCreador" className="flex items-center gap-1 font-semibold text-conexia-green mb-1 text-[11px] md:text-sm">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 md:w-5 md:h-5 text-conexia-green">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-.659 1.591l-7.5 7.5a2.25 2.25 0 01-3.182 0l-7.5-7.5A2.25 2.25 0 012.25 6.993V6.75" />
-                          </svg>
-                          <span className="truncate">Envía un mensaje al creador del proyecto</span>
-                        </label>
-                        <div className="flex flex-row items-center gap-2 w-full">
-                          {/* Input con icono de emoji adentro (derecha) */}
-                          <div className="relative flex-1">
-                            <input
-                              id="mensajeCreador"
-                              type="text"
-                              placeholder="Escribe tu consulta..."
-                              className="w-full rounded-lg px-3 pr-8 py-2 bg-white border border-gray-300 focus:outline-none focus:border-gray-500 text-[11px] md:text-sm text-gray-800 transition-all duration-150"
-                              value={messageText}
-                              onChange={e => setMessageText(e.target.value)}
-                              maxLength={300}
-                              style={{minHeight: '34px'}}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleSendMessage();
-                                }
-                              }}
-                            />
-                            <button
-                              type="button"
-                              className="absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green/70 hover:text-conexia-green"
-                              title="Emoji"
-                              onClick={() => setShowEmojis(v => !v)}
-                            >
-                              <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#1e6e5c" strokeWidth="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="10" r="1" fill="#1e6e5c"/><circle cx="15" cy="10" r="1" fill="#1e6e5c"/></svg>
-                            </button>
-                            {showEmojis && (
-                              <div className="absolute right-0 bottom-full mb-2 z-50">
-                                <EmojiPicker
-                                  onEmojiClick={(emojiData) => {
-                                    const e = emojiData?.emoji || '';
-                                    if (e) setMessageText(prev => prev + e);
-                                    setShowEmojis(false);
-                                  }}
-                                  searchDisabled
-                                  skinTonesDisabled
-                                  height={320}
-                                  width={280}
-                                />
-                              </div>
-                            )}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="neutral"
-                            className={`text-[11px] md:text-sm px-4 md:px-5 py-2 rounded-lg transition-all duration-200 relative ${
-                              !messageText.trim() || sendingMessage
-                                ? 'after:absolute after:inset-0 after:bg-gray-400 after:opacity-40 after:rounded-lg after:pointer-events-none'
-                                : ''
-                            }`}
-                            onClick={handleSendMessage}
-                            disabled={!messageText.trim() || sendingMessage}
-                            style={{minWidth: '70px', height: '34px'}}
-                          >
-                            {sendingMessage ? 'Enviando...' : 'Enviar'}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+
+
+
+
               
               {/* Estado de validación del proyecto */}
               <ProjectValidationStatus
@@ -401,67 +474,186 @@ ${messageText.trim()}`;
               />
             </div>
           </div>
-          {/* Fila de botones que abarca ambas columnas */}
-          <div className="mt-6 w-full flex flex-row items-end justify-between gap-2">
-            {/* Botón Atrás extremo izquierdo */}
-            <div className="flex-shrink-0">
-              <BackButton
-                onClick={() => {
-                  // Lógica: si viene de reportes de un proyecto, volver a esa página
-                  // Si viene de la lista general de reportes, volver a /reports
-                  const from = searchParams.get('from');
-                  const fromReportsProjectId = searchParams.get('fromReportsProjectId');
-                  if (from === 'reports-project' && fromReportsProjectId) {
-                    router.push(`/reports/project/${fromReportsProjectId}`);
-                  } else if (from === 'reports') {
-                    router.push('/reports');
-            } else if (from === 'profile' && project && project.ownerId) {
-              router.push(`/profile/userProfile/${project.ownerId}`);
-                  } else if (from === 'user-projects' && project.ownerId) {
-                    router.push(`/projects/user/${project.ownerId}`);
-                  } else if (from === 'my-projects' && user && user.id) {
-                    router.push(`/projects/user/${user.id}`);
-                  } else {
-                    router.push('/project/search');
-                  }
-                }}
-              />
-            </div>
-            {/* Botones a la derecha: apilados en mobile, en fila en desktop */}
-            <div className="flex flex-col md:flex-row items-end gap-2">
-              {!isOwner && (
-                <PostulationButton
-                  projectId={projectId}
-                  projectTitle={project.title}
-                  project={project}
-                  isOwner={isOwner}
-                  userRole={roleName}
-                  initialIsApplied={project.isApplied || false}
-                  className="text-sm px-3 py-2"
-                />
+          
+          {/* Botones del propietario */}
+          {isOwner && (
+            <div className="mt-6 flex flex-col md:flex-row items-end gap-2 justify-end">
+              <button
+                className="bg-conexia-green text-white px-3 md:px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
+                onClick={() => router.push(`/project/${projectId}/postulations`)}
+              >
+                Ver Postulaciones
+              </button>
+              {!project.isActive || !project.deletedAt && (
+                <button
+                  className="bg-conexia-coral text-white px-3 md:px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
+                  onClick={() => setShowDeleteModal(true)}
+                >
+                  Eliminar proyecto
+                </button>
               )}
-              {isOwner && (
-                <>
-                  <button
-                    className="bg-conexia-green text-white px-3 md:px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
-                    onClick={() => router.push(`/project/${projectId}/postulations`)}
+            </div>
+          )}
+          
+          {/* Mensaje al creador tipo Facebook mejorado y responsivo, alineado y compacto */}
+          {!isOwner && roleName !== ROLES.ADMIN && roleName !== ROLES.MODERATOR && (
+            <div className="mt-8 w-full">
+              {/* Usar el mismo contenedor con altura mínima en ambos estados */}
+              {messageSent ? (
+                <div className="bg-[#f3f9f8] border border-conexia-green/30 rounded-lg p-4 shadow-sm min-h-[96px] flex items-center justify-center gap-3">
+                  <IoCheckmarkCircleSharp size={22} className="text-green-500 flex-shrink-0" />
+                  <span className="text-conexia-green font-semibold">
+                    Mensaje enviado al creador del proyecto
+                  </span>
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-row items-center gap-2 shadow-sm min-h-[96px]" style={{boxShadow: '0 2px 8px 0 rgba(0,0,0,0.03)'}}>
+                  <div className="flex-1 w-full flex flex-col">
+                    <label htmlFor="mensajeCreador" className="flex items-center gap-1 font-semibold text-conexia-green mb-1 text-[11px] md:text-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 md:w-5 md:h-5 text-conexia-green">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-.659 1.591l-7.5 7.5a2.25 2.25 0 01-3.182 0l-7.5-7.5A2.25 2.25 0 012.25 6.993V6.75" />
+                      </svg>
+                      <span className="truncate">Envía un mensaje al creador del proyecto</span>
+                    </label>
+                    <div className="flex flex-row items-center gap-2 w-full">
+                      {/* Input con icono de emoji adentro (derecha) */}
+                      <div className="relative flex-1">
+                        <input
+                          id="mensajeCreador"
+                          type="text"
+                          placeholder="Escribe tu consulta..."
+                          className="w-full rounded-lg px-3 pr-8 py-2 bg-white border border-gray-300 focus:outline-none focus:border-gray-500 text-[11px] md:text-sm text-gray-800 transition-all duration-150"
+                          value={messageText}
+                          onChange={e => setMessageText(e.target.value)}
+                          maxLength={300}
+                          style={{minHeight: '34px'}}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green/70 hover:text-conexia-green"
+                          title="Emoji"
+                          onClick={() => setShowEmojis(v => !v)}
+                        >
+                          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#1e6e5c" strokeWidth="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="10" r="1" fill="#1e6e5c"/><circle cx="15" cy="10" r="1" fill="#1e6e5c"/></svg>
+                        </button>
+                        {showEmojis && (
+                          <div className="absolute right-0 bottom-full mb-2 z-50">
+                            <EmojiPicker
+                              onEmojiClick={(emojiData) => {
+                                const e = emojiData?.emoji || '';
+                                if (e) setMessageText(prev => prev + e);
+                                setShowEmojis(false);
+                              }}
+                              searchDisabled
+                              skinTonesDisabled
+                              height={320}
+                              width={280}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="neutral"
+                        className={`text-[11px] md:text-sm px-4 md:px-5 py-2 rounded-lg transition-all duration-200 relative ${
+                          !messageText.trim() || sendingMessage
+                            ? 'after:absolute after:inset-0 after:bg-gray-400 after:opacity-40 after:rounded-lg after:pointer-events-none'
+                            : ''
+                        }`}
+                        onClick={handleSendMessage}
+                        disabled={!messageText.trim() || sendingMessage}
+                        style={{minWidth: '70px', height: '34px'}}
+                      >
+                        {sendingMessage ? 'Enviando...' : 'Enviar'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Sección de Roles Colapsable */}
+          {project.roles && project.roles.length > 0 && (
+            <div className="mt-8 bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {/* Header de roles - siempre visible */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-conexia-green">Roles Disponibles</h2>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {project.roles.length} {project.roles.length === 1 ? 'rol disponible' : 'roles disponibles'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowRoles(!showRoles)}
+                  className="flex items-center gap-2 text-conexia-green hover:text-conexia-green/80 transition-colors font-medium text-sm"
+                >
+                  {showRoles ? 'Ocultar roles' : 'Ver roles'}
+                  <svg 
+                    className={`w-5 h-5 transition-transform duration-200 ${showRoles ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
                   >
-                    Ver Postulaciones
-                  </button>
-                  {!project.isActive || !project.deletedAt && (
-                    <button
-                      className="bg-conexia-coral text-white px-3 md:px-5 py-2 rounded font-semibold hover:bg-conexia-coral/90 transition text-sm"
-                      onClick={() => setShowDeleteModal(true)}
-                    >
-                      Eliminar proyecto
-                    </button>
-                  )}
-                </>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Contenido de roles expandible */}
+              {showRoles && (
+                <div className="p-6">
+                  <div className="space-y-6">
+                    {project.roles.map((role, index) => (
+                      <RoleCard 
+                        key={role.id || index} 
+                        role={role} 
+                        project={project}
+                        isOwner={isOwner}
+                        user={user}
+                        projectId={projectId}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
+          )}
+          
+
+          
+          {/* Botón Atrás al final */}
+          <div className="mt-8 flex justify-start">
+            <BackButton
+              onClick={() => {
+                // Lógica: si viene de reportes de un proyecto, volver a esa página
+                // Si viene de la lista general de reportes, volver a /reports
+                const from = searchParams.get('from');
+                const fromReportsProjectId = searchParams.get('fromReportsProjectId');
+                if (from === 'reports-project' && fromReportsProjectId) {
+                  router.push(`/reports/project/${fromReportsProjectId}`);
+                } else if (from === 'reports') {
+                  router.push('/reports');
+          } else if (from === 'profile' && project && project.ownerId) {
+            router.push(`/profile/userProfile/${project.ownerId}`);
+                } else if (from === 'user-projects' && project.ownerId) {
+                  router.push(`/projects/user/${project.ownerId}`);
+                } else if (from === 'my-projects' && user && user.id) {
+                  router.push(`/projects/user/${user.id}`);
+                } else {
+                  router.push('/project/search');
+                }
+              }}
+            />
           </div>
         </div>
-        
+
         {/* Modal de eliminación fuera del contenedor principal */}
         {showDeleteModal && (
           <DeleteProjectModal

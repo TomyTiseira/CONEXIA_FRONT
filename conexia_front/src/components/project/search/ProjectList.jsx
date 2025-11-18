@@ -60,7 +60,7 @@ export default function ProjectList({ projects, showFinished = false, showInacti
                 <div className="relative w-52 h-52 sm:w-56 sm:h-56 flex-shrink-0">
                   {project.image ? (
                     <Image
-                      src={`${config.IMAGE_URL}/${project.image}`}
+                      src={`${config.IMAGE_URL}/projects/images/${project.image}`}
                       alt={project.title}
                       fill
                       className="object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm"

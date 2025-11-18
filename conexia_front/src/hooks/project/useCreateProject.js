@@ -15,9 +15,7 @@ export function useCreateProject() {
       const formData = new FormData();
 
       // Procesar roles para limpiar datos innecesarios
-      console.log('📋 Roles originales:', form.roles);
       const processedRoles = (form.roles || []).map((role, index) => {
-        console.log(`🔄 Procesando rol ${index}:`, role);
         
         // Crear estructura base del rol según la API
         const processedRole = {
@@ -123,7 +121,6 @@ export function useCreateProject() {
           processedRole.evaluation = null;
         }
 
-        console.log(`✅ Rol ${index} procesado:`, processedRole);
         return processedRole;
       });
 
@@ -165,9 +162,7 @@ export function useCreateProject() {
         projectData.requiresInvestor = form.needsInvestors;
       }
 
-      // Debug: Log de la estructura de datos antes de enviar
-      console.log('📊 Estructura del proyecto a enviar:', projectData);
-      console.log('📋 Roles procesados:', processedRoles);
+
       
       // Enviar cada campo del proyecto por separado en el FormData
       formData.append('title', projectData.title);
@@ -195,7 +190,6 @@ export function useCreateProject() {
       // Agregar imagen del proyecto si existe
       if (form.image) {
         formData.append('image', form.image);
-        console.log('🖼️ Imagen del proyecto agregada:', form.image.name);
       }
 
       // Agregar archivos de evaluación si existen en algún rol
@@ -203,16 +197,11 @@ export function useCreateProject() {
         form.roles.forEach((role, index) => {
           if (role.evaluation && role.evaluation.file) {
             formData.append('evaluationFiles', role.evaluation.file);
-            console.log(`📎 Archivo de evaluación agregado para rol ${index}:`, role.evaluation.file.name);
           }
         });
       }
 
-      // Debug: Log del FormData que se va a enviar
-      console.log('📤 FormData entries:');
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
+
 
       await createProject(formData);
     } catch (err) {
