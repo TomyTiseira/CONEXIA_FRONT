@@ -46,7 +46,7 @@ export default function NavbarModerator() {
   { label: 'Proyectos', href: '/project/search', icon: Layers },
   { label: 'Reportes', href: '/reports', icon: AlertTriangle },
   { label: 'Reclamos', href: '/admin/claims', icon: AlertCircle },
-  { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+  { label: 'Métricas', href: '/dashboard', icon: BarChart3 },
   ];
 
   const defaultAvatar = '/images/default-avatar.png';

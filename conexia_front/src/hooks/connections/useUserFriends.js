@@ -10,6 +10,7 @@ export function useUserFriends(userId, initialPage = 1, limit = 12) {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(initialPage);
   const [pagination, setPagination] = useState(null);
+  const [connectionsCount, setConnectionsCount] = useState(0);
   const { user } = useAuth();
   const { roleName } = useUserStore();
 
@@ -33,6 +34,7 @@ export function useUserFriends(userId, initialPage = 1, limit = 12) {
         const data = await getUserFriends(userId, page, limit);
         setFriends(prev => page === 1 ? data.friends : [...prev, ...data.friends]);
         setPagination(data.pagination);
+        setConnectionsCount(data.connectionsCount || 0);
       } catch (err) {
         setError(err.message || 'Error al obtener amigos');
       } finally {
@@ -59,5 +61,5 @@ export function useUserFriends(userId, initialPage = 1, limit = 12) {
     }
   };
 
-  return { friends, loading, error, pagination, loadMore, page };
+  return { friends, loading, error, pagination, loadMore, page, connectionsCount };
 }
