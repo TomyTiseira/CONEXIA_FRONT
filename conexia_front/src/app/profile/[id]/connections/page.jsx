@@ -75,6 +75,7 @@ export default function UserConnectionsPage() {
               <ProfileSidebar profile={profile} userId={id} />
             </div>
             {/* Conexiones */}
+            {/* Conexiones */}
             <div className="w-full md:w-3/4 lg:w-4/5 flex justify-center">
               <div className="bg-white rounded-2xl shadow p-6 border border-[#c6e3e4] w-full max-w-full md:max-w-4xl flex flex-col">
                 <div className="flex flex-col md:flex-row items-start md:items-start justify-between mb-6 gap-2">
