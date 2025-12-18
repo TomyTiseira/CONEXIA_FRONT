@@ -47,7 +47,7 @@ export default function UserCollaborativeProjects({ userId }) {
         <div className="flex items-center gap-2 mb-1">
           <MdFolderOpen className="w-6 h-6 text-conexia-green" />
           <h3 className="text-base md:text-lg font-bold text-conexia-green">
-            {isOwner ? 'Mis Proyectos Colaborativos' : `Proyectos colaborativos`}
+            {isOwner ? 'Mis proyectos colaborativos' : `Proyectos colaborativos`}
           </h3>
         </div>
         <div className="text-gray-500 text-xs md:text-sm mb-2">Proyectos publicados recientemente en la comunidad.</div>

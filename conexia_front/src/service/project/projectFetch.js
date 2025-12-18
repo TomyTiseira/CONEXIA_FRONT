@@ -131,3 +131,45 @@ export async function deleteProjectById(projectId, motivo) {
     throw error;
   }
 }
+
+/**
+ * Obtener estadísticas y evaluaciones de postulaciones de un proyecto
+ * @param {number} projectId - ID del proyecto
+ * @returns {Promise<ProjectStatisticsResponse>}
+ */
+export async function getProjectStatistics(projectId) {
+  try {
+    const res = await fetch(`${config.API_URL}/projects/${projectId}/statistics`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      if (res.status === 403) {
+        throw new Error('No tienes permisos para ver las estadísticas de este proyecto');
+      }
+      if (res.status === 404) {
+        throw new Error('Proyecto no encontrado');
+      }
+      
+      let errorMessage = 'Error al obtener estadísticas del proyecto';
+      try {
+        const errorData = await res.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        errorMessage = `Error ${res.status}: ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.message || 'Error en la respuesta del servidor');
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}

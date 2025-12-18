@@ -6,10 +6,15 @@ export { AdminDashboard } from './AdminDashboard';
 export { KPICard } from './KPICard';
 export { ChartContainer } from './ChartContainer';
 export { DashboardHeader } from './DashboardHeader';
+export { DashboardSection } from './DashboardSection';
 
 // Gráficos de usuario
 export { PostulationsChart } from './PostulationsChart';
 export { InsightsSection } from './InsightsSection';
+
+// Componentes de métricas de proyectos
+export { StatusBreakdown } from './StatusBreakdown';
+export { ProjectRankingCard } from './ProjectRankingCard';
 
 // Gráficos de admin
 export { NewUsersChart } from './NewUsersChart';
