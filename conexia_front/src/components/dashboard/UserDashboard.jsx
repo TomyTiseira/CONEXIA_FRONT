@@ -6,7 +6,6 @@ import {
   FolderCheck, 
   Award, 
   Download, 
-  RotateCcw, 
   Grip,
   Users,
   Send,
@@ -34,8 +33,7 @@ import { useState } from 'react';
 export const UserDashboard = () => {
   const { data, isLoading, error, refetch } = useDashboardData();
   const { exportUserData } = useExportDashboard();
-  const { containerRef, resetLayout, isSwapyReady } = useSwapyLayout('conexia-user-dashboard-layout');
-  const [showResetButton, setShowResetButton] = useState(false);
+  const { containerRef, isSwapyReady } = useSwapyLayout('conexia-user-dashboard-layout');
   const [showTooltip, setShowTooltip] = useState(false);
   const router = useRouter();
 
