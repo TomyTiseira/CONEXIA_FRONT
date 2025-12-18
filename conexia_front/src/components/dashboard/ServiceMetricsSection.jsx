@@ -168,42 +168,20 @@ export const ServiceMetricsSection = () => {
   const router = useRouter();
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Briefcase className="w-7 h-7 text-[#48a6a7]" />
-          Métricas de Servicios
-        </h2>
-        <DashboardSkeleton cards={3} />
-      </div>
-    );
+    return <DashboardSkeleton cards={3} />;
   }
 
   if (error) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Briefcase className="w-7 h-7 text-[#48a6a7]" />
-          Métricas de Servicios
-        </h2>
-        <ErrorState message={error} onRetry={refetch} />
-      </div>
-    );
+    return <ErrorState message={error} onRetry={refetch} />;
   }
 
   if (!data || data.totalServicesPublished === 0) {
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Briefcase className="w-7 h-7 text-[#48a6a7]" />
-          Métricas de Servicios
-        </h2>
-        <EmptyState
-          message="Aún no tienes servicios publicados. Comienza a ofrecer tus servicios para ver tus métricas aquí."
-          actionLabel="Publicar servicio"
-          onAction={() => router.push('/services/create')}
-        />
-      </div>
+      <EmptyState
+        message="Aún no tienes servicios publicados. Comienza a ofrecer tus servicios para ver tus métricas aquí."
+        actionLabel="Publicar servicio"
+        onAction={() => router.push('/services/create')}
+      />
     );
   }
 
@@ -213,25 +191,6 @@ export const ServiceMetricsSection = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Briefcase className="w-7 h-7 text-[#48a6a7]" />
-          <h2 className="text-2xl font-bold text-gray-900">
-            Métricas de Servicios
-          </h2>
-        </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-semibold w-fit ${
-          userPlan === 'Premium'
-            ? 'bg-purple-100 text-purple-800'
-            : userPlan === 'Basic'
-            ? 'bg-blue-100 text-blue-800'
-            : 'bg-gray-100 text-gray-800'
-        }`}>
-          Plan {userPlan}
-        </span>
-      </div>
-
       {/* KPIs Base - Disponibles para todos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <KPICard
@@ -482,10 +441,6 @@ export const ServiceMetricsSection = () => {
         </motion.div>
       )}
 
-      {/* Última actualización */}
-      <p className="text-xs text-gray-500 text-right">
-        Última actualización: {new Date(data.lastUpdated).toLocaleString('es-AR')}
-      </p>
     </div>
   );
 };
