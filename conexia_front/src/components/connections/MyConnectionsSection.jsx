@@ -7,7 +7,7 @@ import { useUserFriends } from '@/hooks/connections/useUserFriends';
 export default function MyConnectionsSection() {
   const { user } = useUserStore();
   const userId = user?.id;
-  const { friends, loading, error, pagination, loadMore, page } = useUserFriends(userId);
+  const { friends, loading, error, pagination, loadMore, page, connectionsCount } = useUserFriends(userId);
   React.useEffect(() => {
   }, [friends]);
   const [localFriends, setLocalFriends] = React.useState([]);
@@ -40,7 +40,14 @@ export default function MyConnectionsSection() {
 
   return (
     <div className="w-full">
-      <div className="text-conexia-green text-2xl font-bold mb-1">Mis conexiones</div>
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-conexia-green text-2xl font-bold">Mis conexiones</div>
+        {connectionsCount > 0 && (
+          <div className="text-conexia-green font-semibold text-lg">
+            {connectionsCount} {connectionsCount === 1 ? 'contacto' : 'contactos'}
+          </div>
+        )}
+      </div>
       <div className="text-conexia-green/80 mb-6">Personas con las que ya conectaste en Conexia.</div>
       {loading && localFriends.length === 0 ? (
         <div className="text-conexia-green/70 text-center py-8">Cargando...</div>
