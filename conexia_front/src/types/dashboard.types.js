@@ -1,4 +1,31 @@
 /**
+ * @typedef {Object} PostulationsByStatus
+ * @property {number} total
+ * @property {Object} byStatus
+ * @property {number} byStatus.activo
+ * @property {number} byStatus.pendiente_evaluacion
+ * @property {number} byStatus.evaluacion_expirada
+ * @property {number} byStatus.aceptada
+ * @property {number} byStatus.rechazada
+ * @property {number} byStatus.cancelada
+ */
+
+/**
+ * @typedef {Object} TopProject
+ * @property {number} projectId
+ * @property {string} projectTitle
+ * @property {number} postulationsCount
+ */
+
+/**
+ * @typedef {Object} ProjectDashboardMetrics
+ * @property {PostulationsByStatus} [receivedPostulations] - Postulaciones recibidas (Plan Free+)
+ * @property {PostulationsByStatus} [sentPostulations] - Postulaciones enviadas (Plan Free+)
+ * @property {number} [percentageProjectsWithPostulations] - % de proyectos con postulaciones (Plan Basic+)
+ * @property {TopProject[]} [topProjectsByPostulations] - Top 10 proyectos (Plan Premium)
+ */
+
+/**
  * @typedef {Object} UserDashboardData
  * @property {boolean} success
  * @property {Object} data
@@ -11,6 +38,7 @@
  * @property {number} data.postulations.totalPostulations - Total de postulaciones realizadas
  * @property {number} data.postulations.acceptedPostulations - Postulaciones aceptadas
  * @property {number} data.postulations.successRate - % de éxito (0-100)
+ * @property {ProjectDashboardMetrics} [data.projectDashboard] - Métricas de proyectos colaborativos
  * @property {string} timestamp
  */
 
