@@ -238,7 +238,7 @@ export const UserDashboard = () => {
                     <Inbox className="w-6 h-6 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-800">Postulaciones Recibidas</h3>
+                    <h3 className="text-lg font-bold text-gray-800">Postulaciones recibidas</h3>
                     <p className="text-sm text-gray-500">En todos tus proyectos</p>
                   </div>
                 </div>
@@ -260,7 +260,7 @@ export const UserDashboard = () => {
                     <Send className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-800">Postulaciones Enviadas</h3>
+                    <h3 className="text-lg font-bold text-gray-800">Postulaciones enviadas</h3>
                     <p className="text-sm text-gray-500">Tus postulaciones a proyectos</p>
                   </div>
                 </div>
