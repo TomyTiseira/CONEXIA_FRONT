@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ROLES } from '@/constants/roles';
 import { UserDashboard } from '@/components/dashboard/UserDashboard';
 import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
+import { ModeratorDashboard } from '@/components/dashboard/ModeratorDashboard';
 import { DashboardSkeleton } from '@/components/dashboard/LoadingStates';
 import Navbar from '@/components/navbar/Navbar';
 import { motion } from 'framer-motion';
@@ -46,7 +47,7 @@ export default function DashboardPage() {
   const roleId = user.roleId;
   const isAdmin = roleId === 1;
   const isModerator = roleId === 3;
-  const isInternalUser = isAdmin || isModerator;
+  const isRegularUser = roleId === 2;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -58,7 +59,9 @@ export default function DashboardPage() {
       >
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Renderizar dashboard según rol */}
-          {isInternalUser ? <AdminDashboard /> : <UserDashboard />}
+          {isAdmin && <AdminDashboard />}
+          {isModerator && <ModeratorDashboard />}
+          {isRegularUser && <UserDashboard />}
         </div>
       </motion.div>
     </div>
