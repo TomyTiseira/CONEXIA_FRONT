@@ -4,10 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { loginUser } from "@/service/auth/authService";
+import { resendVerification } from "@/service/user/userFetch";
 import ConexiaLogo from "@/components/ui/ConexiaLogo";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [submitted, setSubmitted] = useState(false);
   const [focused, setFocused] = useState({ email: false, password: false });
@@ -42,14 +45,39 @@ export default function LoginForm() {
     }
 
     try {
-      await loginUser({ email: form.email, password: form.password });
+      const response = await loginUser({ email: form.email, password: form.password });
+      
+      // Verificar si el perfil está incompleto
+      // IMPORTANTE: Usar comparación estricta con false
+      // null = Admin/Moderador (no necesitan perfil)
+      // false = Usuario con perfil incompleto
+      // true = Usuario con perfil completo
+      if (response?.data?.user?.isProfileComplete === false) {
+        router.push("/profile/complete");
+        return;
+      }
+      
       setMsg({ ok: true, text: "Sesión iniciada con éxito." });
       window.location.href = "/";
     } catch (err) {
       let friendlyMsg = "Ocurrió un error al iniciar sesión.";
 
       if (err.message.includes("not verified")) {
-        friendlyMsg = "Tu cuenta aún no fue verificada. Revisa tu correo electrónico.";
+        // Cuenta no verificada: reenviar código y redirigir a verificación
+        try {
+          await resendVerification(form.email);
+          // Mostrar mensaje y redirigir después de un tiempo
+          setMsg({ 
+            ok: true, 
+            text: "Tu cuenta no está verificada. Te redireccionaremos para que puedas terminar de verificar tu correo." 
+          });
+          setTimeout(() => {
+            router.push(`/verify-account?email=${encodeURIComponent(form.email)}&fromLogin=true`);
+          }, 2000);
+          return;
+        } catch (resendErr) {
+          friendlyMsg = "Tu cuenta no está verificada. No pudimos reenviar el código. Intenta más tarde.";
+        }
       } else if (err.message.includes("Invalid credentials")) {
         friendlyMsg = "El correo y la contraseña no coinciden. Verificalos e intentalo de nuevo.";
       } else if (err.message.includes("not found")) {

@@ -343,6 +343,14 @@ export default function UserProfile() {
         changedFields.coverPicture = formData.coverPicture;
       }
       
+      // Agregar flags de eliminación de imágenes si están marcadas
+      if (formData.removeProfilePicture === true) {
+        changedFields.removeProfilePicture = true;
+      }
+      if (formData.removeCoverPicture === true) {
+        changedFields.removeCoverPicture = true;
+      }
+      
       // Solo salir si NO hay cambios Y NO hay datos de formulario relevantes
       // Los arrays siempre se incluyen para asegurar sincronización
       const hasRelevantData = Object.keys(changedFields).length > 0;
@@ -362,6 +370,14 @@ export default function UserProfile() {
       }
       if (formData.coverPicture instanceof File) {
         payload.coverPicture = formData.coverPicture;
+      }
+      
+      // Incluir flags de eliminación si están presentes
+      if (formData.removeProfilePicture === true) {
+        payload.removeProfilePicture = true;
+      }
+      if (formData.removeCoverPicture === true) {
+        payload.removeCoverPicture = true;
       }
       
       const response = await updateUserProfile(payload);
@@ -420,7 +436,7 @@ export default function UserProfile() {
     return (
       <div className="bg-conexia-soft min-h-screen">
   <Navbar />
-        <div className="w-full max-w-2xl mx-auto mt-4">
+        <div className="w-full max-w-5xl mx-auto px-4 py-10">
           <EditProfileForm 
             user={user} 
             onSubmit={handleUpdate} 

@@ -13,6 +13,7 @@ import ConexiaLogo from "@/components/ui/ConexiaLogo";
 export default function VerifyForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
+  const fromLogin = searchParams.get("fromLogin") === "true";
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [msg, setMsg] = useState(null);
   const router = useRouter();
@@ -78,12 +79,16 @@ const handlePaste = (e) => {
       const response = await verifyUser({ email, verificationCode });
       setMsg({ ok: true, text: "¡Usuario verificado con éxito!" });
       
-      // El usuario ya está logueado en el backend (cookies HTTP-only)
-      // Actualizar el estado de autenticación en el frontend
-      await refreshAuth();
-      
-      // Redirigir a creación de perfil
-      setTimeout(() => router.push("/profile/Create"), 1500);
+      // Si viene desde login, redirigir a login; si no, a creación de perfil
+      if (fromLogin) {
+        setTimeout(() => router.push("/login"), 1500);
+      } else {
+        // El usuario ya está logueado en el backend (cookies HTTP-only)
+        // Actualizar el estado de autenticación en el frontend
+        await refreshAuth();
+        // Redirigir a creación de perfil
+        setTimeout(() => router.push("/profile/create"), 1500);
+      }
     } catch (err) {
       if (
         err.message.includes("is already active") ||
