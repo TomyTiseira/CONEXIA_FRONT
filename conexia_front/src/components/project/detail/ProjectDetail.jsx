@@ -27,13 +27,27 @@ function RoleCard({ role, project, isOwner, user, projectId }) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const getApplicationTypesText = (applicationTypes) => {
+  const getApplicationTypesText = (applicationTypes, applicationType) => {
+    // Si no hay applicationTypes array pero hay applicationType, usar ese
+    if ((!applicationTypes || applicationTypes.length === 0) && applicationType) {
+      const typeLabels = {
+        'CV': 'CV',
+        'QUESTIONS': 'Preguntas',
+        'EVALUATION': 'Evaluación Técnica',
+        'PARTNER': 'Socio',
+        'INVESTOR': 'Inversor'
+      };
+      return typeLabels[applicationType] || applicationType;
+    }
+    
     if (!applicationTypes || applicationTypes.length === 0) return 'No especificado';
     
     const typeLabels = {
       'CV': 'CV',
       'QUESTIONS': 'Preguntas',
-      'EVALUATION': 'Evaluación Técnica'
+      'EVALUATION': 'Evaluación Técnica',
+      'PARTNER': 'Socio',
+      'INVESTOR': 'Inversor'
     };
     
     return applicationTypes.map(type => typeLabels[type] || type).join(', ');
@@ -88,7 +102,7 @@ function RoleCard({ role, project, isOwner, user, projectId }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="text-sm font-medium text-gray-600">Tipos de postulación</label>
-                <p className="text-sm text-gray-900">{getApplicationTypesText(role.applicationTypes)}</p>
+                <p className="text-sm text-gray-900">{getApplicationTypesText(role.applicationTypes, role.applicationType)}</p>
               </div>
               
               {role.maxCollaborators && (
@@ -232,7 +246,11 @@ ${messageText.trim()}`;
         const reports = data?.data?.reports || [];
         const found = reports.find(r => String(r.userId) === String(user.id));
         setAlreadyReported(!!found);
-      }).catch(() => setAlreadyReported(false));
+      }).catch((error) => {
+        // Manejar errores que no sean 403
+        console.error('Error fetching project reports:', error);
+        setAlreadyReported(false);
+      });
     }
   }, [projectId, user]);
 
