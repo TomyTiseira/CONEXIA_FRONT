@@ -21,6 +21,7 @@ export default function ProjectPostulations({ projectId }) {
   const [postulationStatuses, setPostulationStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
@@ -39,7 +40,7 @@ export default function ProjectPostulations({ projectId }) {
     if (project && isOwner) {
       loadPostulations();
     }
-  }, [currentPage, selectedStatus, project, isOwner]);
+  }, [currentPage, selectedStatus, selectedRole, project, isOwner]);
 
   const loadInitialData = async () => {
     try {
@@ -95,9 +96,19 @@ export default function ProjectPostulations({ projectId }) {
                 applicantName = profile.email.split('@')[0];
               }
               
+              // Obtener el nombre del rol desde project.roles
+              let roleName = 'Rol no especificado';
+              if (postulation.roleId && project.roles) {
+                const role = project.roles.find(r => r.id === postulation.roleId);
+                if (role) {
+                  roleName = role.title || role.name || `Rol ${postulation.roleId}`;
+                }
+              }
+              
               return {
                 ...postulation,
                 applicantName: applicantName,
+                roleName: roleName,
                 applicantProfile: profile
               };
             } catch (error) {
@@ -111,7 +122,14 @@ export default function ProjectPostulations({ projectId }) {
           })
         );
 
-        setPostulations(postulationsWithProfiles);
+        // Filtrar por rol en el frontend si está seleccionado
+        let filteredPostulations = postulationsWithProfiles;
+        if (selectedRole) {
+          const roleIdToFilter = parseInt(selectedRole);
+          filteredPostulations = postulationsWithProfiles.filter(p => p.roleId === roleIdToFilter);
+        }
+
+        setPostulations(filteredPostulations);
         setPagination(response.data.pagination);
       }
     } catch (error) {
@@ -172,6 +190,11 @@ export default function ProjectPostulations({ projectId }) {
     setCurrentPage(1); // Reset to first page when changing filter
   };
 
+  const handleRoleChange = (roleId) => {
+    setSelectedRole(roleId);
+    setCurrentPage(1); // Reset to first page when changing filter
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -207,9 +230,28 @@ export default function ProjectPostulations({ projectId }) {
               Postulaciones
             </h1>
             
-            {/* Filtro por estado */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Filtrar por estado:</label>
+            {/* Filtros */}
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+              {/* Filtro por rol */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Filtrar por rol:</label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => handleRoleChange(e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+                >
+                  <option value="">Todos los roles</option>
+                  {project.roles && project.roles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.title || role.name || `Rol ${role.id}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Filtro por estado */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Filtrar por estado:</label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => handleStatusChange(e.target.value)}
@@ -223,6 +265,7 @@ export default function ProjectPostulations({ projectId }) {
                     </option>
                   ))}
                 </select>
+              </div>
             </div>
           </div>
 
