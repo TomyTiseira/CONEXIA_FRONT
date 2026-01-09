@@ -268,7 +268,36 @@ export default function ProjectApplicationPage() {
         throw new Error(result.message || 'Error al enviar la postulación');
       }
     } catch (error) {
-      setToast({ type: 'error', message: error.message || 'Error al enviar la postulación' });
+      console.error('Error al postularse:', error);
+      
+      // Mensajes personalizados según el tipo de error
+      let errorMessage = 'No se pudo enviar tu postulación. Por favor, intenta nuevamente.';
+      
+      const errorMsg = error.message?.toLowerCase() || '';
+      
+      if (errorMsg.includes('already applied') || errorMsg.includes('ya postulado') || errorMsg.includes('ya te postulaste')) {
+        errorMessage = 'Ya te has postulado anteriormente a este rol.';
+      } else if (errorMsg.includes('project not found') || errorMsg.includes('proyecto no encontrado')) {
+        errorMessage = 'El proyecto no está disponible en este momento.';
+      } else if (errorMsg.includes('role not found') || errorMsg.includes('rol no encontrado')) {
+        errorMessage = 'El rol no está disponible para postulación.';
+      } else if (errorMsg.includes('cv required') || errorMsg.includes('cv requerido')) {
+        errorMessage = 'Debes adjuntar tu CV para completar la postulación.';
+      } else if (errorMsg.includes('file') || errorMsg.includes('archivo')) {
+        errorMessage = 'Hubo un problema al cargar el archivo. Verifica que sea un PDF válido.';
+      } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
+        errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+      } else if (errorMsg.includes('unauthorized') || errorMsg.includes('not authorized')) {
+        errorMessage = 'No tienes permisos para postularte a este proyecto.';
+      } else if (errorMsg.includes('banned') || errorMsg.includes('bloqueado')) {
+        errorMessage = 'No puedes postularte a este proyecto en este momento.';
+      } else if (errorMsg.includes('answers') || errorMsg.includes('questions') || errorMsg.includes('preguntas')) {
+        errorMessage = 'Por favor, completa todas las preguntas requeridas.';
+      } else if (errorMsg.includes('validation') || errorMsg.includes('invalid')) {
+        errorMessage = 'Algunos datos ingresados no son válidos. Revisa el formulario.';
+      }
+      
+      setToast({ type: 'error', message: errorMessage });
     } finally {
       setSubmitting(false);
     }

@@ -5,7 +5,7 @@ import BackButton from '@/components/ui/BackButton';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/navbar/Navbar';
-import { getPostulationsByProject, getPostulationStatuses } from '@/service/postulations/postulationService';
+import { getPostulationsByProject, getPostulationsByProjectAndRole, getPostulationStatuses } from '@/service/postulations/postulationService';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import PostulationsTable from './PostulationsTable';
@@ -66,7 +66,15 @@ export default function ProjectPostulations({ projectId }) {
       setLoadingProfiles(true);
       
       const statusId = selectedStatus ? parseInt(selectedStatus) : null;
-      const response = await getPostulationsByProject(projectId, currentPage, statusId);
+      const roleId = selectedRole ? parseInt(selectedRole) : null;
+      
+      // Usar el endpoint apropiado según si hay filtro por rol o no
+      let response;
+      if (roleId) {
+        response = await getPostulationsByProjectAndRole(projectId, roleId, currentPage, statusId);
+      } else {
+        response = await getPostulationsByProject(projectId, currentPage, statusId);
+      }
       
       if (response.success) {
         const postulationsWithProfiles = await Promise.all(
@@ -122,14 +130,7 @@ export default function ProjectPostulations({ projectId }) {
           })
         );
 
-        // Filtrar por rol en el frontend si está seleccionado
-        let filteredPostulations = postulationsWithProfiles;
-        if (selectedRole) {
-          const roleIdToFilter = parseInt(selectedRole);
-          filteredPostulations = postulationsWithProfiles.filter(p => p.roleId === roleIdToFilter);
-        }
-
-        setPostulations(filteredPostulations);
+        setPostulations(postulationsWithProfiles);
         setPagination(response.data.pagination);
       }
     } catch (error) {

@@ -306,7 +306,9 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                 Selecciona uno o más métodos de postulación para este rol
               </p>
               <div className="relative max-h-64 overflow-y-auto border border-gray-200 rounded-md bg-white">
-                {Object.entries(APPLICATION_TYPE_LABELS).map(([type, label]) => (
+                {Object.entries(APPLICATION_TYPE_LABELS)
+                  .filter(([type]) => type !== APPLICATION_TYPES.PARTNER && type !== APPLICATION_TYPES.INVESTOR)
+                  .map(([type, label]) => (
                   <label 
                     key={type} 
                     className="flex items-start px-3 py-3 cursor-pointer hover:bg-conexia-green/10 border-b border-gray-100 last:border-b-0"
@@ -324,8 +326,6 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                         {type === APPLICATION_TYPES.CUSTOM_QUESTIONS && 'El candidato responderá preguntas personalizadas'}
                         {type === APPLICATION_TYPES.TECHNICAL_EVALUATION && 'El candidato completará una evaluación técnica'}
                         {type === APPLICATION_TYPES.MIXED && 'El candidato adjuntará CV y completará preguntas/evaluación'}
-                        {type === APPLICATION_TYPES.INVESTOR && 'Para personas que buscan invertir capital'}
-                        {type === APPLICATION_TYPES.PARTNER && 'Para personas que buscan ser socios/cofundadores'}
                       </p>
                     </div>
                   </label>
@@ -696,7 +696,7 @@ function QuestionBuilder({ questions, onChange, error }) {
             {newQuestion.options.length > 0 && (
               <p className="text-xs text-gray-600 mt-2">
                 {newQuestion.options.length < 2 && '⚠️ Agrega al menos 2 opciones'}
-                {newQuestion.options.length >= 2 && newQuestion.hasCorrectAnswers && !newQuestion.options.some(opt => opt.isCorrect) && '⚠️ Marca al menos una respuesta correcta'}
+                {newQuestion.options.length >= 2 && newQuestion.hasCorrectAnswers && !newQuestion.options.some(opt => opt.isCorrect) && 'Marca al menos una respuesta correcta'}
                 {newQuestion.options.length >= 2 && (!newQuestion.hasCorrectAnswers || newQuestion.options.some(opt => opt.isCorrect)) && '✓ Pregunta lista para agregar'}
               </p>
             )}
