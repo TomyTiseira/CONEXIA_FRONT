@@ -1,6 +1,17 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Briefcase, DollarSign, FolderCheck, Award, Download, RotateCcw, Grip } from 'lucide-react';
+import { 
+  Briefcase, 
+  DollarSign, 
+  FolderCheck, 
+  Award, 
+  Download, 
+  Grip,
+  Users,
+  Send,
+  Inbox,
+  TrendingUp
+} from 'lucide-react';
 import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
 import { useExportDashboard } from '@/hooks/dashboard/useExportDashboard';
 import { useSwapyLayout } from '@/hooks/dashboard/useSwapyLayout';
@@ -10,6 +21,9 @@ import { InsightsSection } from './InsightsSection';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardSkeleton } from './LoadingStates';
 import { ErrorState, EmptyState } from './ErrorStates';
+import { DashboardSection } from './DashboardSection';
+import { StatusBreakdown } from './StatusBreakdown';
+import { ProjectRankingCard } from './ProjectRankingCard';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -19,8 +33,7 @@ import { useState } from 'react';
 export const UserDashboard = () => {
   const { data, isLoading, error, refetch } = useDashboardData();
   const { exportUserData } = useExportDashboard();
-  const { containerRef, resetLayout, isSwapyReady } = useSwapyLayout('conexia-user-dashboard-layout');
-  const [showResetButton, setShowResetButton] = useState(false);
+  const { containerRef, isSwapyReady } = useSwapyLayout('conexia-user-dashboard-layout');
   const [showTooltip, setShowTooltip] = useState(false);
   const router = useRouter();
 
@@ -46,6 +59,7 @@ export const UserDashboard = () => {
     services = {},
     projects = {},
     postulations = {},
+    projectDashboard = {},
   } = data;
 
   const hasAnyActivity = 
@@ -146,85 +160,185 @@ export const UserDashboard = () => {
         </motion.div>
       )}
 
-      {/* KPI Cards Grid - Con Swapy */}
-      <div
-        ref={containerRef}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      {/* Sección: Resumen General */}
+      <DashboardSection 
+        title="Resumen general" 
+        subtitle="Tus métricas principales"
+        icon={Award}
+        iconColor="blue"
       >
-        <div data-swapy-slot="kpi-1" className="h-full">
-          <div data-swapy-item="services">
-            <KPICard
-              title="Servicios completados"
-              value={services.totalServicesHired || 0}
-              icon={Briefcase}
-              color="blue"
+        <div
+          ref={containerRef}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          <div data-swapy-slot="kpi-1" className="h-full">
+            <div data-swapy-item="services">
+              <KPICard
+                title="Servicios completados"
+                value={services.totalServicesHired || 0}
+                icon={Briefcase}
+                color="blue"
+              />
+            </div>
+          </div>
+
+          <div data-swapy-slot="kpi-2" className="h-full">
+            <div data-swapy-item="revenue">
+              <KPICard
+                title="Ingresos generados"
+                value={`$${(services.totalRevenueGenerated || 0).toLocaleString('es-AR')}`}
+                icon={DollarSign}
+                color="green"
+                subtitle="ARS"
+              />
+            </div>
+          </div>
+
+          <div data-swapy-slot="kpi-3" className="h-full">
+            <div data-swapy-item="projects">
+              <KPICard
+                title="Proyectos finalizados"
+                value={projects.totalProjectsEstablished || 0}
+                icon={FolderCheck}
+                color="purple"
+              />
+            </div>
+          </div>
+
+          <div data-swapy-slot="kpi-4" className="h-full">
+            <div data-swapy-item="success">
+              <KPICard
+                title="Tasa de éxito"
+                value={`${(postulations.successRate || 0).toFixed(1)}%`}
+                icon={Award}
+                color="gold"
+                subtitle={`${postulations.acceptedPostulations || 0} de ${postulations.totalPostulations || 0} postulaciones`}
+                showProgressBar
+                progressValue={postulations.successRate || 0}
+              />
+            </div>
+          </div>
+        </div>
+      </DashboardSection>
+
+      {/* Sección: Proyectos Colaborativos (Nueva) */}
+      {projectDashboard && (projectDashboard.receivedPostulations || projectDashboard.sentPostulations) && (
+        <DashboardSection 
+          title="Proyectos colaborativos" 
+          subtitle="Métricas de tus proyectos y postulaciones"
+          icon={Users}
+          iconColor="purple"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Postulaciones Recibidas */}
+            {projectDashboard.receivedPostulations && (
+              <div className="bg-white rounded-xl shadow-lg border-2 border-purple-200 p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 rounded-lg bg-purple-50">
+                    <Inbox className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800">Postulaciones recibidas</h3>
+                    <p className="text-sm text-gray-500">En todos tus proyectos</p>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-purple-600 mb-4">
+                  {projectDashboard.receivedPostulations.total}
+                </div>
+                <StatusBreakdown 
+                  byStatus={projectDashboard.receivedPostulations.byStatus} 
+                  compact={false}
+                />
+              </div>
+            )}
+
+            {/* Postulaciones Enviadas */}
+            {projectDashboard.sentPostulations && (
+              <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 rounded-lg bg-blue-50">
+                    <Send className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800">Postulaciones enviadas</h3>
+                    <p className="text-sm text-gray-500">Tus postulaciones a proyectos</p>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-blue-600 mb-4">
+                  {projectDashboard.sentPostulations.total}
+                </div>
+                <StatusBreakdown 
+                  byStatus={projectDashboard.sentPostulations.byStatus} 
+                  compact={false}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Porcentaje de Proyectos con Postulaciones (Plan Basic+) */}
+          {projectDashboard.percentageProjectsWithPostulations !== undefined && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <KPICard
+                title="Proyectos con postulaciones"
+                value={`${projectDashboard.percentageProjectsWithPostulations.toFixed(1)}%`}
+                icon={TrendingUp}
+                color="green"
+                subtitle="de tus proyectos recibieron postulaciones"
+                showProgressBar
+                progressValue={projectDashboard.percentageProjectsWithPostulations}
+              />
+            </div>
+          )}
+
+          {/* Top 10 Proyectos (Plan Premium) */}
+          {projectDashboard.topProjectsByPostulations && projectDashboard.topProjectsByPostulations.length > 0 && (
+            <ProjectRankingCard 
+              title="Top 10 proyectos más populares"
+              projects={projectDashboard.topProjectsByPostulations}
             />
-          </div>
-        </div>
-
-        <div data-swapy-slot="kpi-2" className="h-full">
-          <div data-swapy-item="revenue">
-            <KPICard
-              title="Ingresos generados"
-              value={`$${(services.totalRevenueGenerated || 0).toLocaleString('es-AR')}`}
-              icon={DollarSign}
-              color="green"
-              subtitle="ARS"
-            />
-          </div>
-        </div>
-
-        <div data-swapy-slot="kpi-3" className="h-full">
-          <div data-swapy-item="projects">
-            <KPICard
-              title="Proyectos finalizados"
-              value={projects.totalProjectsEstablished || 0}
-              icon={FolderCheck}
-              color="purple"
-            />
-          </div>
-        </div>
-
-        <div data-swapy-slot="kpi-4" className="h-full">
-          <div data-swapy-item="success">
-            <KPICard
-              title="Tasa de éxito"
-              value={`${(postulations.successRate || 0).toFixed(1)}%`}
-              icon={Award}
-              color="gold"
-              subtitle={`${postulations.acceptedPostulations || 0} de ${postulations.totalPostulations || 0} postulaciones`}
-              showProgressBar
-              progressValue={postulations.successRate || 0}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      {postulations.totalPostulations > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PostulationsChart
-            totalPostulations={postulations.totalPostulations}
-            acceptedPostulations={postulations.acceptedPostulations}
-            successRate={(postulations.successRate || 0).toFixed(1)}
-          />
-
-          {/* Placeholder para futuro gráfico */}
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-lg p-6 border-2 border-dashed border-gray-300 flex items-center justify-center">
-            <p className="text-gray-400 text-center">
-              Más gráficos próximamente...
-            </p>
-          </div>
-        </div>
+          )}
+        </DashboardSection>
       )}
 
-      {/* Insights Section */}
-      <InsightsSection
-        successRate={postulations.successRate || 0}
-        totalServicesHired={services.totalServicesHired || 0}
-        totalRevenueGenerated={services.totalRevenueGenerated || 0}
-        totalProjectsEstablished={projects.totalProjectsEstablished || 0}
-      />
+      {/* Sección: Gráficos y Análisis */}
+      {postulations.totalPostulations > 0 && (
+        <DashboardSection 
+          title="Análisis de postulaciones" 
+          subtitle="Visualización de tu actividad"
+          icon={TrendingUp}
+          iconColor="green"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PostulationsChart
+              totalPostulations={postulations.totalPostulations}
+              acceptedPostulations={postulations.acceptedPostulations}
+              successRate={(postulations.successRate || 0).toFixed(1)}
+            />
+
+            {/* Placeholder para futuro gráfico */}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-lg p-6 border-2 border-dashed border-gray-300 flex items-center justify-center">
+              <p className="text-gray-400 text-center">
+                Más gráficos próximamente...
+              </p>
+            </div>
+          </div>
+        </DashboardSection>
+      )}
+
+      {/* Sección: Insights */}
+      <DashboardSection 
+        title="Recomendaciones" 
+        subtitle="Consejos para mejorar tu perfil"
+        icon={Award}
+        iconColor="gold"
+      >
+        <InsightsSection
+          successRate={postulations.successRate || 0}
+          totalServicesHired={services.totalServicesHired || 0}
+          totalRevenueGenerated={services.totalRevenueGenerated || 0}
+          totalProjectsEstablished={projects.totalProjectsEstablished || 0}
+        />
+      </DashboardSection>
     </div>
   );
 };

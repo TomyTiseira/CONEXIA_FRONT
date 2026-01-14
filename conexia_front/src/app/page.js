@@ -12,6 +12,19 @@ import Navbar from "@/components/navbar/Navbar";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function Home() {
+  // Detectar si está en proceso de logout
+  let isLoggingOut = false;
+  if (typeof window !== "undefined") {
+    try {
+      // Acceso seguro a la variable global de logout
+      isLoggingOut = window.__CONEXIA_LOGGING_OUT__ || false;
+    } catch {}
+  }
+
+  if (isLoggingOut) {
+    return <LoadingSpinner message="Cerrando sesión..." size="large" />;
+  }
+
   // Contenido público para usuarios no autenticados
   const publicContent = (
     <div className="min-h-screen flex flex-col">

@@ -147,7 +147,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
                 <div className="flex-1">
                   <p className="text-sm font-medium text-yellow-800 mb-1">IMPORTANTE</p>
                   <p className="text-sm text-yellow-700">
-                    Al crear un reclamo, el servicioo quedará pausado hasta que un
+                    Al crear un reclamo, el servicio quedará pausado hasta que un
                     moderador lo resuelva. Ambas partes serán notificadas por email.
                   </p>
                 </div>

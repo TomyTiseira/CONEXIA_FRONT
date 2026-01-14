@@ -53,10 +53,10 @@ export default function MessagingByUserPage() {
 
   useEffect(() => {
     if (!meta?.id) return;
-  const panel = { id: meta.id, name: getDisplayName(meta.userName, meta.userLastName, meta.id), avatar: getProfilePictureUrl(meta.userProfilePicture), conversationId: null };
+    const panel = { id: meta.id, name: getDisplayName(meta.userName, meta.userLastName, meta.id), avatar: getProfilePictureUrl(meta.userProfilePicture), conversationId: null };
     setPanelUser(panel);
-  selectConversation({ conversationId: null, otherUserId: meta.id, otherUser: { id: meta.id, userName: meta.userName, userLastName: meta.userLastName, userProfilePicture: meta.userProfilePicture } });
-  }, [meta, selectConversation]);
+    selectConversation({ conversationId: null, otherUserId: meta.id, otherUser: { id: meta.id, userName: meta.userName, userLastName: meta.userLastName, userProfilePicture: meta.userProfilePicture } });
+  }, [otherId]);
 
   return (
     <>

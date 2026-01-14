@@ -9,6 +9,7 @@ import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { NotFound } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
 import { useUserStore } from '@/store/userStore';
 import { config } from '@/config';
@@ -16,7 +17,7 @@ import MessagingWidget from '@/components/messaging/MessagingWidget';
 
 export default function UserConnectionsPage() {
   const { id } = useParams();
-  const { friends, loading, error, pagination, loadMore, page } = useUserFriends(id, 1, 12);
+  const { friends, loading, error, pagination, loadMore, page, connectionsCount } = useUserFriends(id, 1, 12);
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const { profile: storeProfile } = useUserStore();
@@ -75,9 +76,18 @@ export default function UserConnectionsPage() {
             </div>
             {/* Conexiones */}
             <div className="w-full md:w-3/4 lg:w-4/5 flex justify-center">
-              <div className="bg-white rounded-2xl shadow p-2 md:p-6 border border-[#c6e3e4] w-full max-w-full md:max-w-4xl flex flex-col items-center">
-                <h2 className="text-conexia-green text-2xl font-bold mb-1">Conexiones de este usuario</h2>
-                <p className="text-conexia-green/80 mb-6 text-center">Personas con las que ya conectó en Conexia.</p>
+              <div className="bg-white rounded-2xl shadow p-6 border border-[#c6e3e4] w-full max-w-full md:max-w-4xl flex flex-col">
+                <div className="flex flex-col md:flex-row items-start md:items-start justify-between mb-6 gap-2">
+                  <div>
+                    <h2 className="text-conexia-green text-2xl font-bold mb-1">Conexiones de este usuario</h2>
+                    <p className="text-conexia-green/80">Personas con las que ya conectó en Conexia.</p>
+                  </div>
+                  {connectionsCount > 0 && (
+                    <div className="text-conexia-green font-semibold text-lg whitespace-nowrap self-end md:self-auto">
+                      {connectionsCount} {connectionsCount === 1 ? 'contacto' : 'contactos'}
+                    </div>
+                  )}
+                </div>
                 {loading && friends.length === 0 ? (
                   <div className="text-conexia-green/70 text-center py-8">Cargando conexiones...</div>
                 ) : error ? (

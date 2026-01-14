@@ -24,7 +24,7 @@ export default function UserConnections({ userId, profile, isOwner }) {
   }
   
   // Traemos los primeros 8 amigos, pero solo mostramos los que entran en una fila (como actividad)
-  const { friends, loading, error } = useUserFriends(userId, 1, 8);
+  const { friends, loading, error, connectionsCount } = useUserFriends(userId, 1, 8);
   // Determinar cuántos mostrar según el tamaño de pantalla
   // En desktop: 5, en tablet: 3, en mobile: 2
   let maxPerRow = 2;
@@ -44,16 +44,23 @@ export default function UserConnections({ userId, profile, isOwner }) {
   return (
     <section className="w-full mt-8">
       <div className="bg-white rounded-2xl shadow p-6">
-        <div className="flex flex-col items-start mb-2">
-          <div className="flex items-center gap-2 mb-1">
-            <HiUserGroup className="w-6 h-6 text-conexia-green" />
-            <h3 className="text-base md:text-lg font-bold text-conexia-green">
-              {isOwner ? 'Mis Conexiones' : 'Conexiones'}
-            </h3>
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex flex-col items-start">
+            <div className="flex items-center gap-2 mb-1">
+              <HiUserGroup className="w-6 h-6 text-conexia-green" />
+              <h3 className="text-base md:text-lg font-bold text-conexia-green">
+                {isOwner ? 'Mis Conexiones' : 'Conexiones'}
+              </h3>
+            </div>
+            <div className="text-gray-500 text-xs md:text-sm">
+              {isOwner ? 'Tus contactos en Conexia.' : 'Contactos de este usuario en Conexia.'}
+            </div>
           </div>
-          <div className="text-gray-500 text-xs md:text-sm mb-2">
-            {isOwner ? 'Tus contactos en Conexia.' : 'Contactos de este usuario en Conexia.'}
-          </div>
+          {connectionsCount > 0 && (
+            <div className="text-conexia-green font-semibold text-base md:text-lg whitespace-nowrap">
+              {connectionsCount} {connectionsCount === 1 ? 'contacto' : 'contactos'}
+            </div>
+          )}
         </div>
         {loading || error || friends.length === 0 ? (
           null

@@ -91,16 +91,16 @@ export default function ContractPlanButton({ plan, billingCycle, onError }) {
 
     } catch (error) {
       console.error('❌ ERROR al contratar plan:', error);
-      
       // Limpiar datos pendientes en caso de error
       localStorage.removeItem('pendingSubscription');
-      
+      // Usar el handler para mostrar mensaje limpio
+      const errorInfo = require('@/utils/planErrorHandler').handlePlanError(error);
       setToast({
-        type: 'error',
-        message: error.message || 'Error al procesar la contratación. Por favor intenta nuevamente.',
+        type: errorInfo.type || 'error',
+        message: errorInfo.message || 'Error al procesar la contratación. Por favor intenta nuevamente.',
         isVisible: true
       });
-      onError?.(error);
+      onError?.(errorInfo);
       setProcessing(false);
     }
     // No se ejecuta finally porque la redirección abandona la página
