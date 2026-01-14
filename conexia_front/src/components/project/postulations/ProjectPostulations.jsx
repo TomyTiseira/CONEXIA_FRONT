@@ -18,6 +18,7 @@ export default function ProjectPostulations({ projectId }) {
   const router = useRouter();
   const [project, setProject] = useState(null);
   const [postulations, setPostulations] = useState([]);
+  const [projectRoles, setProjectRoles] = useState([]); // Roles del proyecto desde API
   const [postulationStatuses, setPostulationStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -77,6 +78,11 @@ export default function ProjectPostulations({ projectId }) {
       }
       
       if (response.success) {
+        // Guardar los roles del proyecto que vienen en la respuesta
+        if (response.data.roles) {
+          setProjectRoles(response.data.roles);
+        }
+        
         const postulationsWithProfiles = await Promise.all(
           response.data.postulations.map(async (postulation) => {
             try {
@@ -104,10 +110,10 @@ export default function ProjectPostulations({ projectId }) {
                 applicantName = profile.email.split('@')[0];
               }
               
-              // Obtener el nombre del rol desde project.roles
+              // Obtener el nombre del rol desde response.data.roles
               let roleName = 'Rol no especificado';
-              if (postulation.roleId && project.roles) {
-                const role = project.roles.find(r => r.id === postulation.roleId);
+              if (postulation.roleId && response.data.roles) {
+                const role = response.data.roles.find(r => r.id === postulation.roleId);
                 if (role) {
                   roleName = role.title || role.name || `Rol ${postulation.roleId}`;
                 }
@@ -242,7 +248,7 @@ export default function ProjectPostulations({ projectId }) {
                   className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
                 >
                   <option value="">Todos los roles</option>
-                  {project.roles && project.roles.map((role) => (
+                  {projectRoles && projectRoles.map((role) => (
                     <option key={role.id} value={role.id}>
                       {role.title || role.name || `Rol ${role.id}`}
                     </option>

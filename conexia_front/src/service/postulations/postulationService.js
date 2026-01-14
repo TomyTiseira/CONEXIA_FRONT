@@ -174,7 +174,13 @@ export const approvePostulation = async (postulationId) => {
   return res.json();
 };
 
-// Obtener postulaciones de un proyecto
+/**
+ * Obtener postulaciones de un proyecto (sin filtro de rol)
+ * @param {number} projectId - ID del proyecto
+ * @param {number} page - Número de página (opcional, por defecto 1)
+ * @param {number} statusId - ID del estado para filtrar (opcional)
+ * @returns {Promise} - Respuesta con { postulations, roles, pagination }
+ */
 export const getPostulationsByProject = async (projectId, page = 1, statusId = null) => {
   let url = `${config.API_URL}/postulations/project/${projectId}?page=${page}`;
   if (statusId) {
@@ -200,7 +206,7 @@ export const getPostulationsByProject = async (projectId, page = 1, statusId = n
  * @param {number} roleId - ID del rol para filtrar
  * @param {number} page - Número de página (opcional, por defecto 1)
  * @param {number} statusId - ID del estado para filtrar (opcional)
- * @returns {Promise} - Respuesta con las postulaciones filtradas
+ * @returns {Promise} - Respuesta con { postulations, roles, pagination }
  */
 export const getPostulationsByProjectAndRole = async (projectId, roleId, page = 1, statusId = null) => {
   let url = `${config.API_URL}/postulations/project/${projectId}?roleId=${roleId}`;
