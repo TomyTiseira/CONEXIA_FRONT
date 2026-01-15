@@ -17,7 +17,7 @@ export const ProjectsByCategorySummary = ({ projectsByCategory }) => {
             <FolderCheck className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800">Proyectos por Categoría</h3>
+            <h3 className="text-lg font-bold text-gray-800">Proyectos por categoría</h3>
             <p className="text-sm text-gray-500">No hay proyectos registrados</p>
           </div>
         </div>
@@ -47,7 +47,7 @@ export const ProjectsByCategorySummary = ({ projectsByCategory }) => {
           <FolderCheck className="w-6 h-6 text-purple-600" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-bold text-gray-800">Proyectos por Categoría</h3>
+          <h3 className="text-lg font-bold text-gray-800">Proyectos por categoría</h3>
           <p className="text-sm text-gray-500">
             Total: {totalProjects} proyectos • {totalPostulations.toFixed(0)} postulaciones
           </p>

@@ -12,6 +12,7 @@ import PublicationModal from './publications/PublicationModal';
 import Toast from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
+import { useAccountStatus } from '@/hooks';
 import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 import { getCommunityPublications } from '@/service/publications/publicationsFetch';
@@ -27,6 +28,7 @@ export default function ClientCommunity() {
   const [modalOpen, setModalOpen] = useState(false);
   const { user, isLoading } = useAuth();
   const { profile, roleName } = useUserStore();
+  const { canCreateContent } = useAccountStatus();
   const [publications, setPublications] = useState([]);
   const [loadingPublications, setLoadingPublications] = useState(true);
   const [errorPublications, setErrorPublications] = useState(null);
@@ -179,13 +181,15 @@ export default function ClientCommunity() {
           {/* Feed principal */}
           <div className="flex-1 flex flex-col items-center max-w-2xl mx-auto">
             {/* Caja de inicio de publicación */}
-            <div className="bg-white rounded-2xl shadow border border-[#c6e3e4] px-2 sm:px-4 md:px-6 pt-4 pb-2 mb-3 flex flex-col gap-2 w-full">
+            <div className={`bg-white rounded-2xl shadow border border-[#c6e3e4] px-2 sm:px-4 md:px-6 pt-4 pb-2 mb-3 flex flex-col gap-2 w-full ${
+              !canCreateContent ? 'opacity-50 cursor-not-allowed' : ''
+            }`}>
               <div className="flex items-center gap-3">
                 <Image src={avatar} alt="avatar" width={40} height={40} className="rounded-full aspect-square object-cover" />
                 <button
-                  className="flex-1 text-left bg-[#eef6f6] text-conexia-green/70 px-6 py-3 rounded-lg border border-[#c6e3e4] focus:outline-none hover:bg-[#e0f0f0] transition-colors"
+                  className="flex-1 text-left bg-[#eef6f6] text-conexia-green/70 px-6 py-3 rounded-lg border border-[#c6e3e4] focus:outline-none hover:bg-[#e0f0f0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => setModalOpen(true)}
-                  disabled={isLoading || !user}
+                  disabled={isLoading || !user || !canCreateContent}
                 >
                   {profile ? `¿Qué tienes en mente?` : 'Cargando...'}
                 </button>
@@ -197,7 +201,7 @@ export default function ClientCommunity() {
                   onClick={() => setModalOpen(true)}
                   className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]"
                   style={{ boxShadow: 'none', border: 'none', minWidth: 'auto' }}
-                  disabled={isLoading || !user}
+                  disabled={isLoading || !user || !canCreateContent}
                 >
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><circle cx="8" cy="10" r="2" fill="#1e6e5c"/><path d="M21 19l-5.5-7-4.5 6-3-4-4 5" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round"/></svg>
                   <span className="hidden md:inline text-xs text-conexia-green/80 select-none">Imagen</span>
@@ -207,7 +211,7 @@ export default function ClientCommunity() {
                   onClick={() => setModalOpen(true)}
                   className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]"
                   style={{ boxShadow: 'none', border: 'none', minWidth: 'auto' }}
-                  disabled={isLoading || !user}
+                  disabled={isLoading || !user || !canCreateContent}
                 >
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><polygon points="10,9 16,12 10,15" fill="#1e6e5c"/></svg>
                   <span className="hidden md:inline text-xs text-conexia-green/80 select-none">Video</span>
@@ -217,13 +221,13 @@ export default function ClientCommunity() {
                   onClick={() => setModalOpen(true)}
                   className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-lg bg-transparent border-none focus:outline-none transition-colors hover:bg-[#e0f0f0]"
                   style={{ boxShadow: 'none', border: 'none', minWidth: 'auto' }}
-                  disabled={isLoading || !user}
+                  disabled={isLoading || !user || !canCreateContent}
                 >
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e0f0f0" stroke="#1e6e5c" strokeWidth="2"/><text x="7" y="17" fontSize="8" fill="#1e6e5c">GIF</text></svg>
                   <span className="hidden md:inline text-xs text-conexia-green/80 select-none">GIF</span>
                 </button>
                 <div className="flex-1" />
-                <Button onClick={() => setModalOpen(true)} className="!px-4 md:!px-5 !py-2 !rounded-lg ml-0 md:ml-4 mt-2 md:mt-0" disabled={isLoading || !user}>Publicar</Button>
+                <Button onClick={() => setModalOpen(true)} className="!px-4 md:!px-5 !py-2 !rounded-lg ml-0 md:ml-4 mt-2 md:mt-0" disabled={isLoading || !user || !canCreateContent}>Publicar</Button>
               </div>
             </div>
             {/* Modal de publicación */}

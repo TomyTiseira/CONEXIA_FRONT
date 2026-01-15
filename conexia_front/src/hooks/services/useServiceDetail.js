@@ -6,7 +6,7 @@ import { fetchServiceDetail } from '@/service/services/servicesFetch';
  */
 export function useServiceDetail(serviceId) {
   const [service, setService] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Iniciar en true para mostrar skeleton
   const [error, setError] = useState(null);
 
   const loadServiceDetail = async (id = serviceId) => {

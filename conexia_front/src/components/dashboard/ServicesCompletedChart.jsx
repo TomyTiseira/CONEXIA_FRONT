@@ -22,7 +22,7 @@ export const ServicesCompletedChart = ({ totalServicesHired, totalRevenue }) => 
           <Briefcase className="w-6 h-6 text-green-600" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Servicios Completados</h3>
+          <h3 className="text-lg font-bold text-gray-800">Servicios completados</h3>
           <p className="text-sm text-gray-500">Estado COMPLETED</p>
         </div>
       </div>

@@ -24,6 +24,7 @@ import { config } from '@/config';
 import GlobalSearchBar from '@/components/common/GlobalSearchBar';
 import { useMessaging } from '@/hooks/messaging/useMessaging'; // ya importado
 import { getMessagingSocket } from '@/lib/socket/messagingSocket'; // <- NUEVO
+import SuspensionBadge from '@/components/common/SuspensionBadge';
 
 // Componente separado para el buscador mobile para evitar problemas de hidratación
 function MobileSearchBar() {
@@ -137,9 +138,10 @@ export default function NavbarCommunity() {
   ];
 
   return (
-    <header className="bg-white shadow sticky top-0 z-50">
-      {/* Desktop Navbar */}
-  <nav className="hidden md:flex items-center px-4 py-3 max-w-7xl mx-auto h-[64px] relative">
+    <>      
+      <header className="bg-white shadow sticky top-0 z-50">
+        {/* Desktop Navbar */}
+    <nav className="hidden md:flex items-center px-4 py-3 max-w-7xl mx-auto h-[64px] relative">
 
         {/* Logo a la izquierda */}
   <div className="flex items-center min-w-0 flex-1 gap-2 z-10 order-1">
@@ -193,6 +195,9 @@ export default function NavbarCommunity() {
 
         {/* Right cluster: actions (message, bell, avatar) */}
   <div className="flex items-center gap-4 text-conexia-green min-w-0 flex-1 justify-end order-3">
+          {/* Badge de suspensión - ANTES de los iconos */}
+          <SuspensionBadge />
+          
           <div className="relative">
             <Link href="/messaging" prefetch={false} className="block">
               <MessageCircle size={20} className="hover:text-conexia-green/80" />
@@ -208,6 +213,7 @@ export default function NavbarCommunity() {
               <Bell size={20} className="hover:text-conexia-green/80" />
             </Link>
           </div>
+          
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
@@ -309,5 +315,6 @@ export default function NavbarCommunity() {
         })}
       </div>
     </header>
+    </>
   );
 }

@@ -19,6 +19,13 @@ export function usePlans(includeInactive = false) {
       const response = await getPlans(includeInactive);
       setPlans(response.data || []);
     } catch (err) {
+      // Silenciar errores si la sesión fue terminada (baneo/logout)
+      const { isSessionTerminated } = await import('@/service/auth/fetchWithRefresh');
+      if (isSessionTerminated()) {
+        // Sesión terminada, no loguear errores
+        return;
+      }
+      
       const errorMessage = err.message || 'Error al cargar los planes';
       setError(errorMessage);
       console.error('Error fetching plans:', err);

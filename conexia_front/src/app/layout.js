@@ -3,7 +3,11 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ConnectionRequestsProvider } from "@/context/ConnectionRequestsContext";
 import { ChatWidgetsProvider } from "@/context/ChatWidgetsContext";
+import { SuspensionProvider } from "@/context/SuspensionContext";
+import { AccessDeniedProvider } from "@/context/AccessDeniedContext";
 import NexoChat from "@/components/nexo/NexoChat";
+import BannedAccountModal from "@/components/common/BannedAccountModal";
+import HttpErrorProvider from "@/components/providers/HttpErrorProvider";
 
 export const metadata = {
   title: "Conexia",
@@ -20,9 +24,19 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <ConnectionRequestsProvider>
             <ChatWidgetsProvider>
-              {children}
-              {/* NEXO - Chatbot Virtual (disponible globalmente) */}
-              <NexoChat />
+              <SuspensionProvider>
+                <AccessDeniedProvider>
+                  <HttpErrorProvider>
+                    {/* Modal de baneo (bloquea toda la UI si usuario está baneado) */}
+                    <BannedAccountModal />
+                    
+                    {children}
+                    
+                    {/* NEXO - Chatbot Virtual (disponible globalmente) */}
+                    <NexoChat />
+                  </HttpErrorProvider>
+                </AccessDeniedProvider>
+              </SuspensionProvider>
             </ChatWidgetsProvider>
           </ConnectionRequestsProvider>
         </AuthProvider>

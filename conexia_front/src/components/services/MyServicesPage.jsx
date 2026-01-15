@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fetchUserServices } from '@/service/services/servicesFetch';
 import { fetchMyServiceRequests } from '@/service/service-hirings/serviceHiringsFetch';
 import { useUserStore } from '@/store/userStore';
+import { useAccountStatus } from '@/hooks/useAccountStatus';
 import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { FaRegEye, FaFileInvoiceDollar, FaEllipsisH, FaExchangeAlt } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
@@ -19,6 +20,7 @@ import Toast from '@/components/ui/Toast';
 export default function MyServicesPage() {
   const router = useRouter();
   const { user } = useUserStore();
+  const { canCreateContent, suspensionMessage } = useAccountStatus();
   const [services, setServices] = useState([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -289,13 +291,24 @@ export default function MyServicesPage() {
               </div>
               
               <RequireVerification action="publicar un servicio">
-                <button
-                  onClick={() => router.push('/services/create')}
-                  className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
-                >
-                  <Briefcase size={16} />
-                  Crear Nuevo Servicio
-                </button>
+                {canCreateContent ? (
+                  <button
+                    onClick={() => router.push('/services/create')}
+                    className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
+                  >
+                    <Briefcase size={16} />
+                    Crear Nuevo Servicio
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed flex items-center gap-2"
+                    title={suspensionMessage}
+                  >
+                    <Briefcase size={16} />
+                    Crear Nuevo Servicio
+                  </button>
+                )}
               </RequireVerification>
             </div>
           </div>
@@ -326,12 +339,22 @@ export default function MyServicesPage() {
                   Comienza creando tu primer servicio para recibir solicitudes de contratación.
                 </p>
                 <RequireVerification action="publicar un servicio">
-                  <button
-                    onClick={() => router.push('/services/create')}
-                    className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
-                  >
-                    Crear Mi Primer Servicio
-                  </button>
+                  {canCreateContent ? (
+                    <button
+                      onClick={() => router.push('/services/create')}
+                      className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
+                    >
+                      Crear Mi Primer Servicio
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed"
+                      title={suspensionMessage}
+                    >
+                      Crear Mi Primer Servicio
+                    </button>
+                  )}
                 </RequireVerification>
               </div>
             ) : (

@@ -131,6 +131,15 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
     completed_with_agreement: {
       label: 'Finalizado con Acuerdo',
       className: 'bg-teal-200 text-teal-800'
+    },
+    // Estados de moderación para servicios
+    terminated_by_moderation: {
+      label: 'Terminado por Moderación',
+      className: 'bg-red-100 text-red-700 border border-red-300'
+    },
+    finished_by_moderation: {
+      label: 'Finalizado por Moderación',
+      className: 'bg-amber-100 text-amber-700 border border-amber-300'
     }
   };
 

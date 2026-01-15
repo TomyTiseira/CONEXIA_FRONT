@@ -5,7 +5,8 @@ import {
   Download,
   Shield,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Ban
 } from 'lucide-react';
 import { useModeratorDashboardData } from '@/hooks/dashboard/useModeratorDashboardData';
 import { useExportModeratorDashboard } from '@/hooks/dashboard/useExportModeratorDashboard';
@@ -16,6 +17,7 @@ import { ErrorState } from './ErrorStates';
 import { KPICard } from './KPICard';
 import { ReportsSummary } from './ReportsSummary';
 import { ClaimsChart } from './ClaimsChart';
+import { UsersModerationChart } from './UsersModerationChart';
 import { useState } from 'react';
 
 /**
@@ -25,7 +27,6 @@ import { useState } from 'react';
 export const ModeratorDashboard = () => {
   const { data, isLoading, error, refetch } = useModeratorDashboardData();
   const { exportMetrics, isExporting } = useExportModeratorDashboard();
-  const [showTooltip, setShowTooltip] = useState(false);
 
   if (isLoading) {
     return <DashboardSkeleton cards={4} />;
@@ -41,6 +42,7 @@ export const ModeratorDashboard = () => {
 
   const reports = data.reports || {};
   const claims = data.claims || {};
+  const userModeration = data.userModeration || {};
 
   return (
     <div className="space-y-8">
@@ -48,61 +50,36 @@ export const ModeratorDashboard = () => {
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex-1">
           <DashboardHeader
-            title="Dashboard de Moderación"
+            title="Métricas de Moderación"
             subtitle="Métricas de control y moderación de la plataforma"
             timestamp={new Date().toISOString()}
           />
         </div>
         
-        <div 
-          className="relative"
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
+        <motion.button
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={exportMetrics}
+          disabled={isExporting}
+          className="
+            flex items-center gap-2 px-5 py-3
+            bg-gradient-to-r from-[#48a6a7] to-[#419596]
+            hover:from-[#419596] hover:to-[#3a8586]
+            text-white font-semibold rounded-xl
+            transition-all duration-300
+            shadow-lg hover:shadow-xl
+            border-2 border-white/20
+            disabled:opacity-50 disabled:cursor-not-allowed
+            lg:self-start
+          "
+          aria-label="Exportar métricas de moderación a CSV"
         >
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={exportMetrics}
-            disabled={isExporting}
-            className="
-              flex items-center gap-2 px-5 py-3
-              bg-gradient-to-r from-[#9333ea] to-[#7e22ce]
-              hover:from-[#7e22ce] hover:to-[#6b21a8]
-              text-white font-semibold rounded-xl
-              transition-all duration-300
-              shadow-lg hover:shadow-xl
-              border-2 border-white/20
-              disabled:opacity-50 disabled:cursor-not-allowed
-              lg:self-start
-            "
-            aria-label="Exportar métricas de moderación a CSV"
-          >
-            <Download className="w-5 h-5" />
-            <span>{isExporting ? 'Exportando...' : 'Exportar datos'}</span>
-          </motion.button>
-
-          {/* Tooltip */}
-          {showTooltip && !isExporting && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              transition={{ duration: 0.2 }}
-              className="
-                absolute -bottom-14 right-0
-                px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg
-                whitespace-nowrap pointer-events-none
-                shadow-xl z-50
-              "
-            >
-              Exportar datos a CSV
-              <div className="absolute -top-1 right-6 w-2 h-2 bg-gray-900 rotate-45" />
-            </motion.div>
-          )}
-        </div>
+          <Download className="w-5 h-5" />
+          <span>{isExporting ? 'Exportando...' : 'Exportar datos'}</span>
+        </motion.button>
       </div>
 
       {/* Sección: Resumen General */}
@@ -152,6 +129,43 @@ export const ModeratorDashboard = () => {
       {/* Separador visual */}
       <div className="border-t-2 border-gray-200"></div>
 
+      {/* Sección: Moderación y Estado de Cuentas */}
+      <DashboardSection 
+        title="Moderación y estado de cuentas" 
+        subtitle="Usuarios suspendidos, baneados y dados de baja"
+        icon={Shield}
+        iconColor="purple"
+      >
+        {/* KPIs de moderación */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
+          <KPICard
+            title="Usuarios suspendidos"
+            value={userModeration.suspendedUsers || 0}
+            icon={Clock}
+            color="yellow"
+            subtitle="Suspensión temporal"
+          />
+          
+          <KPICard
+            title="Usuarios baneados"
+            value={userModeration.bannedUsers || 0}
+            icon={Ban}
+            color="red"
+            subtitle="Suspensión permanente"
+          />
+        </div>
+
+        {/* Gráfico de estado de moderación */}
+        <UsersModerationChart
+          activeUsers={userModeration.activeUsers || 0}
+          suspendedUsers={userModeration.suspendedUsers || 0}
+          bannedUsers={userModeration.bannedUsers || 0}
+        />
+      </DashboardSection>
+
+      {/* Separador visual */}
+      <div className="border-t-2 border-gray-200"></div>
+
       {/* Sección: Reportes */}
       <DashboardSection 
         title="Reportes" 
@@ -167,7 +181,7 @@ export const ModeratorDashboard = () => {
 
       {/* Sección: Reclamos */}
       <DashboardSection 
-        title="Reclamos de Servicios" 
+        title="Reclamos de servicios" 
         subtitle="Gestión y resolución de conflictos"
         icon={AlertCircle}
         iconColor="amber"

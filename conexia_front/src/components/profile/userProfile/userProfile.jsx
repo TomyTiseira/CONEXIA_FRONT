@@ -31,6 +31,7 @@ import VerificationSection from "@/components/profile/VerificationSection";
 import { useVerificationStatus } from "@/hooks";
 import { ShieldCheck } from 'lucide-react';
 import { PlanBadge } from '@/components/plans';
+import UserRestrictionAlert from '@/components/common/UserRestrictionAlert';
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
@@ -478,6 +479,7 @@ export default function UserProfile() {
             duration={4000}
           />
         )}
+        
         {/* Rectángulo de datos personales */}
         <div className="bg-white rounded-xl shadow p-6 border border-[#e0e0e0]">
           {/* Portada y foto de perfil */}
@@ -490,6 +492,19 @@ export default function UserProfile() {
               className="object-cover"
               priority
             />
+            
+            {/* Banner de restricción sobre la portada (Overlay sin transparencia) */}
+            {(profile.isBanned || profile.isSuspended) && (
+              <div className="absolute top-0 left-0 right-0 p-3 md:p-4 z-10">
+                <UserRestrictionAlert 
+                  isBanned={profile.isBanned}
+                  isSuspended={profile.isSuspended}
+                  suspensionExpiresAt={profile.suspensionExpiresAt}
+                  isOwner={isOwner}
+                  className="m-0 shadow-lg w-full"
+                />
+              </div>
+            )}
           </div>
           <div className="relative flex flex-col sm:flex-row sm:items-center mb-4 sm:justify-between" style={{ minHeight: 64 }}>
             <div className="flex flex-col sm:flex-row sm:items-center">
@@ -737,18 +752,24 @@ export default function UserProfile() {
           </div>
         )}
 
-  {/* Apartado de conexiones del usuario */}
-  <UserConnections userId={id} profile={profile} isOwner={isOwner} />
-        {/* Rectángulo de proyectos colaborativos */}
-        <UserCollaborativeProjects userId={id} />
-        {/* Rectángulo de servicios */}
-        <UserServices userId={id} />
-        {/* Rectángulo de actividad */}
-        <UserActivity userId={id} isOwner={isOwner} />
-        {/* Reseñas: sección integrada al final */}
-        <div className="mt-6">
-          <ReviewsSection profileUserId={id} />
-        </div>
+        {/* Apartado de conexiones del usuario */}
+        <UserConnections userId={id} profile={profile} isOwner={isOwner} />
+        
+        {/* Secciones ocultas si el usuario está baneado */}
+        {!profile.isBanned && (
+          <>
+            {/* Rectángulo de proyectos colaborativos */}
+            <UserCollaborativeProjects userId={id} />
+            {/* Rectángulo de servicios */}
+            <UserServices userId={id} />
+            {/* Rectángulo de actividad */}
+            <UserActivity userId={id} isOwner={isOwner} />
+            {/* Reseñas: sección integrada al final */}
+            <div className="mt-6">
+              <ReviewsSection profileUserId={id} />
+            </div>
+          </>
+        )}
       </div>
       {/* Margen inferior verde */}
       <div className="bg-conexia-soft w-full" style={{ height: 65 }} />

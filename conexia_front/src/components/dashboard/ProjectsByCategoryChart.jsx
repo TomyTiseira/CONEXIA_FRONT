@@ -14,7 +14,7 @@ export const ProjectsByCategoryChart = ({ projectsByCategory = [] }) => {
             <BarChart3 className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800">Proyectos por Categoría</h3>
+            <h3 className="text-lg font-bold text-gray-800">Proyectos por categoría</h3>
             <p className="text-sm text-gray-500">Distribución de proyectos activos</p>
           </div>
         </div>
@@ -44,7 +44,7 @@ export const ProjectsByCategoryChart = ({ projectsByCategory = [] }) => {
           <BarChart3 className="w-6 h-6 text-purple-600" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Proyectos por Categoría</h3>
+          <h3 className="text-lg font-bold text-gray-800">Proyectos por categoría</h3>
           <p className="text-sm text-gray-500">Distribución de proyectos</p>
         </div>
       </div>

@@ -55,5 +55,14 @@ export async function getProfileById(id) {
     throw new Error("No se pudo obtener el perfil");
   }
 
-  return res.json();
+  const data = await res.json();
+  
+  // Asegurar que los campos de moderación existan en la respuesta
+  if (data.data) {
+    data.data.isBanned = data.data.isBanned || false;
+    data.data.isSuspended = data.data.isSuspended || false;
+    data.data.suspensionExpiresAt = data.data.suspensionExpiresAt || null;
+  }
+  
+  return data;
 }

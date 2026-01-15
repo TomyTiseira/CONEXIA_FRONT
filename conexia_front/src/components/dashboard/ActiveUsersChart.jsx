@@ -1,5 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
+import { Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ChartContainer } from './ChartContainer';
 
@@ -31,6 +32,8 @@ export const ActiveUsersChart = ({ last7Days, last30Days, last90Days }) => {
     <ChartContainer
       title="Usuarios activos"
       description="Actividad de usuarios en diferentes períodos"
+      icon={Activity}
+      iconColor="green"
     >
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>

@@ -55,12 +55,25 @@ export default function ModerationPage() {
   };
 
   // Manejar resolución de análisis
-  const handleResolve = async (action, notes) => {
+  const handleResolve = async (action, notes, suspensionDays = null) => {
     if (!selectedAnalysis) return;
 
     try {
-      await executeResolve(selectedAnalysis.id, action, notes);
-      showToast('success', 'Análisis resuelto correctamente');
+      await executeResolve(selectedAnalysis.id, action, notes, suspensionDays);
+      
+      // Mensaje personalizado según la acción
+      let successMessage = 'Análisis resuelto correctamente';
+      if (action === 'ban_user') {
+        successMessage = 'Usuario baneado permanentemente';
+      } else if (action === 'suspend_user') {
+        successMessage = `Usuario suspendido por ${suspensionDays} días`;
+      } else if (action === 'release_user') {
+        successMessage = 'Usuario liberado - sin acciones tomadas';
+      } else if (action === 'keep_monitoring') {
+        successMessage = 'Usuario marcado para seguir monitoreando';
+      }
+      
+      showToast('success', successMessage);
       setSelectedAnalysis(null); // Cerrar modal
       refresh(); // Recargar resultados
     } catch (error) {

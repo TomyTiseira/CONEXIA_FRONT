@@ -14,7 +14,7 @@ export const ServicesHiredByTypeChart = ({ servicesByType = [] }) => {
             <DollarSign className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800">Servicios por Tipo</h3>
+            <h3 className="text-lg font-bold text-gray-800">Servicios por tipo</h3>
             <p className="text-sm text-gray-500">No hay servicios contratados</p>
           </div>
         </div>
@@ -41,7 +41,7 @@ export const ServicesHiredByTypeChart = ({ servicesByType = [] }) => {
           <DollarSign className="w-6 h-6 text-green-600" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Servicios por Tipo</h3>
+          <h3 className="text-lg font-bold text-gray-800">Servicios por tipo</h3>
           <p className="text-sm text-gray-500">Distribución de contrataciones</p>
         </div>
       </div>

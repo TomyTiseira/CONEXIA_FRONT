@@ -31,15 +31,24 @@ export async function fetchProjectById(id) {
     isActive: p.isActive,
     deletedAt: p.deletedAt, // <-- AGREGADO
     status: p.status, // Agregar el campo status desde el backend
+    suspendedByModeration: p.suspendedByModeration || false, // Campo de moderación de proyectos
     startDate: p.startDate,
     endDate: p.endDate,
     isOwner: p.isOwner,
     isApplied: p.isApplied || false, // Agregar isApplied desde el backend
     hasReported: p.hasReported || false, // Agregar hasReported desde el backend
+    userPostulationStatus: p.userPostulationStatus || null, // Estado de postulación del usuario
+    userEvaluationDeadline: p.userEvaluationDeadline || null, // Fecha límite de evaluación
     roles: p.roles || [], // Agregar roles desde el backend
     applicationTypes: p.applicationTypes || [], // Agregar tipos de aplicación
     questions: p.questions || [], // Agregar preguntas
     evaluation: p.evaluation || null, // Agregar evaluación
+    // Campos de moderación del owner
+    ownerAccountStatus: p.ownerAccountStatus || 'active',
+    ownerIsSuspended: p.ownerIsSuspended || false,
+    ownerIsBanned: p.ownerIsBanned || false,
+    ownerSuspensionExpiresAt: p.ownerSuspensionExpiresAt || null,
+    ownerSuspensionReason: p.ownerSuspensionReason || null,
   };
   
   return result;

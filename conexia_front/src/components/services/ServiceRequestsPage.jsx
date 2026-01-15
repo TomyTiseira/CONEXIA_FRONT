@@ -19,50 +19,20 @@ import Toast from '@/components/ui/Toast';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { useUserStore } from '@/store/userStore';
+import { 
+  SERVICE_HIRING_STATUS_OPTIONS, 
+  getServiceHiringStatusBadge,
+  isReadOnlyState,
+  isTerminatedByModeration
+} from '@/constants/serviceHirings';
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'Todos los estados' },
-  { value: 'pending', label: 'Pendiente' },
-  { value: 'quoted', label: 'Cotizado' },
-  { value: 'requoting', label: 'Re-cotizando' },
-  { value: 'accepted', label: 'Aceptado' },
-  { value: 'approved', label: 'Aprobado' },
-  { value: 'rejected', label: 'Rechazado' },
-  { value: 'cancelled', label: 'Cancelado' },
-  { value: 'negotiating', label: 'Negociando' },
-  { value: 'in_progress', label: 'En progreso' },
-  { value: 'in_claim', label: 'En reclamo' },
-  { value: 'delivered', label: 'Entregado' },
-  { value: 'revision_requested', label: 'Revisión solicitada' },
-  { value: 'completed', label: 'Completado' }
-];
+const STATUS_OPTIONS = SERVICE_HIRING_STATUS_OPTIONS;
 
 const getStatusBadge = (statusCode) => {
-  const statusMap = {
-    pending: { label: 'Pendiente', className: 'bg-yellow-100 text-yellow-800' },
-    quoted: { label: 'Cotizado', className: 'bg-blue-100 text-blue-800' },
-    requoting: { label: 'Re-cotizando', className: 'bg-sky-100 text-sky-800' },
-    accepted: { label: 'Aceptado', className: 'bg-green-100 text-green-800' },
-    payment_pending: { label: 'Pago en proceso', className: 'bg-amber-100 text-amber-800' },
-    approved: { label: 'Aprobado', className: 'bg-conexia-green/10 text-conexia-green' },
-    payment_rejected: { label: 'Pago rechazado', className: 'bg-rose-100 text-rose-800' },
-    rejected: { label: 'Rechazado', className: 'bg-red-100 text-red-800' },
-    cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
-    negotiating: { label: 'Negociando', className: 'bg-orange-100 text-orange-800' },
-    in_progress: { label: 'En progreso', className: 'bg-purple-100 text-purple-800' },
-    in_claim: { label: 'En reclamo', className: 'bg-red-100 text-red-800' },
-    delivered: { label: 'Entregado', className: 'bg-teal-100 text-teal-800' },
-    revision_requested: { label: 'Revisión solicitada', className: 'bg-orange-100 text-orange-800' },
-    completed: { label: 'Completado', className: 'bg-green-100 text-green-800' },
-    cancelled_by_claim: { label: 'Cancelado por reclamo', className: 'bg-red-100 text-red-800' },
-    completed_by_claim: { label: 'Finalizado por reclamo', className: 'bg-purple-100 text-purple-800' },
-    completed_with_agreement: { label: 'Finalizado con acuerdo', className: 'bg-teal-100 text-teal-800' }
-  };
-  
-  const status = statusMap[statusCode] || { label: statusCode, className: 'bg-gray-100 text-gray-800' };
+  const { label, className } = getServiceHiringStatusBadge(statusCode);
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${status.className}`}>
-      {status.label}
+    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${className}`}>
+      {label}
     </span>
   );
 };
@@ -231,6 +201,11 @@ export default function ServiceRequestsPage({ serviceId }) {
 
   // Función para verificar si puede crear claim (como proveedor)
   const canCreateClaim = (hiring) => {
+    // No permitir reclamos en contrataciones terminadas por moderación
+    if (isTerminatedByModeration(hiring.status?.code)) {
+      return false;
+    }
+    
     const ALLOWED_CLAIM_STATES = ['in_progress', 'approved', 'revision_requested', 'delivered', 'completed'];
     const isInClaimAllowedState = ALLOWED_CLAIM_STATES.includes(hiring.status?.code);
     

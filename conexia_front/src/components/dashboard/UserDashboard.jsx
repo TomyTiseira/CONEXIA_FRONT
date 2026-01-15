@@ -38,7 +38,6 @@ export const UserDashboard = () => {
   const { data: projectData, isLoading, error, refetch } = useDashboardData();
   const { exportAllMetrics } = useExportDashboard();
   const { containerRef, isSwapyReady } = useSwapyLayout('conexia-user-dashboard-layout');
-  const [showTooltip, setShowTooltip] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const router = useRouter();
 
@@ -121,55 +120,30 @@ export const UserDashboard = () => {
           />
         </div>
         
-        <div 
-          className="relative"
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
+        <motion.button
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleExport}
+          disabled={isExporting}
+          className="
+            flex items-center gap-2 px-5 py-3
+            bg-gradient-to-r from-[#48a6a7] to-[#419596]
+            hover:from-[#419596] hover:to-[#3a8586]
+            text-white font-semibold rounded-xl
+            transition-all duration-300
+            shadow-lg hover:shadow-xl
+            border-2 border-white/20
+            disabled:opacity-50 disabled:cursor-not-allowed
+            lg:self-start
+          "
+          aria-label="Exportar todas las métricas a CSV"
         >
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleExport}
-            disabled={isExporting}
-            className="
-              flex items-center gap-2 px-5 py-3
-              bg-gradient-to-r from-[#48a6a7] to-[#419596]
-              hover:from-[#419596] hover:to-[#3a8586]
-              text-white font-semibold rounded-xl
-              transition-all duration-300
-              shadow-lg hover:shadow-xl
-              border-2 border-white/20
-              disabled:opacity-50 disabled:cursor-not-allowed
-              lg:self-start
-            "
-            aria-label="Exportar todas las métricas a CSV"
-          >
-            <Download className="w-5 h-5" />
-            <span>{isExporting ? 'Exportando...' : 'Exportar datos'}</span>
-          </motion.button>
-
-          {/* Tooltip */}
-          {showTooltip && !isExporting && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              transition={{ duration: 0.2 }}
-              className="
-                absolute -bottom-14 right-0
-                px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg
-                whitespace-nowrap pointer-events-none
-                shadow-xl z-50
-              "
-            >
-              Exportar datos a CSV
-              <div className="absolute -top-1 right-6 w-2 h-2 bg-gray-900 rotate-45" />
-            </motion.div>
-          )}
-        </div>
+          <Download className="w-5 h-5" />
+          <span>{isExporting ? 'Exportando...' : 'Exportar datos'}</span>
+        </motion.button>
       </div>
 
       {/* Banner de Upgrade - Para usuarios Free o Basic */}
