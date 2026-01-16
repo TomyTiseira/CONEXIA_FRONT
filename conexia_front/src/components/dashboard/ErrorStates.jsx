@@ -90,7 +90,7 @@ export const ErrorState = ({ message, onRetry }) => {
 /**
  * Estado vacío cuando no hay datos
  */
-export const EmptyState = ({ message, actionLabel, onAction }) => {
+export const EmptyState = ({ message, actionLabel, onAction, secondaryActionLabel, secondaryAction }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -109,22 +109,44 @@ export const EmptyState = ({ message, actionLabel, onAction }) => {
         {message || 'Aún no tienes datos para mostrar. Comienza a interactuar en la plataforma para ver tus métricas.'}
       </p>
       
-      {onAction && actionLabel && (
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onAction}
-          className="
-            px-6 py-3 
-            bg-[#48a6a7] hover:bg-[#419596] 
-            text-white font-semibold rounded-lg 
-            transition-colors duration-200
-            shadow-md hover:shadow-lg
-          "
-          aria-label={actionLabel}
-        >
-          {actionLabel}
-        </motion.button>
+      {(onAction || secondaryAction) && (
+        <div className="flex flex-col sm:flex-row gap-4">
+          {onAction && actionLabel && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onAction}
+              className="
+                px-6 py-3 
+                bg-[#35ba5b] hover:bg-[#30a752]
+                text-white font-semibold rounded-lg 
+                transition-colors duration-200
+                shadow-md hover:shadow-lg
+              "
+              aria-label={actionLabel}
+            >
+              {actionLabel}
+            </motion.button>
+          )}
+          
+          {secondaryAction && secondaryActionLabel && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={secondaryAction}
+              className="
+                px-6 py-3 
+                bg-[#48a6a7] hover:bg-[#419596]
+                text-white font-semibold rounded-lg 
+                transition-colors duration-200
+                shadow-md hover:shadow-lg
+              "
+              aria-label={secondaryActionLabel}
+            >
+              {secondaryActionLabel}
+            </motion.button>
+          )}
+        </div>
       )}
     </motion.div>
   );
