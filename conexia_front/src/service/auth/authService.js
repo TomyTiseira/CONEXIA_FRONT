@@ -78,7 +78,10 @@ export const getProfileSimple = async () => {
   });
 
   if (!res.ok) {
-    throw new Error("No se pudo obtener el perfil del usuario");
+    // 401 = No autenticado (normal), otros = error real
+    const error = new Error("No se pudo obtener el perfil del usuario");
+    error.status = res.status;
+    throw error;
   }
 
   const data = await res.json();

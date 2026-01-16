@@ -136,8 +136,11 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
     }
   }, [connection, isDeleting, cancelRequest, refreshRequests, refreshConnection]);
 
-  // Ocultar completamente para owner/admin/moderador, pero después de declarar TODOS los hooks anteriores
-  if (isOwner || isAdmin || isModerator) return null;
+  // Solo bloquear usuarios BANEADOS (los suspendidos SÍ pueden recibir interacciones)
+  const isUserRestricted = profile.isBanned;
+
+  // Ocultar completamente para owner/admin/moderador/baneados
+  if (isOwner || isAdmin || isModerator || isUserRestricted) return null;
 
   // Amigo
   if (connection?.state === 'accepted') {
@@ -213,9 +216,10 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
             variant="primary"
             className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full shadow-none border-none"
             onClick={openChat}
+            disabled={isUserRestricted}
           >
             <Send className="w-4 h-4 mr-2" />
-            Enviar mensaje
+            {isUserRestricted ? 'Usuario No Disponible' : 'Enviar mensaje'}
           </Button>
         </div>
         {/* Modal único para eliminar contacto */}
@@ -294,11 +298,12 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               variant="connect"
               className="flex items-center justify-center font-semibold rounded-full border border-[#e0f0f0] transition-colors focus:outline-none shadow-sm px-4 h-10 text-sm w-56 whitespace-nowrap gap-2"
               onClick={handleSend}
+              disabled={isUserRestricted}
             >
               <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white bg-transparent">
                 <HiOutlinePlus className="w-3.5 h-3.5 text-white stroke-[3]" />
               </span>
-              <span>Conectar</span>
+              <span>{isUserRestricted ? 'Usuario No Disponible' : 'Conectar'}</span>
             </Button>
           ) : (
             <div className="relative flex justify-center" ref={mobileDropdownRef}>
@@ -331,10 +336,11 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
             variant="primary"
             className="flex items-center justify-center px-4 h-10 text-sm font-semibold w-56 whitespace-nowrap rounded-full"
             onClick={openChat}
+            disabled={isUserRestricted}
             style={{lineHeight: '1.2'}}
           >
             <Send className="w-4 h-4 mr-2" />
-            <span className="truncate">Enviar mensaje</span>
+            <span className="truncate">{isUserRestricted ? 'Usuario No Disponible' : 'Enviar mensaje'}</span>
           </Button>
         </div>
         
@@ -345,11 +351,12 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               variant="connect"
               className="flex items-center justify-center rounded-full border border-[#e0f0f0] transition-colors focus:outline-none shadow-sm px-4 text-sm min-w-[190px] max-w-[190px] h-10 gap-2"
               onClick={handleSend}
+              disabled={isUserRestricted}
             >
               <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white bg-transparent">
                 <HiOutlinePlus className="w-3.5 h-3.5 text-white stroke-[3]" />
               </span>
-              <span>Conectar</span>
+              <span>{isUserRestricted ? 'Usuario No Disponible' : 'Conectar'}</span>
             </Button>
           ) : (
             <div className="relative flex items-center h-10" ref={desktopDropdownRef}>
@@ -382,9 +389,10 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
             variant="primary"
             className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
             onClick={openChat}
+            disabled={isUserRestricted}
           >
             <Send className="w-4 h-4 mr-2" />
-            Enviar mensaje
+            {isUserRestricted ? 'Usuario No Disponible' : 'Enviar mensaje'}
           </Button>
         </div>
         

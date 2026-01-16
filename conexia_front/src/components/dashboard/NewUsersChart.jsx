@@ -1,5 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
+import { UserPlus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { ChartContainer } from './ChartContainer';
 
@@ -31,6 +32,8 @@ export const NewUsersChart = ({ last7Days, last30Days, last90Days }) => {
     <ChartContainer
       title="Nuevos usuarios"
       description="Crecimiento de usuarios en diferentes períodos"
+      icon={UserPlus}
+      iconColor="purple"
     >
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>

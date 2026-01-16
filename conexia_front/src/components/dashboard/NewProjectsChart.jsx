@@ -26,7 +26,7 @@ export const NewProjectsChart = ({ last7Days, last30Days, last90Days }) => {
           <FolderPlus className="w-6 h-6 text-blue-600" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Nuevos Proyectos</h3>
+          <h3 className="text-lg font-bold text-gray-800">Nuevos proyectos</h3>
           <p className="text-sm text-gray-500">Proyectos por período</p>
         </div>
       </div>

@@ -24,7 +24,7 @@ export const UsersVerificationChart = ({ verifiedUsers, totalUsers }) => {
           <UserCheck className="w-6 h-6 text-amber-600" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Estado de Verificación</h3>
+          <h3 className="text-lg font-bold text-gray-800">Estado de verificación</h3>
           <p className="text-sm text-gray-500">Usuarios verificados</p>
         </div>
       </div>

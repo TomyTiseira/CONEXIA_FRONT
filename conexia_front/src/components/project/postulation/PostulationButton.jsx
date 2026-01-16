@@ -7,6 +7,7 @@ import { ROLES } from '@/constants/roles';
 import PostulationModal from './PostulationModal';
 import Toast from '@/components/ui/Toast';
 import RequireVerification from '@/components/common/RequireVerification';
+import { useAccountStatus } from '@/hooks/useAccountStatus';
 
 export default function PostulationButton({ 
   projectId, 
@@ -20,6 +21,7 @@ export default function PostulationButton({
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState({ visible: false, type: 'success', message: '' });
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const { canCreateContent, suspensionMessage } = useAccountStatus();
   
   const {
     isApplied,
@@ -135,6 +137,23 @@ export default function PostulationButton({
         onClick: null
       };
     }
+    
+    // Verificar si el usuario está suspendido
+    if (!canCreateContent) {
+      return {
+        className: `bg-gray-300 text-gray-500 px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
+        content: (
+          <div className="flex items-center gap-1.5">
+            <Info size={16} />
+            <span>No disponible</span>
+          </div>
+        ),
+        disabled: true,
+        onClick: null,
+        title: suspensionMessage
+      };
+    }
+    
     return {
       className: `bg-conexia-green text-white px-4 py-2 rounded font-semibold hover:bg-conexia-green/90 transition disabled:opacity-50 disabled:cursor-not-allowed ${className}`,
       content: (
@@ -158,13 +177,15 @@ export default function PostulationButton({
     <>
       {/* Botón principal */}
       <RequireVerification action="postularte a este proyecto">
-        <button
-          onClick={buttonConfig.onClick}
-          disabled={buttonConfig.disabled}
-          className={buttonConfig.className}
-        >
-          {buttonConfig.content}
-        </button>
+        <div title={buttonConfig.title || ''}>
+          <button
+            onClick={buttonConfig.onClick}
+            disabled={buttonConfig.disabled}
+            className={buttonConfig.className}
+          >
+            {buttonConfig.content}
+          </button>
+        </div>
       </RequireVerification>
 
       {/* Modal de postulación */}

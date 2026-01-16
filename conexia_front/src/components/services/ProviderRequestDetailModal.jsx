@@ -42,7 +42,9 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
       in_claim: 'En Reclamo',
       cancelled_by_claim: 'Cancelado por reclamo',
       completed_by_claim: 'Finalizado por reclamo',
-      completed_with_agreement: 'Finalizado con acuerdo'
+      completed_with_agreement: 'Finalizado con acuerdo',
+      terminated_by_moderation: 'Terminado por moderación',
+      finished_by_moderation: 'Finalizado por moderación'
     };
     return statusMap[statusCode] || statusCode;
   };
@@ -67,7 +69,9 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
       in_claim: 'text-red-800 bg-red-100',
       cancelled_by_claim: 'text-gray-800 bg-gray-100',
       completed_by_claim: 'text-green-800 bg-green-100',
-      completed_with_agreement: 'text-blue-800 bg-blue-100'
+      completed_with_agreement: 'text-blue-800 bg-blue-100',
+      terminated_by_moderation: 'text-slate-800 bg-slate-100',
+      finished_by_moderation: 'text-slate-800 bg-slate-100'
     };
     return statusMap[statusCode] || 'text-gray-800 bg-gray-100';
   };

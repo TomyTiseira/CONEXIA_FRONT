@@ -42,7 +42,9 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
       in_claim: 'En Reclamo',
       cancelled_by_claim: 'Cancelado por reclamo',
       completed_by_claim: 'Finalizado por reclamo',
-      completed_with_agreement: 'Finalizado con acuerdo'
+      completed_with_agreement: 'Finalizado con acuerdo',
+      terminated_by_moderation: 'Terminado por moderación',
+      finished_by_moderation: 'Finalizado por moderación'
     };
     return statusMap[statusCode] || statusCode;
   };
@@ -62,7 +64,9 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
       in_progress: 'text-purple-800 bg-purple-100',
       delivered: 'text-teal-800 bg-teal-100',
       revision_requested: 'text-orange-800 bg-orange-100',
-      completed: 'text-green-800 bg-green-100'
+      completed: 'text-green-800 bg-green-100',
+      terminated_by_moderation: 'text-slate-800 bg-slate-100',
+      finished_by_moderation: 'text-slate-800 bg-slate-100'
     };
     return statusMap[statusCode] || 'text-gray-800 bg-gray-100';
   };

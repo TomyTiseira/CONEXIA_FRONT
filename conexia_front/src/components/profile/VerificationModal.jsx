@@ -271,11 +271,19 @@ export default function VerificationModal({ isOpen, onClose, onComplete }) {
                   </li>
                   <li className="flex items-center justify-center space-x-2">
                     <CheckCircle size={16} />
-                    <span>Crear servicios</span>
+                    <span>Recibir postulaciones en tus proyectos</span>
                   </li>
                   <li className="flex items-center justify-center space-x-2">
                     <CheckCircle size={16} />
                     <span>Solicitar cotizaciones</span>
+                  </li>
+                  <li className="flex items-center justify-center space-x-2">
+                    <CheckCircle size={16} />
+                    <span>Recibir solicitudes de cotizaciones en tus servicios</span>
+                  </li>
+                  <li className="flex items-center justify-center space-x-2">
+                    <CheckCircle size={16} />
+                    <span>Crear publicaciones en la comunidad</span>
                   </li>
                 </ul>
               </div>

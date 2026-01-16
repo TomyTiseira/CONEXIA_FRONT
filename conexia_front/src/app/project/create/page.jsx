@@ -7,10 +7,17 @@ import CreateProjectForm from '@/components/project/createProject/CreateProjectF
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
 import { PublicationLimitBanner } from '@/components/plans';
 import { useSubscriptionLimits } from '@/hooks/memberships';
+import { useAccountRestrictions } from '@/hooks';
+import ActionBlockedMessage from '@/components/common/ActionBlockedMessage';
+import { useProtectCreateRoutes } from '@/utils/routeProtection';
 
 export default function CreateProjectPage() {
   const { user, roleName } = useUserStore();
   const { projectsLimit, planName, isLoading: limitsLoading } = useSubscriptionLimits();
+  const { canCreateProject, hasRestrictions } = useAccountRestrictions();
+  
+  // Proteger ruta - redirige si usuario está suspendido
+  useProtectCreateRoutes('/project/search');
 
   if (!user || roleName !== ROLES.USER) {
     return <NotFound />;
@@ -28,6 +35,15 @@ export default function CreateProjectPage() {
       {/* Contenedor para centrar el formulario */}
       <div className="flex-1 flex items-center justify-center relative z-10 pt-20 sm:pt-24 pb-8">
         <div className="w-full max-w-4xl px-4 flex flex-col gap-6">
+          {/* Mensaje de restricción por cuenta suspendida/baneada */}
+          {hasRestrictions && !canCreateProject && (
+            <ActionBlockedMessage 
+              action="create_project"
+              actionLabel="crear un proyecto"
+              showDashboardLink={true}
+            />
+          )}
+
           {/* Indicador de límites - Nuevo estilo */}
           <PublicationLimitBanner 
             type="project"
@@ -38,7 +54,9 @@ export default function CreateProjectPage() {
           />
 
           {/* Formulario principal */}
-          <section className="w-full bg-white/90 border border-conexia-green/30 rounded-xl shadow-lg px-6 py-10 flex flex-col animate-fadeIn backdrop-blur-sm">
+          <section className={`w-full bg-white/90 border border-conexia-green/30 rounded-xl shadow-lg px-6 py-10 flex flex-col animate-fadeIn backdrop-blur-sm ${
+            hasRestrictions && !canCreateProject ? 'pointer-events-none opacity-50' : ''
+          }`}>
             <div className="mb-8 text-center">
               <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight leading-tight">
                 Publica tu proyecto

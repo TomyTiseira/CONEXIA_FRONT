@@ -16,7 +16,7 @@ export const UsersByPlanChart = ({ usersByPlan = [] }) => {
             <Users className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800">Usuarios por Plan</h3>
+            <h3 className="text-lg font-bold text-gray-800">Usuarios por plan</h3>
             <p className="text-sm text-gray-500">Distribución de membresías</p>
           </div>
         </div>
@@ -47,7 +47,7 @@ export const UsersByPlanChart = ({ usersByPlan = [] }) => {
           <Users className="w-6 h-6 text-blue-600" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Usuarios por Plan</h3>
+          <h3 className="text-lg font-bold text-gray-800">Usuarios por plan</h3>
           <p className="text-sm text-gray-500">Total: {totalUsers} usuarios</p>
         </div>
       </div>

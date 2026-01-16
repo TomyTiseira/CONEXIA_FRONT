@@ -14,12 +14,16 @@ import { PlanComparisonBanner, UpgradePlanButton } from '@/components/plans';
 import ServiceFilters from './ServiceFilters';
 import ServiceList from './ServiceList';
 import ServiceSearchBar from './ServiceSearchBar';
+import { useAccountStatus } from '@/hooks/useAccountStatus';
 
 export default function ServiceSearch() {
   const router = useRouter();
   const { roleName } = useUserStore();
+  const { canCreateContent, suspensionMessage } = useAccountStatus();
 
-  const canCreateService = roleName === ROLES.USER;
+  // Banner de planes debe mostrarse solo para usuarios USER, sin importar si están suspendidos
+  const canCreateService = roleName === ROLES.USER && canCreateContent;
+  const showPlanBanner = roleName === ROLES.USER; // Siempre mostrar para USER
   const canViewHirings = roleName === ROLES.USER;
   
   // Estado para filtros
@@ -94,8 +98,8 @@ export default function ServiceSearch() {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
         <div className="w-full max-w-7xl flex flex-col gap-6">
-          {/* Banner Mejorar plan - Solo para usuarios con rol USER */}
-          {canCreateService && (
+          {/* Banner Mejorar plan - Solo para usuarios con rol USER (siempre, incluso suspendidos) */}
+          {showPlanBanner && (
             <UpgradePlanButton context="services" />
           )}
 
@@ -114,16 +118,31 @@ export default function ServiceSearch() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
-              {canCreateService && (
+              {roleName === ROLES.USER && (
                 <RequireVerification action="publicar un servicio">
-                  <Link href="/services/create" className="w-full sm:w-auto order-1 sm:order-none">
-                    <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
-                      <span className="flex items-center justify-center gap-2 w-full">
-                        <Briefcase size={16} className="text-base" />
-                        <span>Publica tu servicio</span>
-                      </span>
-                    </button>
-                  </Link>
+                  <div className="w-full sm:w-auto order-1 sm:order-none" title={!canCreateContent ? suspensionMessage : ''}>
+                    {canCreateContent ? (
+                      <Link href="/services/create" className="w-full sm:w-auto">
+                        <button className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full">
+                          <span className="flex items-center justify-center gap-2 w-full">
+                            <Briefcase size={16} className="text-base" />
+                            <span>Publica tu servicio</span>
+                          </span>
+                        </button>
+                      </Link>
+                    ) : (
+                      <button 
+                        disabled
+                        className="bg-gray-300 text-gray-500 font-semibold rounded-lg px-4 py-3 shadow cursor-not-allowed transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"
+                        title={suspensionMessage}
+                      >
+                        <span className="flex items-center justify-center gap-2 w-full">
+                          <Briefcase size={16} className="text-base" />
+                          <span>Publica tu servicio</span>
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </RequireVerification>
               )}
               {canViewHirings && (

@@ -23,13 +23,13 @@ export default function AnalysisDetailsModal({
   if (!analysis) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div 
-        className="bg-white rounded-lg shadow-2xl max-w-3xl w-full my-8 relative max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg shadow-2xl max-w-3xl w-full h-[90vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <div className="bg-white border-b border-gray-200 p-6 flex items-center justify-between flex-shrink-0 rounded-t-lg">
           <h2 className="text-2xl font-bold text-conexia-green">
             Detalles del Análisis
           </h2>
@@ -43,7 +43,7 @@ export default function AnalysisDetailsModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Información del Usuario */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function AnalysisDetailsModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-4 flex justify-end">
+        <div className="bg-gray-50 border-t border-gray-200 p-4 flex justify-end flex-shrink-0 rounded-b-lg">
           <button
             onClick={onClose}
             disabled={loading}

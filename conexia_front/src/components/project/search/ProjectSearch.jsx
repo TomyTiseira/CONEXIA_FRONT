@@ -25,11 +25,13 @@ import NoRecommendationsFound from './NoRecommendationsFound';
 import CompactNoRecommendations from './CompactNoRecommendations';
 import MessagingWidget from '@/components/messaging/MessagingWidget';
 import { config } from '@/config';
+import { useAccountStatus } from '@/hooks/useAccountStatus';
 
 export default function ProjectSearch() {
   const router = useRouter();
   const { user } = useAuth();
   const { roleName } = useUserStore();
+  const { canCreateContent, suspensionMessage } = useAccountStatus();
   const { recommendations, allProjects, isLoading: isLoadingRecommendations, hasRecommendations, userHasSkills } = useRecommendations();
   
   const [filters, setFilters] = useState({
@@ -236,15 +238,30 @@ export default function ProjectSearch() {
             {(roleName === ROLES.USER || user?.roleId === 2) && (
               <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
                 <RequireVerification action="publicar un proyecto">
-                  <button
-                    className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"
-                    onClick={() => router.push('/project/create')}
-                  >
-                    <span className="flex items-center justify-center gap-2 w-full">
-                      <FaRegLightbulb className="text-base" />
-                      <span>Publica tu proyecto</span>
-                    </span>
-                  </button>
+                  <div title={!canCreateContent ? suspensionMessage : ''}>
+                    {canCreateContent ? (
+                      <button
+                        className="bg-conexia-green text-white font-semibold rounded-lg px-4 py-3 shadow hover:bg-conexia-green/90 transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"
+                        onClick={() => router.push('/project/create')}
+                      >
+                        <span className="flex items-center justify-center gap-2 w-full">
+                          <FaRegLightbulb className="text-base" />
+                          <span>Publica tu proyecto</span>
+                        </span>
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        className="bg-gray-300 text-gray-500 font-semibold rounded-lg px-4 py-3 shadow cursor-not-allowed transition text-sm whitespace-nowrap flex items-center justify-center gap-2 w-full"
+                        title={suspensionMessage}
+                      >
+                        <span className="flex items-center justify-center gap-2 w-full">
+                          <FaRegLightbulb className="text-base" />
+                          <span>Publica tu proyecto</span>
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </RequireVerification>
                 {roleName === ROLES.USER && (
                   <button

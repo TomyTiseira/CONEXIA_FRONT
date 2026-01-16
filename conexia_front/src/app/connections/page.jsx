@@ -11,7 +11,6 @@ import { ROLES } from "@/constants/roles";
 import { useRecommendations } from "@/hooks/connections/useRecommendations";
 import { sendConnectionRequest } from "@/service/connections/sendConnectionRequest";
 import { useRouter } from "next/navigation";
-
 function RecommendedSection() {
   const { recommendations, loading, error, refetch } = useRecommendations();
   const router = useRouter();

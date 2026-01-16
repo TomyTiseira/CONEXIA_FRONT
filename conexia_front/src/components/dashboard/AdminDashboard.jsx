@@ -10,7 +10,11 @@ import {
   Briefcase,
   AlertCircle,
   CreditCard,
-  TrendingUp
+  TrendingUp,
+  Shield,
+  UserX,
+  Clock,
+  Ban
 } from 'lucide-react';
 import { useAdminDashboardData } from '@/hooks/dashboard/useAdminDashboardData';
 import { useExportAdminDashboard } from '@/hooks/dashboard/useExportAdminDashboard';
@@ -33,6 +37,9 @@ import { ServicesCompletedChart } from './ServicesCompletedChart';
 import { StatusBreakdown } from './StatusBreakdown';
 import { NewUsersChart } from './NewUsersChart';
 import { ActiveUsersChart } from './ActiveUsersChart';
+import { UsersModerationChart } from './UsersModerationChart';
+import { DeletedUsersChart } from './DeletedUsersChart';
+import { DeletedUsersReasonsSummary } from './DeletedUsersReasonsSummary';
 import { useState } from 'react';
 
 /**
@@ -42,7 +49,6 @@ import { useState } from 'react';
 export const AdminDashboard = () => {
   const { data, isLoading, error, refetch } = useAdminDashboardData();
   const { exportMetrics, isExporting } = useExportAdminDashboard();
-  const [showTooltip, setShowTooltip] = useState(false);
 
   if (isLoading) {
     return <DashboardSkeleton cards={6} />;
@@ -79,61 +85,36 @@ export const AdminDashboard = () => {
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex-1">
           <DashboardHeader
-            title="Dashboard Administrativo"
+            title="Métricas Administrativas"
             subtitle="Métricas globales de la plataforma Conexia"
             timestamp={new Date().toISOString()}
           />
         </div>
         
-        <div 
-          className="relative"
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
+        <motion.button
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={exportMetrics}
+          disabled={isExporting}
+          className="
+            flex items-center gap-2 px-5 py-3
+            bg-gradient-to-r from-[#48a6a7] to-[#419596]
+            hover:from-[#419596] hover:to-[#3a8586]
+            text-white font-semibold rounded-xl
+            transition-all duration-300
+            shadow-lg hover:shadow-xl
+            border-2 border-white/20
+            disabled:opacity-50 disabled:cursor-not-allowed
+            lg:self-start
+          "
+          aria-label="Exportar métricas administrativas a CSV"
         >
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={exportMetrics}
-            disabled={isExporting}
-            className="
-              flex items-center gap-2 px-5 py-3
-              bg-gradient-to-r from-[#9333ea] to-[#7e22ce]
-              hover:from-[#7e22ce] hover:to-[#6b21a8]
-              text-white font-semibold rounded-xl
-              transition-all duration-300
-              shadow-lg hover:shadow-xl
-              border-2 border-white/20
-              disabled:opacity-50 disabled:cursor-not-allowed
-              lg:self-start
-            "
-            aria-label="Exportar métricas administrativas a CSV"
-          >
-            <Download className="w-5 h-5" />
-            <span>{isExporting ? 'Exportando...' : 'Exportar datos'}</span>
-          </motion.button>
-
-          {/* Tooltip */}
-          {showTooltip && !isExporting && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              transition={{ duration: 0.2 }}
-              className="
-                absolute -bottom-14 right-0
-                px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg
-                whitespace-nowrap pointer-events-none
-                shadow-xl z-50
-              "
-            >
-              Exportar datos a CSV
-              <div className="absolute -top-1 right-6 w-2 h-2 bg-gray-900 rotate-45" />
-            </motion.div>
-          )}
-        </div>
+          <Download className="w-5 h-5" />
+          <span>{isExporting ? 'Exportando...' : 'Exportar datos'}</span>
+        </motion.button>
       </div>
 
       {/* Sección: Resumen General */}
@@ -238,6 +219,73 @@ export const AdminDashboard = () => {
             last30Days={data.users?.activeUsers?.last30Days || 0}
             last90Days={data.users?.activeUsers?.last90Days || 0}
           />
+        </div>
+      </DashboardSection>
+
+      {/* Separador visual */}
+      <div className="border-t-2 border-gray-200"></div>
+
+      {/* Sección: Moderación y Estado de Cuentas */}
+      <DashboardSection 
+        title="Moderación y estado de cuentas" 
+        subtitle="Usuarios suspendidos, baneados y dados de baja"
+        icon={Shield}
+        iconColor="purple"
+      >
+        {/* KPIs de moderación */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <KPICard
+            title="Usuarios suspendidos"
+            value={data.users?.moderationMetrics?.suspendedUsers || 0}
+            icon={Clock}
+            color="yellow"
+            subtitle="Suspensión temporal"
+          />
+          
+          <KPICard
+            title="Usuarios baneados"
+            value={data.users?.moderationMetrics?.bannedUsers || 0}
+            icon={Ban}
+            color="red"
+            subtitle="Suspensión permanente"
+          />
+
+          <KPICard
+            title="Usuarios dados de baja"
+            value={data.users?.deletedUsers?.total || 0}
+            icon={UserX}
+            color="orange"
+            subtitle={`${data.users?.deletedUsers?.last30Days || 0} últimos 30 días`}
+          />
+        </div>
+
+        {/* Gráfico de estado de moderación - Ancho completo */}
+        <div className="mb-6">
+          <UsersModerationChart
+            activeUsers={(data.users?.verifiedUsers?.total || 0) - (data.users?.moderationMetrics?.suspendedUsers || 0) - (data.users?.moderationMetrics?.bannedUsers || 0)}
+            suspendedUsers={data.users?.moderationMetrics?.suspendedUsers || 0}
+            bannedUsers={data.users?.moderationMetrics?.bannedUsers || 0}
+          />
+        </div>
+
+        {/* Gráficos de bajas y razones - En una fila */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DeletedUsersChart
+            last7Days={data.users?.deletedUsers?.last7Days || 0}
+            last30Days={data.users?.deletedUsers?.last30Days || 0}
+            last90Days={data.users?.deletedUsers?.last90Days || 0}
+          />
+
+          {/* Razones de baja - Solo mostrar si hay datos */}
+          {data.users?.deletedUsers?.reasonCategories && data.users.deletedUsers.reasonCategories.length > 0 ? (
+            <DeletedUsersReasonsSummary
+              topReasons={data.users.deletedUsers.reasonCategories}
+            />
+          ) : (
+            <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6 flex items-center justify-center">
+              <p className="text-gray-500 text-sm">No hay datos de razones de baja disponibles</p>
+            </div>
+          )}
         </div>
       </DashboardSection>
 
@@ -377,7 +425,7 @@ export const AdminDashboard = () => {
       {memberships.usersByPlan && memberships.usersByPlan.length > 0 && (
         <>
           <DashboardSection 
-            title="Membresías y Planes" 
+            title="Membresías y planes" 
             subtitle="Distribución de usuarios por plan"
             icon={CreditCard}
             iconColor="blue"

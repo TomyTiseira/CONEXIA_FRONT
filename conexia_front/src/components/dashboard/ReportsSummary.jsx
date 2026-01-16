@@ -42,7 +42,7 @@ export const ReportsSummary = ({ reports }) => {
             <AlertCircle className="w-6 h-6 text-red-600" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-800">Resumen de Reportes</h3>
+            <h3 className="text-lg font-bold text-gray-800">Resumen de reportes</h3>
             <p className="text-sm text-gray-500">Total: {reports.totalReports} reportes</p>
           </div>
         </div>

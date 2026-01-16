@@ -18,7 +18,7 @@ export const CompletedServicesCard = ({ totalServicesHired, totalRevenue }) => {
           <CheckCircle className="w-6 h-6 text-green-600" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-bold text-gray-800">Servicios Completados</h3>
+          <h3 className="text-lg font-bold text-gray-800">Servicios completados</h3>
           <p className="text-sm text-green-700">
             ✅ Servicios finalizados exitosamente
           </p>
