@@ -411,8 +411,9 @@ function QuestionBuilder({ questions, onChange, error }) {
   });
   const [newOption, setNewOption] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false); // Estado para controlar si se está creando una nueva pregunta
 
-  const handleAddQuestion = () => {
+  const handleConfirmQuestion = () => {
     if (newQuestion.questionText.trim()) {
       // Validar que si es opción múltiple tenga al menos 2 opciones
       if (newQuestion.questionType === 'MULTIPLE_CHOICE') {
@@ -438,7 +439,15 @@ function QuestionBuilder({ questions, onChange, error }) {
       
       setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
       setNewOption('');
+      setIsCreatingNew(false); // Ocultar el formulario después de confirmar
     }
+  };
+
+  const handleStartNewQuestion = () => {
+    setIsCreatingNew(true);
+    setEditingIndex(null);
+    setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
+    setNewOption('');
   };
 
   const handleRemoveQuestion = (index) => {
@@ -448,11 +457,13 @@ function QuestionBuilder({ questions, onChange, error }) {
       setEditingIndex(null);
       setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
       setNewOption('');
+      setIsCreatingNew(false);
     }
   };
 
   const handleEditQuestion = (index) => {
     setEditingIndex(index);
+    setIsCreatingNew(true); // Mostrar el formulario
     setNewQuestion({ ...questions[index] });
     setNewOption('');
   };
@@ -461,6 +472,7 @@ function QuestionBuilder({ questions, onChange, error }) {
     setEditingIndex(null);
     setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
     setNewOption('');
+    setIsCreatingNew(false); // Ocultar el formulario
   };
 
   const handleAddOption = () => {
@@ -498,7 +510,7 @@ function QuestionBuilder({ questions, onChange, error }) {
     }));
   };
 
-  const canAddQuestion = () => {
+  const canConfirmQuestion = () => {
     if (!newQuestion.questionText.trim()) return false;
     if (newQuestion.questionType === 'MULTIPLE_CHOICE') {
       // Debe tener al menos 2 opciones
@@ -571,149 +583,164 @@ function QuestionBuilder({ questions, onChange, error }) {
       )}
 
       {/* Agregar/Editar pregunta */}
-      <div className="space-y-2">
-        {editingIndex !== null && (
-          <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
-            <span className="text-sm text-blue-700 font-medium">
-              ✏️ Editando pregunta
-            </span>
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-            >
-              Cancelar edición
-            </button>
-          </div>
-        )}
-        <InputField
-          placeholder="Escribe tu pregunta"
-          value={newQuestion.questionText}
-          onChange={(e) => setNewQuestion(prev => ({ ...prev, questionText: e.target.value }))}
-        />
-        <SelectField
-          options={[
-            { value: 'OPEN', label: 'Respuesta abierta' },
-            { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
-          ]}
-          value={newQuestion.questionType}
-          onChange={handleTypeChange}
-        />
-
-        {/* Opciones para preguntas de opción múltiple */}
-        {newQuestion.questionType === 'MULTIPLE_CHOICE' && (
-          <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-            {/* Checkbox para indicar si tiene respuestas correctas */}
-            <div className="mb-3 pb-3 border-b border-gray-200">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={newQuestion.hasCorrectAnswers}
-                  onChange={(e) => setNewQuestion(prev => ({ 
-                    ...prev, 
-                    hasCorrectAnswers: e.target.checked,
-                    // Si se desmarca, limpiar todas las respuestas correctas
-                    options: e.target.checked ? prev.options : prev.options.map(opt => ({ ...opt, isCorrect: false }))
-                  }))}
-                  className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green focus:ring-2 cursor-pointer"
-                />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-conexia-green transition-colors">
-                  Esta pregunta tiene respuesta(s) correcta(s)
-                </span>
-              </label>
-              <p className="text-xs text-gray-500 mt-1 ml-6">
-                {newQuestion.hasCorrectAnswers 
-                  ? 'Las respuestas serán evaluadas automáticamente'
-                  : 'Las respuestas solo serán revisadas sin evaluación automática'}
-              </p>
-            </div>
-
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              Opciones de respuesta
-            </label>
-
-            {/* Lista de opciones */}
-            {newQuestion.options.length > 0 && (
-              <div className="space-y-1.5 mb-2">
-                {newQuestion.options.map((opt, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200">
-                    {newQuestion.hasCorrectAnswers ? (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCorrect(index)}
-                        className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                          opt.isCorrect 
-                            ? 'bg-green-500 border-green-500 text-white' 
-                            : 'border-gray-300 hover:border-green-400'
-                        }`}
-                        title={opt.isCorrect ? 'Respuesta correcta' : 'Marcar como correcta'}
-                      >
-                        {opt.isCorrect && '✓'}
-                      </button>
-                    ) : (
-                      <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-gray-200 bg-gray-100" title="Sin evaluación automática">
-                        <span className="text-gray-400 text-xs">-</span>
-                      </div>
-                    )}
-                    <span className="flex-1 text-sm text-gray-900">{opt.text}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveOption(index)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                    >
-                      <FiTrash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Agregar nueva opción */}
-            <div className="flex gap-2 items-start">
-              <div className="flex-1">
-                <InputField
-                  placeholder="Escribe una opción"
-                  value={newOption}
-                  onChange={(e) => setNewOption(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddOption();
-                    }
-                  }}
-                />
-              </div>
+      {isCreatingNew && (
+        <div className="space-y-2">
+          {editingIndex !== null && (
+            <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium">
+                ✏️ Editando pregunta
+              </span>
               <button
                 type="button"
-                onClick={handleAddOption}
-                disabled={!newOption.trim()}
-                className="w-10 h-10 bg-[#367d7d] text-white rounded-lg hover:bg-[#2b6a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
+                onClick={handleCancelEdit}
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
               >
-                <FiPlus className="w-4 h-4" />
+                Cancelar edición
               </button>
             </div>
+          )}
+          <InputField
+            placeholder="Escribe tu pregunta"
+            value={newQuestion.questionText}
+            onChange={(e) => setNewQuestion(prev => ({ ...prev, questionText: e.target.value }))}
+          />
+          <SelectField
+            options={[
+              { value: 'OPEN', label: 'Respuesta abierta' },
+              { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
+            ]}
+            value={newQuestion.questionType}
+            onChange={handleTypeChange}
+          />
 
-            {newQuestion.options.length > 0 && (
-              <p className="text-xs text-gray-600 mt-2">
-                {newQuestion.options.length < 2 && '⚠️ Agrega al menos 2 opciones'}
-                {newQuestion.options.length >= 2 && newQuestion.hasCorrectAnswers && !newQuestion.options.some(opt => opt.isCorrect) && 'Marca al menos una respuesta correcta'}
-                {newQuestion.options.length >= 2 && (!newQuestion.hasCorrectAnswers || newQuestion.options.some(opt => opt.isCorrect)) && '✓ Pregunta lista para agregar'}
-              </p>
-            )}
-          </div>
-        )}
+          {/* Opciones para preguntas de opción múltiple */}
+          {newQuestion.questionType === 'MULTIPLE_CHOICE' && (
+            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              {/* Checkbox para indicar si tiene respuestas correctas */}
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={newQuestion.hasCorrectAnswers}
+                    onChange={(e) => setNewQuestion(prev => ({ 
+                      ...prev, 
+                      hasCorrectAnswers: e.target.checked,
+                      // Si se desmarca, limpiar todas las respuestas correctas
+                      options: e.target.checked ? prev.options : prev.options.map(opt => ({ ...opt, isCorrect: false }))
+                    }))}
+                    className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green focus:ring-2 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-conexia-green transition-colors">
+                    Esta pregunta tiene respuesta(s) correcta(s)
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1 ml-6">
+                  {newQuestion.hasCorrectAnswers 
+                    ? 'Las respuestas serán evaluadas automáticamente'
+                    : 'Las respuestas solo serán revisadas sin evaluación automática'}
+                </p>
+              </div>
 
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Opciones de respuesta
+              </label>
+
+              {/* Lista de opciones */}
+              {newQuestion.options.length > 0 && (
+                <div className="space-y-1.5 mb-2">
+                  {newQuestion.options.map((opt, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200">
+                      {newQuestion.hasCorrectAnswers ? (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCorrect(index)}
+                          className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            opt.isCorrect 
+                              ? 'bg-green-500 border-green-500 text-white' 
+                              : 'border-gray-300 hover:border-green-400'
+                          }`}
+                          title={opt.isCorrect ? 'Respuesta correcta' : 'Marcar como correcta'}
+                        >
+                          {opt.isCorrect && '✓'}
+                        </button>
+                      ) : (
+                        <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-gray-200 bg-gray-100" title="Sin evaluación automática">
+                          <span className="text-gray-400 text-xs">-</span>
+                        </div>
+                      )}
+                      <span className="flex-1 text-sm text-gray-900">{opt.text}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveOption(index)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Agregar nueva opción */}
+              <div className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <InputField
+                    placeholder="Escribe una opción"
+                    value={newOption}
+                    onChange={(e) => setNewOption(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddOption();
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddOption}
+                  disabled={!newOption.trim()}
+                  className="w-10 h-10 bg-[#367d7d] text-white rounded-lg hover:bg-[#2b6a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
+                >
+                  <FiPlus className="w-4 h-4" />
+                </button>
+              </div>
+
+              {newQuestion.options.length > 0 && (
+                <p className="text-xs text-gray-600 mt-2">
+                  {newQuestion.options.length < 2 && '⚠️ Agrega al menos 2 opciones'}
+                  {newQuestion.options.length >= 2 && newQuestion.hasCorrectAnswers && !newQuestion.options.some(opt => opt.isCorrect) && 'Marca al menos una respuesta correcta'}
+                  {newQuestion.options.length >= 2 && (!newQuestion.hasCorrectAnswers || newQuestion.options.some(opt => opt.isCorrect)) && '✓ Pregunta lista para confirmar'}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Botón para confirmar la pregunta */}
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleConfirmQuestion}
+            disabled={!canConfirmQuestion()}
+            className="w-full flex items-center justify-center gap-2"
+          >
+            {editingIndex !== null ? '✓ Guardar cambios' : '✓ Confirmar pregunta'}
+          </Button>
+        </div>
+      )}
+
+      {/* Botón para agregar nueva pregunta */}
+      {!isCreatingNew && (
         <Button
           type="button"
           variant="neutral"
-          onClick={handleAddQuestion}
-          disabled={!canAddQuestion()}
+          onClick={handleStartNewQuestion}
           className="w-full flex items-center justify-center gap-2"
         >
           <FiPlus className="w-4 h-4" />
-          {editingIndex !== null ? 'Guardar cambios' : 'Agregar pregunta'}
+          Agregar pregunta
         </Button>
-      </div>
+      )}
 
       {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
     </div>

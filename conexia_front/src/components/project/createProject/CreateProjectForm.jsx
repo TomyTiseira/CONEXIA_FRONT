@@ -40,7 +40,6 @@ export default function CreateProjectForm() {
     locationId: '', // id de la provincia seleccionada
     locationName: '', // nombre para mostrar en el input
     category: '',
-    maxCollaborators: '',
     image: null,
     dates: { startDate: '', endDate: '' },
     roles: [], // Nuevo: roles del proyecto (ahora incluyen collaborationType y contractType)
@@ -141,14 +140,6 @@ export default function CreateProjectForm() {
       }
     }
 
-    // Validación para maxCollaborators: debe ser entero mayor a 1 si se ingresa
-    if (field === 'maxCollaborators' && value !== '') {
-      const num = Number(value);
-      if (!Number.isInteger(num) || num < 1) {
-        error = 'Debe ingresar un número entero mayor o igual a 1';
-      }
-    }
-
     // Validación para roles: debe tener al menos un rol
     if (field === 'roles') {
       if (!value || value.length === 0) {
@@ -217,8 +208,7 @@ export default function CreateProjectForm() {
           setErrors((prev) => ({ ...prev, [field]: 'Este campo es obligatorio' }));
         }
       });
-      // Bloquear envío si maxCollaborators tiene error y no está vacío
-      if ((form.maxCollaborators !== '' && errors.maxCollaborators) || !isValid || missing) return;
+      if (!isValid || missing) return;
 
       const formToSend = { 
         ...form, 
@@ -446,22 +436,6 @@ export default function CreateProjectForm() {
           value={form.category}
           onChange={(e) => handleChange('category', e.target.value)}
           error={touched.category && errors.category}
-        />
-      </div>
-
-      {/* Máximo de colaboradores */}
-      <div className="flex flex-col justify-center min-h-[72px] gap-1.5 -mt-6">
-        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          N° máximo de colaboradores (Opcional)
-        </label>
-        <InputField
-          name="maxCollaborators"
-          type="number"
-          placeholder="Ingrese un número entero mayor a 1"
-          value={form.maxCollaborators}
-          onChange={(e) => handleChange('maxCollaborators', e.target.value)}
-          onBlur={() => handleBlur('maxCollaborators')}
-          error={touched.maxCollaborators && errors.maxCollaborators}
         />
       </div>
 
