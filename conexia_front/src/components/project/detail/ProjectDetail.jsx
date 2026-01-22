@@ -6,6 +6,7 @@ import Image from 'next/image';
 import ReportProjectModal from '@/components/project/report/ReportProjectModal';
 import { createProjectReport, fetchProjectReports } from '@/service/reports/reportsFetch';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
+import { getMyPostulationsByProjectAndRole } from '@/service/postulations/postulationService';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -26,6 +27,8 @@ import MessagingWidget from '@/components/messaging/MessagingWidget';
 function RoleCard({ role, project, isOwner, user, projectId }) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [checkingPostulation, setCheckingPostulation] = useState(false);
 
   const getApplicationTypesText = (applicationTypes, applicationType) => {
     // Si no hay applicationTypes array pero hay applicationType, usar ese
@@ -53,14 +56,53 @@ function RoleCard({ role, project, isOwner, user, projectId }) {
     return applicationTypes.map(type => typeLabels[type] || type).join(', ');
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!user) {
       router.push('/login');
       return;
     }
     
-    // Navegar a la página de postulación con el rol específico
-    router.push(`/project/${projectId}/apply/${role.id}`);
+    // Verificar si ya está postulado
+    setCheckingPostulation(true);
+    try {
+      const postulations = await getMyPostulationsByProjectAndRole(projectId, role.id);
+      
+      console.log('Postulaciones encontradas:', postulations);
+      console.log('ID del rol actual:', role.id);
+      console.log('ID del proyecto actual:', projectId);
+      
+      // Verificar si ya tiene alguna postulación (independientemente del estado)
+      if (postulations && postulations.length > 0) {
+        // Buscar postulaciones activas, aceptadas o pendientes
+        const activePostulation = postulations.find(p => {
+          const statusCode = p.status?.code?.toLowerCase() || '';
+          console.log('Estado de postulación:', p.status?.code, '-> lowercase:', statusCode);
+          return ['activo', 'aceptada', 'pendiente', 'active', 'accepted', 'pending', 'activa'].includes(statusCode);
+        });
+        
+        if (activePostulation) {
+          console.log('Postulación activa encontrada:', activePostulation);
+          setToast({ 
+            type: 'warning', 
+            message: `Ya tienes una postulación ${activePostulation.status.name} para este rol en este proyecto` 
+          });
+          setCheckingPostulation(false);
+          return;
+        }
+      }
+      
+      // Si no está postulado, navegar a la página de postulación
+      console.log('No hay postulaciones activas, navegando al formulario');
+      router.push(`/project/${projectId}/apply/${role.id}`);
+    } catch (error) {
+      console.error('Error checking postulations:', error);
+      // Si hay error al verificar, mostrar toast de error pero no permitir continuar
+      setToast({ 
+        type: 'error', 
+        message: 'Error al verificar postulaciones. Por favor, intenta nuevamente.' 
+      });
+      setCheckingPostulation(false);
+    }
   };
 
   return (
@@ -170,14 +212,27 @@ function RoleCard({ role, project, isOwner, user, projectId }) {
               <div className="pt-4 border-t border-gray-200">
                 <button
                   onClick={handleApply}
-                  className="w-full bg-conexia-green text-white px-6 py-3 rounded-lg font-medium hover:bg-conexia-green/90 transition-colors"
+                  disabled={checkingPostulation}
+                  className="w-full bg-conexia-green text-white px-6 py-3 rounded-lg font-medium hover:bg-conexia-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Postularme a este rol
+                  {checkingPostulation ? 'Verificando...' : 'Postularme a este rol'}
                 </button>
               </div>
             )}
           </div>
         </div>
+      )}
+      
+      {/* Toast para este rol específico */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={true}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={4000}
+        />
       )}
     </div>
   );

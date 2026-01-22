@@ -262,13 +262,15 @@ export async function fetchMyProjects({ ownerId, active, page = 1, limit = 16 })
       collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
       skills: p.skills || p.requiredSkills || [],
       isOwner: p.isOwner,
+      active: p.active !== undefined ? p.active : p.isActive,
       isActive: p.isActive,
       startDate: p.startDate,
       endDate: p.endDate,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
       deletedAt: p.deletedAt,
-      isActive: p.isActive,
+      roles: p.roles || [],
+      postulationsCount: p.postulationsCount || 0,
     })),
     pagination
   };
