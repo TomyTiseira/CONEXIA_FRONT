@@ -61,6 +61,12 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
     router.push(`/profile/userProfile/${postulation.userId}`);
   };
 
+  // Debug: Ver qué datos de prueba técnica tenemos
+  console.log('🔍 Postulation completa:', postulation);
+  console.log('🔍 Prueba técnica - Description:', postulation.technicalEvaluationDescription);
+  console.log('🔍 Prueba técnica - Link:', postulation.technicalEvaluationLink);
+  console.log('🔍 Prueba técnica - URL:', postulation.technicalEvaluationUrl);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
@@ -156,6 +162,103 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
               >
                 Descargar CV
               </button>
+            </div>
+          )}
+
+          {/* Respuestas a Preguntas */}
+          {postulation.answers && postulation.answers.length > 0 && (
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-800 mb-3">
+                Respuestas a Preguntas
+              </h3>
+              <div className="space-y-3">
+                {postulation.answers.map((answer, index) => {
+                  const responseText = answer.selectedOptionText || answer.answerText || 'Sin respuesta';
+                  const hasCorrectAnswer = answer.isCorrect !== undefined && answer.isCorrect !== null;
+                  
+                  return (
+                    <div key={index} className={`rounded p-3 ${
+                      hasCorrectAnswer 
+                        ? answer.isCorrect 
+                          ? 'bg-green-50 border border-green-200' 
+                          : 'bg-red-50 border border-red-200'
+                        : 'bg-gray-50'
+                    }`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium text-gray-700 mb-1 flex-1">
+                          {answer.questionText || `Pregunta ${index + 1}`}
+                        </p>
+                        {hasCorrectAnswer && (
+                          <span className={`text-xs font-semibold px-2 py-1 rounded whitespace-nowrap ${
+                            answer.isCorrect 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {answer.isCorrect ? '✓ Correcta' : '✗ Incorrecta'}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {responseText}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Prueba Técnica */}
+          {(postulation.evaluationDescription || postulation.evaluationLink || postulation.evaluationSubmissionUrl) && (
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-800 mb-3">
+                Prueba Técnica
+              </h3>
+              <div className="space-y-3">
+                {postulation.evaluationDescription && (
+                  <div className="bg-gray-50 rounded p-3">
+                    <span className="text-sm font-medium text-gray-700 block mb-1">Descripción de la solución:</span>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                      {postulation.evaluationDescription}
+                    </p>
+                  </div>
+                )}
+                
+                {postulation.evaluationLink && (
+                  <div className="bg-gray-50 rounded p-3">
+                    <span className="text-sm font-medium text-gray-700 block mb-1">Enlace a la solución:</span>
+                    <a 
+                      href={postulation.evaluationLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-conexia-green hover:text-conexia-green/80 text-sm hover:underline break-all"
+                    >
+                      {postulation.evaluationLink}
+                    </a>
+                  </div>
+                )}
+                
+                {postulation.evaluationSubmissionUrl && (
+                  <div className="bg-gray-50 rounded p-3">
+                    <span className="text-sm font-medium text-gray-700 block mb-1">Archivo adjunto:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        {postulation.evaluationSubmissionFilename || 'archivo.pdf'}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const fullUrl = `${config.DOCUMENT_URL}${postulation.evaluationSubmissionUrl}`;
+                          window.open(fullUrl, '_blank');
+                        }}
+                        className="text-conexia-green hover:text-conexia-green/80 text-sm font-medium hover:underline"
+                        disabled={isApproving}
+                      >
+                        Ver archivo
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
