@@ -244,8 +244,11 @@ export const addObservations = async (claimId, observationsData) => {
  * Subsana un reclamo (agrega respuesta a observaciones y/o nuevas evidencias)
  * Solo puede hacerlo el denunciante cuando el reclamo está en estado "pending_clarification"
  * @param {string} claimId - ID del reclamo
- * @param {FormData} formData - FormData con clarificationResponse (obligatorio) y/o evidence (archivos, opcional)
- * @returns {Promise<Object>} - Reclamo actualizado con estado "open"
+ * @param {FormData} formData - FormData con:
+ *   - clarificationResponse (opcional, 50-2000 chars)
+ *   - evidence (opcional, hasta 5 archivos)
+ *   Debe enviarse al menos uno de los dos.
+ * @returns {Promise<Object>} - Reclamo actualizado
  */
 export const updateClaim = async (claimId, formData) => {
   try {
@@ -269,6 +272,186 @@ export const updateClaim = async (claimId, formData) => {
   }
 };
 
+/**
+ * Obtiene los reclamos del usuario actual (como reclamante o reclamado)
+ * @param {Object} filters - Filtros
+ * @param {number} filters.page - Página (default: 1)
+ * @param {number} filters.limit - Límite por página (default: 12)
+ * @param {string} filters.status - Filtrar por estado
+ * @param {string} filters.role - Filtrar por rol: 'claimant', 'respondent', 'all' (default: 'all')
+ * @param {string} filters.sortBy - Ordenar por: 'createdAt', 'updatedAt' (default: 'createdAt')
+ * @param {string} filters.sortOrder - Orden: 'asc', 'desc' (default: 'desc')
+ * @returns {Promise<Object>} - { claims: Array, pagination: Object }
+ */
+export const getMyClaims = async (filters = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+
+    queryParams.append('page', filters.page || 1);
+    queryParams.append('limit', filters.limit || 12);
+    if (filters.status) queryParams.append('status', filters.status);
+    if (filters.role) queryParams.append('role', filters.role);
+    if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+    if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+
+    const url = `${API_URL}/my-claims?${queryParams.toString()}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al obtener mis reclamos');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error in getMyClaims:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtiene el detalle completo de un reclamo
+ * Incluye toda la información: evidencias, observaciones, resolución, cumplimiento
+ * @param {string|number} claimId - ID del reclamo
+ * @returns {Promise<Object>} - Detalle completo del reclamo
+ */
+export const getClaimDetail = async (claimId) => {
+  try {
+    const response = await fetch(`${API_URL}/${claimId}/detail`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al obtener detalle del reclamo');
+    }
+
+    return result.data || result;
+  } catch (error) {
+    console.error('Error in getClaimDetail:', error);
+    throw error;
+  }
+};
+
+/**
+ * El reclamado envía observaciones al reclamo
+ * Solo disponible cuando el status es 'pending'
+ * @param {string|number} claimId - ID del reclamo
+ * @param {Object|FormData} data - Datos de las observaciones
+ * @param {string} data.observations - Texto de las observaciones (50-2000 chars)
+ * @param {File[]} data.evidenceFiles - Archivos de evidencia (opcional, máximo 5)
+ * @returns {Promise<Object>} - Reclamo actualizado
+ */
+export const submitObservations = async (claimId, data) => {
+  try {
+    const formData = new FormData();
+    
+    if (typeof data === 'string') {
+      formData.append('observations', data);
+    } else if (data instanceof FormData) {
+      return await fetch(`${API_URL}/${claimId}/observations`, {
+        method: 'POST',
+        credentials: 'include',
+        body: data,
+      }).then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || 'Error al enviar observaciones');
+        }
+        return result.data || result;
+      });
+    } else {
+      formData.append('observations', data.observations);
+      
+      // Agregar archivos si existen
+      if (data.evidenceFiles && data.evidenceFiles.length > 0) {
+        data.evidenceFiles.forEach((file) => {
+          formData.append('evidenceFiles', file);
+        });
+      }
+    }
+
+    const response = await fetch(`${API_URL}/${claimId}/observations`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al enviar observaciones');
+    }
+
+    return result.data || result;
+  } catch (error) {
+    console.error('Error in submitObservations:', error);
+    throw error;
+  }
+};
+
+/**
+ * El reclamado sube el cumplimiento del reclamo
+ * Solo disponible cuando existe un compliance asociado
+ * @param {string|number} claimId - ID del reclamo
+ * @param {Object|FormData} data - Datos del cumplimiento
+ * @param {string} data.description - Descripción del cumplimiento (50+ chars)
+ * @param {File[]} data.evidenceFiles - Archivos de evidencia (opcional, máximo 5)
+ * @returns {Promise<Object>} - Compliance actualizado
+ */
+export const submitCompliance = async (claimId, data) => {
+  try {
+    const formData = new FormData();
+    
+    if (data instanceof FormData) {
+      return await fetch(`${API_URL}/${claimId}/compliance/submit`, {
+        method: 'POST',
+        credentials: 'include',
+        body: data,
+      }).then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || 'Error al enviar cumplimiento');
+        }
+        return result.data || result;
+      });
+    }
+    
+    formData.append('description', data.description);
+    
+    // Agregar archivos si existen
+    if (data.evidenceFiles && data.evidenceFiles.length > 0) {
+      data.evidenceFiles.forEach((file) => {
+        formData.append('evidence', file);
+      });
+    }
+
+    const response = await fetch(`${API_URL}/${claimId}/compliance/submit`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al enviar cumplimiento');
+    }
+
+    return result.data || result;
+  } catch (error) {
+    console.error('Error in submitCompliance:', error);
+    throw error;
+  }
+};
+
 const claimsService = {
   createClaim,
   getClaims,
@@ -278,6 +461,10 @@ const claimsService = {
   markAsInReview,
   addObservations,
   updateClaim,
+  getMyClaims,
+  getClaimDetail,
+  submitObservations,
+  submitCompliance,
 };
 
 export default claimsService;

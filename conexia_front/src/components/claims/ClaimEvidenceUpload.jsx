@@ -80,7 +80,7 @@ export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = 
             JPG, PNG, GIF, PDF, DOCX, MP4 (máx. 10 MB por archivo)
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            Puedes subir hasta {filesRemaining} archivo(s) más. ({files.length + existingFilesCount}/{CLAIM_VALIDATION.MAX_EVIDENCE_FILES})
+            Puedes subir hasta {filesRemaining} archivo(s) más. ({files.length + existingFilesCount}/{maxFilesAllowed})
           </p>
           <input
             ref={fileInputRef}
@@ -137,7 +137,7 @@ export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = 
       {!canAddMore && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
           <p className="text-sm text-yellow-800">
-            Has alcanzado el máximo de archivos permitidos ({files.length + existingFilesCount}/{CLAIM_VALIDATION.MAX_EVIDENCE_FILES})
+            Has alcanzado el máximo de archivos permitidos ({files.length + existingFilesCount}/{maxFilesAllowed})
           </p>
         </div>
       )}

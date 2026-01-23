@@ -35,3 +35,9 @@ export * from './claims/useClaims';
 // Hooks de moderación
 export * from './moderation/useModerationAnalysis';
 export * from './moderation/useModerationActions';
+
+// Hooks de compliances
+export * from './compliances/useCompliances';
+export * from './compliances/useComplianceSubmit';
+export * from './compliances/usePeerReview';
+export * from './compliances/useCompliancePolling';

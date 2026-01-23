@@ -119,7 +119,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[100]">
       {/* Overlay */}
       <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 

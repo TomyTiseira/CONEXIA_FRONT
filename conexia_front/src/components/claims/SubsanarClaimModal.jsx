@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { updateClaim } from '@/service/claims';
-import { CLAIM_VALIDATION, CLAIM_ERROR_MESSAGES } from '@/constants/claims';
-import { config } from '@/config';
+import { useState, useEffect, useMemo } from 'react';
+import { X, Loader2 } from 'lucide-react';
+import { getClaimDetail, updateClaim } from '@/service/claims';
+import { CLAIM_VALIDATION, CLAIM_ERROR_MESSAGES, getClaimTypeLabel } from '@/constants/claims';
 import InputField from '@/components/form/InputField';
 import { ClaimEvidenceUpload } from './ClaimEvidenceUpload';
 import { useEvidenceUpload } from '@/hooks/claims';
+import Button from '@/components/ui/Button';
+import { ClaimEvidenceViewer } from '@/components/claims/ClaimEvidenceViewer';
+import { ClaimTypeBadge } from './ClaimTypeBadge';
+import { ClaimStatusBadge } from './ClaimStatusBadge';
 
 /**
  * Modal para subsanar un reclamo cuando está en estado "pending_clarification"
@@ -19,10 +23,14 @@ export function SubsanarClaimModal({
   onSuccess,
   showToast,
 }) {
+  const MAX_SUBSANAR_EVIDENCE_FILES = 5;
+
   const [clarificationResponse, setClarificationResponse] = useState('');
   const [showValidationError, setShowValidationError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [detail, setDetail] = useState(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   // Usar el hook de evidencias igual que en ClaimModal
   const {
@@ -33,10 +41,78 @@ export function SubsanarClaimModal({
     reset: resetUpload,
   } = useEvidenceUpload();
 
-  // Calcular cuántos archivos se pueden agregar
-  const existingFilesCount = claim.evidenceUrls?.length || 0;
-  const maxNewFiles = CLAIM_VALIDATION.MAX_EVIDENCE_FILES - existingFilesCount;
-  const canAddMoreFiles = existingFilesCount < CLAIM_VALIDATION.MAX_EVIDENCE_FILES;
+  const baseClaimId = claim?.claim?.id || claim?.id;
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (!isOpen || !baseClaimId) return;
+
+      if (claim?.claim && claim?.claimant && claim?.otherUser) {
+        setDetail(claim);
+        return;
+      }
+
+      try {
+        setIsLoadingDetail(true);
+        const result = await getClaimDetail(baseClaimId);
+        setDetail(result);
+      } catch (err) {
+        console.error('Error fetching claim detail for subsanar modal:', err);
+        setDetail(null);
+      } finally {
+        setIsLoadingDetail(false);
+      }
+    };
+
+    fetchDetail();
+  }, [isOpen, baseClaimId, claim]);
+
+  const claimObj = useMemo(() => {
+    return detail?.claim || claim?.claim || claim || {};
+  }, [detail, claim]);
+
+  const claimTypeLabel = useMemo(() => {
+    const type = claimObj?.claimType;
+    const otherReason = claimObj?.otherReason;
+    const base = claimObj?.claimTypeLabel || getClaimTypeLabel(type) || type || 'N/A';
+    return otherReason && String(base).toLowerCase() === 'otro' ? `Otro (${otherReason})` : base;
+  }, [claimObj]);
+
+  const serviceTitle = useMemo(() => {
+    return detail?.hiring?.service?.title || claimObj?.hiring?.service?.title || claimObj?.hiring?.serviceTitle || 'N/A';
+  }, [detail, claimObj]);
+
+  const getFirstName = (fullName) => {
+    if (!fullName) return '';
+    const trimmed = String(fullName).trim();
+    if (!trimmed) return '';
+    return trimmed.split(/\s+/)[0] || '';
+  };
+
+  const displayFromProfile = (profile) => {
+    if (!profile) return 'N/A';
+    const firstName = getFirstName(profile.name);
+    const lastName = profile.lastName ? String(profile.lastName).trim() : '';
+    return `${firstName} ${lastName}`.trim() || profile.name || 'N/A';
+  };
+
+  const claimantName = useMemo(() => {
+    return detail?.claimant?.profile
+      ? displayFromProfile(detail.claimant.profile)
+      : claimObj?.claimantName || 'N/A';
+  }, [detail, claimObj]);
+
+  const claimedName = useMemo(() => {
+    return detail?.otherUser?.profile
+      ? displayFromProfile(detail.otherUser.profile)
+      : claimObj?.claimedUserName || 'N/A';
+  }, [detail, claimObj]);
+
+  const trimmedResponse = clarificationResponse.trim();
+  const hasText = trimmedResponse.length > 0;
+  const hasFiles = files.length > 0;
+  const isTextValid = !hasText || trimmedResponse.length >= CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH;
+  const canSubmit = !isSubmitting && isTextValid && (hasText || hasFiles);
 
   // Reset cuando se abre el modal
   useEffect(() => {
@@ -64,40 +140,16 @@ export function SubsanarClaimModal({
   };
 
   /**
-   * Convierte URL relativa a absoluta
-   */
-  const getAbsoluteUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return `${config.DOCUMENT_URL}${url}`;
-  };
-
-  /**
-   * Verifica si el archivo es una imagen
-   */
-  const isImage = (url) => {
-    const ext = url.split('.').pop().toLowerCase();
-    return ['jpg', 'jpeg', 'png', 'gif'].includes(ext);
-  };
-
-  /**
-   * Obtiene el nombre del archivo desde la URL
-   */
-  const getFileName = (url) => {
-    return url.split('/').pop();
-  };
-
-  /**
    * Maneja el cambio de archivos - permite agregar uno a uno
    */
   const handleAddFiles = (selectedFiles) => {
     setUploadError('');
     
     // Validar que no se exceda el límite total
-    const totalFiles = existingFilesCount + files.length + selectedFiles.length;
-    if (totalFiles > CLAIM_VALIDATION.MAX_EVIDENCE_FILES) {
-      const filesRemaining = maxNewFiles - files.length;
-      setUploadError(`Solo puedes agregar ${filesRemaining} archivo(s) más. Ya tienes ${existingFilesCount} archivo(s) existente(s) y ${files.length} archivo(s) nuevo(s) seleccionado(s).`);
+    const totalSelected = files.length + selectedFiles.length;
+    if (totalSelected > MAX_SUBSANAR_EVIDENCE_FILES) {
+      const filesRemaining = MAX_SUBSANAR_EVIDENCE_FILES - files.length;
+      setUploadError(`Solo puedes agregar ${filesRemaining} archivo(s) más. Máximo ${MAX_SUBSANAR_EVIDENCE_FILES} en total para la subsanación.`);
       return false;
     }
 
@@ -110,16 +162,25 @@ export function SubsanarClaimModal({
    * Valida y envía el formulario
    */
   const handleConfirm = async () => {
-    // Validar que la respuesta sea obligatoria y tenga al menos 50 caracteres
-    const trimmedResponse = clarificationResponse.trim();
-    
-    if (trimmedResponse.length === 0) {
+    setUploadError('');
+    setShowValidationError(false);
+
+    // Regla: debe venir al menos uno (respuesta o archivos)
+    if (!hasText && !hasFiles) {
+      setShowValidationError(true);
+      setUploadError('Debes ingresar una respuesta o adjuntar al menos un archivo de evidencia.');
+      return;
+    }
+
+    // Si hay texto, debe cumplir mínimo
+    if (hasText && trimmedResponse.length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH) {
       setShowValidationError(true);
       return;
     }
 
-    if (trimmedResponse.length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH) {
-      setShowValidationError(true);
+    // Archivos: máximo 5
+    if (files.length > MAX_SUBSANAR_EVIDENCE_FILES) {
+      setUploadError(`No puedes subir más de ${MAX_SUBSANAR_EVIDENCE_FILES} archivos en la subsanación.`);
       return;
     }
 
@@ -128,8 +189,10 @@ export function SubsanarClaimModal({
     try {
       const formData = new FormData();
 
-      // Agregar respuesta de subsanación (obligatoria)
-      formData.append('clarificationResponse', trimmedResponse);
+      // Agregar respuesta de subsanación (opcional)
+      if (hasText) {
+        formData.append('clarificationResponse', trimmedResponse);
+      }
 
       // Agregar archivos nuevos si se proporcionaron (opcional)
       if (files.length > 0) {
@@ -139,13 +202,23 @@ export function SubsanarClaimModal({
       }
 
       // Enviar al backend
-      await updateClaim(claim.id, formData);
+      const result = await updateClaim(claimObj.id, formData);
 
-      // Éxito
-      showToast('success', 'Reclamo subsanado exitosamente. El equipo de soporte lo revisará nuevamente.');
+      // Resetear formulario
       resetForm();
-      onSuccess();
+      
+      // Cerrar modal primero
       onClose();
+      
+      // Mostrar toast después de cerrar
+      if (showToast) {
+        showToast('success', 'Subsanación enviada. El equipo de soporte lo revisará nuevamente.');
+      }
+      
+      // Actualizar la tabla
+      if (onSuccess) {
+        onSuccess(result);
+      }
     } catch (error) {
       console.error('Error al subsanar reclamo:', error);
       showToast('error', error.message || 'Error al subsanar el reclamo. Intenta nuevamente.');
@@ -176,72 +249,116 @@ export function SubsanarClaimModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-        {/* Header - Estático */}
-        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg">
-          <h2 className="text-2xl font-semibold text-gray-800">Subsanar Reclamo</h2>
-        </div>
+    <div className="fixed inset-0 z-[100]">
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={handleClose} />
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+          {/* Header (estático) */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-gray-900">Subsanar reclamo</h2>
+              {isLoadingDetail && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Loader2 size={16} className="animate-spin" />
+                  Cargando detalle...
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+            >
+              <X size={24} />
+            </button>
+          </div>
 
-        {/* Body - Con scroll */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-          {/* Observaciones del Moderador */}
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-            <div className="flex items-start">
-              <svg
-                className="w-6 h-6 text-blue-500 mr-3 mt-1 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div className="flex-1">
-                <h3 className="font-semibold text-blue-900 mb-2">Observaciones del Moderador</h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{claim.observations}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  El {formatDate(claim.observationsAt)}
+          {/* Body - Con scroll */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 bg-gray-50">
+            {/* Información del Reclamo */}
+            <div className="bg-white border rounded-lg p-4">
+              <h3 className="font-semibold text-lg text-gray-900 mb-3">Información del reclamo</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Tipo de Reclamo</p>
+                  <ClaimTypeBadge
+                    claimType={claimObj.claimType}
+                    labelOverride={claimTypeLabel}
+                  />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Estado</p>
+                  <ClaimStatusBadge status={claimObj.status} />
+                </div>
+                <p className="text-gray-700">
+                  <span className="font-medium">Reclamante:</span> {claimantName}{' '}
+                  {claimObj?.claimantRole
+                    ? `(${claimObj.claimantRole === 'client' ? 'Cliente' : 'Proveedor'})`
+                    : ''}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-medium">Reclamado:</span> {claimedName}{' '}
+                  {claimObj?.claimantRole
+                    ? `(${claimObj.claimantRole === 'client' ? 'Proveedor' : 'Cliente'})`
+                    : ''}
+                </p>
+                <p className="text-gray-700 md:col-span-2">
+                  <span className="font-medium">Servicio:</span> {serviceTitle}
+                </p>
+                <p className="text-gray-700 md:col-span-2">
+                  <span className="font-medium">Fecha de creación:</span> {formatDate(claimObj.createdAt)}
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Detalle del Reclamo (solo lectura) */}
-          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-            <h3 className="font-semibold text-gray-900 mb-3">Detalle del Reclamo</h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="text-gray-600">Motivo:</span>{' '}
-                <span className="font-medium">{claim.claimTypeLabel}</span>
+            {/* Descripción del Reclamo */}
+            <div className="bg-white border rounded-lg p-4">
+              <h3 className="font-semibold text-lg text-gray-900 mb-2">Descripción del reclamo</h3>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                {claimObj.description || 'No hay descripción disponible'}
+              </p>
+            </div>
+
+            {/* Evidencias actuales */}
+            {claimObj.evidenceUrls?.length > 0 && (
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">Evidencias</h3>
+                <ClaimEvidenceViewer evidenceUrls={claimObj.evidenceUrls} />
               </div>
-              <div>
-                <span className="text-gray-600">Contratación:</span>{' '}
-                <span className="font-medium">#{claim.hiringId}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Fecha de creación:</span>{' '}
-                <span className="font-medium">{formatDate(claim.createdAt)}</span>
+            )}
+
+            {/* Observaciones del Moderador (naranja) */}
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg
+                  className="w-6 h-6 text-orange-600 mr-3 mt-1 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-orange-900 mb-2">Observaciones del Moderador</h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">
+                    {claimObj.observations || 'No hay observaciones disponibles'}
+                  </p>
+                  {claimObj.observationsAt && (
+                    <p className="text-sm text-gray-600 mt-2">El {formatDate(claimObj.observationsAt)}</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Descripción Original (referencia) */}
-          <div className="text-sm">
-            <label className="text-gray-600 mb-1 block font-medium">Descripción actual:</label>
-            <p className="text-gray-700 bg-gray-50 p-3 rounded border border-gray-200 max-h-24 overflow-y-auto whitespace-pre-wrap">
-              {claim.description}
-            </p>
-          </div>
-
-          {/* Respuesta de Subsanación (obligatoria) */}
-          <div>
+            {/* Respuesta a observaciones */}
+            <div className="bg-white border rounded-lg p-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Respuesta a las observaciones <span className="text-red-500">*</span>
+              Respuesta a las observaciones (opcional)
             </label>
             <InputField
               multiline
@@ -252,145 +369,64 @@ export function SubsanarClaimModal({
               onChange={(e) => {
                 setClarificationResponse(e.target.value);
                 setShowValidationError(false);
+                setUploadError('');
               }}
               maxLength={CLAIM_VALIDATION.DESCRIPTION_MAX_LENGTH}
               disabled={isSubmitting}
               showCharCount={true}
-              error={showValidationError && clarificationResponse.trim().length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH ? CLAIM_ERROR_MESSAGES.DESCRIPTION_MIN_LENGTH : ''}
+              error={showValidationError && hasText && trimmedResponse.length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH ? CLAIM_ERROR_MESSAGES.DESCRIPTION_MIN_LENGTH : ''}
             />
             <p className="mt-1 text-xs text-gray-600">
-              Mínimo {CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH} caracteres
+              Si ingresas texto, mínimo {CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH} caracteres. También puedes adjuntar evidencias sin texto.
             </p>
           </div>
 
-          {/* Evidencias Actuales */}
-          {claim.evidenceUrls && claim.evidenceUrls.length > 0 && (
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Evidencias actuales ({claim.evidenceUrls.length}/{CLAIM_VALIDATION.MAX_EVIDENCE_FILES})
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {claim.evidenceUrls.map((url, index) => {
-                  const absoluteUrl = getAbsoluteUrl(url);
-                  return (
-                    <div key={index} className="relative group">
-                      {isImage(url) ? (
-                        <img
-                          src={absoluteUrl}
-                          alt={`Evidencia ${index + 1}`}
-                          className="w-full h-24 object-cover rounded border border-gray-300"
-                        />
-                      ) : (
-                        <div className="w-full h-24 bg-gray-100 rounded border border-gray-300 flex items-center justify-center">
-                          <svg
-                            className="w-8 h-8 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
-                          <span className="text-xs text-gray-500 mt-1">{getFileName(url)}</span>
-                        </div>
-                      )}
-                      <a
-                        href={absoluteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 rounded"
-                      >
-                        <svg
-                          className="w-8 h-8 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      </a>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Nuevas Evidencias (opcional) */}
-          {canAddMoreFiles && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Agregar Nuevas Evidencias (opcional)
-              </label>
-              <p className="text-sm text-gray-600 mb-3">
-                Archivos actuales: {existingFilesCount}. Puedes agregar hasta {maxNewFiles - files.length} archivo(s) más.
-              </p>
-              <ClaimEvidenceUpload
-                files={files}
-                onAddFiles={handleAddFiles}
-                onRemoveFile={removeFile}
-                errors={uploadErrors}
-                maxFiles={maxNewFiles}
-                existingFilesCount={existingFilesCount}
-              />
-              {/* Error de límite de archivos */}
-              {uploadError && (
-                <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-600">• {uploadError}</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Mensaje de validación general - eliminado, ahora se muestra en InputField */}
+          <div className="bg-white border rounded-lg p-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Agregar Evidencias (opcional)
+            </label>
+            <p className="text-sm text-gray-600 mb-3">
+              Puedes adjuntar hasta {MAX_SUBSANAR_EVIDENCE_FILES} archivo(s) en esta subsanación.
+            </p>
+            <ClaimEvidenceUpload
+              files={files}
+              onAddFiles={handleAddFiles}
+              onRemoveFile={removeFile}
+              errors={uploadErrors}
+              maxFiles={MAX_SUBSANAR_EVIDENCE_FILES}
+              existingFilesCount={0}
+            />
+            {/* Error de límite de archivos / regla general */}
+            {uploadError && (
+              <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">• {uploadError}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer - Estático */}
-        <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
-          <button
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleConfirm}
-            disabled={isSubmitting || clarificationResponse.trim().length < CLAIM_VALIDATION.DESCRIPTION_MIN_LENGTH}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Enviando...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Confirmar
-              </>
-            )}
-          </button>
+          <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
+            <Button onClick={handleClose} disabled={isSubmitting} variant="cancel">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              disabled={!canSubmit}
+              variant="warning"
+              className="flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                'Confirmar'
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

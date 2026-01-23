@@ -6,27 +6,36 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { AlertTriangle, Loader2, AlertCircle } from 'lucide-react';
-import { getClaims } from '@/service/claims';
-import { ClaimsListItem } from '@/components/claims/ClaimsListItem';
+import { getClaims, markAsInReview } from '@/service/claims';
 import { ClaimsFilters } from '@/components/claims/ClaimsFilters';
-import { useUserStore } from '@/store/userStore';
+import { AdminClaimsTable } from '@/components/claims/AdminClaimsTable';
+import { ClaimDetailModal } from '@/components/claims/ClaimDetailModal';
+import { ClaimActionsModal } from '@/components/claims/ClaimActionsModal';
+import { AddObservationsModal } from '@/components/claims/AddObservationsModal';
+import { ClaimResolutionModal } from '@/components/claims/ClaimResolutionModal';
 import Navbar from '@/components/navbar/Navbar';
 import { ROLES } from '@/constants/roles';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Pagination from '@/components/common/Pagination';
+import Toast from '@/components/ui/Toast';
 
 function AdminClaimsContent() {
-  const router = useRouter();
-
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showActionsModal, setShowActionsModal] = useState(false);
+  const [showObservationsModal, setShowObservationsModal] = useState(false);
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
+  const [toast, setToast] = useState({ isVisible: false, type: '', message: '' });
   const [pagination, setPagination] = useState({
-    total: 0,
-    pages: 0,
     currentPage: 1,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    totalItems: 0,
   });
 
   const [filters, setFilters] = useState({
@@ -34,22 +43,28 @@ function AdminClaimsContent() {
     status: null,
     claimantRole: null,
     page: 1,
-    limit: 12, // 12 reclamos por página
+    limit: 12,
   });
 
-  // Cargar reclamos
   useEffect(() => {
     const fetchClaims = async () => {
       try {
         setLoading(true);
         setError(null);
         const data = await getClaims(filters);
+        
+        // El backend devuelve { claims: [...], pagination: {...} }
         setClaims(data.claims || []);
-        setPagination({
-          total: data.total || 0,
-          pages: data.pages || 0,
-          currentPage: filters.page,
-        });
+        
+        if (data.pagination) {
+          setPagination({
+            currentPage: data.pagination.currentPage || 1,
+            totalPages: data.pagination.totalPages || 0,
+            hasNextPage: data.pagination.hasNextPage || false,
+            hasPreviousPage: data.pagination.hasPreviousPage || false,
+            totalItems: data.pagination.totalItems || 0,
+          });
+        }
       } catch (err) {
         console.error('Error fetching claims:', err);
         setError(err.message || 'Error al cargar los reclamos');
@@ -65,7 +80,7 @@ function AdminClaimsContent() {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
-      page: 1, // Reset a página 1 al cambiar filtro
+      page: 1,
     }));
   };
 
@@ -87,25 +102,116 @@ function AdminClaimsContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleViewDetail = (claim) => {
+    setSelectedClaim(claim);
+    setShowDetailModal(true);
+  };
+
+  const handleOpenActions = (claim) => {
+    setSelectedClaim(claim);
+    setShowActionsModal(true);
+  };
+
+  const showToast = (type, message) => {
+    setToast({ isVisible: true, type, message });
+  };
+
+  const getSelectedClaimId = (value) => value?.claim?.id || value?.id;
+
+  const handleClaimAction = async (actionId, claim) => {
+    setSelectedClaim(claim);
+    
+    switch (actionId) {
+      case 'view_detail':
+        setShowDetailModal(true);
+        break;
+      case 'mark_in_review':
+        try {
+          const claimId = getSelectedClaimId(claim);
+          await markAsInReview(claimId);
+          // Recargar reclamos
+          const data = await getClaims(filters);
+          setClaims(data.claims || []);
+          if (data.pagination) {
+            setPagination({
+              currentPage: data.pagination.currentPage || 1,
+              totalPages: data.pagination.totalPages || 0,
+              hasNextPage: data.pagination.hasNextPage || false,
+              hasPreviousPage: data.pagination.hasPreviousPage || false,
+              totalItems: data.pagination.totalItems || 0,
+            });
+          }
+        } catch (err) {
+          console.error('Error marking claim in review:', err);
+          showToast('error', err.message || 'Error al marcar como en revisión');
+        }
+        break;
+      case 'add_observations':
+        setShowObservationsModal(true);
+        break;
+      case 'resolve_claim':
+        setShowResolutionModal(true);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleObservationsSuccess = async () => {
+    setShowObservationsModal(false);
+    // Recargar reclamos
+    try {
+      const data = await getClaims(filters);
+      setClaims(data.claims || []);
+      if (data.pagination) {
+        setPagination({
+          currentPage: data.pagination.currentPage || 1,
+          totalPages: data.pagination.totalPages || 0,
+          hasNextPage: data.pagination.hasNextPage || false,
+          hasPreviousPage: data.pagination.hasPreviousPage || false,
+          totalItems: data.pagination.totalItems || 0,
+        });
+      }
+    } catch (err) {
+      console.error('Error reloading claims:', err);
+    }
+  };
+
+  const handleResolutionSuccess = async () => {
+    setShowResolutionModal(false);
+    try {
+      const data = await getClaims(filters);
+      setClaims(data.claims || []);
+      if (data.pagination) {
+        setPagination({
+          currentPage: data.pagination.currentPage || 1,
+          totalPages: data.pagination.totalPages || 0,
+          hasNextPage: data.pagination.hasNextPage || false,
+          hasPreviousPage: data.pagination.hasPreviousPage || false,
+          totalItems: data.pagination.totalItems || 0,
+        });
+      }
+    } catch (err) {
+      console.error('Error reloading claims after resolution:', err);
+    }
+  };
+
   return (
     <>
       <Navbar />
       <main className="bg-[#eaf5f2] min-h-screen p-8 space-y-6 max-w-7xl mx-auto pb-24">
-        {/* Header */}
         <div className="bg-white px-6 py-4 rounded-xl shadow-sm">
           <h1 className="text-2xl font-bold text-conexia-green text-center">
             Gestión de Reclamos
           </h1>
         </div>
 
-        {/* Filtros */}
         <ClaimsFilters
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
         />
 
-        {/* Loading */}
         {loading && (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
             <Loader2 size={48} className="animate-spin text-conexia-green mx-auto mb-4" />
@@ -113,7 +219,6 @@ function AdminClaimsContent() {
           </div>
         )}
 
-        {/* Error */}
         {error && !loading && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
             <AlertCircle size={48} className="mx-auto text-red-500 mb-3" />
@@ -128,7 +233,6 @@ function AdminClaimsContent() {
           </div>
         )}
 
-        {/* Lista de reclamos */}
         {!loading && !error && (
           <>
             {claims.length === 0 ? (
@@ -145,19 +249,17 @@ function AdminClaimsContent() {
               </div>
             ) : (
               <>
-                {/* Grid de reclamos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {claims.map((claim) => (
-                    <ClaimsListItem key={claim.id} claim={claim} />
-                  ))}
-                </div>
+                <AdminClaimsTable
+                  claims={claims}
+                  onViewDetail={handleViewDetail}
+                  onOpenActions={handleOpenActions}
+                />
 
-                {/* Paginación - siempre visible */}
                 <Pagination
                   currentPage={pagination.currentPage}
-                  totalPages={pagination.pages}
-                  hasNextPage={pagination.currentPage < pagination.pages}
-                  hasPreviousPage={pagination.currentPage > 1}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPreviousPage={pagination.hasPreviousPage}
                   onPageChange={handlePageChange}
                 />
               </>
@@ -165,6 +267,49 @@ function AdminClaimsContent() {
           </>
         )}
       </main>
+
+      {showDetailModal && selectedClaim && (
+        <ClaimDetailModal
+          claim={selectedClaim}
+          onClose={() => setShowDetailModal(false)}
+        />
+      )}
+
+      {showActionsModal && selectedClaim && (
+        <ClaimActionsModal
+          claim={selectedClaim}
+          onClose={() => setShowActionsModal(false)}
+          onAction={handleClaimAction}
+        />
+      )}
+
+      {showObservationsModal && selectedClaim && (
+        <AddObservationsModal
+          isOpen={showObservationsModal}
+          claim={selectedClaim}
+          onClose={() => setShowObservationsModal(false)}
+          onSuccess={handleObservationsSuccess}
+          showToast={showToast}
+        />
+      )}
+
+      {showResolutionModal && selectedClaim && (
+        <ClaimResolutionModal
+          isOpen={showResolutionModal}
+          claim={selectedClaim}
+          onClose={() => setShowResolutionModal(false)}
+          onSuccess={handleResolutionSuccess}
+          showToast={showToast}
+        />
+      )}
+
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+        position="top-center"
+      />
     </>
   );
 }
@@ -176,3 +321,4 @@ export default function AdminClaimsPage() {
     </ProtectedRoute>
   );
 }
+

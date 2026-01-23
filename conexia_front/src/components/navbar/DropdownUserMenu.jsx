@@ -159,6 +159,14 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               <Briefcase size={16} />
               Mis servicios
             </Link>
+            <Link
+              href="/claims/my-claims"
+              onClick={handleClose}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+            >
+              <FileText size={16} />
+              Mis reclamos
+            </Link>
           </div>
           <div className="border-t pt-1 mt-1">
             <div className="px-4 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">

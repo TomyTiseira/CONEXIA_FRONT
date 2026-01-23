@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { ChevronDown, ArrowLeft, FileText, Filter, Package, Clock } from 'lucide-react';
+import { ChevronDown, ArrowLeft, FileText, Filter, Package, Clock, X } from 'lucide-react';
 // Nuevos iconos más semánticos desde react-icons
 import { 
   FaRegEye,      /* Ver detalle */
@@ -24,6 +24,7 @@ import RequestDetailModal from '@/components/services/RequestDetailModal';
 import ServiceReviewModal from '@/components/services/ServiceReviewModal';
 import Toast from '@/components/ui/Toast';
 import Button from '../ui/Button';
+import BackButton from '@/components/ui/BackButton';
 import { useClaimPermissions } from '@/hooks/claims';
 import { useUserStore } from '@/store/userStore';
 import { ClaimModal } from '@/components/claims/ClaimModal';
@@ -144,7 +145,7 @@ export default function MyServiceHiringsPage() {
     setIsClaimModalOpen(true);
   };
 
-  const handleClaimSuccess = () => {
+  const handleClaimSuccess = (createdClaim) => {
     setToast({
       type: 'success',
       message: 'Reclamo creado exitosamente',
@@ -154,6 +155,13 @@ export default function MyServiceHiringsPage() {
     setClaimHiring(null);
     // Recargar datos
     loadMyHirings(filters);
+    
+    // Opcionalmente, redirigir a la página de reclamos después de 2 segundos
+    if (createdClaim?.id) {
+      setTimeout(() => {
+        router.push('/claims/my-claims');
+      }, 2000);
+    }
   };
 
   const handleOpenReviewModal = (hiring) => {
@@ -256,15 +264,54 @@ export default function MyServiceHiringsPage() {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-white rounded-lg transition"
-            >
-              <ArrowLeft size={24} className="text-conexia-green" />
-            </button>
-            <h1 className="text-3xl font-bold text-conexia-green">Mis solicitudes</h1>
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+              <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
+                Mis Solicitudes
+              </h1>
+              <div className="w-10"></div>
+            </div>
           </div>
 
           {/* Filtros */}
@@ -457,11 +504,11 @@ export default function MyServiceHiringsPage() {
                                 {/* Botón Ver Reclamo - Cuando está en estado in_claim */}
                                 {hiring.status?.code === 'in_claim' && hiring.claimId && (
                                   <button
-                                    onClick={() => router.push(`/claims/${hiring.claimId}`)}
+                                    onClick={() => router.push('/claims/my-claims')}
                                     className="flex items-center justify-center w-9 h-9 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
-                                    title="Ver reclamo activo"
-                                    aria-label="Ver reclamo"
-                                    data-action="ver-reclamo"
+                                    title="Ver en Mis Reclamos"
+                                    aria-label="Ver en Mis Reclamos"
+                                    data-action="ver-mis-reclamos"
                                   >
                                     <AlertCircle size={18} className="group-hover:scale-110 transition-transform" />
                                   </button>
@@ -637,11 +684,11 @@ export default function MyServiceHiringsPage() {
                             {/* Botón Ver Reclamo Mobile - Cuando está en estado in_claim */}
                             {hiring.status?.code === 'in_claim' && hiring.claimId && (
                               <button
-                                onClick={() => router.push(`/claims/${hiring.claimId}`)}
+                                onClick={() => router.push('/claims/my-claims')}
                                 className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
-                                title="Ver reclamo activo"
-                                aria-label="Ver reclamo"
-                                data-action="ver-reclamo"
+                                title="Ver en Mis Reclamos"
+                                aria-label="Ver en Mis Reclamos"
+                                data-action="ver-mis-reclamos"
                               >
                                 <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />
                               </button>

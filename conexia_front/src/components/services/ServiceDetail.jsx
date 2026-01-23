@@ -1078,8 +1078,8 @@ ${messageText.trim()}`;
                             {service?.hasPendingQuotation
                               ? 'Cancelar Solicitud'
                               : showViewQuotation
-                                ? 'Ver Cotización'
-                                : 'Solicitar Cotización'}
+                                ? 'Ver cotización'
+                                : 'Solicitar cotización'}
                           </Button>
                         </RequireVerification>
                       )}

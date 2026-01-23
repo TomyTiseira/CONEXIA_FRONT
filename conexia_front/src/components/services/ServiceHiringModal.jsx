@@ -320,7 +320,7 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
               className="flex-1"
               disabled={loading || !description.trim() || description.trim().length < 10}
             >
-              {loading ? 'Enviando...' : 'Solicitar Cotización'}
+              {loading ? 'Enviando...' : 'Solicitar cotización'}
             </Button>
           </div>
         </form>

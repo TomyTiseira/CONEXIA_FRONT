@@ -5,11 +5,18 @@
 
 // Estados de reclamos
 export const CLAIM_STATUS = {
-  OPEN: 'open',
-  IN_REVIEW: 'in_review',
-  PENDING_CLARIFICATION: 'pending_clarification',
-  RESOLVED: 'resolved',
-  REJECTED: 'rejected',
+  OPEN: 'open',  // Abierto, esperando observaciones
+  IN_REVIEW: 'in_review',  // Moderador revisando
+  PENDING_CLARIFICATION: 'pending_clarification',  // Requiere aclaración del reclamante
+  REQUIRES_STAFF_RESPONSE: 'requires_staff_response',  // Requiere acción del staff (luego de subsanación)
+  CANCELLED: 'cancelled',  // Cancelado por el denunciante
+
+  // Legacy/compat
+  REQUIRES_RESPONSE: 'requires_response',  // Requiere respuesta del reclamado (legacy)
+  PENDING_COMPLIANCE: 'pending_compliance',  // Cumplimiento pendiente
+  REVIEWING_COMPLIANCE: 'reviewing_compliance',  // Revisando cumplimiento
+  RESOLVED: 'resolved',  // Resuelto completamente
+  REJECTED: 'rejected',  // Rechazado
 };
 
 // Tipos de reclamos para clientes
@@ -31,20 +38,25 @@ export const CLIENT_CLAIM_TYPE_LABELS = {
   [CLIENT_CLAIM_TYPES.NOT_DELIVERED]: 'No se entregó el trabajo',
   [CLIENT_CLAIM_TYPES.OFF_AGREEMENT]: 'Entrega fuera de lo acordado',
   [CLIENT_CLAIM_TYPES.DEFECTIVE_DELIVERY]: 'Entrega defectuosa',
-  [CLIENT_CLAIM_TYPES.CLIENT_OTHER]: 'Otro (especificar)',
+  [CLIENT_CLAIM_TYPES.CLIENT_OTHER]: 'Otro',
 };
 
 // Labels para tipos de reclamos (proveedor)
 export const PROVIDER_CLAIM_TYPE_LABELS = {
   [PROVIDER_CLAIM_TYPES.PAYMENT_NOT_RECEIVED]: 'No se recibió el pago',
-  [PROVIDER_CLAIM_TYPES.PROVIDER_OTHER]: 'Otro (especificar)',
+  [PROVIDER_CLAIM_TYPES.PROVIDER_OTHER]: 'Otro',
 };
 
 // Labels para estados
 export const CLAIM_STATUS_LABELS = {
   [CLAIM_STATUS.OPEN]: 'Abierto',
   [CLAIM_STATUS.IN_REVIEW]: 'En Revisión',
-  [CLAIM_STATUS.PENDING_CLARIFICATION]: 'Pendiente subsanación',
+  [CLAIM_STATUS.PENDING_CLARIFICATION]: 'Requiere aclaración',
+  [CLAIM_STATUS.REQUIRES_STAFF_RESPONSE]: 'Requiere respuesta',
+  [CLAIM_STATUS.CANCELLED]: 'Cancelado',
+  [CLAIM_STATUS.REQUIRES_RESPONSE]: 'Requiere Respuesta',
+  [CLAIM_STATUS.PENDING_COMPLIANCE]: 'Cumplimiento Pendiente',
+  [CLAIM_STATUS.REVIEWING_COMPLIANCE]: 'Revisando Cumplimiento',
   [CLAIM_STATUS.RESOLVED]: 'Resuelto',
   [CLAIM_STATUS.REJECTED]: 'Rechazado',
 };
@@ -56,30 +68,70 @@ export const CLAIM_STATUS_CONFIG = {
     label: 'Abierto',
     color: 'text-yellow-700',
     bg: 'bg-yellow-100',
+    className: 'bg-yellow-100 text-yellow-800',
   },
   [CLAIM_STATUS.IN_REVIEW]: {
     variant: 'info',
     label: 'En Revisión',
     color: 'text-blue-700',
     bg: 'bg-blue-100',
+    className: 'bg-blue-100 text-blue-800',
   },
   [CLAIM_STATUS.PENDING_CLARIFICATION]: {
     variant: 'warning',
-    label: 'Pendiente subsanación',
+    label: 'Requiere aclaración',
     color: 'text-orange-700',
     bg: 'bg-orange-100',
+    className: 'bg-orange-100 text-orange-800',
+  },
+  [CLAIM_STATUS.REQUIRES_STAFF_RESPONSE]: {
+    variant: 'info',
+    label: 'Requiere respuesta',
+    color: 'text-indigo-700',
+    bg: 'bg-indigo-100',
+    className: 'bg-indigo-100 text-indigo-800',
+  },
+  [CLAIM_STATUS.CANCELLED]: {
+    variant: 'danger',
+    label: 'Cancelado',
+    color: 'text-gray-700',
+    bg: 'bg-gray-100',
+    className: 'bg-gray-100 text-gray-800',
+  },
+  [CLAIM_STATUS.REQUIRES_RESPONSE]: {
+    variant: 'warning',
+    label: 'Requiere Respuesta',
+    color: 'text-amber-700',
+    bg: 'bg-amber-100',
+    className: 'bg-amber-100 text-amber-800',
+  },
+  [CLAIM_STATUS.PENDING_COMPLIANCE]: {
+    variant: 'warning',
+    label: 'Cumplimiento Pendiente',
+    color: 'text-purple-700',
+    bg: 'bg-purple-100',
+    className: 'bg-purple-100 text-purple-800',
+  },
+  [CLAIM_STATUS.REVIEWING_COMPLIANCE]: {
+    variant: 'info',
+    label: 'Revisando Cumplimiento',
+    color: 'text-indigo-700',
+    bg: 'bg-indigo-100',
+    className: 'bg-indigo-100 text-indigo-800',
   },
   [CLAIM_STATUS.RESOLVED]: {
     variant: 'success',
     label: 'Resuelto',
     color: 'text-green-700',
     bg: 'bg-green-100',
+    className: 'bg-green-100 text-green-800',
   },
   [CLAIM_STATUS.REJECTED]: {
     variant: 'danger',
     label: 'Rechazado',
-    color: 'text-red-700',
-    bg: 'bg-red-100',
+    color: 'text-gray-700',
+    bg: 'bg-gray-100',
+    className: 'bg-gray-100 text-gray-800',
   },
 };
 
@@ -154,6 +206,160 @@ export const CLAIM_ERROR_MESSAGES = {
   UPLOAD_ERROR: 'Error al subir archivo. Intenta nuevamente',
 };
 
+// Roles en el reclamo
+export const CLAIM_ROLES = {
+  CLAIMANT: 'claimant',  // Reclamante
+  RESPONDENT: 'respondent',  // Reclamado
+};
+
+// Labels para roles
+export const CLAIM_ROLE_LABELS = {
+  [CLAIM_ROLES.CLAIMANT]: 'Reclamante',
+  [CLAIM_ROLES.RESPONDENT]: 'Reclamado',
+};
+
+// Configuración de badges de rol
+export const CLAIM_ROLE_CONFIG = {
+  [CLAIM_ROLES.CLAIMANT]: {
+    label: 'Reclamante',
+    className: 'bg-green-100 text-green-700',  // Verde positivo para reclamante
+  },
+  [CLAIM_ROLES.RESPONDENT]: {
+    label: 'Reclamado',
+    className: 'bg-red-100 text-red-700',  // Rojo negativo para reclamado
+  },
+};
+
+// Prioridades de reclamo
+export const CLAIM_PRIORITY = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  URGENT: 'urgent',
+};
+
+// Labels para prioridades
+export const CLAIM_PRIORITY_LABELS = {
+  [CLAIM_PRIORITY.LOW]: 'Baja',
+  [CLAIM_PRIORITY.MEDIUM]: 'Media',
+  [CLAIM_PRIORITY.HIGH]: 'Alta',
+  [CLAIM_PRIORITY.URGENT]: 'Urgente',
+};
+
+// Configuración de badges de prioridad
+export const CLAIM_PRIORITY_CONFIG = {
+  [CLAIM_PRIORITY.LOW]: {
+    label: 'Baja',
+    className: 'bg-gray-100 text-gray-800',
+  },
+  [CLAIM_PRIORITY.MEDIUM]: {
+    label: 'Media',
+    className: 'bg-yellow-100 text-yellow-800',
+  },
+  [CLAIM_PRIORITY.HIGH]: {
+    label: 'Alta',
+    className: 'bg-orange-100 text-orange-800',
+  },
+  [CLAIM_PRIORITY.URGENT]: {
+    label: 'Urgente',
+    className: 'bg-red-100 text-red-800',
+  },
+};
+
+// Helper para obtener badge de estado
+export const getClaimStatusBadge = (status) => {
+  const safeStatus = status || CLAIM_STATUS.OPEN;
+  const config = CLAIM_STATUS_CONFIG[safeStatus] || CLAIM_STATUS_CONFIG[CLAIM_STATUS.OPEN];
+
+  // Fallback defensivo: evita crashear si el backend envía un estado nuevo/no contemplado.
+  if (!config) {
+    return {
+      label: CLAIM_STATUS_LABELS[safeStatus] || 'Desconocido',
+      className: 'bg-gray-100 text-gray-800',
+    };
+  }
+
+  return {
+    label: config.label || CLAIM_STATUS_LABELS[safeStatus] || 'Desconocido',
+    className: config.className || 'bg-gray-100 text-gray-800',
+  };
+};
+
+// Helper para obtener badge de rol
+export const getClaimRoleBadge = (role) => {
+  const config = CLAIM_ROLE_CONFIG[role] || CLAIM_ROLE_CONFIG[CLAIM_ROLES.CLAIMANT];
+  return {
+    label: config.label,
+    className: config.className,
+  };
+};
+
+// Helper para obtener badge de prioridad
+export const getClaimPriorityBadge = (priority) => {
+  const config = CLAIM_PRIORITY_CONFIG[priority] || CLAIM_PRIORITY_CONFIG[CLAIM_PRIORITY.MEDIUM];
+  return {
+    label: config.label,
+    className: config.className,
+  };
+};
+
+// Helper para formatear fecha
+export const formatClaimDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('es-CO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+};
+
+// Helper para formatear fecha y hora
+export const formatClaimDateTime = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('es-CO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
+// Helper para validar archivo
+export const isValidClaimFile = (file) => {
+  const isValidType = CLAIM_VALIDATION.ALLOWED_FILE_TYPES.includes(file.type);
+  const isValidSize = file.size <= CLAIM_VALIDATION.MAX_FILE_SIZE;
+  return isValidType && isValidSize;
+};
+
+// Helper para obtener días desde creación
+export const getDaysSinceCreation = (createdAt) => {
+  if (!createdAt) return 0;
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffTime = Math.abs(now - created);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
+// Helper para obtener label del tipo de reclamo
+export const getClaimTypeLabel = (claimType) => {
+  // Intentar primero en tipos de cliente
+  if (CLIENT_CLAIM_TYPE_LABELS[claimType]) {
+    return CLIENT_CLAIM_TYPE_LABELS[claimType];
+  }
+  // Si no, intentar en tipos de proveedor
+  if (PROVIDER_CLAIM_TYPE_LABELS[claimType]) {
+    return PROVIDER_CLAIM_TYPE_LABELS[claimType];
+  }
+  // Si no existe, retornar el código formateado
+  return claimType ? claimType.split('_').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ') : 'N/A';
+};
+
 const claimsConstants = {
   CLAIM_STATUS,
   CLIENT_CLAIM_TYPES,
@@ -167,6 +373,20 @@ const claimsConstants = {
   ALLOWED_CLAIM_STATES,
   CLAIM_VALIDATION,
   CLAIM_ERROR_MESSAGES,
+  CLAIM_ROLES,
+  CLAIM_ROLE_LABELS,
+  CLAIM_ROLE_CONFIG,
+  CLAIM_PRIORITY,
+  CLAIM_PRIORITY_LABELS,
+  CLAIM_PRIORITY_CONFIG,
+  getClaimStatusBadge,
+  getClaimRoleBadge,
+  getClaimPriorityBadge,
+  getClaimTypeLabel,
+  formatClaimDate,
+  formatClaimDateTime,
+  isValidClaimFile,
+  getDaysSinceCreation,
 };
 
 export default claimsConstants;

@@ -22,8 +22,8 @@ import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { config } from '@/config';
 import GlobalSearchBar from '@/components/common/GlobalSearchBar';
-import { useMessaging } from '@/hooks/messaging/useMessaging'; // ya importado
-import { getMessagingSocket } from '@/lib/socket/messagingSocket'; // <- NUEVO
+import { useMessaging } from '@/hooks/messaging/useMessaging';
+import { getMessagingSocket } from '@/lib/socket/messagingSocket';
 import SuspensionBadge from '@/components/common/SuspensionBadge';
 
 // Componente separado para el buscador mobile para evitar problemas de hidratación
