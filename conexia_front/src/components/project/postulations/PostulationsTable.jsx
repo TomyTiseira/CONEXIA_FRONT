@@ -78,6 +78,9 @@ export default function PostulationsTable({ postulations, onEvaluate, isLoading 
               Postulante
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rol
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Fecha de postulación
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -102,6 +105,11 @@ export default function PostulationsTable({ postulations, onEvaluate, isLoading 
                 >
                   {postulation.applicantName || 'Usuario sin nombre'}
                 </button>
+              </td>
+
+              {/* Rol */}
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                {postulation.roleName || 'Rol no especificado'}
               </td>
 
               {/* Fecha de postulación */}
@@ -170,6 +178,9 @@ export default function PostulationsTable({ postulations, onEvaluate, isLoading 
 
             {/* Información adicional */}
             <div className="space-y-2 text-sm text-gray-600 mb-3">
+              <div>
+                <span className="font-medium">Rol:</span> {postulation.roleName || 'Rol no especificado'}
+              </div>
               <div>
                 <span className="font-medium">Fecha:</span> {formatDate(postulation.createdAt)}
               </div>

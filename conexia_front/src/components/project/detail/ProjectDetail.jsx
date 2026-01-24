@@ -6,6 +6,7 @@ import Image from 'next/image';
 import ReportProjectModal from '@/components/project/report/ReportProjectModal';
 import { createProjectReport, fetchProjectReports } from '@/service/reports/reportsFetch';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
+import { getMyPostulationsByProjectAndRole } from '@/service/postulations/postulationService';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -30,20 +31,37 @@ import OwnerSuspensionAlert from '@/components/common/OwnerSuspensionAlert';
 function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwnerRestricted, canUserApply }) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [checkingPostulation, setCheckingPostulation] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
 
-  const getApplicationTypesText = (applicationTypes) => {
+  const getApplicationTypesText = (applicationTypes, applicationType) => {
+    // Si no hay applicationTypes array pero hay applicationType, usar ese
+    if ((!applicationTypes || applicationTypes.length === 0) && applicationType) {
+      const typeLabels = {
+        'CV': 'CV',
+        'QUESTIONS': 'Preguntas',
+        'EVALUATION': 'Evaluación Técnica',
+        'PARTNER': 'Socio',
+        'INVESTOR': 'Inversor'
+      };
+      return typeLabels[applicationType] || applicationType;
+    }
+    
     if (!applicationTypes || applicationTypes.length === 0) return 'No especificado';
     
     const typeLabels = {
       'CV': 'CV',
       'QUESTIONS': 'Preguntas',
-      'EVALUATION': 'Evaluación Técnica'
+      'EVALUATION': 'Evaluación Técnica',
+      'PARTNER': 'Socio',
+      'INVESTOR': 'Inversor'
     };
     
     return applicationTypes.map(type => typeLabels[type] || type).join(', ');
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     // Verificar si el proyecto está moderado
     if (isModerated) {
       return; // No hacer nada si está moderado
@@ -59,8 +77,56 @@ function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwne
       return;
     }
     
-    // Navegar a la página de postulación con el rol específico
-    router.push(`/project/${projectId}/apply/${role.id}`);
+    // Verificar si ya está postulado
+    setCheckingPostulation(true);
+    try {
+      const postulations = await getMyPostulationsByProjectAndRole(projectId, role.id);
+      
+      console.log('Postulaciones encontradas:', postulations);
+      console.log('ID del rol actual:', role.id);
+      console.log('ID del proyecto actual:', projectId);
+      
+      // NUEVA REGLA: Verificar si ya tiene CUALQUIER postulación previa
+      if (postulations && postulations.length > 0) {
+        const lastPostulation = postulations[0];
+        const statusCode = lastPostulation.status?.code?.toLowerCase() || '';
+        const statusName = lastPostulation.status?.name || 'en proceso';
+        
+        let message = '';
+        if (statusCode === 'rechazada' || statusCode === 'rejected') {
+          message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
+        } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
+          message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
+        } else if (statusCode === 'cancelada' || statusCode === 'cancelled') {
+          message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
+        } else if (statusCode === 'expirada' || statusCode === 'expired') {
+          message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
+        } else if (statusCode === 'pendiente' || statusCode === 'pending' || statusCode === 'activo' || statusCode === 'active') {
+          message = `Ya tienes una postulación ${statusName} para este rol.`;
+        } else {
+          message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
+        }
+        
+        console.log('Postulación previa encontrada:', lastPostulation);
+        setToast({ 
+          type: 'error', 
+          message: message
+        });
+        setCheckingPostulation(false);
+        return;
+      }
+      
+      // Si no hay postulaciones previas, mostrar modal de advertencia
+      setCheckingPostulation(false);
+      setShowWarningModal(true);
+    } catch (error) {
+      console.error('Error checking postulations:', error);
+      setToast({ 
+        type: 'error', 
+        message: 'Error al verificar postulaciones. Por favor, intenta nuevamente.' 
+      });
+      setCheckingPostulation(false);
+    }
   };
 
   return (
@@ -102,7 +168,7 @@ function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwne
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="text-sm font-medium text-gray-600">Tipos de postulación</label>
-                <p className="text-sm text-gray-900">{getApplicationTypesText(role.applicationTypes)}</p>
+                <p className="text-sm text-gray-900">{getApplicationTypesText(role.applicationTypes, role.applicationType)}</p>
               </div>
               
               {role.maxCollaborators && (
@@ -170,22 +236,89 @@ function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwne
               <div className="pt-4 border-t border-gray-200">
                 <button
                   onClick={handleApply}
-                  disabled={isModerated || isOwnerRestricted || !canUserApply}
+                  disabled={checkingPostulation || isModerated || isOwnerRestricted || !canUserApply}
                   className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
                     (isModerated || isOwnerRestricted || !canUserApply)
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-conexia-green text-white hover:bg-conexia-green/90'
+                      : checkingPostulation
+                        ? 'bg-conexia-green text-white opacity-50 cursor-not-allowed'
+                        : 'bg-conexia-green text-white hover:bg-conexia-green/90'
                   }`}
                 >
-                  {isModerated 
-                    ? 'Proyecto No Disponible' 
-                    : (isOwnerRestricted || !canUserApply)
-                      ? 'No Disponible'
-                      : 'Postularme a este rol'
+                  {checkingPostulation 
+                    ? 'Verificando...'
+                    : isModerated 
+                      ? 'Proyecto No Disponible' 
+                      : (isOwnerRestricted || !canUserApply)
+                        ? 'No Disponible'
+                        : 'Postularme a este rol'
                   }
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* Toast para este rol específico */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={true}
+          onClose={() => setToast(null)}
+          position="top-center"
+          duration={4000}
+        />
+      )}
+      
+      {/* Modal de advertencia antes de postularse */}
+      {showWarningModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Importante: Postulación Única</h3>
+            </div>
+            
+            <div className="mb-6 space-y-3">
+              <p className="text-gray-700">
+                Estás a punto de postularte al rol <span className="font-semibold text-conexia-green">{role.title}</span>.
+              </p>
+              <p className="text-gray-700 font-medium">
+                Ten en cuenta que:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-gray-600 ml-2">
+                <li>Solo puedes postularte <strong>una vez</strong> a este rol</li>
+                <li>No podrás volver a postularte aunque canceles, te rechacen o expire tu postulación</li>
+                <li>Asegúrate de completar toda la información requerida correctamente</li>
+              </ul>
+              <p className="text-sm text-gray-500 mt-3 p-3 bg-yellow-50 rounded border border-yellow-200">
+                💡 Revisa cuidadosamente todos los requisitos antes de continuar.
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowWarningModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setShowWarningModal(false);
+                  router.push(`/project/${projectId}/apply/${role.id}`);
+                }}
+                className="flex-1 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors font-medium"
+              >
+                Entiendo, continuar
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -261,7 +394,11 @@ ${messageText.trim()}`;
         const reports = data?.data?.reports || [];
         const found = reports.find(r => String(r.userId) === String(user.id));
         setAlreadyReported(!!found);
-      }).catch(() => setAlreadyReported(false));
+      }).catch((error) => {
+        // Manejar errores que no sean 403
+        console.error('Error fetching project reports:', error);
+        setAlreadyReported(false);
+      });
     }
   }, [projectId, user, roleName]);
 
@@ -706,8 +843,8 @@ ${messageText.trim()}`;
             router.push(`/profile/userProfile/${project.ownerId}`);
                 } else if (from === 'user-projects' && project.ownerId) {
                   router.push(`/projects/user/${project.ownerId}`);
-                } else if (from === 'my-projects' && user && user.id) {
-                  router.push(`/projects/user/${user.id}`);
+                } else if (from === 'my-projects') {
+                  router.push('/my-projects');
                 } else {
                   router.push('/project/search');
                 }

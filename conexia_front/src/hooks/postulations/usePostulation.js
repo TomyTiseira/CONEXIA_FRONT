@@ -2,24 +2,35 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { applyToProject, cancelPostulation, getMyActivePostulationByProject, getMyPostulationByProject } from '@/service/postulations/postulationService';
+import { applyToProjectRole, cancelPostulation, getMyActivePostulationByProject, getMyPostulationByProject, getMyPostulationsByProjectAndRole } from '@/service/postulations/postulationService';
 import { useAuth } from '@/context/AuthContext';
 import { useRole } from '@/hooks/useRole';
 import { ROLES } from '@/constants/roles';
 import { validateProjectForPostulation } from '@/utils/postulationValidation';
 
-export const usePostulation = (projectId, isOwner, initialIsApplied = false) => {
+/**
+ * Hook para manejar postulaciones a roles específicos de un proyecto
+ * Soporta múltiples postulaciones por usuario (a diferentes roles del mismo proyecto)
+ * 
+ * @param {number} projectId - ID del proyecto
+ * @param {number} roleId - ID del rol específico (opcional)
+ * @param {boolean} isOwner - Si el usuario es dueño del proyecto
+ * @param {boolean} initialIsApplied - Estado inicial de aplicación
+ */
+export const usePostulation = (projectId, roleId = null, isOwner = false, initialIsApplied = false) => {
   const [isApplied, setIsApplied] = useState(initialIsApplied);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [postulationStatus, setPostulationStatus] = useState(null);
+  const [postulations, setPostulations] = useState([]); // Todas las postulaciones del proyecto
+  const [rolePostulation, setRolePostulation] = useState(null); // Postulación del rol específico
   const [initialLoad, setInitialLoad] = useState(true);
   const { user } = useAuth();
   
   // Obtener el rol del usuario
-  const roleId = user?.roleId || null;
-  const { role: userRole } = useRole(roleId);
+  const userId = user?.roleId || null;
+  const { role: userRole } = useRole(userId);
 
   // Función para verificar estado de postulación al cargar
   const checkPostulationStatus = React.useCallback(async () => {
@@ -31,15 +42,33 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
 
     try {
       setCheckingStatus(true);
-      // Verificar si existe cualquier postulación para este proyecto
-      const anyPostulation = await getMyPostulationByProject(projectId);
-      if (anyPostulation) {
-        setPostulationStatus(anyPostulation.status);
-        // Solo está "aplicado" si la postulación está activa
-        setIsApplied(anyPostulation.status.code === 'activo');
+      
+      if (roleId) {
+        // Si se especifica un roleId, verificar postulación para ese rol específico
+        const rolePostulations = await getMyPostulationsByProjectAndRole(projectId, roleId);
+        setPostulations(rolePostulations);
+        
+        if (rolePostulations.length > 0) {
+          // Usar la postulación más reciente
+          const latestPostulation = rolePostulations[0];
+          setRolePostulation(latestPostulation);
+          setPostulationStatus(latestPostulation.status);
+          setIsApplied(latestPostulation.status.code === 'activo');
+        } else {
+          setRolePostulation(null);
+          setPostulationStatus(null);
+          setIsApplied(false);
+        }
       } else {
-        setPostulationStatus(null);
-        setIsApplied(false);
+        // Sin roleId, verificar si existe cualquier postulación para este proyecto
+        const anyPostulation = await getMyPostulationByProject(projectId);
+        if (anyPostulation) {
+          setPostulationStatus(anyPostulation.status);
+          setIsApplied(anyPostulation.status.code === 'activo');
+        } else {
+          setPostulationStatus(null);
+          setIsApplied(false);
+        }
       }
     } catch (error) {
       console.error('Error checking postulation status:', error);
@@ -49,50 +78,52 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
       setCheckingStatus(false);
       setInitialLoad(false);
     }
-  }, [user, isOwner, userRole, projectId, initialIsApplied]);
+  }, [user, isOwner, userRole, projectId, roleId, initialIsApplied]);
 
   useEffect(() => {
-      if (user && userRole !== undefined) {
-        checkPostulationStatus();
-      }
-    }, [projectId, user, isOwner, userRole, initialIsApplied, checkPostulationStatus]);
+    if (user && userRole !== undefined) {
+      checkPostulationStatus();
+    }
+  }, [projectId, roleId, user, isOwner, userRole, initialIsApplied, checkPostulationStatus]);
 
-  // Función para postularse
+  // Función para postularse (versión antigua mantenida por compatibilidad)
   const handleApply = async (cvFile, project = null) => {
     // Validar el estado del proyecto si se proporciona
     if (project) {
       const validation = validateProjectForPostulation(project, { role: 'USER' });
       if (!validation.isValid) {
-        setError(validation.errors[0]); // Mostrar el primer error
+        setError(validation.errors[0]);
         return false;
       }
     }
 
     // Verificar el estado actual antes de postularse
     try {
-      const currentPostulation = await getMyPostulationByProject(projectId);
+      const currentPostulation = roleId 
+        ? (await getMyPostulationsByProjectAndRole(projectId, roleId))[0]
+        : await getMyPostulationByProject(projectId);
+        
       if (currentPostulation) {
         switch (currentPostulation.status.code) {
           case 'activo':
-            setError('Ya tienes una postulación activa para este proyecto');
+            setError('Ya tienes una postulación activa para este rol');
             return false;
           case 'aceptada':
-            setError('Tu postulación ya fue aceptada para este proyecto');
+            setError('Tu postulación ya fue aceptada para este rol');
             return false;
           case 'rechazada':
-            setError('Tu postulación anterior fue rechazada. No puedes postularte nuevamente a este proyecto');
+            setError('Tu postulación anterior fue rechazada. No puedes postularte nuevamente a este rol');
             return false;
           case 'cancelada':
             // Permitir postularse nuevamente si fue cancelada
             break;
           default:
-            setError('Ya te has postulado a este proyecto anteriormente');
+            setError('Ya te has postulado a este rol anteriormente');
             return false;
         }
       }
     } catch (error) {
       console.error('Error verificando estado de postulación:', error);
-      // Continuar con la postulación si no se puede verificar el estado
     }
 
     if (!cvFile) {
@@ -115,9 +146,22 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
     setError(null);
 
     try {
-      await applyToProject(projectId, cvFile);
+      // Si se especifica roleId, usar la nueva función
+      if (roleId) {
+        await applyToProjectRole({ projectId, roleId, cv: cvFile });
+      } else {
+        // Compatibilidad con código antiguo
+        await applyToProjectRole({ projectId, cv: cvFile });
+      }
+      
       setIsApplied(true);
       setPostulationStatus({ code: 'activo', name: 'Activa' });
+      
+      // Actualizar la postulación del rol si se especifica
+      if (roleId) {
+        await checkPostulationStatus();
+      }
+      
       return true;
     } catch (err) {
       console.error('Error al postularse:', err);
@@ -129,15 +173,11 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
         setError('El archivo CV es requerido');
       } else if (err.message.includes('CV file size cannot exceed 10MB')) {
         setError('El archivo CV no puede superar los 10MB');
-      } else if (err.message.includes('already exists for this project')) {
+      } else if (err.message.includes('already exists for this project') || err.message.includes('already applied')) {
         // Si el backend dice que ya existe una postulación
         // Actualizar el estado local para reflejar que ya se postuló
-        const existingPostulation = await getMyPostulationByProject(projectId);
-        if (existingPostulation) {
-          setPostulationStatus(existingPostulation.status);
-          setIsApplied(existingPostulation.status.code === 'activo');
-        }
-        setError('Ya te has postulado a este proyecto anteriormente');
+        await checkPostulationStatus();
+        setError('Ya te has postulado a este rol anteriormente');
       } else {
         setError('Error al postularse al proyecto. Intenta nuevamente.');
       }
@@ -148,41 +188,92 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
     }
   };
 
-  // Función para cancelar postulación
-  const handleCancel = async () => {
+  /**
+   * Nueva función para aplicar con datos completos de postulación
+   * Soporta CV, preguntas, evaluación técnica, socios e inversores
+   */
+  const applyToRole = async (applicationData) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Primero obtenemos la postulación activa para este proyecto
-      const activePostulation = await getMyActivePostulationByProject(projectId);
+      // Validar que se especifique roleId
+      if (!applicationData.roleId) {
+        throw new Error('El ID del rol es requerido');
+      }
+
+      // Verificar estado actual antes de postularse
+      const existingPostulations = await getMyPostulationsByProjectAndRole(projectId, applicationData.roleId);
+      const activePostulation = existingPostulations.find(p => 
+        ['activo', 'aceptada', 'pendiente'].includes(p.status?.code)
+      );
+
+      if (activePostulation) {
+        setError(`Ya tienes una postulación ${activePostulation.status.name} para este rol`);
+        return { success: false, error: `Ya tienes una postulación ${activePostulation.status.name} para este rol` };
+      }
+
+      // Realizar la postulación
+      const result = await applyToProjectRole({
+        projectId,
+        ...applicationData
+      });
+
+      if (result.success) {
+        setIsApplied(true);
+        setPostulationStatus({ code: 'activo', name: 'Activa' });
+        await checkPostulationStatus();
+        return { success: true, data: result.data };
+      } else {
+        setError(result.message || 'Error al postularse');
+        return { success: false, error: result.message };
+      }
+    } catch (err) {
+      console.error('Error al postularse:', err);
+      setError(err.message || 'Error al postularse al proyecto');
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para cancelar postulación
+  const handleCancel = async (postulationIdToCancel = null) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      let postulationToCancel = postulationIdToCancel;
       
-      if (!activePostulation) {
-        throw new Error('No se encontró una postulación activa para este proyecto');
+      // Si no se especifica ID, buscar la postulación activa
+      if (!postulationToCancel) {
+        if (roleId) {
+          // Buscar postulación activa para el rol específico
+          const rolePostulations = await getMyPostulationsByProjectAndRole(projectId, roleId);
+          const activeRolePostulation = rolePostulations.find(p => p.status.code === 'activo');
+          postulationToCancel = activeRolePostulation?.id;
+        } else {
+          // Buscar cualquier postulación activa para el proyecto
+          const activePostulation = await getMyActivePostulationByProject(projectId);
+          postulationToCancel = activePostulation?.id;
+        }
       }
       
-      // Cancelamos usando el ID de la postulación
-      await cancelPostulation(activePostulation.id);
+      if (!postulationToCancel) {
+        throw new Error('No se encontró una postulación activa para cancelar');
+      }
       
-      // Actualizar el estado local inmediatamente para permitir postularse de nuevo
+      // Cancelar usando el ID de la postulación
+      await cancelPostulation(postulationToCancel);
+      
+      // Actualizar el estado local inmediatamente
       setIsApplied(false);
-      setPostulationStatus(null); // Reset to null to allow applying again
+      setPostulationStatus(null);
+      setRolePostulation(null);
       
-      // Después de un breve retraso, verificar el estado real desde el backend
+      // Verificar el estado real desde el backend después de un breve retraso
       setTimeout(async () => {
-        try {
-          const updatedPostulation = await getMyPostulationByProject(projectId);
-          if (updatedPostulation && updatedPostulation.status.code !== 'cancelada') {
-            setPostulationStatus(updatedPostulation.status);
-            setIsApplied(updatedPostulation.status.code === 'activo');
-          } else {
-            // Si no se encuentra ninguna postulación o está cancelada, permitir postularse nuevamente
-            setPostulationStatus(null);
-            setIsApplied(false);
-          }
-        } catch (error) {
-          console.error('Error verifying cancellation:', error);
-        }
+        await checkPostulationStatus();
       }, 1000);
       
       return true;
@@ -191,7 +282,7 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
       
       // Manejar errores específicos
       if (err.message.includes('No se encontró una postulación activa')) {
-        setError('No tienes una postulación activa para este proyecto');
+        setError('No tienes una postulación activa para este rol');
       } else if (err.message.includes('cannot be cancelled')) {
         setError('Esta postulación no puede ser cancelada en su estado actual');
       } else if (err.message.includes('not authorized')) {
@@ -201,15 +292,7 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
       }
       
       // En caso de error, verificar el estado real
-      try {
-        const currentPostulation = await getMyPostulationByProject(projectId);
-        if (currentPostulation) {
-          setPostulationStatus(currentPostulation.status);
-          setIsApplied(currentPostulation.status.code === 'activo');
-        }
-      } catch (statusError) {
-        console.error('Error checking status after cancel failure:', statusError);
-      }
+      await checkPostulationStatus();
       
       return false;
     } finally {
@@ -223,27 +306,7 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
       return;
     }
 
-    try {
-      setCheckingStatus(true);
-      
-      // Verificar si existe cualquier postulación para este proyecto
-      const anyPostulation = await getMyPostulationByProject(projectId, true);
-      
-      if (anyPostulation) {
-        setPostulationStatus(anyPostulation.status);
-        // Solo está "aplicado" si la postulación está activa
-        setIsApplied(anyPostulation.status.code === 'activo');
-      } else {
-        setPostulationStatus(null);
-        setIsApplied(false);
-      }
-    } catch (error) {
-      console.error('Error refreshing postulation status:', error);
-      setPostulationStatus(null);
-      setIsApplied(false);
-    } finally {
-      setCheckingStatus(false);
-    }
+    await checkPostulationStatus();
   };
 
   return {
@@ -252,9 +315,12 @@ export const usePostulation = (projectId, isOwner, initialIsApplied = false) => 
     error,
     setError,
     handleApply,
+    applyToRole, // Nueva función para aplicar con datos completos
     handleCancel,
     checkingStatus,
     postulationStatus,
+    postulations, // Todas las postulaciones al proyecto
+    rolePostulation, // Postulación específica al rol
     initialLoad,
     refreshPostulationStatus,
   };

@@ -16,6 +16,7 @@ export default function MyPostulationsPage() {
   const { roleName } = useUserStore();
   const router = useRouter();
   const [postulations, setPostulations] = useState([]);
+  const [allPostulations, setAllPostulations] = useState([]); // Guardar todas las postulaciones
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,6 +24,8 @@ export default function MyPostulationsPage() {
   const [selectedPostulation, setSelectedPostulation] = useState(null);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState('');
+  const [selectedProject, setSelectedProject] = useState(''); // Filtro por proyecto
+  const [uniqueProjects, setUniqueProjects] = useState([]); // Lista de proyectos únicos
 
   useEffect(() => {
     if (roleName !== ROLES.USER) {
@@ -38,26 +41,50 @@ export default function MyPostulationsPage() {
       const response = await getMyPostulations(currentPage);
       
       if (response.success) {
-        // Enrich postulations with project data
+        // Enrich postulations with project data and role name
         const postulationsWithProjects = await Promise.all(
           response.data.postulations.map(async (postulation) => {
             try {
               const projectData = await fetchProjectById(postulation.projectId);
+              
+              // Obtener el nombre del rol desde project.roles
+              let roleName = 'Rol no especificado';
+              if (postulation.roleId && projectData?.roles) {
+                const role = projectData.roles.find(r => r.id === postulation.roleId);
+                if (role) {
+                  roleName = role.title || role.name || `Rol ${postulation.roleId}`;
+                }
+              }
+              
               return {
                 ...postulation,
-                project: projectData
+                project: projectData,
+                roleName: roleName
               };
             } catch (error) {
               console.error(`Error loading project ${postulation.projectId}:`, error);
               return {
                 ...postulation,
-                project: { title: 'Proyecto no disponible', id: postulation.projectId }
+                project: { title: 'Proyecto no disponible', id: postulation.projectId },
+                roleName: 'Rol no especificado'
               };
             }
           })
         );
 
-        setPostulations(postulationsWithProjects);
+        setAllPostulations(postulationsWithProjects);
+        
+        // Extraer proyectos únicos para el filtro
+        const projects = postulationsWithProjects.reduce((acc, p) => {
+          if (!acc.find(proj => proj.id === p.projectId)) {
+            acc.push({ id: p.projectId, title: p.project?.title || 'Proyecto no disponible' });
+          }
+          return acc;
+        }, []);
+        setUniqueProjects(projects);
+        
+        // Aplicar filtro si existe
+        applyFilters(postulationsWithProjects);
         setPagination(response.data.pagination);
       }
     } catch (error) {
@@ -67,6 +94,29 @@ export default function MyPostulationsPage() {
       setLoading(false);
     }
   };
+
+  const applyFilters = (postulationsList = allPostulations) => {
+    let filtered = [...postulationsList];
+    
+    // Filtrar por proyecto
+    if (selectedProject) {
+      filtered = filtered.filter(p => p.projectId === parseInt(selectedProject));
+    }
+    
+    setPostulations(filtered);
+  };
+
+  const handleProjectFilterChange = (projectId) => {
+    setSelectedProject(projectId);
+    setCurrentPage(1);
+  };
+
+  // Aplicar filtros cuando cambian
+  useEffect(() => {
+    if (allPostulations.length > 0) {
+      applyFilters();
+    }
+  }, [selectedProject]);
 
   const handleCancelPostulation = async () => {
     if (!selectedPostulation) return;
@@ -131,16 +181,36 @@ export default function MyPostulationsPage() {
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green mb-4 md:mb-0">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green">
               Mis Postulaciones
             </h1>
-            <button
-              onClick={() => router.push('/project/search')}
-              className="bg-conexia-green text-white px-4 py-2 rounded font-medium hover:bg-conexia-green/90 transition text-sm"
-            >
-              Buscar Proyectos
-            </button>
+            
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+              {/* Filtro por proyecto */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Filtrar por proyecto:</label>
+                <select
+                  value={selectedProject}
+                  onChange={(e) => handleProjectFilterChange(e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+                >
+                  <option value="">Todos los proyectos</option>
+                  {uniqueProjects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <button
+                onClick={() => router.push('/project/search')}
+                className="bg-conexia-green text-white px-4 py-2 rounded font-medium hover:bg-conexia-green/90 transition text-sm"
+              >
+                Buscar Proyectos
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -167,6 +237,9 @@ export default function MyPostulationsPage() {
                           Proyecto
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Rol
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Fecha de Postulación
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -188,6 +261,9 @@ export default function MyPostulationsPage() {
                               {postulation.project?.title || 'Proyecto no disponible'}
                             </button>
                           </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                            {postulation.roleName || 'Rol no especificado'}
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {formatDate(postulation.createdAt)}
                           </td>
@@ -197,7 +273,14 @@ export default function MyPostulationsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            {postulation.status.code === 'activo' && (
+                            {postulation.status.code === 'pendiente_evaluacion' ? (
+                              <button
+                                onClick={() => router.push(`/project/${postulation.projectId}/evaluation/${postulation.id}`)}
+                                className="bg-conexia-green text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-conexia-green/90 transition"
+                              >
+                                Completar Evaluación
+                              </button>
+                            ) : postulation.status.code === 'activo' ? (
                               <button
                                 onClick={() => {
                                   setSelectedPostulation(postulation);
@@ -207,7 +290,7 @@ export default function MyPostulationsPage() {
                               >
                                 Cancelar
                               </button>
-                            )}
+                            ) : null}
                           </td>
                         </tr>
                       ))}
@@ -230,10 +313,22 @@ export default function MyPostulationsPage() {
                           {postulation.status.name}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {formatDate(postulation.createdAt)}
-                      </p>
-                      {postulation.status.code === 'activo' && (
+                      <div className="space-y-1 mb-2">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Rol:</span> {postulation.roleName || 'Rol no especificado'}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Fecha:</span> {formatDate(postulation.createdAt)}
+                        </p>
+                      </div>
+                      {postulation.status.code === 'pendiente_evaluacion' ? (
+                        <button
+                          onClick={() => router.push(`/project/${postulation.projectId}/evaluation/${postulation.id}`)}
+                          className="bg-conexia-green text-white px-4 py-2 rounded text-sm font-medium hover:bg-conexia-green/90 transition w-full"
+                        >
+                          Completar Evaluación Técnica
+                        </button>
+                      ) : postulation.status.code === 'activo' ? (
                         <button
                           onClick={() => {
                             setSelectedPostulation(postulation);
@@ -243,7 +338,7 @@ export default function MyPostulationsPage() {
                         >
                           Cancelar postulación
                         </button>
-                      )}
+                      ) : null}
                     </div>
                   ))}
                 </div>
