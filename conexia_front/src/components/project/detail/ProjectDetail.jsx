@@ -717,8 +717,8 @@ ${messageText.trim()}`;
             router.push(`/profile/userProfile/${project.ownerId}`);
                 } else if (from === 'user-projects' && project.ownerId) {
                   router.push(`/projects/user/${project.ownerId}`);
-                } else if (from === 'my-projects' && user && user.id) {
-                  router.push(`/projects/user/${user.id}`);
+                } else if (from === 'my-projects') {
+                  router.push('/my-projects');
                 } else {
                   router.push('/project/search');
                 }

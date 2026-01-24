@@ -9,19 +9,14 @@ import Pagination from '@/components/common/Pagination';
 import StatusBadge from '@/components/common/StatusBadge';
 import Button from '@/components/ui/Button';
 import { getUserDisplayName } from '@/utils/formatUserName';
-import { ArrowLeft, Briefcase, Calendar, Users, AlertCircle, Eye } from 'lucide-react';
+import { ArrowLeft, Briefcase, Calendar, Users, AlertCircle, Eye, TrendingUp, FileText } from 'lucide-react';
 import { ROLES } from '@/constants/roles';
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
 import NavbarAdmin from '@/components/navbar/NavbarAdmin';
 import NavbarModerator from '@/components/navbar/NavbarModerator';
 import { PlanComparisonBanner } from '@/components/plans';
+import { UpgradePlanButton } from '@/components/plans';
 import { config } from '@/config';
-
-const STATUS_OPTIONS = [
-  { value: '', label: 'Todos los estados' },
-  { value: 'true', label: 'Activos' },
-  { value: 'false', label: 'Inactivos' }
-];
 
 export default function MyProjectsPage() {
   const router = useRouter();
@@ -35,21 +30,26 @@ export default function MyProjectsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showInactive, setShowInactive] = useState(false);
   const [filters, setFilters] = useState({
-    active: '',
     page: 1
   });
+  const [totalPostulations, setTotalPostulations] = useState(0);
+  const [activeProjects, setActiveProjects] = useState(0);
+  const [totalAllProjects, setTotalAllProjects] = useState(0);
 
   useEffect(() => {
     if (!user?.id) return;
     loadProjects();
-  }, [user?.id, filters]);
+  }, [user?.id, filters, showInactive]);
 
   const loadProjects = async () => {
     setLoading(true);
     setError(null);
     try {
-      const activeFilter = filters.active === '' ? undefined : filters.active === 'true';
+      // Si showInactive es false, solo mostrar activos (active: true)
+      // Si showInactive es true, mostrar todos (active: false para que includeDeleted sea true)
+      const activeFilter = showInactive ? false : true;
       const res = await fetchMyProjects({ 
         ownerId: user.id, 
         active: activeFilter, 
@@ -58,6 +58,23 @@ export default function MyProjectsPage() {
       });
       setProjects(res.projects || []);
       setPagination(res.pagination || pagination);
+      
+      // Obtener el total de TODOS los proyectos (activos + inactivos) para la estadística
+      const resAll = await fetchMyProjects({ 
+        ownerId: user.id, 
+        active: false, // includeDeleted = true, trae todos
+        page: 1, 
+        limit: 1 // Solo necesitamos el totalItems
+      });
+      setTotalAllProjects(resAll.pagination?.totalItems || 0);
+      
+      // Calcular estadísticas de solicitudes
+      const projects = res.projects || [];
+      const total = projects.reduce((sum, project) => sum + (project.postulationsCount || 0), 0);
+      setTotalPostulations(total);
+      // Contar proyectos activos
+      const activos = projects.filter(p => p.active).length;
+      setActiveProjects(activos);
     } catch (err) {
       console.error('Error loading projects:', err);
       setError('Error al cargar los proyectos');
@@ -70,12 +87,13 @@ export default function MyProjectsPage() {
     setFilters(prev => ({ ...prev, page: newPage }));
   };
 
-  const handleStatusChange = (e) => {
-    setFilters({ active: e.target.value, page: 1 });
+  const handleShowInactiveChange = (e) => {
+    setShowInactive(e.target.checked);
+    setFilters({ page: 1 });
   };
 
   const handleViewProject = (projectId) => {
-    router.push(`/project/${projectId}`);
+    router.push(`/project/${projectId}?from=my-projects`);
   };
 
   const renderNavbar = () => {
@@ -93,54 +111,83 @@ export default function MyProjectsPage() {
       {renderNavbar()}
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Plan Comparison Banner */}
-          {user?.role === ROLES.USER && (
-            <div className="mb-6">
-              <PlanComparisonBanner context="projects" />
-            </div>
-          )}
-
-          {/* Header */}
+          {/* Banner Mejorar Plan */}
           <div className="mb-6">
-            <button
-              onClick={() => router.back()}
-              className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
-            >
-              <ArrowLeft size={20} className="mr-2" />
-              Volver
-            </button>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Mis Proyectos
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Gestiona y visualiza todos tus proyectos colaborativos
-            </p>
+            <UpgradePlanButton context="projects" />
           </div>
 
-          {/* Filtros */}
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-white rounded-lg transition"
+            >
+              <ArrowLeft size={24} className="text-conexia-green" />
+            </button>
+            <h1 className="text-3xl font-bold text-conexia-green">Mis Proyectos</h1>
+          </div>
+
+          {/* Estadísticas rápidas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-conexia-green/10 rounded-lg">
+                  <Briefcase className="text-conexia-green" size={24} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Proyectos</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalAllProjects}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Users className="text-blue-600" size={24} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Solicitudes Totales</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalPostulations}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <TrendingUp className="text-orange-600" size={24} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Activos</p>
+                  <p className="text-2xl font-bold text-gray-900">{activeProjects}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Controles y filtros */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <div className="flex-1 max-w-xs">
-                <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">
-                  Filtrar por estado:
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={showInactive}
+                    onChange={handleShowInactiveChange}
+                    className="rounded border-gray-300 text-conexia-green focus:ring-conexia-green"
+                  />
+                  <span className="text-sm text-gray-700">Incluir inactivos</span>
                 </label>
-                <select
-                  id="status-filter"
-                  value={filters.active}
-                  onChange={handleStatusChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green focus:border-transparent"
-                >
-                  {STATUS_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
               </div>
               
-              <div className="text-sm text-gray-600">
-                Total: {pagination.totalItems || 0} proyectos
-              </div>
+              <button
+                onClick={() => router.push('/project/create')}
+                className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
+              >
+                <Briefcase size={16} />
+                Crear Nuevo Proyecto
+              </button>
             </div>
           </div>
 
@@ -168,9 +215,9 @@ export default function MyProjectsPage() {
                 No tienes proyectos
               </h3>
               <p className="text-gray-600">
-                {filters.active !== '' 
-                  ? 'No hay proyectos con el estado seleccionado.' 
-                  : 'Aún no tienes proyectos creados.'}
+                {showInactive 
+                  ? 'No se encontraron proyectos.' 
+                  : 'No tienes proyectos activos.'}
               </p>
             </div>
           )}
@@ -194,8 +241,8 @@ export default function MyProjectsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Solicitudes
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Última Actualización
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Acciones
                       </th>
                     </tr>
                   </thead>
