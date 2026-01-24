@@ -56,16 +56,37 @@ export default function ProjectApplicationPage() {
           const postulations = await getMyPostulationsByProjectAndRole(projectId, roleId);
           setExistingPostulations(postulations);
           
-          // Verificar si ya tiene una postulación activa, aceptada o pendiente
-          const activePostulation = postulations.find(p => 
-            ['activo', 'aceptada', 'pendiente'].includes(p.status?.code)
-          );
-          
-          if (activePostulation) {
+          // NUEVA REGLA: No puede volver a postularse si ya existe CUALQUIER postulación previa
+          if (postulations && postulations.length > 0) {
+            const lastPostulation = postulations[0]; // La más reciente
+            const statusCode = lastPostulation.status?.code?.toLowerCase() || '';
+            const statusName = lastPostulation.status?.name || 'en proceso';
+            
+            let message = '';
+            if (statusCode === 'rechazada' || statusCode === 'rejected') {
+              message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
+            } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
+              message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
+            } else if (statusCode === 'cancelada' || statusCode === 'cancelled') {
+              message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
+            } else if (statusCode === 'expirada' || statusCode === 'expired') {
+              message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
+            } else if (statusCode === 'pendiente' || statusCode === 'pending' || statusCode === 'activo' || statusCode === 'active') {
+              message = `Ya tienes una postulación ${statusName} para este rol.`;
+            } else {
+              message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
+            }
+            
             setToast({ 
-              type: 'warning', 
-              message: `Ya tienes una postulación ${activePostulation.status.name} para este rol` 
+              type: 'error', 
+              message: message
             });
+            
+            // Redirigir al detalle del proyecto después de 3 segundos
+            setTimeout(() => {
+              router.push(`/project/${projectId}`);
+            }, 3000);
+            return;
           }
         } catch (error) {
           console.error('Error checking postulations:', error);
@@ -130,15 +151,13 @@ export default function ProjectApplicationPage() {
                           applicationTypes.includes('INVESTOR') ||
                           role.title?.toLowerCase().includes('inversor');
 
-    // Verificar si ya tiene una postulación activa
-    const activePostulation = existingPostulations.find(p => 
-      ['activo', 'aceptada', 'pendiente'].includes(p.status?.code)
-    );
-    
-    if (activePostulation) {
+    // Verificar si ya tiene CUALQUIER postulación previa (nueva regla)
+    if (existingPostulations && existingPostulations.length > 0) {
+      const lastPostulation = existingPostulations[0];
+      const statusName = lastPostulation.status?.name || 'en proceso';
       setToast({ 
         type: 'error', 
-        message: `Ya tienes una postulación ${activePostulation.status.name} para este rol` 
+        message: `Ya tienes una postulación ${statusName} para este rol. No puedes volver a postularte.` 
       });
       return false;
     }
