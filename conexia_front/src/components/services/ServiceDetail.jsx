@@ -36,6 +36,10 @@ import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import Toast from '@/components/ui/Toast';
 import EmojiPicker from 'emoji-picker-react';
 import { createServiceReport, fetchServiceReports } from '@/service/reports/serviceReportsFetch';
+import ModerationAlert from '@/components/common/ModerationAlert';
+import { isServiceModerated } from '@/constants/serviceHirings';
+import { useAccountStatus } from '@/hooks/useAccountStatus';
+import OwnerSuspensionAlert from '@/components/common/OwnerSuspensionAlert';
 
 const ServiceDetail = ({ serviceId }) => {
   const router = useRouter();
@@ -118,10 +122,12 @@ const ServiceDetail = ({ serviceId }) => {
   };
 
   // Consultar si el usuario ya reportó este servicio (para ocultar la acción de reportar)
+  // Solo para admins/moderadores que pueden ver los reportes
   useEffect(() => {
     const checkAlreadyReported = async () => {
       try {
-        if (user && serviceId) {
+        // Solo hacer la llamada si el usuario es admin o moderador
+        if (user && serviceId && (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR)) {
           const data = await fetchServiceReports(serviceId, 1, 50);
           const reports = data?.data?.reports || data?.reports || [];
           const found = reports.find(r => String(r.userId) === String(user.id));
@@ -132,7 +138,7 @@ const ServiceDetail = ({ serviceId }) => {
       }
     };
     checkAlreadyReported();
-  }, [user, serviceId]);
+  }, [user, serviceId, roleName]);
 
   // Cargar estadísticas de reseñas
   useEffect(() => {
@@ -154,10 +160,29 @@ const ServiceDetail = ({ serviceId }) => {
   }, [serviceId]);
 
   const isOwner = service?.isOwner;
+  const isModerated = isServiceModerated(service);
+  
+  // Hook para verificar si el usuario logueado está suspendido (usando el store)
+  const { canCreateContent } = useAccountStatus();
+  
+  // Validar estado del owner usando ownerAccountStatus como fuente de verdad
+  const isOwnerSuspended = service?.ownerAccountStatus === 'suspended';
+  const isOwnerBanned = service?.ownerAccountStatus === 'banned';
+  const canInteractWithOwner = !isOwnerSuspended && !isOwnerBanned;
+  
   const canEdit = isOwner && roleName === ROLES.USER && service?.status === 'active' && service?.isActive !== false;
   const canDelete = isOwner && roleName === ROLES.USER && service?.status === 'active' && service?.isActive !== false;
-  const canContract = !isOwner && roleName === ROLES.USER && service?.status === 'active';
-  const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active';
+  
+  // El usuario puede solicitar cotización solo si:
+  // 1. No es el dueño
+  // 2. Es USER
+  // 3. El servicio está activo
+  // 4. El servicio NO está moderado
+  // 5. El owner del servicio NO está suspendido/baneado
+  // 6. El usuario logueado NO está suspendido
+  const canContract = !isOwner && roleName === ROLES.USER && service?.status === 'active' && !isModerated && canInteractWithOwner && canCreateContent;
+  
+  const canSendMessage = !isOwner && roleName === ROLES.USER && service?.status === 'active' && !isModerated;
   const canViewOnly = roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR;
 
   // Determinar si se debe mostrar "Ver Cotización" (cuando está en estado 'quoted' o 'negotiating')
@@ -166,7 +191,7 @@ const ServiceDetail = ({ serviceId }) => {
   const showViewQuotation = Boolean(service?.hasActiveQuotation && isQuotedOrNegotiating);
 
   // Estados que bloquean solicitar nueva cotización
-  const BLOCKED_STATES = ['pending', 'quoted', 'requoting', 'negotiating', 'accepted', 'approved', 'in_progress', 'in_claim', 'delivered', 'revision_requested'];
+  const BLOCKED_STATES = ['pending', 'quoted', 'requoting', 'negotiating', 'accepted', 'approved', 'in_progress', 'in_claim', 'delivered', 'revision_requested', 'terminated_by_moderation', 'finished_by_moderation'];
   
   // Validar si hay un hiring activo en estado bloqueado
   const hasBlockedHiring = activeHiring && BLOCKED_STATES.includes(activeHiring?.status?.code);
@@ -189,7 +214,9 @@ const ServiceDetail = ({ serviceId }) => {
       'in_progress': 'en progreso',
       'in_claim': 'en reclamo',
       'delivered': 'con entrega pendiente',
-      'revision_requested': 'en revisión'
+      'revision_requested': 'en revisión',
+      'terminated_by_moderation': 'terminada por moderación',
+      'finished_by_moderation': 'finalizada por moderación'
     };
     return statusLabels[status] || '';
   };
@@ -275,6 +302,16 @@ const ServiceDetail = ({ serviceId }) => {
   };
 
   const handleQuote = () => {
+    // Verificar si el servicio está moderado antes de proceder
+    if (isModerated) {
+      setToast({
+        type: 'error',
+        message: 'Este servicio no está disponible para contratación',
+        isVisible: true
+      });
+      return;
+    }
+    
     // Lógica de botones dinámicos según estado del servicio
     if (service?.hasPendingQuotation) {
       // Cancelar solicitud existente
@@ -611,8 +648,23 @@ ${messageText.trim()}`;
           {/* Contenido del servicio */}
           <div className="bg-white rounded-2xl shadow-lg border overflow-hidden relative">
             <div className="p-6 lg:p-8">
+              {/* Banner de moderación (solo mostrar si NO es por baneo del owner) */}
+              {isModerated && !isOwnerBanned && (
+                <ModerationAlert type="service" className="mb-6" />
+              )}
+              
+              {/* Banner de owner suspendido/baneado (prioridad sobre el banner de moderación) */}
+              {(isOwnerSuspended || isOwnerBanned) && (
+                <OwnerSuspensionAlert 
+                  data={service} 
+                  contentType="servicio" 
+                  className="mb-6" 
+                  isOwner={isOwner}
+                />
+              )}
+              
               {/* Botón de más opciones - Desktop: esquina del card; Mobile: junto al título */}
-              {user && roleName === ROLES.USER && !isOwner && service?.status === 'active' && service?.isActive !== false && (
+              {user && roleName === ROLES.USER && !isOwner && !isModerated && service?.status === 'active' && service?.isActive !== false && (
                 <>
                   {/* Desktop */}
                   <div className="absolute top-4 right-6 md:right-8 z-30 hidden md:block">

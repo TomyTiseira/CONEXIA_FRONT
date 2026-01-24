@@ -22,9 +22,13 @@ import { useChatMessages } from '@/hooks/messaging/useChatMessages';
 import EmojiPicker from 'emoji-picker-react';
 import { IoCheckmarkCircleSharp } from 'react-icons/io5'; // <- NUEVO icono
 import MessagingWidget from '@/components/messaging/MessagingWidget';
+import ModerationAlert from '@/components/common/ModerationAlert';
+import { isProjectModerated } from '@/constants/serviceHirings';
+import { useAccountStatus } from '@/hooks/useAccountStatus';
+import OwnerSuspensionAlert from '@/components/common/OwnerSuspensionAlert';
 
 // Componente para mostrar cada rol individualmente
-function RoleCard({ role, project, isOwner, user, projectId }) {
+function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwnerRestricted, canUserApply }) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [toast, setToast] = useState(null);
@@ -58,6 +62,16 @@ function RoleCard({ role, project, isOwner, user, projectId }) {
   };
 
   const handleApply = async () => {
+    // Verificar si el proyecto está moderado
+    if (isModerated) {
+      return; // No hacer nada si está moderado
+    }
+    
+    // Verificar si el owner está suspendido o el usuario no puede aplicar
+    if (isOwnerRestricted || !canUserApply) {
+      return; // No hacer nada si el owner está suspendido o el usuario está suspendido
+    }
+    
     if (!user) {
       router.push('/login');
       return;
@@ -222,10 +236,23 @@ function RoleCard({ role, project, isOwner, user, projectId }) {
               <div className="pt-4 border-t border-gray-200">
                 <button
                   onClick={handleApply}
-                  disabled={checkingPostulation}
-                  className="w-full bg-conexia-green text-white px-6 py-3 rounded-lg font-medium hover:bg-conexia-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={checkingPostulation || isModerated || isOwnerRestricted || !canUserApply}
+                  className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
+                    (isModerated || isOwnerRestricted || !canUserApply)
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : checkingPostulation
+                        ? 'bg-conexia-green text-white opacity-50 cursor-not-allowed'
+                        : 'bg-conexia-green text-white hover:bg-conexia-green/90'
+                  }`}
                 >
-                  {checkingPostulation ? 'Verificando...' : 'Postularme a este rol'}
+                  {checkingPostulation 
+                    ? 'Verificando...'
+                    : isModerated 
+                      ? 'Proyecto No Disponible' 
+                      : (isOwnerRestricted || !canUserApply)
+                        ? 'No Disponible'
+                        : 'Postularme a este rol'
+                  }
                 </button>
               </div>
             )}
@@ -319,6 +346,10 @@ export default function ProjectDetail({ projectId }) {
   const searchParams = useSearchParams();
   const { loadConversations, refreshUnreadCount } = useMessaging(); // NUEVO
   const { sendTextMessageTo } = useChatMessages(); // NUEVO
+  
+  // ⚠️ CRITICAL: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL LOGIC OR RETURNS
+  // Hook para verificar si el usuario logueado está suspendido (usando el store)
+  const { canCreateContent } = useAccountStatus();
 
   // Envío real de mensaje (texto + emojis, sin archivos) independiente del chat abierto
   const handleSendMessage = async () => {
@@ -357,7 +388,8 @@ ${messageText.trim()}`;
       setLoading(false);
     });
     // Verificar si el usuario ya reportó este proyecto
-    if (user && projectId) {
+    // Solo para admins/moderadores que pueden ver los reportes
+    if (user && projectId && (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR)) {
       fetchProjectReports(projectId).then((data) => {
         const reports = data?.data?.reports || [];
         const found = reports.find(r => String(r.userId) === String(user.id));
@@ -368,7 +400,7 @@ ${messageText.trim()}`;
         setAlreadyReported(false);
       });
     }
-  }, [projectId, user]);
+  }, [projectId, user, roleName]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   if (!project) return <div className="min-h-screen flex items-center justify-center text-conexia-green">Proyecto no encontrado</div>;
@@ -380,6 +412,18 @@ ${messageText.trim()}`;
   };
 
   const isOwner = user && project && (String(user.id) === String(project.ownerId) || project.isOwner);
+  const isModerated = isProjectModerated(project);
+  
+  // Validar estado del owner usando ownerAccountStatus como fuente de verdad
+  const isOwnerSuspended = project?.ownerAccountStatus === 'suspended';
+  const isOwnerBanned = project?.ownerAccountStatus === 'banned';
+  const canInteractWithOwner = !isOwnerSuspended && !isOwnerBanned;
+  
+  // El usuario puede postularse solo si:
+  // 1. El owner del proyecto NO está suspendido/baneado
+  // 2. El usuario logueado NO está suspendido
+  const canUserApply = canInteractWithOwner && canCreateContent;
+  const isOwnerRestricted = !canInteractWithOwner;
   
   const skills = Array.isArray(project.skills) ? project.skills : (project.skills ? [project.skills] : []);
   const ownerName = getOwnerName(project.owner || ''); // owner ya viene como string completo del backend
@@ -422,7 +466,9 @@ ${messageText.trim()}`;
         ></div>
   <div className="w-full max-w-4xl bg-white rounded-2xl shadow p-8 z-10 relative mt-4">
           {/* Botón tres puntos: absolute en la esquina del card, tanto mobile como desktop */}
-          {!isOwner && (
+          {/* Usuarios normales: solo si no es owner y no está moderado */}
+          {/* Admins/Moderadores: siempre mostrar para acceder a ver reportes */}
+          {((!isOwner && !isModerated) || (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR)) && (
             <div className="absolute top-4 right-6 md:right-8 z-30">
               <button
                 className="p-2 rounded-full hover:bg-gray-100"
@@ -477,6 +523,22 @@ ${messageText.trim()}`;
               )}
             </div>
           )}
+          
+          {/* Banner de moderación (solo mostrar si NO es por baneo del owner) */}
+          {isModerated && !isOwnerBanned && (
+            <ModerationAlert type="project" className="mb-6" />
+          )}
+          
+          {/* Banner de owner suspendido/baneado (prioridad sobre el banner de moderación) */}
+          {(isOwnerSuspended || isOwnerBanned) && (
+            <OwnerSuspensionAlert 
+              data={project} 
+              contentType="proyecto" 
+              className="mb-6" 
+              isOwner={isOwner}
+            />
+          )}
+          
           <div className="flex flex-col md:flex-row gap-10">
             {/* Imagen */}
             <div className="flex flex-col items-center md:items-start w-full md:w-56">
@@ -630,7 +692,7 @@ ${messageText.trim()}`;
           )}
           
           {/* Mensaje al creador tipo Facebook mejorado y responsivo, alineado y compacto */}
-          {!isOwner && roleName !== ROLES.ADMIN && roleName !== ROLES.MODERATOR && (
+          {!isOwner && !isModerated && roleName !== ROLES.ADMIN && roleName !== ROLES.MODERATOR && (
             <div className="mt-8 w-full">
               {/* Usar el mismo contenedor con altura mínima en ambos estados */}
               {messageSent ? (
@@ -752,6 +814,9 @@ ${messageText.trim()}`;
                         isOwner={isOwner}
                         user={user}
                         projectId={projectId}
+                        isModerated={isModerated}
+                        isOwnerRestricted={isOwnerRestricted}
+                        canUserApply={canUserApply}
                       />
                     ))}
                   </div>

@@ -7,6 +7,7 @@ import { getProfileById } from '@/service/profiles/profilesFetch';
 import { useUserStore } from '@/store/userStore';
 import { useRole } from '@/hooks/useRole';
 import { ROLES } from '@/constants/roles';
+import { authSocketService } from '@/service/auth/authSocket.service';
 
 // Helper function para mapear roleId a role name
 const getRoleNameByRoleId = (roleId) => {
@@ -48,12 +49,21 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
+      
       // Usar getProfileSimple para validación inicial - NO intenta refresh en 401
       const userData = await getProfileSimple();
+      
   setUser(userData);
   // Siempre setear usuario y rol en el store, aunque no haya perfil extendido
+  // Asegurarse de pasar los campos de suspensión
   setUserStore(userData, roleName);
   setRoleName(roleName);
+  
+      // 🔌 CONECTAR AL WEBSOCKET después de validar sesión exitosamente
+      if (typeof window !== 'undefined' && !authSocketService.isConnected()) {
+        authSocketService.connect();
+      }
+      
       // Esperar a que el rol esté definido antes de buscar perfil extendido
       if (roleLoading || !roleName) {
         return;
@@ -83,10 +93,26 @@ export const AuthProvider = ({ children }) => {
         setProfileStore(null);
       }
     } catch (err) {
-  setUser(null);
-  setError(err.message);
-  clearUserStore(); // Limpiar Zustand solo si hay error real
-  setProfileStore(null); // Limpiar solo perfil extendido
+      // Diferenciar entre "no hay sesión" (normal) vs error real (servidor caído)
+      const isNoSession = 
+        err.message?.includes('No se pudo obtener el perfil') ||
+        err.message?.includes('Failed to fetch') ||
+        err.message?.includes('NetworkError') ||
+        err.message?.includes('Load failed');
+      
+      if (!isNoSession) {
+        // Error real: problema inesperado con el servidor
+        console.error('[AuthContext] Error al validar sesión:', err.message);
+      }
+  
+      setUser(null);
+      setError(err.message);
+      clearUserStore(); // Limpiar Zustand
+      setProfileStore(null); // Limpiar perfil extendido
+      
+      // 🔌 DESCONECTAR WEBSOCKET en caso de error
+      authSocketService.disconnect();
+      
       // Limpieza adicional: UI de mensajería persistida y estado del store
       try {
         if (typeof window !== 'undefined') {
@@ -111,6 +137,9 @@ export const AuthProvider = ({ children }) => {
     }
     
     try {
+      // 🔌 DESCONECTAR WEBSOCKET primero
+      authSocketService.disconnect();
+      
       // Primero limpiar el estado local para evitar solicitudes subsecuentes
       setUser(null);
       setError(null);
@@ -137,6 +166,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('Error al cerrar sesión:', err);
       // Aunque falle el logout en el backend, asegurar que el frontend esté limpio
+      authSocketService.disconnect();
       setUser(null);
       setError(null);
       setIsLoading(false);
@@ -165,8 +195,17 @@ export const AuthProvider = ({ children }) => {
   }, [clearUserStore]);
 
   useEffect(() => {
-    // Solo validar sesión cuando el rol esté definido y no estemos cerrando sesión
+    // No validar sesión si:
+    // 1. El rol está cargando
+    // 2. Estamos cerrando sesión
+    // 3. Hay un logout forzado en progreso (desde modal de baneo)
     if (roleLoading || isLoggingOut.current) return;
+    
+    // Verificar si hay logout forzado desde modal de baneo
+    if (typeof window !== 'undefined' && window.__CONEXIA_FORCE_LOGOUT__) {
+      return;
+    }
+    
     validateSession();
   }, [validateSession, roleLoading]);
 
@@ -178,7 +217,13 @@ export const AuthProvider = ({ children }) => {
     const roleFromId = getRoleNameByRoleId(userData?.roleId);
     const userWithRole = {
       ...userData,
-      role: roleName || roleFromId
+      role: roleName || roleFromId,
+      // Asegurar que los campos de suspensión están presentes
+      accountStatus: userData?.accountStatus || 'active',
+      isSuspended: userData?.accountStatus === 'suspended',
+      isBanned: userData?.accountStatus === 'banned',
+      suspensionExpiresAt: userData?.suspensionExpiresAt || null,
+      suspensionReason: userData?.suspensionReason || null,
     };
     setUser(userWithRole);
     setError(null);

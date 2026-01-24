@@ -30,15 +30,23 @@ export function useModerationActions() {
   /**
    * Resuelve un análisis de moderación
    * @param {number} id - ID del análisis
-   * @param {string} action - Acción: "ban_user" | "release_user" | "keep_monitoring"
+   * @param {string} action - Acción: "ban_user" | "suspend_user" | "release_user" | "keep_monitoring"
    * @param {string} notes - Notas del moderador (opcional)
+   * @param {number} suspensionDays - Días de suspensión (7, 15 o 30) - solo para suspend_user
    * @returns {Promise<Object>}
    */
-  const executeResolve = async (id, action, notes = '') => {
+  const executeResolve = async (id, action, notes = '', suspensionDays = null) => {
     setResolving(true);
     setActionError(null);
     try {
-      const result = await resolveAnalysis(id, { action, notes });
+      const payload = { action, notes };
+      
+      // Agregar suspensionDays solo si la acción es suspend_user
+      if (action === 'suspend_user' && suspensionDays) {
+        payload.suspensionDays = suspensionDays;
+      }
+      
+      const result = await resolveAnalysis(id, payload);
       return result;
     } catch (error) {
       setActionError(error.message || 'Error al resolver análisis');

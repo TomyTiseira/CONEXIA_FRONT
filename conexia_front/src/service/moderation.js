@@ -78,8 +78,9 @@ export async function getModerationResults(params = {}) {
  * Resuelve un análisis de moderación
  * @param {number} id - ID del análisis
  * @param {Object} data - Datos de resolución
- * @param {string} data.action - Acción a tomar: "ban_user" | "release_user" | "keep_monitoring"
+ * @param {string} data.action - Acción a tomar: "ban_user" | "suspend_user" | "release_user" | "keep_monitoring"
  * @param {string} data.notes - Notas del moderador (opcional)
+ * @param {number} data.suspensionDays - Días de suspensión (7, 15 o 30) - solo para suspend_user
  * @returns {Promise<Object>} Análisis actualizado
  */
 export async function resolveAnalysis(id, data) {

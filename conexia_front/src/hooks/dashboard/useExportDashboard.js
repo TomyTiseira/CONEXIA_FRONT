@@ -2,6 +2,7 @@
 
 /**
  * Hook para exportar datos del dashboard a CSV
+ * Ahora exporta tanto métricas de servicios como de proyectos en un solo archivo
  */
 export const useExportDashboard = () => {
   
@@ -46,7 +47,99 @@ export const useExportDashboard = () => {
   };
 
   /**
-   * Exportar datos de usuario
+   * Exportar TODAS las métricas (servicios + proyectos)
+   */
+  const exportAllMetrics = (projectData, serviceData) => {
+    const sections = [];
+    
+    // ===== SECCIÓN: MÉTRICAS DE SERVICIOS =====
+    sections.push('=== MÉTRICAS DE SERVICIOS ===');
+    
+    if (serviceData) {
+      const serviceRows = [
+        { metric: 'Plan del usuario', value: serviceData.userPlan || 'N/A' },
+        { metric: '', value: '' }, // Línea vacía
+        { metric: 'Servicios publicados', value: serviceData.totalServicesPublished || 0 },
+        { metric: 'Servicios contratados', value: serviceData.totalServicesHired || 0 },
+        { metric: 'Tasa de contratación (%)', value: serviceData.hiringPercentage || 0 },
+        { metric: 'Calificación promedio (1-5)', value: serviceData.averageRating || 0 },
+        { metric: 'Total de reseñas', value: serviceData.totalReviews || 0 },
+      ];
+
+      // Métricas de ingresos (Basic y Premium)
+      if (serviceData.totalRevenueGenerated !== undefined) {
+        serviceRows.push({ metric: 'Ingresos generados (ARS)', value: serviceData.totalRevenueGenerated || 0 });
+      }
+
+      // Métricas Premium
+      if (serviceData.userPlan === 'Premium') {
+        serviceRows.push(
+          { metric: '', value: '' },
+          { metric: 'Servicios completados', value: serviceData.servicesCompleted || 0 },
+          { metric: 'Servicios cancelados', value: serviceData.servicesCancelled || 0 },
+          { metric: 'Servicios con reclamos', value: serviceData.servicesWithClaims || 0 }
+        );
+
+        // Top servicios
+        if (serviceData.topHiredServices && serviceData.topHiredServices.length > 0) {
+          serviceRows.push({ metric: '', value: '' });
+          serviceRows.push({ metric: 'Top Servicios Más Contratados', value: '' });
+          
+          serviceData.topHiredServices.forEach((service, index) => {
+            serviceRows.push({
+              metric: `#${index + 1} - ${service.serviceTitle}`,
+              value: `${service.timesHired} contratos | $${service.revenue} ARS | ⭐${service.averageRating}`
+            });
+          });
+        }
+      }
+
+      const serviceCsv = convertToCSV(serviceRows, ['metric', 'value']);
+      sections.push(serviceCsv);
+    } else {
+      sections.push('Sin datos de servicios disponibles');
+    }
+
+    sections.push('');
+    sections.push('');
+
+    // ===== SECCIÓN: MÉTRICAS DE PROYECTOS =====
+    sections.push('=== MÉTRICAS DE PROYECTOS ===');
+    
+    if (projectData) {
+      const projectRows = [
+        { metric: 'Proyectos finalizados', value: projectData.projects?.totalProjectsEstablished || 0 },
+        { metric: 'Total de postulaciones', value: projectData.postulations?.totalPostulations || 0 },
+        { metric: 'Postulaciones aceptadas', value: projectData.postulations?.acceptedPostulations || 0 },
+        { metric: 'Tasa de éxito (%)', value: projectData.postulations?.successRate || 0 },
+      ];
+
+      const projectCsv = convertToCSV(projectRows, ['metric', 'value']);
+      sections.push(projectCsv);
+    } else {
+      sections.push('Sin datos de proyectos disponibles');
+    }
+
+    sections.push('');
+    sections.push('');
+
+    // ===== METADATA =====
+    sections.push('=== INFORMACIÓN DEL REPORTE ===');
+    const metadataRows = [
+      { metric: 'Fecha de generación', value: new Date().toLocaleString('es-AR') },
+      { metric: 'Generado por', value: 'Conexia Dashboard' },
+    ];
+    const metadataCsv = convertToCSV(metadataRows, ['metric', 'value']);
+    sections.push(metadataCsv);
+
+    // Combinar todas las secciones
+    const finalCsv = sections.join('\n');
+    const filename = `conexia-metricas-completas-${new Date().toISOString().split('T')[0]}.csv`;
+    downloadCSV(finalCsv, filename);
+  };
+
+  /**
+   * Exportar datos de usuario (legacy - mantener por compatibilidad)
    */
   const exportUserData = (data) => {
     if (!data) return;
@@ -111,6 +204,7 @@ export const useExportDashboard = () => {
   };
 
   return {
+    exportAllMetrics,
     exportUserData,
     exportAdminData,
   };

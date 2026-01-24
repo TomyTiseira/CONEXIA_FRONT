@@ -4,6 +4,9 @@ export * from './useRole';
 export * from './useRoleValidation';
 export * from './useSkills';
 export * from './useVerificationStatus';
+export * from './useAccountRestrictions';
+export * from './useAccountStatus';
+export * from './useOwnerStatus';
 export * from './project/useRecommendations';
 
 // Hooks de conexiones

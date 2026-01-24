@@ -28,7 +28,7 @@
     "react-phone-number-input": "^3.4.13",
     "recharts": "^3.4.1",
     "remark-gfm": "^4.0.1",
-    "socket.io-client": "^4.7.5",
+    "socket.io-client": "^4.8.3",
     "swapy": "^1.0.5",
     "zustand": "^5.0.6"
   },

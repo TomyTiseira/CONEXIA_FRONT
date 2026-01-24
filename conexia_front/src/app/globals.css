@@ -608,7 +608,62 @@ div[class*="grid-cols-1"][class*="md:grid-cols-2"][class*="gap-6"][class*="items
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
+/* Animación para modal de login - fade in suave */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Animación para check de éxito */
+@keyframes check {
+  0% {
+    stroke-dasharray: 0, 100;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dasharray: 100, 0;
+    opacity: 1;
+  }
+}
+
+.animate-check {
+  animation: check 0.6s ease-in-out forwards;
+}
+
 /* Gradiente cónico para efectos especiales */
 .bg-gradient-conic {
   background: conic-gradient(from 0deg, #48a6a7, #d6ecec, #48a6a7, #367d7d, #48a6a7);
 }
+
+/* ========================================
+   Modales de Suspensión/Baneo - Estilos
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+

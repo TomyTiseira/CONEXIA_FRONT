@@ -13,7 +13,7 @@ export default function EmptyRecommendationsState() {
       router.push(`/profile/userProfile/${user.id}`);
     } else {
       // Fallback en caso de que no haya user.id
-      router.push('/profile/Create');
+      router.push('/profile/create');
     }
   };
 

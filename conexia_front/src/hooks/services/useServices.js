@@ -157,6 +157,13 @@ export function useServices() {
       }
       
     } catch (err) {
+      // Silenciar errores si la sesión fue terminada (baneo/logout)
+      const { isSessionTerminated } = await import('@/service/auth/fetchWithRefresh');
+      if (isSessionTerminated()) {
+        // Sesión terminada, no loguear errores
+        return;
+      }
+      
       console.error('❌ Error cargando servicios:', err.message);
       setError(err.message);
       setServices([]);

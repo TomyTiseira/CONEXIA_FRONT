@@ -6,10 +6,38 @@ export const useUserStore = create((set) => ({
   roleId: null,
   roleName: null,
   profile: null, // datos extendidos (foto, nombre, ciudad, etc)
-  setUser: (user, roleName = null) => set({ user, roleId: user?.roleId || null, roleName }),
+  
+  // Estado de cuenta (suspensión/baneo)
+  accountStatus: 'active', // 'active' | 'suspended' | 'banned'
+  isSuspended: false,
+  isBanned: false,
+  suspensionExpiresAt: null,
+  suspensionReason: null,
+  
+  setUser: (user, roleName = null) => set({ 
+    user, 
+    roleId: user?.roleId || null, 
+    roleName,
+    // Extraer estado de cuenta
+    accountStatus: user?.accountStatus || 'active',
+    isSuspended: user?.accountStatus === 'suspended',
+    isBanned: user?.accountStatus === 'banned',
+    suspensionExpiresAt: user?.suspensionExpiresAt || null,
+    suspensionReason: user?.suspensionReason || null,
+  }),
   setProfile: (profile) => set({ profile }),
   setRoleName: (roleName) => set({ roleName }),
-  clearUser: () => set({ user: null, roleId: null, roleName: null, profile: null }),
+  clearUser: () => set({ 
+    user: null, 
+    roleId: null, 
+    roleName: null, 
+    profile: null,
+    accountStatus: 'active',
+    isSuspended: false,
+    isBanned: false,
+    suspensionExpiresAt: null,
+    suspensionReason: null,
+  }),
 }));
 
 // Uso:

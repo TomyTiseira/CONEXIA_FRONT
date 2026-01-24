@@ -43,6 +43,14 @@ export async function updateUserProfile(payload) {
         formData.append('coverPicture', payload.coverPicture);
       }
       
+      // Agregar flags de eliminación de imágenes
+      if (payload.removeProfilePicture === true) {
+        formData.append('removeProfilePicture', 'true');
+      }
+      if (payload.removeCoverPicture === true) {
+        formData.append('removeCoverPicture', 'true');
+      }
+      
       // Usar fetchWithRefresh que maneja automáticamente las cookies/JWT
       const res = await fetchWithRefresh(`${config.API_URL}/users/profile`, {
         method: "PATCH",
@@ -80,6 +88,14 @@ export async function updateUserProfile(payload) {
           jsonPayload[field] = processedArray;
         }
       });
+      
+      // Agregar flags de eliminación de imágenes
+      if (payload.removeProfilePicture === true) {
+        jsonPayload.removeProfilePicture = true;
+      }
+      if (payload.removeCoverPicture === true) {
+        jsonPayload.removeCoverPicture = true;
+      }
       
       // Usar fetchWithRefresh que maneja automáticamente las cookies/JWT
       const res = await fetchWithRefresh(`${config.API_URL}/users/profile`, {

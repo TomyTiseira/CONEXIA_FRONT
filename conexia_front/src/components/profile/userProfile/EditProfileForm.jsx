@@ -37,6 +37,8 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
   });
   
   const [imgErrors, setImgErrors] = useState({ profilePicture: '', coverPicture: '' });   
+  const [removeProfilePicture, setRemoveProfilePicture] = useState(false);
+  const [removeCoverPicture, setRemoveCoverPicture] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [expErrors, setExpErrors] = useState([]);
@@ -523,6 +525,13 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
       // Limpiar error si el archivo es válido
       setImgErrors(prev => ({ ...prev, [field]: '' }));
       setForm(prev => ({ ...prev, [field]: file }));
+      // Resetear flag de eliminación si se selecciona una nueva imagen
+      if (field === 'profilePicture') {
+        setRemoveProfilePicture(false);
+      }
+      if (field === 'coverPicture') {
+        setRemoveCoverPicture(false);
+      }
     } else {
       // Si no hay archivo seleccionado
       setImgErrors(prev => ({ ...prev, [field]: '' }));
@@ -745,25 +754,76 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
     }
     
   // Enviar solo las skills seleccionadas actualmente (puede ser array vacío o con nuevas/viejas)
-  onSubmit({ ...form, skills: form.skills });
+  // Incluir flags para indicar si se deben eliminar imágenes
+  onSubmit({ 
+    ...form, 
+    skills: form.skills,
+    removeProfilePicture,
+    removeCoverPicture
+  });
   }
 
   const { user: authUser } = useAuth();
 
   return (
-    <div className="min-h-screen bg-conexia-soft">
-      <div className="w-full max-w-5xl mx-auto px-4 mt-4">
-        <form onSubmit={handleSubmit} noValidate className="space-y-6 bg-white p-6 rounded shadow">  
-          {/* Imágenes - Ahora al comienzo */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-6">
-              <div className="flex-shrink-0">
-                <label className="block text-sm font-medium text-conexia-green mb-1">Foto de perfil (Opcional)</label>
+    <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+        <form onSubmit={handleSubmit} noValidate className="space-y-6 p-6">  
+          {/* Título del formulario */}
+          <div className="text-center pb-6 border-b border-gray-200">
+            <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight leading-tight">
+              Edita tu perfil profesional
+            </h1>
+            <p className="text-conexia-green-dark mt-2 text-base md:text-lg">
+              Actualiza tu información para mantener tu perfil al día y mejorar tus oportunidades de conexión.
+            </p>
+          </div>
 
-                {/* Imagen actual */}
-                {user.profilePicture && !form.profilePicture && (
-                  <div className="mb-3">
-                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md">
+          {/* Sección de imágenes con estilo mejorado */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Foto de perfil */}
+            <div>
+              <label className="block text-sm font-semibold text-conexia-green-dark mb-2">Foto de perfil (Opcional)</label>
+              
+              {/* Zona de subida estilo ImageUploadZone */}
+              <div
+                onClick={() => !form.profilePicture && profilePicRef.current?.click()}
+                className={`
+                  min-h-[280px] flex items-center justify-center
+                  border-2 border-dashed rounded-lg p-4 text-center transition-colors
+                  ${form.profilePicture || user.profilePicture
+                    ? 'border-conexia-green bg-conexia-green/5' 
+                    : 'border-gray-300 hover:border-conexia-green hover:bg-conexia-green/5 cursor-pointer'
+                  }
+                `}
+              >
+                {form.profilePicture ? (
+                  <div className="space-y-3 w-full">
+                    <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md">
+                      <img
+                        src={URL.createObjectURL(form.profilePicture)}
+                        alt="Vista previa perfil"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-700 mb-2">{form.profilePicture.name}</p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setForm(f => ({ ...f, profilePicture: null }));
+                          if (profilePicRef.current) profilePicRef.current.value = '';
+                        }}
+                        className="text-red-500 text-sm hover:underline"
+                      >
+                        Eliminar imagen
+                      </button>
+                    </div>
+                  </div>
+                ) : user.profilePicture && !removeProfilePicture ? (
+                  <div className="space-y-3 w-full">
+                    <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md">
                       <Image
                         src={`${config.IMAGE_URL}/${user.profilePicture}`}
                         alt="Foto de perfil actual"
@@ -771,59 +831,98 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
                         className="object-cover"
                       />
                     </div>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs text-gray-600 mb-1">Imagen actual</p>
+                      <div className="flex gap-3 justify-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            profilePicRef.current?.click();
+                          }}
+                          className="text-conexia-green text-sm hover:underline"
+                        >
+                          Cambiar imagen
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRemoveProfilePicture(true);
+                          }}
+                          className="text-red-500 text-sm hover:underline"
+                        >
+                          Eliminar imagen
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                )}
-
-                {/* Nueva imagen seleccionada */}
-                {form.profilePicture && (
-                  <div className="mb-3">
-                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md">
-                      <img
-                        src={URL.createObjectURL(form.profilePicture)}
-                        alt="Vista previa perfil"
-                        className="w-full h-full object-cover"
-                      />
+                ) : (
+                  <div className="flex flex-col items-center gap-3 py-6 w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Haz clic para seleccionar</p>
+                      <p className="text-xs text-gray-500 mt-1">Máx. 1 imagen, JPG o PNG, 5MB</p>
                     </div>
                   </div>
                 )}
               </div>
-
-              <div className="flex-1 flex flex-col items-start">
-                <p className="text-xs text-gray-500 mb-1">
-                  Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
-                </p>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  ref={profilePicRef}
-                  onChange={e => handleImageChange(e, 'profilePicture')}
-                  className="w-full mb-2"
-                  style={{ color: 'transparent' }}
-                />
-                {form.profilePicture && (
-                  <button
-                    type="button"
-                    onClick={() => { setForm(f => ({ ...f, profilePicture: null })); if (profilePicRef.current) profilePicRef.current.value = ''; }}
-                    className="text-red-500 text-xs hover:underline mb-1"
-                  >
-                    Eliminar
-                  </button>
-                )}
-                {form.profilePicture && (
-                  <span className="text-xs text-gray-700 mb-1">{form.profilePicture.name}</span>
-                )}
-                {imgErrors.profilePicture && <p className="text-xs text-red-600 mt-1">{imgErrors.profilePicture}</p>}
-              </div>
+              
+              <input
+                ref={profilePicRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={e => handleImageChange(e, 'profilePicture')}
+                className="hidden"
+              />
+              {imgErrors.profilePicture && <p className="text-xs text-red-600 mt-2">{imgErrors.profilePicture}</p>}
             </div>
 
-            <div className="flex items-center gap-6">
-              <div className="flex-shrink-0">
-                <label className="block text-sm font-medium text-conexia-green mb-1">Foto de portada (Opcional)</label>
-
-                {/* Imagen actual */}
-                {user.coverPicture && !form.coverPicture && (
-                  <div className="mb-3">
-                    <div className="relative w-32 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md">
+            {/* Foto de portada */}
+            <div>
+              <label className="block text-sm font-semibold text-conexia-green-dark mb-2">Foto de portada (Opcional)</label>
+              
+              {/* Zona de subida estilo ImageUploadZone */}
+              <div
+                onClick={() => !form.coverPicture && coverPicRef.current?.click()}
+                className={`
+                  min-h-[280px] flex items-center justify-center
+                  border-2 border-dashed rounded-lg p-4 text-center transition-colors
+                  ${form.coverPicture || user.coverPicture
+                    ? 'border-conexia-green bg-conexia-green/5' 
+                    : 'border-gray-300 hover:border-conexia-green hover:bg-conexia-green/5 cursor-pointer'
+                  }
+                `}
+              >
+                {form.coverPicture ? (
+                  <div className="space-y-3 w-full">
+                    <div className="relative w-full h-32 mx-auto rounded-lg overflow-hidden border-4 border-white shadow-md">
+                      <img
+                        src={URL.createObjectURL(form.coverPicture)}
+                        alt="Vista previa portada"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-700 mb-2">{form.coverPicture.name}</p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setForm(f => ({ ...f, coverPicture: null }));
+                          if (coverPicRef.current) coverPicRef.current.value = '';
+                        }}
+                        className="text-red-500 text-sm hover:underline"
+                      >
+                        Eliminar imagen
+                      </button>
+                    </div>
+                  </div>
+                ) : user.coverPicture && !removeCoverPicture ? (
+                  <div className="space-y-3 w-full">
+                    <div className="relative w-full h-32 mx-auto rounded-lg overflow-hidden border-4 border-white shadow-md">
                       <Image
                         src={`${config.IMAGE_URL}/${user.coverPicture}`}
                         alt="Foto de portada actual"
@@ -831,49 +930,53 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
                         className="object-cover"
                       />
                     </div>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs text-gray-600 mb-1">Imagen actual</p>
+                      <div className="flex gap-3 justify-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            coverPicRef.current?.click();
+                          }}
+                          className="text-conexia-green text-sm hover:underline"
+                        >
+                          Cambiar imagen
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRemoveCoverPicture(true);
+                          }}
+                          className="text-red-500 text-sm hover:underline"
+                        >
+                          Eliminar imagen
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                )}
-
-                {/* Nueva imagen seleccionada */}
-                {form.coverPicture && (
-                  <div className="mb-3">
-                    <div className="relative w-32 h-20 rounded-lg overflow-hidden border-4 border-white shadow-md">
-                      <img
-                        src={URL.createObjectURL(form.coverPicture)}
-                        alt="Vista previa portada"
-                        className="w-full h-full object-cover"
-                      />
+                ) : (
+                  <div className="flex flex-col items-center gap-3 py-6 w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Haz clic para seleccionar</p>
+                      <p className="text-xs text-gray-500 mt-1">Máx. 1 imagen, JPG o PNG, 5MB</p>
                     </div>
                   </div>
                 )}
               </div>
-
-              <div className="flex-1 flex flex-col items-start">
-                <p className="text-xs text-gray-500 mb-1">
-                  Formato permitido: <span className="font-semibold text-conexia-green">JPG, PNG</span>. Máx. <span className="font-semibold text-conexia-green">1 archivo</span> y hasta <span className="font-semibold text-conexia-green">5MB</span>.
-                </p>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  ref={coverPicRef}
-                  onChange={e => handleImageChange(e, 'coverPicture')}
-                  className="w-full mb-2"
-                  style={{ color: 'transparent' }}
-                />
-                {form.coverPicture && (
-                  <button
-                    type="button"
-                    onClick={() => { setForm(f => ({ ...f, coverPicture: null })); if (coverPicRef.current) coverPicRef.current.value = ''; }}
-                    className="text-red-500 text-xs hover:underline mb-1"
-                  >
-                    Eliminar
-                  </button>
-                )}
-                {form.coverPicture && (
-                  <span className="text-xs text-gray-700 mb-1">{form.coverPicture.name}</span>
-                )}
-                {imgErrors.coverPicture && <p className="text-xs text-red-600 mt-1">{imgErrors.coverPicture}</p>}
-              </div>
+              
+              <input
+                ref={coverPicRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={e => handleImageChange(e, 'coverPicture')}
+                className="hidden"
+              />
+              {imgErrors.coverPicture && <p className="text-xs text-red-600 mt-2">{imgErrors.coverPicture}</p>}
             </div>
           </div>
 
@@ -1360,17 +1463,10 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
           </div>
           
           {isEditing && (
-            <div className="flex flex-col md:flex-row gap-4 mt-8">
-              <button 
-                type="submit" 
-                className="w-full md:w-auto bg-conexia-green text-white py-2 px-8 rounded font-semibold hover:bg-conexia-green/90"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Guardando...' : 'Confirmar cambios'}
-              </button>   
+            <div className="flex flex-col md:flex-row gap-4 mt-8 md:justify-end">
               <button
                 type="button"
-                className="w-full md:w-auto bg-[#f5f6f6] text-[#777d7d] py-2 px-8 rounded font-semibold hover:bg-[#f1f2f2] border border-[#e1e4e4]"
+                className="w-full md:w-auto bg-[#f5f6f6] text-[#777d7d] py-3 px-8 rounded-lg font-semibold hover:bg-[#f1f2f2] border border-[#e1e4e4] transition-colors"
                 style={{ minWidth: '120px' }}
                 onClick={() => {
                   if (onCancel) {
@@ -1388,6 +1484,13 @@ export default function EditProfileForm({ user, onSubmit, onCancel, isEditing = 
                 }}
               >
                 Cancelar
+              </button>
+              <button 
+                type="submit" 
+                className="w-full md:w-auto bg-conexia-green text-white py-3 px-8 rounded-lg font-semibold hover:bg-conexia-green/90 transition-colors shadow-sm"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Guardando...' : 'Confirmar cambios'}
               </button>
             </div>
           )}
