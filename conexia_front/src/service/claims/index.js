@@ -452,6 +452,47 @@ export const submitCompliance = async (claimId, data) => {
   }
 };
 
+/**
+ * Sube evidencia de cumplimiento de un compliance específico
+ * @param {string} complianceId - ID del compliance
+ * @param {Object} data - Datos de la evidencia
+ * @param {File[]} data.files - Archivos de evidencia (1-5 archivos, máx 10MB c/u)
+ * @param {string} data.userResponse - Explicación del cumplimiento (20-1000 chars)
+ * @returns {Promise<Object>} - Compliance actualizado
+ */
+export const submitComplianceEvidence = async (complianceId, data) => {
+  try {
+    const formData = new FormData();
+    
+    // Agregar respuesta del usuario
+    formData.append('userResponse', data.userResponse);
+    
+    // Agregar archivos
+    if (data.files && data.files.length > 0) {
+      data.files.forEach((file) => {
+        formData.append('evidence', file);
+      });
+    }
+
+    const response = await fetch(`${config.API_URL}/compliances/${complianceId}/submit`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al enviar evidencia del cumplimiento');
+    }
+
+    return result.data || result;
+  } catch (error) {
+    console.error('Error in submitComplianceEvidence:', error);
+    throw error;
+  }
+};
+
 const claimsService = {
   createClaim,
   getClaims,
@@ -465,6 +506,7 @@ const claimsService = {
   getClaimDetail,
   submitObservations,
   submitCompliance,
+  submitComplianceEvidence,
 };
 
 export default claimsService;

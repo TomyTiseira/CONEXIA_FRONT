@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMyClaims } from '@/hooks/claims';
 import { useAuth } from '@/context/AuthContext';
-import { FaEllipsisH, FaRegEye } from 'react-icons/fa';
+import { FaEllipsisH, FaRegEye, FaRegCopy } from 'react-icons/fa';
 import { Filter, AlertTriangle } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
@@ -22,6 +22,7 @@ import { ClaimActionsModal } from './ClaimActionsModal';
 import { ClaimTypeBadge } from './ClaimTypeBadge';
 import { ClaimRoleBadge } from './ClaimRoleBadge';
 import { ClaimStatusBadge } from './ClaimStatusBadge';
+import { ComplianceStatusBadge } from './ComplianceStatusBadge';
 import { formatClaimDate } from '@/constants/claims';
 import { config } from '@/config';
 
@@ -41,6 +42,60 @@ export default function MyClaimsPage() {
   const [showSubsanarModal, setShowSubsanarModal] = useState(false);
   const [showActionsModal, setShowActionsModal] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // Helper para formatear ID corto
+  const formatShortId = (id) => {
+    const value = String(id ?? '');
+    if (value.length <= 10) return value;
+    return `${value.slice(0, 8)}…`;
+  };
+
+  // Helper para copiar al portapapeles
+  const copyToClipboard = async (text) => {
+    const value = String(text ?? '');
+    if (!value) return false;
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+        return true;
+      }
+    } catch (_) {
+      // fallback below
+    }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = value;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return ok;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  // Helper para obtener primer nombre
+  const getFirstName = (fullName) => {
+    if (!fullName) return '';
+    const trimmed = String(fullName).trim();
+    if (!trimmed) return '';
+    return trimmed.split(/\s+/)[0] || '';
+  };
+
+  // Helper para obtener nombre corto (primer nombre + primer apellido)
+  const getShortDisplayName = (profile) => {
+    if (!profile) return 'N/A';
+    const firstName = getFirstName(profile.name);
+    const lastName = profile.lastName ? String(profile.lastName).trim().split(/\s+/)[0] : '';
+    const composed = `${firstName} ${lastName}`.trim();
+    return composed || profile.name || 'N/A';
+  };
 
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
@@ -228,7 +283,7 @@ export default function MyClaimsPage() {
                     <table className="w-full">
                       <thead className="bg-gray-50 border-b">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[120px]">
                             ID
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -244,6 +299,9 @@ export default function MyClaimsPage() {
                             Estado
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Compromiso
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Fecha
                           </th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -254,11 +312,26 @@ export default function MyClaimsPage() {
                       <tbody className="bg-white divide-y divide-gray-200">
                         {claims.map((claim) => (
                           <tr key={claim.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              #{claim.folio || claim.id.substring(0, 8)}
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="text-xs font-mono font-semibold text-gray-900"
+                                  title={String(claim.id)}
+                                >
+                                  {formatShortId(claim.id)}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(claim.id)}
+                                  className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                                  title="Copiar ID completo"
+                                >
+                                  <FaRegCopy size={14} />
+                                </button>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <ClaimTypeBadge claimType={claim.claimType} />
+                              <ClaimTypeBadge claimType={claim.claimType} showIcon={false} />
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <ClaimRoleBadge role={claim.userRole} />
@@ -268,15 +341,64 @@ export default function MyClaimsPage() {
                                 {claim.otherUser?.profilePicture && (
                                   <img
                                     src={`${config.IMAGE_URL}/${claim.otherUser.profilePicture}`}
-                                    alt={claim.otherUser.name}
-                                    className="w-8 h-8 rounded-full object-cover"
+                                    alt={claim.otherUser?.name}
+                                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                                   />
                                 )}
-                                <span className="text-sm text-gray-900">{claim.otherUser?.name}</span>
+                                <span className="text-sm font-medium text-gray-900">{claim.otherUser?.name}</span>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <ClaimStatusBadge status={claim.status} />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {(() => {
+                                if (!claim.compliances || claim.compliances.length === 0) {
+                                  return <span className="text-xs text-gray-400 italic">Sin compromisos</span>;
+                                }
+                                
+                                const total = claim.compliances.length;
+                                const pending = claim.compliances.filter(c => c.status === 'pending').length;
+                                const approved = claim.compliances.filter(c => c.status === 'approved').length;
+                                const submitted = claim.compliances.filter(c => c.status === 'submitted').length;
+                                const isResponsible = claim.compliances.some(c => String(c.responsibleUserId) === String(user?.id));
+                                
+                                if (approved === total) {
+                                  return (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                        {total} completado{total !== 1 ? 's' : ''}
+                                      </span>
+                                      {isResponsible && (
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                          Tu compromiso
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                
+                                if (pending > 0 || submitted > 0) {
+                                  return (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                                        {pending + submitted} en curso
+                                      </span>
+                                      {isResponsible && (
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                          Tu compromiso
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                
+                                return (
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                                    {total} {total === 1 ? 'compromiso' : 'compromisos'}
+                                  </span>
+                                );
+                              })()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {formatClaimDate(claim.createdAt)}
@@ -319,8 +441,20 @@ export default function MyClaimsPage() {
                     <div key={claim.id} className="bg-white rounded-xl shadow-sm p-4 space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
-                          <p className="text-sm font-semibold text-gray-900">#{claim.folio || claim.id.substring(0, 8)}</p>
-                          <ClaimTypeBadge claimType={claim.claimType} />
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-mono font-semibold text-gray-900" title={String(claim.id)}>
+                              {formatShortId(claim.id)}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(claim.id)}
+                              className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                              title="Copiar ID completo"
+                            >
+                              <FaRegCopy size={14} />
+                            </button>
+                          </div>
+                          <ClaimTypeBadge claimType={claim.claimType} showIcon={false} />
                         </div>
                         <ClaimStatusBadge status={claim.status} />
                       </div>
@@ -334,6 +468,56 @@ export default function MyClaimsPage() {
                           <p className="text-xs text-gray-600">Contra</p>
                           <p className="text-sm font-medium text-gray-900">{claim.otherUser?.name}</p>
                         </div>
+                        {claim.compliances && claim.compliances.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-600">Compromiso</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {(() => {
+                                const total = claim.compliances.length;
+                                const pending = claim.compliances.filter(c => c.status === 'pending').length;
+                                const approved = claim.compliances.filter(c => c.status === 'approved').length;
+                                const submitted = claim.compliances.filter(c => c.status === 'submitted').length;
+                                const isResponsible = claim.compliances.some(c => String(c.responsibleUserId) === String(user?.id));
+                                
+                                if (approved === total) {
+                                  return (
+                                    <>
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                        {total} completado{total !== 1 ? 's' : ''}
+                                      </span>
+                                      {isResponsible && (
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                          Tu compromiso
+                                        </span>
+                                      )}
+                                    </>
+                                  );
+                                }
+                                
+                                if (pending > 0 || submitted > 0) {
+                                  return (
+                                    <>
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                                        {pending + submitted} en curso
+                                      </span>
+                                      {isResponsible && (
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                          Tu compromiso
+                                        </span>
+                                      )}
+                                    </>
+                                  );
+                                }
+                                
+                                return (
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                                    {total} {total === 1 ? 'compromiso' : 'compromisos'}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        )}
                         <div>
                           <p className="text-xs text-gray-600">Fecha</p>
                           <p className="text-sm text-gray-900">{formatClaimDate(claim.createdAt)}</p>

@@ -46,14 +46,14 @@ export const CompliancesFilters = ({
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           >
             <option value="">Todos los estados</option>
-            <option value="pending,requires_adjustment,rejected">⏳ Requieren acción</option>
-            <option value="pending">⏳ Pendientes</option>
-            <option value="submitted">📤 Enviados</option>
-            <option value="peer_approved">✅ Pre-aprobados</option>
-            <option value="peer_objected">⚠️ Objetados</option>
-            <option value="in_review">👀 En revisión</option>
-            <option value="approved">✅ Aprobados</option>
-            <option value="overdue,warning">🔴 Vencidos</option>
+            <option value="pending,requires_adjustment,rejected">Requieren acción</option>
+            <option value="pending">Pendientes</option>
+            <option value="submitted">Enviados</option>
+            <option value="peer_approved">Pre-aprobados</option>
+            <option value="peer_objected">Objetados</option>
+            <option value="in_review">En revisión</option>
+            <option value="approved">Aprobados</option>
+            <option value="overdue,warning">Vencidos</option>
           </select>
         )}
 

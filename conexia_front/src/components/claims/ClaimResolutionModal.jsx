@@ -7,20 +7,22 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, CheckCircle, XCircle, Loader2, User, Briefcase, HandshakeIcon } from 'lucide-react';
+import { X, CheckCircle, XCircle, Loader2, User, Briefcase, HandshakeIcon, Plus, Trash2, Check } from 'lucide-react';
 import { getClaimDetail, resolveClaim } from '@/service/claims';
-import { CLAIM_VALIDATION, CLAIM_RESOLUTION_TYPES, CLAIM_RESOLUTION_CONFIG, getClaimTypeLabel } from '@/constants/claims';
+import { CLAIM_VALIDATION, CLAIM_RESOLUTION_TYPES, CLAIM_RESOLUTION_CONFIG, getClaimTypeLabel, COMPLIANCE_TYPES, COMPLIANCE_TYPE_LABELS } from '@/constants/claims';
 import InputField from '@/components/form/InputField';
+import SelectField from '@/components/form/SelectField';
 import Button from '@/components/ui/Button';
 import { ClaimTypeBadge } from './ClaimTypeBadge';
 import { ClaimStatusBadge } from './ClaimStatusBadge';
 import { ClaimEvidenceViewer } from './ClaimEvidenceViewer';
 
 export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showToast }) => {
-  const [action, setAction] = useState('resolve');
   const [resolutionType, setResolutionType] = useState(CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR);
   const [resolution, setResolution] = useState('');
   const [partialAgreementDetails, setPartialAgreementDetails] = useState('');
+  const [compliances, setCompliances] = useState([]);
+  const [editingComplianceId, setEditingComplianceId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -31,6 +33,14 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
   useEffect(() => {
     const fetchDetail = async () => {
       if (!isOpen || !baseClaimId) return;
+
+      // Limpiar estado de compromisos al abrir modal
+      setCompliances([]);
+      setEditingComplianceId(null);
+      setResolutionType(CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR);
+      setResolution('');
+      setPartialAgreementDetails('');
+      setError(null);
 
       if (claim?.claim && claim?.claimant && claim?.otherUser) {
         setDetail(claim);
@@ -104,6 +114,18 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
         : `Otro (${otherReason})`)
       : baseTypeLabel;
 
+    // Extraer IDs correctamente - el backend devuelve profile.id
+    const claimantUserId = claimData?.claimant?.profile?.id || claimData?.claimant?.id || claimData?.claimant?.userId;
+    const otherUserId = claimData?.otherUser?.profile?.id || claimData?.otherUser?.id || claimData?.otherUser?.userId;
+
+    // Debug: Ver qué IDs tenemos
+    console.log('[ClaimResolutionModal] User IDs:', {
+      claimantUserId,
+      otherUserId,
+      claimantData: claimData?.claimant,
+      otherUserData: claimData?.otherUser
+    });
+
     return {
       claimId: claimObj?.id,
       claimType,
@@ -111,12 +133,96 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
       claimantName,
       claimedName,
       claimantRole: claimObj?.claimantRole,
+      claimantId: claimantUserId,
+      otherUserId: otherUserId,
       serviceTitle,
       description,
       evidenceUrls,
       status: currentStatus,
     };
   }, [claim, detail]);
+
+  // Funciones para manejar compliances
+  const addCompliance = () => {
+    const newId = Date.now();
+    setCompliances([
+      ...compliances,
+      {
+        id: newId,
+        responsibleUserId: '',
+        complianceType: COMPLIANCE_TYPES.CONFIRMATION_ONLY,
+        instructions: '',
+        deadlineDays: 7,
+        order: compliances.length,
+        isConfirmed: false,
+      },
+    ]);
+    setEditingComplianceId(newId);
+  };
+
+  const removeCompliance = (id) => {
+    setCompliances(compliances.filter((c) => c.id !== id));
+    if (editingComplianceId === id) {
+      setEditingComplianceId(null);
+    }
+  };
+
+  const updateCompliance = (id, field, value) => {
+    setCompliances(
+      compliances.map((c) =>
+        c.id === id ? { ...c, [field]: value } : c
+      )
+    );
+  };
+
+  const confirmCompliance = (id) => {
+    const compliance = compliances.find((c) => c.id === id);
+    if (!compliance) return;
+
+    // Validar campos antes de confirmar
+    if (!compliance.responsibleUserId) {
+      setError('Debes seleccionar un responsable');
+      return;
+    }
+    if (!compliance.complianceType) {
+      setError('Debes seleccionar un tipo de compromiso');
+      return;
+    }
+    if (compliance.instructions.trim().length < 20) {
+      setError('Las instrucciones deben tener al menos 20 caracteres');
+      return;
+    }
+    if (compliance.instructions.trim().length > 1000) {
+      setError('Las instrucciones no pueden exceder 1000 caracteres');
+      return;
+    }
+    if (compliance.deadlineDays < 1 || compliance.deadlineDays > 60) {
+      setError('El plazo debe estar entre 1 y 60 días');
+      return;
+    }
+
+    setCompliances(
+      compliances.map((c) =>
+        c.id === id ? { ...c, isConfirmed: true } : c
+      )
+    );
+    setEditingComplianceId(null);
+    setError(null);
+  };
+
+  const editCompliance = (id) => {
+    setEditingComplianceId(id);
+  };
+
+  const cancelEditCompliance = () => {
+    const editing = compliances.find(c => c.id === editingComplianceId);
+    // Si el compromiso ya está confirmado, solo cancelamos la edición
+    // Si es un compromiso nuevo sin confirmar, lo eliminamos
+    if (editing && !editing.isConfirmed) {
+      setCompliances(compliances.filter(c => c.id !== editingComplianceId));
+    }
+    setEditingComplianceId(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -133,7 +239,6 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
     }
 
     if (
-      action === 'resolve' &&
       resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT &&
       partialAgreementDetails.trim().length > CLAIM_VALIDATION.PARTIAL_AGREEMENT_MAX_LENGTH
     ) {
@@ -141,20 +246,85 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
       return;
     }
 
+    // Verificar si hay un compromiso en edición sin confirmar
+    if (editingComplianceId !== null) {
+      setError('Debes confirmar o cancelar el compromiso actual antes de continuar');
+      return;
+    }
+
+    // Validar compromisos confirmados
+    const confirmedCompliances = compliances.filter(c => c.isConfirmed);
+    for (const compliance of confirmedCompliances) {
+      if (!compliance.responsibleUserId) {
+        setError('Todos los compromisos deben tener un responsable asignado');
+        return;
+      }
+      if (!compliance.complianceType) {
+        setError('Todos los compromisos deben tener un tipo seleccionado');
+        return;
+      }
+      if (compliance.instructions.trim().length < 20) {
+        setError('Las instrucciones de cada compromiso deben tener al menos 20 caracteres');
+        return;
+      }
+      if (compliance.instructions.trim().length > 1000) {
+        setError('Las instrucciones de cada compromiso no pueden exceder 1000 caracteres');
+        return;
+      }
+      if (compliance.deadlineDays < 1 || compliance.deadlineDays > 60) {
+        setError('El plazo de cada compromiso debe estar entre 1 y 60 días');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
       const resolutionData = {
-        status: action === 'resolve' ? 'resolved' : 'rejected',
+        status: 'resolved',
         resolution: trimmedResolution,
+        resolutionType: resolutionType,
       };
-
-      if (action === 'resolve') {
-        resolutionData.resolutionType = resolutionType;
+      
+      // Agregar solo compromisos confirmados si existen
+      const confirmedCompliances = compliances.filter(c => c.isConfirmed);
+      
+      // Debug: Ver qué compromisos se están enviando
+      console.log('[DEBUG] Enviando resolución con compromisos:', {
+        totalCompliances: compliances.length,
+        confirmedCompliances: confirmedCompliances.length,
+        allCompliances: compliances,
+        confirmedOnly: confirmedCompliances
+      });
+      
+      // VALIDACIÓN EXTRA: Verificar que no se excedan 5 compromisos
+      if (confirmedCompliances.length > 5) {
+        setError(`Error: Se detectaron ${confirmedCompliances.length} compromisos confirmados. El máximo es 5. Por favor, recarga la página.`);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (confirmedCompliances.length > 0) {
+        // Crear array de compromisos únicos (por si acaso)
+        const uniqueCompliances = confirmedCompliances.filter((compliance, index, self) =>
+          index === self.findIndex((c) => c.id === compliance.id)
+        );
+        
+        console.log('[DEBUG] Compromisos únicos después de filtrar:', uniqueCompliances);
+        
+        resolutionData.compliances = uniqueCompliances.map((c, index) => ({
+          responsibleUserId: Number(c.responsibleUserId),
+          complianceType: c.complianceType,
+          instructions: c.instructions.trim(),
+          deadlineDays: Number(c.deadlineDays),
+          order: index,
+        }));
+        
+        console.log('[DEBUG] Compromisos a enviar al backend:', resolutionData.compliances);
       }
 
-      if (action === 'resolve' && resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT && partialAgreementDetails.trim()) {
+      if (resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT && partialAgreementDetails.trim()) {
         resolutionData.partialAgreementDetails = partialAgreementDetails.trim();
       }
 
@@ -164,13 +334,8 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
       handleClose();
 
       // Mostrar toast en la página padre
-      const message =
-        action === 'resolve'
-          ? 'Reclamo resuelto exitosamente. Las partes serán notificadas.'
-          : 'Reclamo rechazado. La contratación vuelve a su estado anterior.';
-
       if (showToast) {
-        showToast('success', message);
+        showToast('success', 'Reclamo resuelto exitosamente. Las partes serán notificadas.');
       }
 
       // Actualizar claim en el padre
@@ -192,10 +357,11 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
   const handleClose = () => {
     if (!isSubmitting) {
       onClose();
-      setAction('resolve');
       setResolutionType(CLAIM_RESOLUTION_TYPES.CLIENT_FAVOR);
       setResolution('');
       setPartialAgreementDetails('');
+      setCompliances([]);
+      setEditingComplianceId(null);
       setError(null);
     }
   };
@@ -216,7 +382,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
           {/* Header (estático) */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-semibold text-gray-900">
-              {action === 'resolve' ? 'Resolver reclamo' : 'Rechazar reclamo'}
+              Resolver reclamo
             </h2>
             <button
               onClick={handleClose}
@@ -288,50 +454,14 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
                 <ClaimEvidenceViewer evidenceUrls={normalized.evidenceUrls} />
               </div>
             )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Acción <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setAction('resolve')}
-                  disabled={isSubmitting}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    action === 'resolve'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <CheckCircle size={20} className="text-green-600" />
-                    <span className="font-semibold text-gray-900">Resolver</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Reclamo es válido</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAction('reject')}
-                  disabled={isSubmitting}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    action === 'reject'
-                      ? 'border-red-500 bg-red-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <XCircle size={20} className="text-red-600" />
-                    <span className="font-semibold text-gray-900">Rechazar</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Reclamo no es válido</p>
-                </button>
-              </div>
-            </div>
 
-            {/* Tipo de resolución (solo si se resuelve) */}
-            {action === 'resolve' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+            {/* Tipo de Resolución y Descripción agrupados */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <h3 className="text-xl font-semibold text-conexia-green-dark mb-4">Resolución del Reclamo</h3>
+              
+              {/* Tipo de resolución */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-conexia-green-dark mb-3">
                   Tipo de resolución <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-3">
@@ -434,74 +564,248 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
                     </div>
                   </label>
                 </div>
+              </div>
 
-                {/* Campo adicional para acuerdo parcial */}
-                {resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT && (
-                  <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                    <label htmlFor="partialAgreementDetails" className="block text-sm font-medium text-gray-700 mb-2">
-                      Detalles del acuerdo (opcional)
-                    </label>
-                    <p className="text-xs text-gray-600 mb-3">
-                      Especifica los términos del acuerdo parcial entre las partes
-                    </p>
-                    <InputField
-                      multiline
-                      rows={3}
-                      name="partialAgreementDetails"
-                      placeholder="Ej: El cliente pagará el 70% del monto acordado, el proveedor realizará ajustes menores..."
-                      value={partialAgreementDetails}
-                      onChange={(e) => setPartialAgreementDetails(e.target.value)}
-                      maxLength={CLAIM_VALIDATION.PARTIAL_AGREEMENT_MAX_LENGTH}
-                      disabled={isSubmitting}
-                      showCharCount={true}
-                    />
+              {/* Campo de resolución/explicación - AHORA DENTRO DEL MISMO COMPONENTE */}
+              <div className="border-t pt-6 mt-6">
+                <label htmlFor="resolution" className="block text-sm font-semibold text-conexia-green-dark mb-2">
+                  Explicación de la Resolución <span className="text-red-500">*</span>
+                </label>
+                <InputField
+                  multiline
+                  rows={8}
+                  name="resolution"
+                  placeholder="Explica detalladamente la resolución del reclamo, qué se decidió y por qué..."
+                  value={resolution}
+                  onChange={(e) => {
+                    setResolution(e.target.value);
+                    setError(null);
+                  }}
+                  maxLength={maxLength}
+                  disabled={isSubmitting}
+                  showCharCount={true}
+                  error={error}
+                />
+                <p className="mt-1 text-xs text-gray-600">
+                  Mínimo {minLength} caracteres
+                </p>
+              </div>
+            </div>
+
+            {/* Compromisos a asignar */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="mb-4">
+                <h3 className="text-xl font-semibold text-conexia-green-dark">Compromisos a Asignar</h3>
+                <p className="text-sm text-gray-600 mt-1">Define las acciones que cada parte debe cumplir para resolver el reclamo</p>
+              </div>
+
+              {/* Lista de compromisos confirmados - COMPACTO */}
+              {compliances.filter(c => c.isConfirmed).length > 0 && (
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm font-semibold text-gray-700">Compromisos agregados ({compliances.filter(c => c.isConfirmed).length}):</p>
+                  {compliances.filter(c => c.isConfirmed).map((compliance) => {
+                    const responsibleName = 
+                      String(compliance.responsibleUserId) === String(normalized.claimantId) 
+                        ? normalized.claimantName 
+                        : normalized.claimedName;
+                    
+                    return (
+                      <div key={compliance.id} className="bg-green-50 border border-green-200 rounded-lg p-3 relative">
+                        {/* Iconos de acciones en la esquina superior derecha */}
+                        <div className="absolute top-2 right-2 flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => editCompliance(compliance.id)}
+                            className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-100 transition-colors"
+                            disabled={isSubmitting || editingComplianceId !== null}
+                            title="Editar compromiso"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                              <path d="m15 5 4 4"/>
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeCompliance(compliance.id)}
+                            className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-100 transition-colors"
+                            disabled={isSubmitting || editingComplianceId !== null}
+                            title="Eliminar compromiso"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+
+                        {/* Contenido del compromiso */}
+                        <div className="pr-12">
+                          <div className="flex items-center gap-1 mb-2">
+                            <CheckCircle size={14} className="text-green-600" />
+                            <span className="font-semibold text-gray-900 text-xs">{COMPLIANCE_TYPE_LABELS[compliance.complianceType]}</span>
+                          </div>
+                          <div className="text-xs space-y-1">
+                            <p className="text-gray-600">
+                              <span className="font-medium">Responsable:</span> {responsibleName} | 
+                              <span className="font-medium"> Plazo:</span> {compliance.deadlineDays} días
+                            </p>
+                            <p className="text-gray-700"><span className="font-medium">Instrucciones:</span> {compliance.instructions}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Formulario para agregar/editar compromiso - COMPACTO */}
+              {editingComplianceId !== null && (() => {
+                const editingCompliance = compliances.find(c => c.id === editingComplianceId);
+                if (!editingCompliance) return null;
+
+                // Debug: Ver qué IDs tenemos disponibles
+                console.log('Datos de usuarios para compromisos:', {
+                  claimantId: normalized.claimantId,
+                  claimantName: normalized.claimantName,
+                  otherUserId: normalized.otherUserId,
+                  otherUserName: normalized.claimedName,
+                  detail: detail
+                });
+
+                return (
+                  <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 mb-3">
+                    <div className="mb-4">
+                      <h4 className="text-base font-semibold text-conexia-green-dark">
+                        {editingCompliance.isConfirmed ? 'Editar Compromiso' : 'Nuevo Compromiso'}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Fila 1: Responsable y Tipo */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
+                            Responsable <span className="text-red-500">*</span>
+                          </label>
+                          <SelectField
+                            name="responsibleUserId"
+                            placeholder="Selecciona responsable"
+                            options={[
+                              ...(normalized.claimantId ? [{
+                                value: String(normalized.claimantId),
+                                label: `${normalized.claimantName} (Reclamante)`
+                              }] : []),
+                              ...(normalized.otherUserId ? [{
+                                value: String(normalized.otherUserId),
+                                label: `${normalized.claimedName} (Reclamado)`
+                              }] : [])
+                            ]}
+                            value={String(editingCompliance.responsibleUserId)}
+                            onChange={(e) => updateCompliance(editingComplianceId, 'responsibleUserId', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
+                            Tipo de Compromiso <span className="text-red-500">*</span>
+                          </label>
+                          <SelectField
+                            name="complianceType"
+                            placeholder="Selecciona tipo"
+                            options={Object.entries(COMPLIANCE_TYPES).map(([key, value]) => ({
+                              value: value,
+                              label: COMPLIANCE_TYPE_LABELS[value]
+                            }))}
+                            value={editingCompliance.complianceType}
+                            onChange={(e) => updateCompliance(editingComplianceId, 'complianceType', e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Fila 2: Plazo */}
+                      <div className="grid grid-cols-1 md:grid-cols-3">
+                        <div>
+                          <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
+                            Plazo (días) <span className="text-red-500">*</span>
+                          </label>
+                          <InputField
+                            type="number"
+                            name="deadlineDays"
+                            placeholder="7"
+                            min={1}
+                            max={60}
+                            value={editingCompliance.deadlineDays}
+                            onChange={(e) => updateCompliance(editingComplianceId, 'deadlineDays', e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Fila 3: Instrucciones */}
+                      <div>
+                        <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
+                          Instrucciones <span className="text-red-500">*</span>
+                        </label>
+                        <InputField
+                          multiline
+                          rows={4}
+                          name="instructions"
+                          placeholder="Ej: Debes realizar el reembolso del 50% del monto pagado..."
+                          value={editingCompliance.instructions}
+                          onChange={(e) => updateCompliance(editingComplianceId, 'instructions', e.target.value)}
+                          maxLength={1000}
+                          showCharCount={true}
+                        />
+                        <p className="text-xs text-gray-600 mt-1">Mínimo 20 caracteres</p>
+                      </div>
+                    </div>
+
+                    {/* Botones */}
+                    <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
+                      <Button
+                        type="button"
+                        onClick={cancelEditCompliance}
+                        variant="cancel"
+                        disabled={isSubmitting}
+                        className="text-sm"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => confirmCompliance(editingComplianceId)}
+                        variant="success"
+                        className="flex items-center gap-2 text-sm"
+                        disabled={isSubmitting || !editingCompliance.responsibleUserId || !editingCompliance.complianceType || editingCompliance.instructions.trim().length < 20}
+                        title={!editingCompliance.responsibleUserId || !editingCompliance.complianceType || editingCompliance.instructions.trim().length < 20 ? 'Completa todos los campos requeridos' : ''}
+                      >
+                        <Check size={16} />
+                        Confirmar
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+                {/* Botón para agregar nuevo compromiso */}
+                {editingComplianceId === null && (
+                  <Button
+                    type="button"
+                    onClick={addCompliance}
+                    variant="primary"
+                    className="flex items-center gap-2 w-full justify-center"
+                    disabled={isSubmitting}
+                  >
+                    <Plus size={18} />
+                    Agregar Compromiso
+                  </Button>
+                )}
+
+                {compliances.length === 0 && (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 mt-4">
+                    <p className="text-sm text-gray-600">No hay compromisos asignados</p>
+                    <p className="text-xs text-gray-500 mt-1">Los compromisos son opcionales. Haz clic en &quot;Agregar Compromiso&quot; si deseas crear uno</p>
                   </div>
                 )}
               </div>
-            )}
-
-            {/* Advertencia para rechazos */}
-            {action === 'reject' && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-800 font-medium">Al rechazar el reclamo:</p>
-                <ul className="text-sm text-red-700 mt-2 space-y-1 list-disc list-inside">
-                  <li>El reclamo se marcará como &quot;Rechazado&quot;</li>
-                  <li>La contratación volverá a su estado anterior</li>
-                  <li>Ambas partes recibirán un email con el motivo del rechazo</li>
-                </ul>
-              </div>
-            )}
-
-            {/* Campo de resolución/explicación */}
-            <div className="bg-white border rounded-lg p-4">
-              <label htmlFor="resolution" className="block text-sm font-medium text-gray-700 mb-2">
-                {action === 'resolve' ? 'Resolución / Explicación' : 'Motivo del rechazo'}{' '}
-                <span className="text-red-500">*</span>
-              </label>
-              <InputField
-                multiline
-                rows={8}
-                name="resolution"
-                placeholder={
-                  action === 'resolve'
-                    ? 'Explica detalladamente la resolución del reclamo, qué se decidió y por qué...'
-                    : 'Explica por qué se rechaza el reclamo. Sé específico y profesional...'
-                }
-                value={resolution}
-                onChange={(e) => {
-                  setResolution(e.target.value);
-                  setError(null);
-                }}
-                maxLength={maxLength}
-                disabled={isSubmitting}
-                showCharCount={true}
-                error={error}
-              />
-              <p className="mt-1 text-xs text-gray-600">
-                Mínimo {minLength} caracteres
-              </p>
             </div>
-          </div>
 
           {/* Footer (estático) */}
           <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
@@ -511,7 +815,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
             <Button
               type="submit"
               disabled={!isValid || isSubmitting}
-              variant={action === 'resolve' ? 'success' : 'danger'}
+              variant="success"
               className="flex items-center gap-2"
             >
               {isSubmitting ? (
@@ -519,15 +823,10 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
                   <Loader2 size={18} className="animate-spin" />
                   Procesando...
                 </>
-              ) : action === 'resolve' ? (
+              ) : (
                 <>
                   <CheckCircle size={18} />
                   Resolver reclamo
-                </>
-              ) : (
-                <>
-                  <XCircle size={18} />
-                  Rechazar reclamo
                 </>
               )}
             </Button>

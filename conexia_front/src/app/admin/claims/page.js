@@ -14,6 +14,7 @@ import { ClaimDetailModal } from '@/components/claims/ClaimDetailModal';
 import { ClaimActionsModal } from '@/components/claims/ClaimActionsModal';
 import { AddObservationsModal } from '@/components/claims/AddObservationsModal';
 import { ClaimResolutionModal } from '@/components/claims/ClaimResolutionModal';
+import { ClaimRejectionModal } from '@/components/claims/ClaimRejectionModal';
 import Navbar from '@/components/navbar/Navbar';
 import { ROLES } from '@/constants/roles';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -29,6 +30,7 @@ function AdminClaimsContent() {
   const [showActionsModal, setShowActionsModal] = useState(false);
   const [showObservationsModal, setShowObservationsModal] = useState(false);
   const [showResolutionModal, setShowResolutionModal] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [toast, setToast] = useState({ isVisible: false, type: '', message: '' });
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -151,6 +153,9 @@ function AdminClaimsContent() {
         break;
       case 'resolve_claim':
         setShowResolutionModal(true);
+        break;
+      case 'reject_claim':
+        setShowRejectionModal(true);
         break;
       default:
         break;
@@ -298,6 +303,16 @@ function AdminClaimsContent() {
           isOpen={showResolutionModal}
           claim={selectedClaim}
           onClose={() => setShowResolutionModal(false)}
+          onSuccess={handleResolutionSuccess}
+          showToast={showToast}
+        />
+      )}
+
+      {showRejectionModal && selectedClaim && (
+        <ClaimRejectionModal
+          isOpen={showRejectionModal}
+          claim={selectedClaim}
+          onClose={() => setShowRejectionModal(false)}
           onSuccess={handleResolutionSuccess}
           showToast={showToast}
         />

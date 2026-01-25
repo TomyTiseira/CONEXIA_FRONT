@@ -169,6 +169,102 @@ export const CLAIM_RESOLUTION_CONFIG = {
   },
 };
 
+// Tipos de compliance (compromisos)
+export const COMPLIANCE_TYPES = {
+  FULL_REFUND: 'full_refund',
+  PARTIAL_REFUND: 'partial_refund',
+  PAYMENT_REQUIRED: 'payment_required',
+  WORK_COMPLETION: 'work_completion',
+  WORK_REVISION: 'work_revision',
+  APOLOGY_REQUIRED: 'apology_required',
+  SERVICE_DISCOUNT: 'service_discount',
+  PENALTY_FEE: 'penalty_fee',
+  ACCOUNT_RESTRICTION: 'account_restriction',
+  CONFIRMATION_ONLY: 'confirmation_only',
+  OTHER: 'other',
+};
+
+// Labels para tipos de compliance
+export const COMPLIANCE_TYPE_LABELS = {
+  [COMPLIANCE_TYPES.FULL_REFUND]: 'Reembolso total',
+  [COMPLIANCE_TYPES.PARTIAL_REFUND]: 'Reembolso parcial',
+  [COMPLIANCE_TYPES.PAYMENT_REQUIRED]: 'Pago requerido',
+  [COMPLIANCE_TYPES.WORK_COMPLETION]: 'Completar trabajo',
+  [COMPLIANCE_TYPES.WORK_REVISION]: 'Revisión de trabajo',
+  [COMPLIANCE_TYPES.APOLOGY_REQUIRED]: 'Disculpa requerida',
+  [COMPLIANCE_TYPES.SERVICE_DISCOUNT]: 'Descuento en servicio',
+  [COMPLIANCE_TYPES.PENALTY_FEE]: 'Tarifa de penalización',
+  [COMPLIANCE_TYPES.ACCOUNT_RESTRICTION]: 'Restricción de cuenta',
+  [COMPLIANCE_TYPES.CONFIRMATION_ONLY]: 'Solo confirmación',
+  [COMPLIANCE_TYPES.OTHER]: 'Otro',
+};
+
+// Estados de compliance
+export const COMPLIANCE_STATUS = {
+  PENDING: 'pending',
+  SUBMITTED: 'submitted',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+  OVERDUE: 'overdue',
+  WARNING: 'warning',
+  ESCALATED: 'escalated',
+};
+
+// Labels para estados de compliance
+export const COMPLIANCE_STATUS_LABELS = {
+  [COMPLIANCE_STATUS.PENDING]: 'Pendiente',
+  [COMPLIANCE_STATUS.SUBMITTED]: 'Enviado',
+  [COMPLIANCE_STATUS.APPROVED]: 'Aprobado',
+  [COMPLIANCE_STATUS.REJECTED]: 'Rechazado',
+  [COMPLIANCE_STATUS.OVERDUE]: 'Vencido',
+  [COMPLIANCE_STATUS.WARNING]: 'Advertencia',
+  [COMPLIANCE_STATUS.ESCALATED]: 'Escalado',
+};
+
+// Configuración de colores para estados de compliance
+export const COMPLIANCE_STATUS_CONFIG = {
+  [COMPLIANCE_STATUS.PENDING]: {
+    label: 'Pendiente',
+    className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  },
+  [COMPLIANCE_STATUS.SUBMITTED]: {
+    label: 'Enviado',
+    className: 'bg-blue-100 text-blue-800 border-blue-200',
+
+  },
+  [COMPLIANCE_STATUS.APPROVED]: {
+    label: 'Aprobado',
+    className: 'bg-green-100 text-green-800 border-green-200',
+  },
+  [COMPLIANCE_STATUS.REJECTED]: {
+    label: 'Rechazado',
+    className: 'bg-gray-100 text-gray-800 border-gray-200',
+  },
+  [COMPLIANCE_STATUS.OVERDUE]: {
+    label: 'Vencido',
+    className: 'bg-red-100 text-red-800 border-red-200',
+  },
+  [COMPLIANCE_STATUS.WARNING]: {
+    label: 'Advertencia',
+    className: 'bg-orange-100 text-orange-800 border-orange-200',
+  },
+  [COMPLIANCE_STATUS.ESCALATED]: {
+    label: 'Escalado',
+    className: 'bg-red-100 text-red-900 border-red-300',
+  },
+};
+
+// Validaciones para compliances
+export const COMPLIANCE_VALIDATION = {
+  MAX_EVIDENCE_FILES: 5,
+  INSTRUCTIONS_MIN_LENGTH: 20,
+  INSTRUCTIONS_MAX_LENGTH: 1000,
+  USER_NOTES_MIN_LENGTH: 20,
+  USER_NOTES_MAX_LENGTH: 1000,
+  MIN_DEADLINE_DAYS: 1,
+  MAX_DEADLINE_DAYS: 60,
+};
+
 // Validaciones
 export const CLAIM_VALIDATION = {
   DESCRIPTION_MIN_LENGTH: 50,
@@ -370,6 +466,12 @@ const claimsConstants = {
   CLAIM_STATUS_CONFIG,
   CLAIM_RESOLUTION_TYPES,
   CLAIM_RESOLUTION_CONFIG,
+  COMPLIANCE_TYPES,
+  COMPLIANCE_TYPE_LABELS,
+  COMPLIANCE_STATUS,
+  COMPLIANCE_STATUS_LABELS,
+  COMPLIANCE_STATUS_CONFIG,
+  COMPLIANCE_VALIDATION,
   ALLOWED_CLAIM_STATES,
   CLAIM_VALIDATION,
   CLAIM_ERROR_MESSAGES,

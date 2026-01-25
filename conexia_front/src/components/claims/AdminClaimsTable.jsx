@@ -9,6 +9,7 @@ import React from 'react';
 import { FaRegEye, FaEllipsisH, FaRegCopy } from 'react-icons/fa';
 import { ClaimTypeBadge } from './ClaimTypeBadge';
 import { ClaimStatusBadge } from './ClaimStatusBadge';
+import { ComplianceStatusBadge } from './ComplianceStatusBadge';
 import { config } from '@/config';
 
 export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
@@ -132,6 +133,9 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Estado
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Compromiso
+                </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
                 </th>
@@ -143,6 +147,40 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
                 const claimant = claimData.claimant?.profile;
                 const otherUser = claimData.otherUser?.profile;
                 const assignedModerator = claimData.assignedModerator;
+                
+                // Estado inteligente de compromisos sin iconos
+                const getComplianceDisplay = () => {
+                  if (!claimData.compliances || claimData.compliances.length === 0) {
+                    return <span className="text-xs text-gray-400 italic">Sin compromisos</span>;
+                  }
+                  
+                  const total = claimData.compliances.length;
+                  const pending = claimData.compliances.filter(c => c.status === 'pending').length;
+                  const approved = claimData.compliances.filter(c => c.status === 'approved').length;
+                  const submitted = claimData.compliances.filter(c => c.status === 'submitted').length;
+                  
+                  if (approved === total) {
+                    return (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                        {total} completado{total !== 1 ? 's' : ''}
+                      </span>
+                    );
+                  }
+                  
+                  if (pending > 0 || submitted > 0) {
+                    return (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                        {pending + submitted} en curso
+                      </span>
+                    );
+                  }
+                  
+                  return (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                      {total} {total === 1 ? 'compromiso' : 'compromisos'}
+                    </span>
+                  );
+                };
                 
                 return (
                   <tr key={claim.id} className="hover:bg-gray-50 transition-colors">
@@ -168,6 +206,7 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
                       <ClaimTypeBadge
                         claimType={claim.claimType}
                         labelOverride={getTableClaimTypeLabelOverride(claim)}
+                        showIcon={false}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -224,6 +263,9 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <ClaimStatusBadge status={claim.status} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getComplianceDisplay()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -323,6 +365,12 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
                     <p className="text-sm text-gray-500 italic">Sin asignar</p>
                   )}
                 </div>
+                {claimData.compliance && (
+                  <div>
+                    <p className="text-xs text-gray-600">Compromiso</p>
+                    <ComplianceStatusBadge status={claimData.compliance.status} />
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 pt-2 border-t">

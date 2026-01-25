@@ -56,13 +56,24 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
   if (availableActions.includes('resolve_claim')) {
     actions.push({
       id: 'resolve_claim',
-      label: 'Resolver / Rechazar',
-      description: 'Emitir resolución final del reclamo',
+      label: 'Resolver Reclamo',
+      description: 'Aprobar y emitir resolución a favor de una parte',
       icon: CheckCircle,
       color: 'text-emerald-800',
       borderColor: 'border-emerald-200',
       hoverBg: 'hover:bg-emerald-50',
       iconBg: 'text-emerald-600',
+    });
+
+    actions.push({
+      id: 'reject_claim',
+      label: 'Rechazar Reclamo',
+      description: 'Rechazar el reclamo por infundado',
+      icon: X,
+      color: 'text-red-800',
+      borderColor: 'border-red-200',
+      hoverBg: 'hover:bg-red-50',
+      iconBg: 'text-red-600',
     });
   }
 

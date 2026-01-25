@@ -12,14 +12,23 @@ import { ClaimTypeBadge } from './ClaimTypeBadge';
 import { ClaimRoleBadge } from './ClaimRoleBadge';
 import { ClaimStatusBadge } from './ClaimStatusBadge';
 import { ClaimEvidenceViewer } from './ClaimEvidenceViewer';
+import { ComplianceCard } from './ComplianceCard';
+import { UploadComplianceEvidenceModal } from './UploadComplianceEvidenceModal';
 import { formatClaimDateTime, getClaimTypeLabel } from '@/constants/claims';
 import { config } from '@/config';
-import { getClaimDetail } from '@/service/claims';
+import { getClaimDetail, submitComplianceEvidence } from '@/service/claims';
+import { useAuth } from '@/context/AuthContext';
+import Toast from '@/components/ui/Toast';
 
 export const ClaimDetailModal = ({ claim: initialClaim, onClose }) => {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedCompliance, setSelectedCompliance] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isSubmittingEvidence, setIsSubmittingEvidence] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const DEFAULT_AVATAR_SRC = '/images/default-avatar.png';
 
@@ -140,6 +149,52 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose }) => {
 
     fetchDetail();
   }, [initialClaim]);
+
+  const handleOpenUploadModal = (compliance) => {
+    setSelectedCompliance(compliance);
+    setShowUploadModal(true);
+  };
+
+  const handleCloseUploadModal = () => {
+    setShowUploadModal(false);
+    setSelectedCompliance(null);
+  };
+
+  const handleSubmitEvidence = async (evidenceData) => {
+    setIsSubmittingEvidence(true);
+    try {
+      await submitComplianceEvidence(evidenceData.complianceId, {
+        files: evidenceData.files,
+        userResponse: evidenceData.userResponse,
+      });
+
+      setToast({
+        type: 'success',
+        message: 'Evidencia enviada exitosamente. El moderador la revisará pronto.',
+      });
+
+      handleCloseUploadModal();
+
+      // Refrescar datos del claim
+      const claimId = data?.claim?.id || initialClaim?.claim?.id || initialClaim?.id;
+      if (claimId) {
+        const result = await getClaimDetail(claimId);
+        setData(result);
+      }
+    } catch (err) {
+      console.error('Error submitting compliance evidence:', err);
+      setToast({
+        type: 'error',
+        message: err.message || 'Error al enviar la evidencia. Por favor intenta nuevamente.',
+      });
+    } finally {
+      setIsSubmittingEvidence(false);
+    }
+  };
+
+  const handleCloseToast = () => {
+    setToast(null);
+  };
 
   if (!initialClaim) return null;
 
@@ -405,27 +460,36 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose }) => {
                 </div>
               )}
 
-              {/* Cumplimiento */}
+              {/* Compromisos Asignados */}
               {data.compliances && data.compliances.length > 0 && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-3">Cumplimiento</h3>
-                  {data.compliances.map((compliance, index) => (
-                    <div key={index} className="space-y-2 mb-4 last:mb-0">
-                      <p className="text-sm"><span className="font-medium">Estado:</span> {compliance.status}</p>
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{compliance.description}</p>
-                      {compliance.evidenceUrls && compliance.evidenceUrls.length > 0 && (
-                        <div className="mt-3">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Evidencias:</p>
-                          <ClaimEvidenceViewer evidenceUrls={compliance.evidenceUrls} />
-                        </div>
-                      )}
-                      {compliance.submittedAt && (
-                        <p className="text-xs text-gray-600">
-                          Enviado el: {formatClaimDateTime(compliance.submittedAt)}
-                        </p>
+                <div className="border rounded-lg p-6 bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-conexia-green-dark">
+                      Compromisos Asignados
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-white px-3 py-1 rounded-full text-gray-700 font-medium shadow-sm">
+                        Total: {data.compliances.length} {data.compliances.length === 1 ? 'compromiso' : 'compromisos'}
+                      </span>
+                      {data.compliances.filter((c) => c.status === 'pending').length > 0 && (
+                        <span className="text-xs bg-yellow-100 px-3 py-1 rounded-full text-yellow-700 font-medium">
+                          {data.compliances.filter((c) => c.status === 'pending').length} pendiente{data.compliances.filter((c) => c.status === 'pending').length !== 1 ? 's' : ''}
+                        </span>
                       )}
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="space-y-4">
+                    {data.compliances.map((compliance, index) => (
+                      <ComplianceCard
+                        key={compliance?.id || `compliance-${index}`}
+                        compliance={compliance}
+                        currentUserId={user?.id}
+                        onUploadEvidence={() => handleOpenUploadModal(compliance)}
+                        canUpload={true}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </>
@@ -442,6 +506,25 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose }) => {
           </button>
         </div>
       </div>
+
+      {/* Modal de Subir Evidencia */}
+      {showUploadModal && selectedCompliance && (
+        <UploadComplianceEvidenceModal
+          compliance={selectedCompliance}
+          onClose={handleCloseUploadModal}
+          onSubmit={handleSubmitEvidence}
+          isSubmitting={isSubmittingEvidence}
+        />
+      )}
+
+      {/* Toast de Notificación */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={handleCloseToast}
+        />
+      )}
     </div>
   );
 };
