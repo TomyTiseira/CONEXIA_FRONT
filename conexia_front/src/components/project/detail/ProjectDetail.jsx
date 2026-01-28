@@ -173,8 +173,13 @@ function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwne
               
               {role.maxCollaborators && (
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Máx. colaboradores</label>
-                  <p className="text-sm text-gray-900">{role.maxCollaborators}</p>
+                  <label className="text-sm font-medium text-gray-600">Vacantes disponibles</label>
+                  <p className="text-sm text-gray-900">
+                    {role.approvedCount !== undefined 
+                      ? `${Math.max(0, role.maxCollaborators - (role.approvedCount || 0))} de ${role.maxCollaborators}`
+                      : `${role.maxCollaborators} vacante${role.maxCollaborators !== 1 ? 's' : ''}`
+                    }
+                  </p>
                 </div>
               )}
 
@@ -210,19 +215,19 @@ function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwne
             )}
 
             {role.evaluation && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 overflow-hidden">
                 <h4 className="font-medium text-blue-900 mb-2">Evaluación Técnica</h4>
-                <p className="text-blue-800 text-sm mb-2">{role.evaluation.description}</p>
+                <p className="text-blue-800 text-sm mb-2 break-words overflow-wrap-anywhere">{role.evaluation.description}</p>
                 {role.evaluation.link && (
-                  <p className="text-blue-700 text-xs mb-1">
+                  <p className="text-blue-700 text-xs mb-1 break-all overflow-wrap-anywhere">
                     <span className="font-medium">Link:</span> 
-                    <a href={role.evaluation.link} target="_blank" rel="noopener noreferrer" className="hover:underline ml-1">
+                    <a href={role.evaluation.link} target="_blank" rel="noopener noreferrer" className="hover:underline ml-1 inline-block max-w-full">
                       {role.evaluation.link}
                     </a>
                   </p>
                 )}
                 {role.evaluation.fileUrl && (
-                  <p className="text-blue-700 text-xs mb-1">
+                  <p className="text-blue-700 text-xs mb-1 break-words overflow-wrap-anywhere">
                     <span className="font-medium">Archivo:</span> {role.evaluation.fileName || 'Archivo adjunto'}
                   </p>
                 )}
