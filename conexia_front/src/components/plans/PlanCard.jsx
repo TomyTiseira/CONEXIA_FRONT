@@ -165,7 +165,7 @@ export default function PlanCard({
             disabled
             className="w-full !bg-gray-50 !text-gray-500 !border-gray-300 !cursor-not-allowed !py-2.5"
           >
-            Plan Actual
+            Plan actual
           </Button>
         ) : canContractThisPlan && !isFree ? (
           <Button 
@@ -181,7 +181,7 @@ export default function PlanCard({
               !text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300
             `}
           >
-            Contratar Plan
+            Contratar plan
           </Button>
         ) : !canContractThisPlan && isDowngrade ? (
           // Mostrar solo el botón de ver detalles si es un downgrade

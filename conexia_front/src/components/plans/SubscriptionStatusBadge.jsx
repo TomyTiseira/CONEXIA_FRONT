@@ -31,7 +31,7 @@ export default function SubscriptionStatusBadge({
   return (
     <span 
       className={`
-        inline-flex items-center gap-1.5 font-semibold rounded-full border-2
+        inline-flex items-center justify-center gap-1.5 font-semibold rounded-full border-2
         ${statusInfo.bgClass} 
         ${statusInfo.colorClass} 
         ${statusInfo.borderClass}
@@ -39,7 +39,7 @@ export default function SubscriptionStatusBadge({
         ${className}
       `}
     >
-      {showIcon && <span>{statusInfo.icon}</span>}
+      {showIcon && statusInfo.icon && <span>{statusInfo.icon}</span>}
       <span>{statusInfo.label}</span>
     </span>
   );

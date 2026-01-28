@@ -31,6 +31,7 @@ import VerificationSection from "@/components/profile/VerificationSection";
 import { useVerificationStatus } from "@/hooks";
 import { ShieldCheck } from 'lucide-react';
 import { PlanBadge } from '@/components/plans';
+import UpgradeBanner from '@/components/plans/UpgradeBanner';
 import UserRestrictionAlert from '@/components/common/UserRestrictionAlert';
 
 export default function UserProfile() {
@@ -60,17 +61,17 @@ export default function UserProfile() {
   let isAdmin = false;
   let isModerator = false;
   if (storeUser) {
-    isAdmin = storeUser.roleName === ROLES.ADMIN || storeUser.role === ROLES.ADMIN;
-    isModerator = storeUser.roleName === ROLES.MODERATOR || storeUser.role === ROLES.MODERATOR;
+    const normalizedRoleName = storeUser.roleName?.toLowerCase();
+    const normalizedRole = storeUser.role?.toLowerCase();
+    isAdmin = normalizedRoleName === ROLES.ADMIN || normalizedRole === ROLES.ADMIN || storeUser.roleId === 1;
+    isModerator = normalizedRoleName === ROLES.MODERATOR || normalizedRole === ROLES.MODERATOR || storeUser.roleId === 3;
   }
   // Fallback: si no está en storeUser, intentar con authUser
   if (!isAdmin && !isModerator && authUser) {
-    isAdmin = authUser.role === ROLES.ADMIN;
-    isModerator = authUser.role === ROLES.MODERATOR;
+    const normalizedAuthRole = authUser.role?.toLowerCase();
+    isAdmin = normalizedAuthRole === ROLES.ADMIN || authUser.roleId === 1;
+    isModerator = normalizedAuthRole === ROLES.MODERATOR || authUser.roleId === 3;
   }
-  // LOG para depuración de navbar y roles
-  useEffect(() => {
-  }, [storeUser, roleName, authUser, isAdmin, isModerator]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -541,8 +542,8 @@ export default function UserProfile() {
                 {(user.state || user.country) && (
                   <p className="text-gray-600 mt-1">{user.state}{user.state && user.country ? ", " : ""}{user.country}</p>
                 )}
-                {/* Badge del plan (solo para el dueño del perfil) */}
-                {isOwner && profile.plan && (
+                {/* Badge del plan (visible para dueño, admin y moderador) */}
+                {profile.plan && (isOwner || isAdmin || isModerator) && (
                   <div className="mt-2 flex justify-center sm:justify-start">
                     <PlanBadge 
                       planId={profile.plan.id} 
@@ -744,6 +745,13 @@ export default function UserProfile() {
             )}
           </div>
         </div>
+
+        {/* Banner de upgrade para mejorar plan (solo dueño del perfil) - Antes de verificación */}
+        {isOwner && !(isAdmin || isModerator) && (
+          <div className="mt-6">
+            <UpgradeBanner variant="compact" />
+          </div>
+        )}
 
         {/* Sección de Verificación de Identidad (solo visible para el dueño) */}
         {isOwner && (

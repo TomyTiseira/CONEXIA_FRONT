@@ -14,7 +14,9 @@ export const formatMemberSince = (date) => {
   if (!date) return 'Fecha no disponible';
   
   try {
-    return format(new Date(date), "MMMM yyyy", { locale: es });
+    const formatted = format(new Date(date), "MMMM yyyy", { locale: es });
+    // Capitalizar la primera letra del mes
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   } catch (error) {
     console.error('Error al formatear memberSince:', error);
     return 'Fecha no disponible';
@@ -103,7 +105,7 @@ export const getSubscriptionStatusInfo = (status) => {
       colorClass: 'text-green-700',
       bgClass: 'bg-green-100',
       borderClass: 'border-green-300',
-      icon: '✅'
+      icon: ''
     },
     'pending_payment': {
       label: 'Pago Pendiente',
@@ -188,7 +190,7 @@ export const formatBenefitValue = (key, value) => {
       const visibilityMap = {
         'estandar': 'Estándar',
         'alta': 'Alta',
-        'prioridad_maxima': 'Prioridad Máxima'
+        'prioridad_maxima': 'Prioridad máxima'
       };
       return visibilityMap[value] || value.replace(/_/g, ' ');
     }
@@ -198,9 +200,11 @@ export const formatBenefitValue = (key, value) => {
       const metricsMap = {
         'basico': 'Básico',
         'avanzado': 'Avanzado',
-        'completo': 'Completo'
+        'avanzadas': 'Avanzadas',
+        'completo': 'Completo',
+        'completas': 'Completas'
       };
-      return metricsMap[value] || value.replace(/_/g, ' ');
+      return metricsMap[value] || value.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 
     // Por defecto, reemplazar guiones bajos y capitalizar

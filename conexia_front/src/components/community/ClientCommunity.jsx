@@ -159,12 +159,17 @@ export default function ClientCommunity() {
     };
 
     return (
-      <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8 relative">
-        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-2 md:gap-4">
+      <main className="md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8 relative">
+        <div className="w-full md:max-w-6xl mx-auto flex flex-col md:flex-row gap-0 md:gap-4">
           {/* Sidebar perfil mobile (arriba de la caja de inicio) */}
           {userStore?.id && !isInternal && (
-            <div className="block md:hidden w-full mb-1">
+            <div className="block md:hidden w-full mb-2">
               <ProfileSidebar profile={profile} userId={userStore.id} />
+              
+              {/* Banner de Upgrade - también en mobile */}
+              <div className="px-3 mt-2">
+                <UpgradeBanner variant="compact" />
+              </div>
             </div>
           )}
           {/* Sidebar perfil desktop/tablet */}
@@ -179,7 +184,7 @@ export default function ClientCommunity() {
             </div>
           )}
           {/* Feed principal */}
-          <div className="flex-1 flex flex-col items-center max-w-2xl mx-auto">
+          <div className="flex-1 flex flex-col items-center md:max-w-2xl md:mx-auto px-3 md:px-0">
             {/* Caja de inicio de publicación */}
             <div className={`bg-white rounded-2xl shadow border border-[#c6e3e4] px-2 sm:px-4 md:px-6 pt-4 pb-2 mb-3 flex flex-col gap-2 w-full ${
               !canCreateContent ? 'opacity-50 cursor-not-allowed' : ''
