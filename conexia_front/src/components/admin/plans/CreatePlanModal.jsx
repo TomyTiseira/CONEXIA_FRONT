@@ -397,7 +397,7 @@ export default function CreatePlanModal({ onClose, onSave, loading }) {
             Cancelar
           </Button>
           <Button type="submit" onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Creando...' : 'Crear Plan'}
+            {loading ? 'Creando...' : 'Crear plan'}
           </Button>
         </div>
       </div>

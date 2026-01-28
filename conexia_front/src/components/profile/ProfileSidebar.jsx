@@ -36,8 +36,8 @@ export default function ProfileSidebar({ profile, userId}) {
 
   return (
     <aside
-      className="bg-white rounded-2xl shadow border border-[#c6e3e4] overflow-hidden flex flex-col w-full md:max-w-xs md:mx-auto mb-0 md:mb-4"
-      style={{ minWidth: 220, maxWidth: '100%' }}
+      className="bg-white rounded-none md:rounded-2xl shadow-none md:shadow border-0 md:border md:border-[#c6e3e4] overflow-hidden flex flex-col w-full md:max-w-xs md:mx-auto mb-0 md:mb-4"
+      style={{ minWidth: '100%', maxWidth: '100%' }}
     >
       {/* Avatar y fondo decorativo MOBILE: alineado a la izquierda */}
       <a

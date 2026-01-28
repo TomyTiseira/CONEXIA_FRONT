@@ -1,13 +1,11 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Users, UserCheck } from 'lucide-react';
-import { useState } from 'react';
+import { UserCheck } from 'lucide-react';
 
 /**
- * Gráfico de usuarios verificados vs no verificados
+ * Gráfico de barras para usuarios verificados vs no verificados
  */
 export const UsersVerificationChart = ({ verifiedUsers, totalUsers }) => {
-  const [hoveredSection, setHoveredSection] = useState(null);
   const nonVerified = totalUsers - verifiedUsers;
   const verifiedPercentage = totalUsers > 0 ? ((verifiedUsers / totalUsers) * 100).toFixed(1) : 0;
   const nonVerifiedPercentage = totalUsers > 0 ? ((nonVerified / totalUsers) * 100).toFixed(1) : 0;
@@ -29,83 +27,54 @@ export const UsersVerificationChart = ({ verifiedUsers, totalUsers }) => {
         </div>
       </div>
 
-      {/* Gráfico de pastel simple */}
-      <div className="flex items-center justify-center mb-6">
-        <div className="relative w-48 h-48">
-          <svg viewBox="0 0 100 100" className="transform -rotate-90">
-            {/* Círculo de fondo (no verificados) */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="none"
-              stroke="#E5E7EB"
-              strokeWidth={hoveredSection === 'non-verified' ? "22" : "20"}
-              onMouseEnter={() => setHoveredSection('non-verified')}
-              onMouseLeave={() => setHoveredSection(null)}
-              style={{ 
-                cursor: 'pointer',
-                transition: 'stroke-width 0.2s ease',
-                opacity: hoveredSection === null || hoveredSection === 'non-verified' ? 1 : 0.6
-              }}
-            />
-            {/* Círculo de progreso (verificados) */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="none"
-              stroke="#F59E0B"
-              strokeWidth={hoveredSection === 'verified' ? "22" : "20"}
-              strokeDasharray={`${verifiedPercentage * 2.51327} 251.327`}
-              strokeLinecap="round"
-              onMouseEnter={() => setHoveredSection('verified')}
-              onMouseLeave={() => setHoveredSection(null)}
-              style={{ 
-                cursor: 'pointer',
-                transition: 'stroke-width 0.2s ease',
-                opacity: hoveredSection === null || hoveredSection === 'verified' ? 1 : 0.6
-              }}
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            {hoveredSection === 'verified' ? (
-              <>
-                <span className="text-3xl font-bold text-amber-600">{verifiedUsers}</span>
-                <span className="text-sm text-gray-500">Verificados</span>
-                <span className="text-xs text-gray-400">{verifiedPercentage}%</span>
-              </>
-            ) : hoveredSection === 'non-verified' ? (
-              <>
-                <span className="text-3xl font-bold text-gray-600">{nonVerified}</span>
-                <span className="text-sm text-gray-500">Sin verificar</span>
-                <span className="text-xs text-gray-400">{nonVerifiedPercentage}%</span>
-              </>
-            ) : (
-              <>
-                <span className="text-3xl font-bold text-amber-600">{verifiedPercentage}%</span>
-                <span className="text-sm text-gray-500">Verificados</span>
-              </>
-            )}
+      {/* Gráfico de barras horizontales */}
+      <div className="space-y-6">
+        {/* Barra de usuarios verificados */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">Verificados</span>
+            <span className="text-sm font-bold text-amber-600">{verifiedUsers} ({verifiedPercentage}%)</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${verifiedPercentage}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="h-full bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-end pr-3"
+            >
+              {verifiedPercentage > 10 && (
+                <span className="text-xs font-bold text-white">{verifiedPercentage}%</span>
+              )}
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Barra de usuarios no verificados */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">No verificados</span>
+            <span className="text-sm font-bold text-gray-600">{nonVerified} ({nonVerifiedPercentage}%)</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${nonVerifiedPercentage}%` }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+              className="h-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-end pr-3"
+            >
+              {nonVerifiedPercentage > 10 && (
+                <span className="text-xs font-bold text-white">{nonVerifiedPercentage}%</span>
+              )}
+            </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Leyenda */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-            <span className="text-sm font-medium text-gray-700">Verificados</span>
-          </div>
-          <span className="text-lg font-bold text-amber-600">{verifiedUsers}</span>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-            <span className="text-sm font-medium text-gray-700">Sin verificar</span>
-          </div>
-          <span className="text-lg font-bold text-gray-600">{nonVerified}</span>
+      {/* Resumen total */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600">Total de usuarios</span>
+          <span className="text-xl font-bold text-gray-800">{totalUsers}</span>
         </div>
       </div>
     </motion.div>
