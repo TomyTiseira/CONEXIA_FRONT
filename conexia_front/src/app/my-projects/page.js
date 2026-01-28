@@ -124,7 +124,7 @@ export default function MyProjectsPage() {
             >
               <ArrowLeft size={24} className="text-conexia-green" />
             </button>
-            <h1 className="text-3xl font-bold text-conexia-green">Mis Proyectos</h1>
+            <h1 className="text-3xl font-bold text-conexia-green">Mis proyectos</h1>
           </div>
 
           {/* Estadísticas rápidas */}
@@ -135,7 +135,7 @@ export default function MyProjectsPage() {
                   <Briefcase className="text-conexia-green" size={24} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Proyectos</p>
+                  <p className="text-sm text-gray-600">Total proyectos</p>
                   <p className="text-2xl font-bold text-gray-900">{totalAllProjects}</p>
                 </div>
               </div>
@@ -147,7 +147,7 @@ export default function MyProjectsPage() {
                   <Users className="text-blue-600" size={24} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Solicitudes Totales</p>
+                  <p className="text-sm text-gray-600">Solicitudes totales</p>
                   <p className="text-2xl font-bold text-gray-900">{totalPostulations}</p>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export default function MyProjectsPage() {
                 className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
               >
                 <Briefcase size={16} />
-                Crear Nuevo Proyecto
+                Crear nuevo proyecto
               </button>
             </div>
           </div>
