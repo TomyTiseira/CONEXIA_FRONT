@@ -245,7 +245,7 @@ export default function CreateProjectForm() {
   return (
     <form onSubmit={handleSubmit} noValidate className="w-full grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
       {/* Título del proyecto */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[90px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Título del proyecto
         </label>
@@ -261,7 +261,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Descripción e Imagen - lado a lado */}
-      <div className="md:col-span-1 flex flex-col justify-start min-h-[72px] gap-1.5 -mt-6">
+      <div className="md:col-span-1 flex flex-col justify-start min-h-[90px] gap-1.5 -mt-6">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Descripción del proyecto
         </label>
@@ -347,7 +347,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Ubicación */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[120px] gap-1.5 -mt-8">
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[130px] gap-1.5 -mt-8">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Ubicación del proyecto (Opcional)
         </label>
@@ -426,7 +426,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Categoría */}
-      <div className="flex flex-col justify-center min-h-[72px] gap-1.5 -mt-6">
+      <div className="flex flex-col justify-center min-h-[90px] gap-1.5 -mt-6">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Categoría del proyecto
         </label>

@@ -235,6 +235,7 @@ export default function ProjectRolesManager({ roles = [], onChange, error }) {
 
   const handleAddRole = () => {
     setEditingIndex(null);
+    setDraftRole(null); // Limpiar draft al agregar nuevo rol
     setShowRoleModal(true);
   };
 

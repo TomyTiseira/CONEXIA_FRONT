@@ -70,6 +70,11 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
         newTypes = [...currentTypes, type];
       }
       
+      // Limpiar error de applicationTypes si hay al menos uno seleccionado
+      if (newTypes.length > 0) {
+        setErrors(prevErrors => ({ ...prevErrors, applicationTypes: '' }));
+      }
+      
       return { ...prev, applicationTypes: newTypes };
     });
   };
@@ -139,20 +144,25 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
     }
 
     // Validaciones específicas por tipo de postulación
-    if (formData.applicationTypes?.includes(APPLICATION_TYPES.QUESTIONS) && formData.questions.length === 0) {
-      setErrors(prev => ({ ...prev, questions: 'Debe agregar al menos una pregunta' }));
-      isValid = false;
+    if (formData.applicationTypes?.includes(APPLICATION_TYPES.QUESTIONS)) {
+      if (formData.questions.length === 0) {
+        setErrors(prev => ({ ...prev, questions: 'Debe agregar al menos una pregunta' }));
+        isValid = false;
+      }
     }
 
-    if (formData.applicationTypes?.includes(APPLICATION_TYPES.EVALUATION) && (!formData.evaluation || !formData.evaluation.description?.trim())) {
-      setErrors(prev => ({ ...prev, evaluation: 'Debe agregar una descripción para la evaluación técnica' }));
-      isValid = false;
-    }
-
-    if (formData.applicationTypes?.includes(APPLICATION_TYPES.MIXED) && 
-        formData.questions.length === 0 && !formData.evaluation) {
-      setErrors(prev => ({ ...prev, mixed: 'Debe agregar preguntas o evaluación técnica' }));
-      isValid = false;
+    if (formData.applicationTypes?.includes(APPLICATION_TYPES.EVALUATION)) {
+      const evalErrors = [];
+      if (!formData.evaluation || !formData.evaluation.description?.trim()) {
+        evalErrors.push('descripción');
+      }
+      if (!formData.evaluation || !formData.evaluation.days || formData.evaluation.days < 1) {
+        evalErrors.push('cantidad de días');
+      }
+      if (evalErrors.length > 0) {
+        setErrors(prev => ({ ...prev, evaluation: `Debe completar: ${evalErrors.join(', ')}` }));
+        isValid = false;
+      }
     }
 
     return isValid;
@@ -307,7 +317,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
               </p>
               <div className="relative max-h-64 overflow-y-auto border border-gray-200 rounded-md bg-white">
                 {Object.entries(APPLICATION_TYPE_LABELS)
-                  .filter(([type]) => type !== APPLICATION_TYPES.PARTNER && type !== APPLICATION_TYPES.INVESTOR)
+                  .filter(([type]) => type !== APPLICATION_TYPES.PARTNER && type !== APPLICATION_TYPES.INVESTOR && type !== APPLICATION_TYPES.MIXED)
                   .map(([type, label]) => (
                   <label 
                     key={type} 
@@ -325,7 +335,6 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                         {type === APPLICATION_TYPES.CV_ONLY && 'El candidato solo adjuntará su CV'}
                         {type === APPLICATION_TYPES.CUSTOM_QUESTIONS && 'El candidato responderá preguntas personalizadas'}
                         {type === APPLICATION_TYPES.TECHNICAL_EVALUATION && 'El candidato completará una evaluación técnica'}
-                        {type === APPLICATION_TYPES.MIXED && 'El candidato adjuntará CV y completará preguntas/evaluación'}
                       </p>
                     </div>
                   </label>
@@ -360,7 +369,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                 questions={formData.questions}
                 onChange={(questions) => {
                   handleChange('questions', questions);
-                  setErrors(prev => ({ ...prev, questions: '', mixed: '' }));
+                  setErrors(prev => ({ ...prev, questions: '' }));
                 }}
                 error={errors.questions}
               />
@@ -372,15 +381,10 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                 evaluation={formData.evaluation}
                 onChange={(evaluation) => {
                   handleChange('evaluation', evaluation);
-                  setErrors(prev => ({ ...prev, evaluation: '', mixed: '' }));
+                  setErrors(prev => ({ ...prev, evaluation: '' }));
                 }}
                 error={errors.evaluation}
               />
-            )}
-
-            {/* Error para modo mixto */}
-            {formData.applicationType === APPLICATION_TYPES.MIXED && errors.mixed && (
-              <p className="text-sm text-red-600">{errors.mixed}</p>
             )}
           </div>
 
@@ -588,7 +592,7 @@ function QuestionBuilder({ questions, onChange, error }) {
           {editingIndex !== null && (
             <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
               <span className="text-sm text-blue-700 font-medium">
-                ✏️ Editando pregunta
+                Editando pregunta
               </span>
               <button
                 type="button"
@@ -604,14 +608,17 @@ function QuestionBuilder({ questions, onChange, error }) {
             value={newQuestion.questionText}
             onChange={(e) => setNewQuestion(prev => ({ ...prev, questionText: e.target.value }))}
           />
-          <SelectField
-            options={[
-              { value: 'OPEN', label: 'Respuesta abierta' },
-              { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
-            ]}
-            value={newQuestion.questionType}
-            onChange={handleTypeChange}
-          />
+          <div className="w-full overflow-hidden">
+            <SelectField
+              options={[
+                { value: 'OPEN', label: 'Respuesta abierta' },
+                { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
+              ]}
+              value={newQuestion.questionType}
+              onChange={handleTypeChange}
+              className="w-full"
+            />
+          </div>
 
           {/* Opciones para preguntas de opción múltiple */}
           {newQuestion.questionType === 'MULTIPLE_CHOICE' && (
@@ -708,9 +715,9 @@ function QuestionBuilder({ questions, onChange, error }) {
 
               {newQuestion.options.length > 0 && (
                 <p className="text-xs text-gray-600 mt-2">
-                  {newQuestion.options.length < 2 && '⚠️ Agrega al menos 2 opciones'}
+                  {newQuestion.options.length < 2 && 'Agrega al menos 2 opciones'}
                   {newQuestion.options.length >= 2 && newQuestion.hasCorrectAnswers && !newQuestion.options.some(opt => opt.isCorrect) && 'Marca al menos una respuesta correcta'}
-                  {newQuestion.options.length >= 2 && (!newQuestion.hasCorrectAnswers || newQuestion.options.some(opt => opt.isCorrect)) && '✓ Pregunta lista para confirmar'}
+                  {newQuestion.options.length >= 2 && (!newQuestion.hasCorrectAnswers || newQuestion.options.some(opt => opt.isCorrect)) && 'Pregunta lista para confirmar'}
                 </p>
               )}
             </div>
@@ -724,7 +731,7 @@ function QuestionBuilder({ questions, onChange, error }) {
             disabled={!canConfirmQuestion()}
             className="w-full flex items-center justify-center gap-2"
           >
-            {editingIndex !== null ? '✓ Guardar cambios' : '✓ Confirmar pregunta'}
+            {editingIndex !== null ? 'Guardar cambios' : 'Confirmar pregunta'}
           </Button>
         </div>
       )}
@@ -799,7 +806,7 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
 
         <div className="-mt-4">
           <label className="block text-xs font-medium text-gray-700 mb-1.5">
-            Días para completar la evaluación
+            Días para completar la evaluación <span className="text-red-600">*</span>
           </label>
           <InputField
             type="number"
@@ -818,6 +825,7 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
                 }
               }
             }}
+            required
           />
           <p className="text-xs text-gray-500 mt-1">
             Entre 1 y 30 días (por defecto: 7 días)
@@ -843,9 +851,13 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
                         file:bg-conexia-green file:text-white hover:file:bg-[#1a7a66]"
             />
           </div>
-          {formData.file && (
-            <p className="text-xs text-gray-600 mt-1">
+          {formData.file ? (
+            <p className="text-xs text-gray-600 mt-1 break-words">
               Archivo: {formData.file.name}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400 mt-1">
+              Ningún archivo seleccionado
             </p>
           )}
         </div>
