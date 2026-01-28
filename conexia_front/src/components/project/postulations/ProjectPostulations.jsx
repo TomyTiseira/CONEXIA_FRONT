@@ -232,48 +232,60 @@ export default function ProjectPostulations({ projectId }) {
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
         <div className="w-full max-w-7xl flex flex-col gap-6">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green mb-4 md:mb-0">
+          <div className="flex items-center mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green">
               Postulaciones
             </h1>
-            
-            {/* Filtros */}
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-              {/* Filtro por rol */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Filtrar por rol:</label>
-                <select
-                  value={selectedRole}
-                  onChange={(e) => handleRoleChange(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
-                >
-                  <option value="">Todos los roles</option>
-                  {projectRoles && projectRoles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.title || role.name || `Rol ${role.id}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Filtro por estado */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Filtrar por estado:</label>
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
-                >
-                                 
-                  <option value="">Todos los estados</option>
-                  {postulationStatuses.map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          </div>
+
+          {/* Filtros y Botón de Estadísticas */}
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+            {/* Filtro por rol */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Filtrar por rol:</label>
+              <select
+                value={selectedRole}
+                onChange={(e) => handleRoleChange(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+              >
+                <option value="">Todos los roles</option>
+                {projectRoles && projectRoles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.title || role.name || `Rol ${role.id}`}
+                  </option>
+                ))}
+              </select>
             </div>
+            
+            {/* Filtro por estado */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Filtrar por estado:</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+              >
+                                 
+                <option value="">Todos los estados</option>
+                {postulationStatuses.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Botón de Estadísticas */}
+            <button
+              onClick={() => router.push(`/project/${projectId}/stats`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2"
+              title="Ver estadísticas de postulaciones"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Estadísticas
+            </button>
           </div>
 
           {/* Project info */}
