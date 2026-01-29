@@ -50,7 +50,7 @@ export const ModeratorDashboard = () => {
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex-1">
           <DashboardHeader
-            title="Métricas de Moderación"
+            title="Métricas de moderación"
             subtitle="Métricas de control y moderación de la plataforma"
             timestamp={new Date().toISOString()}
           />

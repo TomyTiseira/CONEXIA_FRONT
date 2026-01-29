@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { loginUser } from "@/service/auth/authService";
 import { resendVerification } from "@/service/user/userFetch";
 import ConexiaLogo from "@/components/ui/ConexiaLogo";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -192,27 +193,41 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* Modal de Éxito - Overlay */}
+      {/* Modal de Éxito - Overlay con LoadingSpinner */}
       {msg && msg.type === 'success' && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-fade-in">
-            {/* Ícono de check grande con animación */}
-            <div className="flex justify-center mb-4">
-              <div className="bg-conexia-green/10 rounded-full p-4">
-                <svg className="w-12 h-12 text-conexia-green animate-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
-
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-fade-in">
             {/* Contenido */}
-            <div className="text-center space-y-3">
+            <div className="text-center space-y-4">
               <h2 className="text-2xl font-bold text-conexia-green">
                 ¡Bienvenido!
               </h2>
               <p className="text-base text-gray-700">
                 Sesión iniciada con éxito.
               </p>
+              
+              {/* LoadingSpinner con logo - con tamaño fijo para mantener proporciones circulares */}
+              <div className="flex flex-col items-center justify-center py-4">
+                <div className="relative w-24 h-24 flex items-center justify-center">
+                  {/* Círculo giratorio externo */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-24 h-24 border-4 border-gray-200 border-t-conexia-green rounded-full animate-spin"></div>
+                  </div>
+                  
+                  {/* Logo de Conexia */}
+                  <div className="relative z-10 animate-pulse">
+                    <Image 
+                      src="/logo.png" 
+                      alt="Conexia" 
+                      width={64}
+                      height={64}
+                      className="drop-shadow-lg"
+                      priority
+                    />
+                  </div>
+                </div>
+              </div>
+              
               <p className="text-sm text-gray-500">
                 Redirigiendo...
               </p>

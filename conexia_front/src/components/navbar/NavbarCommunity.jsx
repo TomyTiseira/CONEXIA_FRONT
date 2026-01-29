@@ -267,17 +267,19 @@ export default function NavbarCommunity() {
             </Link>
             <div className="relative">
               <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
-                  <div className="w-7 h-7 rounded-full overflow-hidden relative">
-                    <Image
+                  <div className="w-7 h-7 rounded-full overflow-hidden relative bg-gray-200 flex items-center justify-center">
+                    <img
                       src={
                         profile && profile.profilePicture
                           ? `${config.IMAGE_URL}/${profile.profilePicture}`
                           : defaultAvatar
                       }
                       alt="Foto de perfil"
-                      fill
-                      sizes="28px"
-                      className="object-cover"
+                      className="object-cover w-full h-full"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = defaultAvatar;
+                      }}
                     />
                   </div>
                 <ChevronDown size={14} />

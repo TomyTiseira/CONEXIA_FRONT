@@ -85,7 +85,7 @@ export const AdminDashboard = () => {
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex-1">
           <DashboardHeader
-            title="Métricas Administrativas"
+            title="Métricas administrativas"
             subtitle="Métricas globales de la plataforma Conexia"
             timestamp={new Date().toISOString()}
           />
@@ -169,7 +169,7 @@ export const AdminDashboard = () => {
         icon={Users}
         iconColor="blue"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
           <KPICard
             title="Total usuarios"
             value={users.totalUsers || 0}
@@ -183,21 +183,6 @@ export const AdminDashboard = () => {
             icon={TrendingUp}
             color="green"
             subtitle={`${((users.activeUsers / users.totalUsers) * 100 || 0).toFixed(1)}% del total`}
-          />
-
-          <KPICard
-            title="Nuevos usuarios (30d)"
-            value={users.newUsers || 0}
-            icon={Users}
-            color="purple"
-          />
-
-          <KPICard
-            title="Usuarios verificados"
-            value={users.verifiedUsers.verified || 0}
-            icon={UserCheck}
-            color="amber"
-            subtitle={`${users.verifiedUsers.verificationPercentage.toFixed(1)}% del total`}
           />
         </div>
 
@@ -233,7 +218,7 @@ export const AdminDashboard = () => {
         iconColor="purple"
       >
         {/* KPIs de moderación */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <KPICard
             title="Usuarios suspendidos"
             value={data.users?.moderationMetrics?.suspendedUsers || 0}
@@ -248,14 +233,6 @@ export const AdminDashboard = () => {
             icon={Ban}
             color="red"
             subtitle="Suspensión permanente"
-          />
-
-          <KPICard
-            title="Usuarios dados de baja"
-            value={data.users?.deletedUsers?.total || 0}
-            icon={UserX}
-            color="orange"
-            subtitle={`${data.users?.deletedUsers?.last30Days || 0} últimos 30 días`}
           />
         </div>
 
