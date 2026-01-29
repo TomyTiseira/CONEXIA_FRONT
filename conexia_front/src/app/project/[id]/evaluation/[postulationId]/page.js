@@ -131,11 +131,7 @@ export default function TechnicalEvaluationPage() {
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-      }
-    }
-
-    return true;
-  ;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -401,4 +397,4 @@ export default function TechnicalEvaluationPage() {
       )}
     </div>
   );
-
+}
