@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiX, FiPlus, FiTrash2, FiUpload, FiLink, FiEdit2 } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
@@ -15,6 +16,7 @@ import { APPLICATION_TYPES, APPLICATION_TYPE_LABELS } from './ProjectRolesManage
  * Modal para crear o editar un rol del proyecto
  */
 export default function RoleFormModal({ role, onSave, onCancel }) {
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -34,6 +36,11 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
   const { data: collaborationTypes } = useCollaborationTypes();
   const { data: contractTypes } = useContractTypes();
   const { data: applicationTypes } = useApplicationTypes();
+
+  // Verificar que estamos en el cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Cargar datos si estamos editando
   useEffect(() => {
@@ -180,18 +187,10 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
     onCancel(formData); // Pasar los datos actuales al cerrar
   };
 
-  const handleBackdropClick = (e) => {
-    // Cerrar solo si se hace click en el fondo (no en el modal)
-    if (e.target === e.currentTarget) {
-      handleClose();
-    }
-  };
+  if (!mounted) return null;
 
-  return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={handleBackdropClick}
-    >
+  const modalContent = (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -401,6 +400,8 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 /**

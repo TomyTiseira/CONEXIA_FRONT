@@ -135,7 +135,7 @@ export default function TechnicalEvaluationPage() {
     }
 
     return true;
-  };
+  ;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -401,4 +401,4 @@ export default function TechnicalEvaluationPage() {
       )}
     </div>
   );
-}
+
