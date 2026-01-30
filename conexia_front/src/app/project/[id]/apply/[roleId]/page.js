@@ -21,6 +21,8 @@ export default function ProjectApplicationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const [existingPostulations, setExistingPostulations] = useState([]);
+  const [hasExistingPostulation, setHasExistingPostulation] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [applicationData, setApplicationData] = useState({
     cv: null,
     answers: [],
@@ -77,16 +79,18 @@ export default function ProjectApplicationPage() {
               message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
             }
             
+            setHasExistingPostulation(true);
             setToast({ 
               type: 'error', 
               message: message
             });
             
-            // Redirigir al detalle del proyecto después de 3 segundos
+            // Redirigir inmediatamente al detalle del proyecto
+            setLoading(false);
             setTimeout(() => {
               router.push(`/project/${projectId}`);
-            }, 3000);
-            return;
+            }, 2000);
+            return; // Detener la carga del proyecto
           }
         } catch (error) {
           console.error('Error checking postulations:', error);
@@ -141,6 +145,7 @@ export default function ProjectApplicationPage() {
   const validateApplication = () => {
     const applicationTypes = role.applicationTypes || [];
     const applicationType = role.applicationType;
+    const errors = {};
     
     // Detectar si es PARTNER o INVESTOR por el título del rol
     const isPartnerRole = applicationType === 'PARTNER' || 
@@ -154,18 +159,32 @@ export default function ProjectApplicationPage() {
     // Verificar si ya tiene CUALQUIER postulación previa (nueva regla)
     if (existingPostulations && existingPostulations.length > 0) {
       const lastPostulation = existingPostulations[0];
+      const statusCode = lastPostulation.status?.code?.toLowerCase() || '';
       const statusName = lastPostulation.status?.name || 'en proceso';
+      
+      let message = '';
+      if (statusCode === 'cancelada' || statusCode === 'cancelled') {
+        message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
+      } else if (statusCode === 'rechazada' || statusCode === 'rejected') {
+        message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
+      } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
+        message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
+      } else if (statusCode === 'expirada' || statusCode === 'expired') {
+        message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
+      } else {
+        message = `Ya tienes una postulación ${statusName} para este rol. No puedes volver a postularte.`;
+      }
+      
       setToast({ 
         type: 'error', 
-        message: `Ya tienes una postulación ${statusName} para este rol. No puedes volver a postularte.` 
+        message: message
       });
       return false;
     }
 
     // Validar CV si es requerido (para CV, PARTNER, INVESTOR)
     if ((applicationTypes.includes('CV') || applicationType === 'CV' || isPartnerRole || isInvestorRole) && !applicationData.cv) {
-      setToast({ type: 'error', message: 'Debes subir tu CV' });
-      return false;
+      errors.cv = 'Debes subir tu CV';
     }
 
     // Validar respuestas si hay preguntas
@@ -174,8 +193,7 @@ export default function ProjectApplicationPage() {
         const answer = applicationData.answers.find(a => a.questionId === question.id);
         if (!answer || (question.questionType === 'OPEN' && !answer.answerText?.trim()) || 
             (question.questionType === 'MULTIPLE_CHOICE' && !answer.optionId)) {
-          setToast({ type: 'error', message: `Debes responder todas las preguntas` });
-          return false;
+          errors[`question_${question.id}`] = 'Este campo es requerido';
         }
       }
     }
@@ -183,20 +201,17 @@ export default function ProjectApplicationPage() {
     // Validar campos de socio
     if (isPartnerRole) {
       if (!applicationData.partnerDescription?.trim()) {
-        setToast({ type: 'error', message: 'La descripción como socio es requerida' });
-        return false;
+        errors.partnerDescription = 'La descripción como socio es requerida';
       }
     }
 
     // Validar campos de inversor
     if (isInvestorRole) {
       if (!applicationData.investorMessage?.trim()) {
-        setToast({ type: 'error', message: 'El mensaje de inversión es requerido' });
-        return false;
+        errors.investorMessage = 'El mensaje de inversión es requerido';
       }
       if (!applicationData.investorAmount || applicationData.investorAmount <= 0) {
-        setToast({ type: 'error', message: 'El monto de inversión es requerido y debe ser mayor a 0' });
-        return false;
+        errors.investorAmount = 'El monto de inversión es requerido y debe ser mayor a 0';
       }
     }
 
@@ -206,7 +221,8 @@ export default function ProjectApplicationPage() {
       console.log('Se creará una evaluación técnica pendiente');
     }
 
-    return true;
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -333,13 +349,43 @@ export default function ProjectApplicationPage() {
     );
   }
 
-  if (!project || !role) {
+  if (!project || !role || hasExistingPostulation) {
     return (
       <div className="min-h-screen bg-[#f3f9f8]">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="text-red-600">Proyecto o rol no encontrado</div>
+          <div className="bg-white rounded-2xl shadow p-8 max-w-md text-center">
+            {hasExistingPostulation ? (
+              <>
+                <div className="mb-4">
+                  <svg className="w-16 h-16 mx-auto text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">No puedes postularte</h2>
+                <p className="text-gray-600 mb-4">Ya tienes una postulación para este rol.</p>
+                <Button
+                  onClick={() => router.push(`/project/${projectId}`)}
+                  className="bg-conexia-green hover:bg-conexia-green/90"
+                >
+                  Volver al proyecto
+                </Button>
+              </>
+            ) : (
+              <div className="text-red-600">Proyecto o rol no encontrado</div>
+            )}
+          </div>
         </div>
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={true}
+            onClose={() => setToast(null)}
+            position="top-center"
+            duration={4000}
+          />
+        )}
       </div>
     );
   }
@@ -396,12 +442,21 @@ export default function ProjectApplicationPage() {
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
-                  onChange={(e) => handleFileChange(e, 'cv')}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+                  onChange={(e) => {
+                    handleFileChange(e, 'cv');
+                    if (fieldErrors.cv) {
+                      setFieldErrors(prev => ({...prev, cv: undefined}));
+                    }
+                  }}
+                  className={`block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
                             file:rounded-lg file:border-0 file:text-sm file:font-semibold
-                            file:bg-conexia-green file:text-white hover:file:bg-conexia-green/90"
-                  required
+                            file:bg-conexia-green file:text-white hover:file:bg-conexia-green/90 ${
+                              fieldErrors.cv ? 'border border-red-500 rounded-lg' : ''
+                            }`}
                 />
+                {fieldErrors.cv && (
+                  <p className="text-sm text-red-600 mt-1">{fieldErrors.cv}</p>
+                )}
                 {applicationData.cv && (
                   <p className="text-sm text-green-600 mt-1">✓ {applicationData.cv.name}</p>
                 )}
@@ -414,37 +469,57 @@ export default function ProjectApplicationPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Preguntas</h3>
                 <div className="space-y-4">
                   {role.questions.map((question, index) => (
-                    <div key={question.id || index} className="border border-gray-200 rounded-lg p-4">
+                    <div key={question.id || index} className={`border rounded-lg p-4 ${
+                      fieldErrors[`question_${question.id}`] ? 'border-red-500' : 'border-gray-200'
+                    }`}>
                       <label className="block text-sm font-medium text-gray-700 mb-3">
                         {question.questionText}
                       </label>
                       
                       {question.questionType === 'OPEN' ? (
-                        <InputField
-                          multiline
-                          rows={3}
-                          placeholder="Escribe tu respuesta..."
-                          value={applicationData.answers.find(a => a.questionId === question.id)?.answerText || ''}
-                          onChange={(e) => handleAnswerChange(question.id, e.target.value, 'text')}
-                          required
-                        />
+                        <>
+                          <InputField
+                            multiline
+                            rows={3}
+                            placeholder="Escribe tu respuesta..."
+                            value={applicationData.answers.find(a => a.questionId === question.id)?.answerText || ''}
+                            onChange={(e) => {
+                              handleAnswerChange(question.id, e.target.value, 'text');
+                              if (fieldErrors[`question_${question.id}`]) {
+                                setFieldErrors(prev => ({...prev, [`question_${question.id}`]: undefined}));
+                              }
+                            }}
+                          />
+                          {fieldErrors[`question_${question.id}`] && (
+                            <p className="text-sm text-red-600 mt-1">{fieldErrors[`question_${question.id}`]}</p>
+                          )}
+                        </>
                       ) : (
-                        <div className="space-y-2">
-                          {question.options?.map((option, optIndex) => (
-                            <label key={optIndex} className="flex items-center">
-                              <input
-                                type="radio"
-                                name={`question-${question.id}`}
-                                value={option.id}
-                                checked={applicationData.answers.find(a => a.questionId === question.id)?.optionId === option.id}
-                                onChange={(e) => handleAnswerChange(question.id, parseInt(e.target.value), 'option')}
-                                className="mr-2"
-                                required
-                              />
-                              <span className="text-sm">{option.optionText}</span>
-                            </label>
-                          ))}
-                        </div>
+                        <>
+                          <div className="space-y-2">
+                            {question.options?.map((option, optIndex) => (
+                              <label key={optIndex} className="flex items-center">
+                                <input
+                                  type="radio"
+                                  name={`question-${question.id}`}
+                                  value={option.id}
+                                  checked={applicationData.answers.find(a => a.questionId === question.id)?.optionId === option.id}
+                                  onChange={(e) => {
+                                    handleAnswerChange(question.id, parseInt(e.target.value), 'option');
+                                    if (fieldErrors[`question_${question.id}`]) {
+                                      setFieldErrors(prev => ({...prev, [`question_${question.id}`]: undefined}));
+                                    }
+                                  }}
+                                  className="mr-2"
+                                />
+                                <span className="text-sm">{option.optionText}</span>
+                              </label>
+                            ))}
+                          </div>
+                          {fieldErrors[`question_${question.id}`] && (
+                            <p className="text-sm text-red-600 mt-1">{fieldErrors[`question_${question.id}`]}</p>
+                          )}
+                        </>
                       )}
                     </div>
                   ))}
@@ -502,9 +577,17 @@ export default function ProjectApplicationPage() {
                   rows={3}
                   placeholder="Describe qué puedes aportar como socio..."
                   value={applicationData.partnerDescription}
-                  onChange={(e) => setApplicationData(prev => ({...prev, partnerDescription: e.target.value}))}
-                  required
+                  onChange={(e) => {
+                    setApplicationData(prev => ({...prev, partnerDescription: e.target.value}));
+                    if (fieldErrors.partnerDescription) {
+                      setFieldErrors(prev => ({...prev, partnerDescription: undefined}));
+                    }
+                  }}
+                  className={fieldErrors.partnerDescription ? 'border-red-500' : ''}
                 />
+                {fieldErrors.partnerDescription && (
+                  <p className="text-sm text-red-600 mt-1">{fieldErrors.partnerDescription}</p>
+                )}
                 <p className="text-xs text-gray-500 mt-1">
                   Describe tus habilidades, experiencia y qué valor puedes aportar al proyecto
                 </p>
@@ -522,9 +605,17 @@ export default function ProjectApplicationPage() {
                     rows={3}
                     placeholder="Describe tu propuesta de inversión..."
                     value={applicationData.investorMessage}
-                    onChange={(e) => setApplicationData(prev => ({...prev, investorMessage: e.target.value}))}
-                    required
+                    onChange={(e) => {
+                      setApplicationData(prev => ({...prev, investorMessage: e.target.value}));
+                      if (fieldErrors.investorMessage) {
+                        setFieldErrors(prev => ({...prev, investorMessage: undefined}));
+                      }
+                    }}
+                    className={fieldErrors.investorMessage ? 'border-red-500' : ''}
                   />
+                  {fieldErrors.investorMessage && (
+                    <p className="text-sm text-red-600 mt-1">{fieldErrors.investorMessage}</p>
+                  )}
                   <p className="text-xs text-gray-500 mt-1">
                     Explica tu interés en invertir y tu experiencia
                   </p>
@@ -537,9 +628,17 @@ export default function ProjectApplicationPage() {
                     type="number"
                     placeholder="Monto en pesos"
                     value={applicationData.investorAmount}
-                    onChange={(e) => setApplicationData(prev => ({...prev, investorAmount: e.target.value}))}
-                    required
+                    onChange={(e) => {
+                      setApplicationData(prev => ({...prev, investorAmount: e.target.value}));
+                      if (fieldErrors.investorAmount) {
+                        setFieldErrors(prev => ({...prev, investorAmount: undefined}));
+                      }
+                    }}
+                    className={fieldErrors.investorAmount ? 'border-red-500' : ''}
                   />
+                  {fieldErrors.investorAmount && (
+                    <p className="text-sm text-red-600 mt-1">{fieldErrors.investorAmount}</p>
+                  )}
                   <p className="text-xs text-gray-500 mt-1">
                     Ingresa el monto que estás dispuesto a invertir
                   </p>

@@ -287,7 +287,7 @@ export default function MyProjectsPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-1 text-sm text-gray-600">
                             <Users size={16} />
-                            <span>{project.roles?.length || 0}</span>
+                            <span>{project.rolesCount || 0}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -342,7 +342,7 @@ export default function MyProjectsPage() {
                     <div className="space-y-2 mb-4 text-sm">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Users size={16} />
-                        <span>{project.roles?.length || 0} roles</span>
+                        <span>{project.rolesCount || 0} roles</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600">
                         <span className="font-medium">Solicitudes:</span>

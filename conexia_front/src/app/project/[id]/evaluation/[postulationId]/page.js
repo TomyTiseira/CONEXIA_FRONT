@@ -20,6 +20,7 @@ export default function TechnicalEvaluationPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [evaluationData, setEvaluationData] = useState({
     evaluationDescription: '',
     evaluationLink: '',
@@ -110,13 +111,12 @@ export default function TechnicalEvaluationPage() {
 
   const validateEvaluation = () => {
     const { evaluationDescription, evaluationLink, evaluation } = evaluationData;
+    const errors = {};
 
     // Al menos uno de los campos debe estar presente
     if (!evaluationDescription?.trim() && !evaluationLink?.trim() && !evaluation) {
-      setToast({ 
-        type: 'error', 
-        message: 'Debes proporcionar al menos una descripción, enlace o archivo' 
-      });
+      errors.general = 'Debes proporcionar al menos una descripción, enlace o archivo';
+      setFieldErrors(errors);
       return false;
     }
 
@@ -125,12 +125,12 @@ export default function TechnicalEvaluationPage() {
       try {
         new URL(evaluationLink);
       } catch {
-        setToast({ type: 'error', message: 'El enlace proporcionado no es válido' });
-        return false;
+        errors.evaluationLink = 'El enlace proporcionado no es válido';
       }
     }
 
-    return true;
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -273,10 +273,16 @@ export default function TechnicalEvaluationPage() {
                 rows={6}
                 placeholder="Describe cómo resolviste la evaluación, los pasos que seguiste, tecnologías utilizadas, etc."
                 value={evaluationData.evaluationDescription}
-                onChange={(e) => setEvaluationData(prev => ({ 
-                  ...prev, 
-                  evaluationDescription: e.target.value 
-                }))}
+                onChange={(e) => {
+                  setEvaluationData(prev => ({ 
+                    ...prev, 
+                    evaluationDescription: e.target.value 
+                  }));
+                  if (fieldErrors.general) {
+                    setFieldErrors(prev => ({...prev, general: undefined}));
+                  }
+                }}
+                className={fieldErrors.general ? 'border-red-500' : ''}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Proporciona detalles sobre tu implementación y enfoque
@@ -293,11 +299,20 @@ export default function TechnicalEvaluationPage() {
                 type="url"
                 placeholder="https://github.com/tu-usuario/proyecto"
                 value={evaluationData.evaluationLink}
-                onChange={(e) => setEvaluationData(prev => ({ 
-                  ...prev, 
-                  evaluationLink: e.target.value 
-                }))}
+                onChange={(e) => {
+                  setEvaluationData(prev => ({ 
+                    ...prev, 
+                    evaluationLink: e.target.value 
+                  }));
+                  if (fieldErrors.evaluationLink || fieldErrors.general) {
+                    setFieldErrors(prev => ({...prev, evaluationLink: undefined, general: undefined}));
+                  }
+                }}
+                className={fieldErrors.evaluationLink ? 'border-red-500' : ''}
               />
+              {fieldErrors.evaluationLink && (
+                <p className="text-sm text-red-600 mt-1">{fieldErrors.evaluationLink}</p>
+              )}
               <p className="text-xs text-gray-500 mt-1">
                 Puede ser un repositorio de GitHub, CodePen, enlace a demo, etc.
               </p>
@@ -312,7 +327,12 @@ export default function TechnicalEvaluationPage() {
               <input
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg"
-                onChange={handleFileChange}
+                onChange={(e) => {
+                  handleFileChange(e);
+                  if (fieldErrors.general) {
+                    setFieldErrors(prev => ({...prev, general: undefined}));
+                  }
+                }}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
                           file:rounded-lg file:border-0 file:text-sm file:font-semibold
                           file:bg-conexia-green file:text-white hover:file:bg-conexia-green/90
@@ -327,6 +347,13 @@ export default function TechnicalEvaluationPage() {
                 Formatos permitidos: PDF, PNG, JPG (máx. 10MB)
               </p>
             </div>
+
+            {/* Mostrar error general si no se completó ningún campo */}
+            {fieldErrors.general && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-700 text-sm font-medium">{fieldErrors.general}</p>
+              </div>
+            )}
 
             {/* Nota importante */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
