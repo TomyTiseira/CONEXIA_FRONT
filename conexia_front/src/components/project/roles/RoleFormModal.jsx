@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiPlus, FiTrash2, FiUpload, FiLink, FiEdit2 } from 'react-icons/fi';
+import { FiX, FiPlus, FiEdit2, FiTrash2, FiUpload, FiLink, FiCheck } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
@@ -17,6 +17,7 @@ import { APPLICATION_TYPES, APPLICATION_TYPE_LABELS } from './ProjectRolesManage
  */
 export default function RoleFormModal({ role, onSave, onCancel }) {
   const [mounted, setMounted] = useState(false);
+  const evaluationBuilderRef = useRef(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -168,6 +169,10 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
       }
       if (evalErrors.length > 0) {
         setErrors(prev => ({ ...prev, evaluation: `Debe completar: ${evalErrors.join(', ')}` }));
+        // Marcar campos del EvaluationBuilder como touched
+        if (evaluationBuilderRef.current) {
+          evaluationBuilderRef.current.markAllAsTouched();
+        }
         isValid = false;
       }
     }
@@ -267,14 +272,17 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                 <label className="block text-sm font-semibold text-conexia-green-dark mb-1">
                   Tipo de colaboración <span className="text-red-600">*</span>
                 </label>
-                <SelectField
-                  name="collaborationType"
-                  options={collaborationTypes?.map((t) => ({ value: t.id, label: t.name })) || []}
-                  value={formData.collaborationType}
-                  onChange={(e) => handleChange('collaborationType', e.target.value)}
-                  onBlur={() => handleBlur('collaborationType')}
-                  error={touched.collaborationType && errors.collaborationType}
-                />
+                <div className="w-full">
+                  <SelectField
+                    name="collaborationType"
+                    options={collaborationTypes?.map((t) => ({ value: t.id, label: t.name })) || []}
+                    value={formData.collaborationType}
+                    onChange={(e) => handleChange('collaborationType', e.target.value)}
+                    onBlur={() => handleBlur('collaborationType')}
+                    error={touched.collaborationType && errors.collaborationType}
+                    className="max-w-full"
+                  />
+                </div>
               </div>
 
               {/* Tipo de contratación */}
@@ -282,14 +290,17 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                 <label className="block text-sm font-semibold text-conexia-green-dark mb-1">
                   Tipo de contratación <span className="text-red-600">*</span>
                 </label>
-                <SelectField
-                  name="contractType"
-                  options={contractTypes?.map((t) => ({ value: t.id, label: t.name })) || []}
-                  value={formData.contractType}
-                  onChange={(e) => handleChange('contractType', e.target.value)}
-                  onBlur={() => handleBlur('contractType')}
-                  error={touched.contractType && errors.contractType}
-                />
+                <div className="w-full">
+                  <SelectField
+                    name="contractType"
+                    options={contractTypes?.map((t) => ({ value: t.id, label: t.name })) || []}
+                    value={formData.contractType}
+                    onChange={(e) => handleChange('contractType', e.target.value)}
+                    onBlur={() => handleBlur('contractType')}
+                    error={touched.contractType && errors.contractType}
+                    className="max-w-full"
+                  />
+                </div>
               </div>
             </div>
 
@@ -377,6 +388,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
             {/* Sección de evaluación técnica */}
             {formData.applicationTypes?.includes(APPLICATION_TYPES.EVALUATION) && (
               <EvaluationBuilder
+                ref={evaluationBuilderRef}
                 evaluation={formData.evaluation}
                 onChange={(evaluation) => {
                   handleChange('evaluation', evaluation);
@@ -417,6 +429,7 @@ function QuestionBuilder({ questions, onChange, error }) {
   const [newOption, setNewOption] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false); // Estado para controlar si se está creando una nueva pregunta
+  const [isAddingOption, setIsAddingOption] = useState(false); // Estado para controlar si se está agregando una opción
 
   const handleConfirmQuestion = () => {
     if (newQuestion.questionText.trim()) {
@@ -487,7 +500,17 @@ function QuestionBuilder({ questions, onChange, error }) {
         options: [...prev.options, { text: newOption, isCorrect: false }]
       }));
       setNewOption('');
+      setIsAddingOption(false); // Ocultar el campo después de agregar
     }
+  };
+
+  const handleStartAddingOption = () => {
+    setIsAddingOption(true);
+  };
+
+  const handleCancelAddingOption = () => {
+    setNewOption('');
+    setIsAddingOption(false);
   };
 
   const handleRemoveOption = (index) => {
@@ -609,7 +632,7 @@ function QuestionBuilder({ questions, onChange, error }) {
             value={newQuestion.questionText}
             onChange={(e) => setNewQuestion(prev => ({ ...prev, questionText: e.target.value }))}
           />
-          <div className="w-full overflow-hidden">
+          <div className="w-full">
             <SelectField
               options={[
                 { value: 'OPEN', label: 'Respuesta abierta' },
@@ -617,7 +640,7 @@ function QuestionBuilder({ questions, onChange, error }) {
               ]}
               value={newQuestion.questionType}
               onChange={handleTypeChange}
-              className="w-full"
+              className="max-w-full"
             />
           </div>
 
@@ -662,17 +685,21 @@ function QuestionBuilder({ questions, onChange, error }) {
                         <button
                           type="button"
                           onClick={() => handleToggleCorrect(index)}
-                          className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                          className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
                             opt.isCorrect 
-                              ? 'bg-green-500 border-green-500 text-white' 
-                              : 'border-gray-300 hover:border-green-400'
+                              ? 'bg-green-500 border-green-500 text-white shadow-md' 
+                              : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
                           }`}
                           title={opt.isCorrect ? 'Respuesta correcta' : 'Marcar como correcta'}
                         >
-                          {opt.isCorrect && '✓'}
+                          {opt.isCorrect && (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
                         </button>
                       ) : (
-                        <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-gray-200 bg-gray-100" title="Sin evaluación automática">
+                        <div className="flex-shrink-0 w-6 h-6 rounded border-2 border-gray-200 bg-gray-100 flex items-center justify-center" title="Sin evaluación automática">
                           <span className="text-gray-400 text-xs">-</span>
                         </div>
                       )}
@@ -690,8 +717,8 @@ function QuestionBuilder({ questions, onChange, error }) {
               )}
 
               {/* Agregar nueva opción */}
-              <div className="flex gap-2 items-start">
-                <div className="flex-1">
+              {isAddingOption ? (
+                <div className="space-y-2">
                   <InputField
                     placeholder="Escribe una opción"
                     value={newOption}
@@ -703,16 +730,39 @@ function QuestionBuilder({ questions, onChange, error }) {
                       }
                     }}
                   />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCancelAddingOption}
+                      className="p-2 text-red-600 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
+                      title="Cancelar"
+                    >
+                      <FiX className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddOption}
+                      disabled={!newOption.trim()}
+                      className="p-2 text-white bg-conexia-green hover:bg-[#2b6a6a] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Agregar opción"
+                    >
+                      <FiCheck className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddOption}
-                  disabled={!newOption.trim()}
-                  className="w-10 h-10 bg-[#367d7d] text-white rounded-lg hover:bg-[#2b6a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
-                >
-                  <FiPlus className="w-4 h-4" />
-                </button>
-              </div>
+              ) : (
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="neutral"
+                    onClick={handleStartAddingOption}
+                    className="px-4 py-2 text-sm flex items-center gap-2"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    Agregar opción
+                  </Button>
+                </div>
+              )}
 
               {newQuestion.options.length > 0 && (
                 <p className="text-xs text-gray-600 mt-2">
@@ -724,16 +774,26 @@ function QuestionBuilder({ questions, onChange, error }) {
             </div>
           )}
 
-          {/* Botón para confirmar la pregunta */}
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleConfirmQuestion}
-            disabled={!canConfirmQuestion()}
-            className="w-full flex items-center justify-center gap-2"
-          >
-            {editingIndex !== null ? 'Guardar cambios' : 'Confirmar pregunta'}
-          </Button>
+          {/* Botones para confirmar o cancelar la pregunta */}
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="cancel"
+              onClick={handleCancelEdit}
+              className="px-4 py-2 text-sm"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleConfirmQuestion}
+              disabled={!canConfirmQuestion()}
+              className="px-4 py-2 text-sm"
+            >
+              {editingIndex !== null ? 'Guardar cambios' : 'Confirmar pregunta'}
+            </Button>
+          </div>
         </div>
       )}
 
@@ -758,13 +818,36 @@ function QuestionBuilder({ questions, onChange, error }) {
 /**
  * Componente para configurar evaluación técnica
  */
-function EvaluationBuilder({ evaluation, onChange, error }) {
+const EvaluationBuilder = forwardRef(({ evaluation, onChange, error }, ref) => {
   const [formData, setFormData] = useState(evaluation || {
     description: '',
     link: '',
     days: 7,
     file: null,
   });
+
+  const [errors, setErrors] = useState({
+    description: '',
+    days: ''
+  });
+
+  const [touched, setTouched] = useState({
+    description: false,
+    days: false
+  });
+
+  // Exponer método para marcar todos los campos como touched
+  useImperativeHandle(ref, () => ({
+    markAllAsTouched: () => {
+      setTouched({
+        description: true,
+        days: true
+      });
+      // Validar campos inmediatamente
+      validateField('description', formData.description);
+      validateField('days', formData.days);
+    }
+  }));
 
   useEffect(() => {
     if (formData.description && formData.description.trim()) {
@@ -774,27 +857,103 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
     }
   }, [formData]);
 
+  const validateField = (field, value) => {
+    let error = '';
+    
+    if (field === 'description') {
+      if (!value || !value.trim()) {
+        error = 'La descripción es requerida';
+      } else if (value.trim().length < 10) {
+        error = 'La descripción debe tener al menos 10 caracteres';
+      }
+    } else if (field === 'days') {
+      if (!value || value === '') {
+        error = 'Los días son requeridos';
+      } else if (value < 1 || value > 30) {
+        error = 'Debe ser entre 1 y 30 días';
+      }
+    }
+
+    setErrors(prev => ({ ...prev, [field]: error }));
+    return error === '';
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validateField(field, formData[field]);
+  };
+
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, description: value }));
+    if (touched.description) {
+      validateField('description', value);
+    }
+  };
+
+  const handleDaysChange = (e) => {
+    const value = e.target.value;
+    if (value === '' || value === null) {
+      setFormData(prev => ({ ...prev, days: '' }));
+      if (touched.days) {
+        validateField('days', '');
+      }
+    } else {
+      const numValue = parseInt(value);
+      if (!isNaN(numValue)) {
+        setFormData(prev => ({ ...prev, days: numValue }));
+        if (touched.days) {
+          validateField('days', numValue);
+        }
+      }
+    }
+  };
+
   return (
     <div className="border border-gray-200 rounded-lg p-4">
       <label className="block text-sm font-semibold text-gray-900 mb-2">
         Evaluación técnica
       </label>
 
-      <div className="space-y-0">
+      <div className="space-y-4">
+        {/* Descripción */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1.5">
-            Descripción de la evaluación
+            Descripción de la evaluación <span className="text-red-600">*</span>
           </label>
           <InputField
             placeholder="Describe qué debe hacer el candidato"
             multiline
             rows={3}
             value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            onChange={handleDescriptionChange}
+            onBlur={() => handleBlur('description')}
+            error={touched.description && errors.description}
           />
         </div>
 
-        <div className="-mt-4">
+        {/* Días para completar */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+            Días para completar la evaluación <span className="text-red-600">*</span>
+          </label>
+          <InputField
+            type="number"
+            min="1"
+            max="30"
+            placeholder="7"
+            value={formData.days}
+            onChange={handleDaysChange}
+            onBlur={() => handleBlur('days')}
+            error={touched.days && errors.days}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Entre 1 y 30 días
+          </p>
+        </div>
+
+        {/* Link externo */}
+        <div>
           <label className="block text-xs font-medium text-gray-700 mb-1.5">
             Link externo (opcional)
           </label>
@@ -805,34 +964,7 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
           />
         </div>
 
-        <div className="-mt-4">
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">
-            Días para completar la evaluación <span className="text-red-600">*</span>
-          </label>
-          <InputField
-            type="number"
-            min="1"
-            max="30"
-            placeholder="7"
-            value={formData.days}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === '' || value === null) {
-                setFormData(prev => ({ ...prev, days: '' }));
-              } else {
-                const numValue = parseInt(value);
-                if (!isNaN(numValue) && numValue >= 1 && numValue <= 30) {
-                  setFormData(prev => ({ ...prev, days: numValue }));
-                }
-              }
-            }}
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Entre 1 y 30 días (por defecto: 7 días)
-          </p>
-        </div>
-
+        {/* Archivo adjunto */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1.5">
             Archivo adjunto (opcional)
@@ -852,13 +984,9 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
                         file:bg-conexia-green file:text-white hover:file:bg-[#1a7a66]"
             />
           </div>
-          {formData.file ? (
+          {formData.file && (
             <p className="text-xs text-gray-600 mt-1 break-words">
               Archivo: {formData.file.name}
-            </p>
-          ) : (
-            <p className="text-xs text-gray-400 mt-1">
-              Ningún archivo seleccionado
             </p>
           )}
         </div>
@@ -867,4 +995,6 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
       {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
     </div>
   );
-}
+});
+
+EvaluationBuilder.displayName = 'EvaluationBuilder';
