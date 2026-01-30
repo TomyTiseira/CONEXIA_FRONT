@@ -208,7 +208,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-4 space-y-1">
+          <div className="px-6 py-4 space-y-4">
             {/* Título del rol */}
             <div>
               <label className="block text-sm font-semibold text-conexia-green-dark mb-1">
