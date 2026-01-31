@@ -214,7 +214,8 @@ function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwne
               </div>
             )}
 
-            {role.evaluation && (
+            {/* Solo mostrar evaluación técnica si el usuario es dueño del proyecto */}
+            {isOwner && role.evaluation && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 overflow-hidden">
                 <h4 className="font-medium text-blue-900 mb-2">Evaluación Técnica</h4>
                 <p className="text-blue-800 text-sm mb-2 break-words overflow-wrap-anywhere">{role.evaluation.description}</p>

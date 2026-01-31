@@ -13,7 +13,6 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
   const [formData, setFormData] = useState({
     cvFile: null,
     answers: {}, // Para preguntas: { questionIndex: answer }
-    evaluationFile: null,
     investmentAmount: '', // Para inversores
     investmentDescription: '', // Para inversores
     partnerContribution: '', // Para socios
@@ -22,7 +21,6 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const cvFileInputRef = useRef(null);
-  const evaluationFileInputRef = useRef(null);
 
   const requiresCV = [
     APPLICATION_TYPES.CV_ONLY,
@@ -33,11 +31,6 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
 
   const requiresQuestions = [
     APPLICATION_TYPES.CUSTOM_QUESTIONS,
-    APPLICATION_TYPES.MIXED,
-  ].includes(role.applicationType);
-
-  const requiresEvaluation = [
-    APPLICATION_TYPES.TECHNICAL_EVALUATION,
     APPLICATION_TYPES.MIXED,
   ].includes(role.applicationType);
 
@@ -91,10 +84,6 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
       });
     }
 
-    if (requiresEvaluation && !formData.evaluationFile) {
-      newErrors.evaluationFile = 'Debes adjuntar tu solución a la evaluación técnica';
-    }
-
     if (isInvestor) {
       if (!formData.investmentAmount || formData.investmentAmount <= 0) {
         newErrors.investmentAmount = 'El monto de inversión es requerido';
@@ -116,7 +105,7 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
     e.preventDefault();
     
     // Marcar todos como touched
-    const allTouched = { cvFile: true, evaluationFile: true };
+    const allTouched = { cvFile: true };
     if (requiresQuestions && role.questions) {
       role.questions.forEach((_, index) => {
         allTouched[`question_${index}`] = true;
@@ -160,7 +149,9 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Currículum Vitae (PDF) <span className="text-red-600">*</span>
             </label>
-            <div className="border-2 border-dashed rounded-lg p-4 text-center border-gray-300 hover:border-gray-400 transition-colors">
+            <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+              errors.cvFile ? 'border-red-500' : 'border-gray-300 hover:border-gray-400'
+            }`}>
               {formData.cvFile ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -257,77 +248,6 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
                   )}
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        {/* Evaluación Técnica */}
-        {requiresEvaluation && role.evaluation && (
-          <div className="border-t pt-4">
-            <h4 className="font-semibold text-gray-900 mb-3">Evaluación Técnica</h4>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-sm text-gray-700 mb-3">{role.evaluation.description}</p>
-              {role.evaluation.link && (
-                <a
-                  href={role.evaluation.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                >
-                  🔗 Abrir enlace de la evaluación
-                </a>
-              )}
-              {role.evaluation.file && (
-                <p className="text-sm text-gray-600 mt-2">
-                  📎 El proyecto incluye un archivo adjunto con la evaluación
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Adjunta tu solución <span className="text-red-600">*</span>
-              </label>
-              <div className="border-2 border-dashed rounded-lg p-4 text-center border-gray-300 hover:border-gray-400 transition-colors">
-                {formData.evaluationFile ? (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <FileText className="text-blue-500" size={24} />
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-gray-800">{formData.evaluationFile.name}</p>
-                        <p className="text-xs text-gray-500">{formatFileSize(formData.evaluationFile.size)}</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, evaluationFile: null }))}
-                      className="text-red-600 hover:text-red-700 text-sm"
-                    >
-                      Quitar
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <Upload className="mx-auto mb-2 text-gray-400" size={32} />
-                    <button
-                      type="button"
-                      onClick={() => evaluationFileInputRef.current?.click()}
-                      className="text-conexia-green font-semibold hover:underline text-sm"
-                    >
-                      Seleccionar archivo
-                    </button>
-                    <p className="text-xs text-gray-500 mt-1">Cualquier formato hasta 10MB</p>
-                  </div>
-                )}
-                <input
-                  ref={evaluationFileInputRef}
-                  type="file"
-                  onChange={(e) => handleFileSelect(e.target.files[0], 'evaluationFile')}
-                  className="hidden"
-                />
-              </div>
-              {errors.evaluationFile && <p className="text-xs text-red-600 mt-1">{errors.evaluationFile}</p>}
             </div>
           </div>
         )}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
-import { applyToProjectRole, getMyPostulationsByProjectAndRole } from '@/service/postulations/postulationService';
+import { applyToProjectRole, getMyPostulationsByProjectAndRole, cancelPostulation, createCancelledPostulation } from '@/service/postulations/postulationService';
 import Navbar from '@/components/navbar/Navbar';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
@@ -23,6 +23,7 @@ export default function ProjectApplicationPage() {
   const [existingPostulations, setExistingPostulations] = useState([]);
   const [hasExistingPostulation, setHasExistingPostulation] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [applicationData, setApplicationData] = useState({
     cv: null,
     answers: [],
@@ -285,16 +286,28 @@ export default function ProjectApplicationPage() {
       console.log('Datos de postulación a enviar:', postulationData);
 
       const result = await applyToProjectRole(postulationData);
+      
+      console.log('Resultado de la postulación:', result);
 
       if (result.success) {
-        setToast({ type: 'success', message: 'Postulación enviada correctamente' });
+        // Si hay evaluación técnica, redirigir directamente a la página de evaluación
+        const hasEvaluation = applicationTypes.includes('EVALUATION') || 
+                             applicationType === 'EVALUATION' || 
+                             applicationType === 'MIXED';
         
-        // Si hay evaluación técnica, redirigir a la página de evaluación
-        if (applicationTypes.includes('EVALUATION') && result.data?.postulationId) {
-          setTimeout(() => {
-            router.push(`/project/${projectId}/evaluation/${result.data.postulationId}`);
-          }, 2000);
+        // Extraer el ID de la postulación (puede venir como postulationId, id, o dentro de data)
+        const postulationId = result.postulationId || result.id || result.data?.postulationId || result.data?.id;
+        
+        console.log('hasEvaluation:', hasEvaluation);
+        console.log('postulationId:', postulationId);
+        console.log('role.evaluation:', role.evaluation);
+        
+        if (hasEvaluation && postulationId && role.evaluation) {
+          console.log('Redirigiendo a evaluación:', `/project/${projectId}/evaluation/${postulationId}`);
+          router.push(`/project/${projectId}/evaluation/${postulationId}?from=apply`);
+          return; // Importante: salir aquí para evitar el timeout
         } else {
+          setToast({ type: 'success', message: 'Postulación enviada correctamente' });
           setTimeout(() => {
             router.push(`/project/${projectId}`);
           }, 2000);
@@ -527,45 +540,6 @@ export default function ProjectApplicationPage() {
               </div>
             )}
 
-            {/* Evaluación técnica */}
-            {applicationTypes.includes('EVALUATION') && role.evaluation && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-blue-900 mb-2">Evaluación Técnica</h3>
-                <p className="text-blue-800 mb-3">{role.evaluation.description}</p>
-                {role.evaluation.link && (
-                  <p className="text-blue-700 text-sm mb-2">
-                    <span className="font-medium">Enlace:</span>{' '}
-                    <a href={role.evaluation.link} target="_blank" rel="noopener noreferrer" className="hover:underline text-blue-600">
-                      {role.evaluation.link}
-                    </a>
-                  </p>
-                )}
-                {role.evaluation.fileUrl && (
-                  <div className="text-blue-700 text-sm mb-2">
-                    <span className="font-medium">Archivo adjunto:</span>{' '}
-                    <a 
-                      href={role.evaluation.fileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      download={role.evaluation.fileName || 'evaluacion-tecnica.pdf'}
-                      className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {role.evaluation.fileName || 'Descargar archivo de evaluación'}
-                    </a>
-                  </div>
-                )}
-                <p className="text-blue-700 text-sm font-medium">
-                  Tienes {role.evaluation.days} días para completar esta evaluación después de postularte.
-                </p>
-                <p className="text-blue-600 text-xs mt-2">
-                  Al postularte, se creará una evaluación técnica en tu perfil donde podrás subir tu solución.
-                </p>
-              </div>
-            )}
-
             {/* Campos adicionales para socio/inversor */}
             {isPartnerRole && (
               <div>
@@ -651,7 +625,7 @@ export default function ProjectApplicationPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push(`/project/${projectId}`)}
+                onClick={() => setShowCancelModal(true)}
                 disabled={submitting}
               >
                 Cancelar
@@ -661,12 +635,87 @@ export default function ProjectApplicationPage() {
                 disabled={submitting}
                 className="bg-conexia-green hover:bg-conexia-green/90"
               >
-                {submitting ? 'Enviando...' : 'Enviar Postulación'}
+                {submitting 
+                  ? 'Enviando...' 
+                  : (role?.applicationTypes?.includes('EVALUATION') || 
+                     role?.applicationType === 'EVALUATION' || 
+                     role?.applicationType === 'MIXED')
+                    ? 'Continuar con prueba técnica'
+                    : 'Enviar Postulación'
+                }
               </Button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Modal de confirmación de cancelación */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              ¿Estás seguro de cancelar?
+            </h3>
+            <div className="space-y-3 mb-6">
+              <p className="text-sm text-gray-700">
+                Si cancelas esta postulación:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-sm text-gray-600">
+                <li>No podrás volver a postularte a este rol</li>
+                <li>La postulación quedará en estado <span className="font-semibold">cancelada</span></li>
+                <li>Perderás todo el progreso realizado en este formulario</li>
+              </ul>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1"
+              >
+                Volver al formulario
+              </Button>
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    setSubmitting(true);
+                    
+                    // TODO: Cuando el backend implemente el endpoint para postulaciones canceladas,
+                    // descomentar esta línea:
+                    // await createCancelledPostulation(parseInt(projectId), parseInt(roleId));
+                    
+                    // Por ahora, marcar como cancelado solo en localStorage
+                    const viewedRolesKey = `project_${projectId}_viewed_roles`;
+                    const viewedRoles = JSON.parse(localStorage.getItem(viewedRolesKey) || '[]');
+                    if (!viewedRoles.includes(parseInt(roleId))) {
+                      viewedRoles.push(parseInt(roleId));
+                      localStorage.setItem(viewedRolesKey, JSON.stringify(viewedRoles));
+                    }
+                    
+                    setShowCancelModal(false);
+                    setToast({ type: 'success', message: 'Postulación cancelada correctamente' });
+                    
+                    setTimeout(() => {
+                      router.push(`/project/${projectId}`);
+                    }, 2000);
+                  } catch (error) {
+                    console.error('Error al cancelar:', error);
+                    setShowCancelModal(false);
+                    setToast({ type: 'error', message: error.message || 'Error al cancelar la postulación' });
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+                disabled={submitting}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                {submitting ? 'Cancelando...' : 'Cancelar postulación'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <Toast

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import { submitTechnicalEvaluation, getMyPostulations } from '@/service/postulations/postulationService';
@@ -14,6 +14,7 @@ import { FileText, Link as LinkIcon, Upload, AlertCircle } from 'lucide-react';
 export default function TechnicalEvaluationPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();
   const [project, setProject] = useState(null);
   const [postulation, setPostulation] = useState(null);
@@ -368,17 +369,26 @@ export default function TechnicalEvaluationPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push(`/project/${projectId}`)}
+                onClick={() => {
+                  // Si viene de apply, volver al detalle del proyecto
+                  // Si viene de mis postulaciones, volver atrás
+                  const fromApply = searchParams.get('from') === 'apply';
+                  if (fromApply) {
+                    router.push(`/project/${projectId}`);
+                  } else {
+                    router.back();
+                  }
+                }}
                 disabled={submitting}
               >
-                Cancelar
+                Enviar evaluación técnica más tarde
               </Button>
               <Button
                 type="submit"
                 disabled={submitting}
                 className="bg-conexia-green hover:bg-conexia-green/90"
               >
-                {submitting ? 'Enviando...' : 'Enviar Evaluación'}
+                {submitting ? 'Enviando...' : 'Enviar evaluación técnica ahora'}
               </Button>
             </div>
           </form>
