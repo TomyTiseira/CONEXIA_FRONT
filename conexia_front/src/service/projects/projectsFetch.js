@@ -249,36 +249,50 @@ export async function fetchMyProjects({ ownerId, active, page = 1, limit = 16 })
   const projects = data?.data?.projects;
   const pagination = data?.data?.pagination || { currentPage: page, itemsPerPage: limit, totalItems: Array.isArray(projects) ? projects.length : 0, totalPages: 1 };
 
+  console.log('📊 Datos recibidos del backend (fetchMyProjects):', JSON.stringify(projects, null, 2));
+
   if (!Array.isArray(projects)) return { projects: [], pagination };
 
+  const mappedProjects = projects.map(p => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    image: p.image,
+    userId: p.userId,
+    owner: typeof p.owner === 'object' && p.owner !== null 
+      ? `${p.owner.name || ''} ${p.owner.lastName || ''}`.trim() || p.owner.id || ''
+      : p.owner,
+    ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
+    ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
+    category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
+    categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
+    contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
+    contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
+    collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
+    collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
+    skills: p.skills || p.requiredSkills || [],
+    isOwner: p.isOwner,
+    active: p.active !== undefined ? p.active : p.isActive,
+    isActive: p.isActive,
+    startDate: p.startDate,
+    endDate: p.endDate,
+    createdAt: p.createdAt,
+    updatedAt: p.updatedAt,
+    deletedAt: p.deletedAt,
+    roles: p.roles || [],
+    rolesCount: p.rolesCount || 0,
+    postulationsCount: p.postulationsCount || 0,
+  }));
+
+  console.log('🔄 Proyectos después del mapeo:', mappedProjects.map(p => ({
+    id: p.id,
+    title: p.title,
+    rolesCount: p.rolesCount,
+    postulationsCount: p.postulationsCount
+  })));
+
   return {
-    projects: projects.map(p => ({
-      id: p.id,
-      title: p.title,
-      description: p.description,
-      image: p.image,
-      userId: p.userId,
-      owner: typeof p.owner === 'object' && p.owner !== null 
-        ? `${p.owner.name || ''} ${p.owner.lastName || ''}`.trim() || p.owner.id || ''
-        : p.owner,
-      ownerId: typeof p.owner === 'object' && p.owner !== null ? p.owner.id : undefined,
-      ownerImage: typeof p.owner === 'object' && p.owner !== null ? p.owner.image : p.ownerImage,
-      category: typeof p.category === 'object' && p.category !== null ? p.category.name || '' : p.category,
-      categoryId: typeof p.category === 'object' && p.category !== null ? p.category.id : undefined,
-      contractType: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.name || '' : p.collaborationType,
-      contractTypeId: typeof p.collaborationType === 'object' && p.collaborationType !== null ? p.collaborationType.id : undefined,
-      collaborationType: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.name || '' : p.contractType,
-      collaborationTypeId: typeof p.contractType === 'object' && p.contractType !== null ? p.contractType.id : undefined,
-      skills: p.skills || p.requiredSkills || [],
-      isOwner: p.isOwner,
-      isActive: p.isActive,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      createdAt: p.createdAt,
-      updatedAt: p.updatedAt,
-      deletedAt: p.deletedAt,
-      isActive: p.isActive,
-    })),
+    projects: mappedProjects,
     pagination
   };
 }

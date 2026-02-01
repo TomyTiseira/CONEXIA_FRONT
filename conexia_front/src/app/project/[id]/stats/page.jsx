@@ -140,18 +140,17 @@ export default function ProjectStatisticsPage({ params }) {
             </div>
 
             {/* Postulaciones por rol */}
-            {postulationsByRole && Object.entries(postulationsByRole).map(([roleId, count]) => {
-              const roleStat = evaluationStatsByRole?.find(r => r.roleId === parseInt(roleId));
+            {postulationsByRole && postulationsByRole.map((role) => {
               return (
                 <div
-                  key={roleId}
+                  key={role.roleId}
                   className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-4 border-2 border-blue-200"
                 >
                   <div className="text-3xl font-bold text-blue-600 mb-1">
-                    {count}
+                    {role.totalPostulations}
                   </div>
                   <div className="text-sm font-medium text-gray-700">
-                    {roleStat?.roleName || `Rol #${roleId}`}
+                    {role.roleName}
                   </div>
                 </div>
               );
@@ -209,9 +208,6 @@ export default function ProjectStatisticsPage({ params }) {
                     `}
                   >
                     {roleStat.roleName}
-                    <span className="ml-2 text-sm opacity-75">
-                      ({roleStat.totalPostulations})
-                    </span>
                   </button>
                 ))}
               </div>

@@ -187,7 +187,7 @@ export default function RequestedServicesPage() {
                   : 'Aún no has contratado ningún servicio.'}
               </p>
               <Button variant="primary" onClick={() => router.push('/services')}>
-                Explorar Servicios
+                Explorar servicios
               </Button>
             </div>
           )}

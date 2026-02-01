@@ -27,11 +27,30 @@ export async function fetchReportedProjects({ page = 1, orderBy = 'reportCount' 
 
 // Obtener detalles de reportes de un proyecto específico
 export async function fetchProjectReports(projectId, page = 1) {
-	const res = await fetchWithRefresh(`${config.API_URL}/reports/project/${projectId}?page=${page}`, {
-		method: 'GET',
-		headers: { 'Content-Type': 'application/json' },
-		credentials: 'include',
-	});
-	if (!res.ok) throw new Error('Error al obtener reportes del proyecto');
-	return res.json();
+	try {
+		const res = await fetchWithRefresh(`${config.API_URL}/reports/project/${projectId}?page=${page}`, {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+		});
+		
+		// Si es 403 (Forbidden), retornar estructura vacía sin lanzar error
+		if (res.status === 403) {
+			return { data: { reports: [] }, success: false, status: 403 };
+		}
+		
+		if (!res.ok) {
+			const error = new Error('Error al obtener reportes del proyecto');
+			error.status = res.status;
+			throw error;
+		}
+		
+		return res.json();
+	} catch (error) {
+		// Si es un error de red o 403, retornar estructura vacía
+		if (error.status === 403 || error.message?.includes('403')) {
+			return { data: { reports: [] }, success: false, status: 403 };
+		}
+		throw error;
+	}
 }

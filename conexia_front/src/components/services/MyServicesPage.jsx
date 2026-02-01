@@ -280,7 +280,7 @@ export default function MyServicesPage() {
                   <Briefcase className="text-conexia-green" size={24} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Servicios</p>
+                  <p className="text-sm text-gray-600">Total servicios</p>
                   <p className="text-2xl font-bold text-gray-900">{pagination.totalItems}</p>
                 </div>
               </div>
@@ -292,9 +292,11 @@ export default function MyServicesPage() {
                   <Users className="text-blue-600" size={24} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Solicitudes Totales</p>
+                  <p className="text-sm text-gray-600">Solicitudes totales</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {Object.values(requestsCounts).reduce((sum, count) => sum + count.total, 0)}
+                    {Object.values(requestsCounts).reduce((sum, count) => {
+                      return sum + (typeof count === 'object' && count?.total !== undefined ? count.total : 0);
+                    }, 0)}
                   </p>
                 </div>
               </div>
@@ -308,7 +310,9 @@ export default function MyServicesPage() {
                 <div>
                   <p className="text-sm text-gray-600">Pendientes</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {Object.values(requestsCounts).reduce((sum, count) => sum + count.pending, 0)}
+                    {Object.values(requestsCounts).reduce((sum, count) => {
+                      return sum + (typeof count === 'object' && count?.pending !== undefined ? count.pending : 0);
+                    }, 0)}
                   </p>
                 </div>
               </div>
@@ -337,7 +341,7 @@ export default function MyServicesPage() {
                     className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
                   >
                     <Briefcase size={16} />
-                    Crear Nuevo Servicio
+                    Crear nuevo servicio
                   </button>
                 ) : (
                   <button
@@ -346,7 +350,7 @@ export default function MyServicesPage() {
                     title={suspensionMessage}
                   >
                     <Briefcase size={16} />
-                    Crear Nuevo Servicio
+                    Crear nuevo servicio
                   </button>
                 )}
               </RequireVerification>
@@ -384,7 +388,7 @@ export default function MyServicesPage() {
                       onClick={() => router.push('/services/create')}
                       className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
                     >
-                      Crear Mi Primer Servicio
+                      Crear mi primer servicio
                     </button>
                   ) : (
                     <button
@@ -392,7 +396,7 @@ export default function MyServicesPage() {
                       className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed"
                       title={suspensionMessage}
                     >
-                      Crear Mi Primer Servicio
+                      Crear mi primer servicio
                     </button>
                   )}
                 </RequireVerification>

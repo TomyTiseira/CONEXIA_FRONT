@@ -181,7 +181,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               Mis postulaciones
             </Link>
             <Link
-              href={`/projects/user/${userId}`}
+              href="/my-projects"
               onClick={handleClose}
               className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
             >

@@ -140,50 +140,26 @@ export default function ProjectList({ projects, showFinished = false, showInacti
                 )}
               </div>
 
-              {/* Botón/Botones */}
+              {/* Botón */}
               <div className="w-full mt-auto px-1.5 mb-2.5">
-                {origin === 'my-projects' || origin === 'my-projects-preview' ? (
-                  <div className="flex gap-2">
-                    <button
-                      className="flex-1 bg-conexia-green hover:bg-conexia-green/90 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition"
-                      onClick={() => {
-                        let url = `/project/${project.id}`;
-                        if (origin === 'my-projects') {
-                          url += '?from=my-projects';
-                        } else if (origin === 'my-projects-preview') {
-                          url += '?from=profile';
-                        }
-                        router.push(url);
-                      }}
-                    >
-                      Ver detalle
-                    </button>
-                    <button
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition"
-                      onClick={() => {
-                        router.push(`/project/${project.id}/stats`);
-                      }}
-                      title="Ver estadísticas de postulaciones"
-                    >
-                      Estadísticas
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="bg-conexia-green hover:bg-conexia-green/90 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition w-full"
-                    onClick={() => {
-                      let url = `/project/${project.id}`;
-                      if (origin === 'user-projects') {
-                        url += '?from=user-projects';
-                      } else if (origin === 'user-projects-preview') {
-                        url += '?from=profile';
-                      }
-                      router.push(url);
-                    }}
-                  >
-                    Ver detalle
-                  </button>
-                )}
+                <button
+                  className="bg-conexia-green hover:bg-conexia-green/90 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition w-full"
+                  onClick={() => {
+                    let url = `/project/${project.id}`;
+                    if (origin === 'my-projects') {
+                      url += '?from=my-projects';
+                    } else if (origin === 'my-projects-preview') {
+                      url += '?from=profile';
+                    } else if (origin === 'user-projects') {
+                      url += '?from=user-projects';
+                    } else if (origin === 'user-projects-preview') {
+                      url += '?from=profile';
+                    }
+                    router.push(url);
+                  }}
+                >
+                  Ver detalle
+                </button>
               </div>
             </div>
           );

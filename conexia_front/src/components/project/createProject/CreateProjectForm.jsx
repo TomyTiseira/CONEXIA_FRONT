@@ -40,7 +40,6 @@ export default function CreateProjectForm() {
     locationId: '', // id de la provincia seleccionada
     locationName: '', // nombre para mostrar en el input
     category: '',
-    maxCollaborators: '',
     image: null,
     dates: { startDate: '', endDate: '' },
     roles: [], // Nuevo: roles del proyecto (ahora incluyen collaborationType y contractType)
@@ -141,14 +140,6 @@ export default function CreateProjectForm() {
       }
     }
 
-    // Validación para maxCollaborators: debe ser entero mayor a 1 si se ingresa
-    if (field === 'maxCollaborators' && value !== '') {
-      const num = Number(value);
-      if (!Number.isInteger(num) || num < 1) {
-        error = 'Debe ingresar un número entero mayor o igual a 1';
-      }
-    }
-
     // Validación para roles: debe tener al menos un rol
     if (field === 'roles') {
       if (!value || value.length === 0) {
@@ -217,8 +208,7 @@ export default function CreateProjectForm() {
           setErrors((prev) => ({ ...prev, [field]: 'Este campo es obligatorio' }));
         }
       });
-      // Bloquear envío si maxCollaborators tiene error y no está vacío
-      if ((form.maxCollaborators !== '' && errors.maxCollaborators) || !isValid || missing) return;
+      if (!isValid || missing) return;
 
       const formToSend = { 
         ...form, 
@@ -255,7 +245,7 @@ export default function CreateProjectForm() {
   return (
     <form onSubmit={handleSubmit} noValidate className="w-full grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
       {/* Título del proyecto */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[72px] gap-1.5">
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[90px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Título del proyecto
         </label>
@@ -271,7 +261,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Descripción e Imagen - lado a lado */}
-      <div className="md:col-span-1 flex flex-col justify-start min-h-[72px] gap-1.5 -mt-6">
+      <div className="md:col-span-1 flex flex-col justify-start min-h-[90px] gap-1.5 -mt-6">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Descripción del proyecto
         </label>
@@ -357,7 +347,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Ubicación */}
-      <div className="md:col-span-2 flex flex-col justify-center min-h-[120px] gap-1.5 -mt-8">
+      <div className="md:col-span-2 flex flex-col justify-center min-h-[130px] gap-1.5 -mt-8">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Ubicación del proyecto (Opcional)
         </label>
@@ -436,7 +426,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Categoría */}
-      <div className="flex flex-col justify-center min-h-[72px] gap-1.5 -mt-6">
+      <div className="flex flex-col justify-center min-h-[90px] gap-1.5 -mt-6">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Categoría del proyecto
         </label>
@@ -446,22 +436,6 @@ export default function CreateProjectForm() {
           value={form.category}
           onChange={(e) => handleChange('category', e.target.value)}
           error={touched.category && errors.category}
-        />
-      </div>
-
-      {/* Máximo de colaboradores */}
-      <div className="flex flex-col justify-center min-h-[72px] gap-1.5 -mt-6">
-        <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
-          N° máximo de colaboradores (Opcional)
-        </label>
-        <InputField
-          name="maxCollaborators"
-          type="number"
-          placeholder="Ingrese un número entero mayor a 1"
-          value={form.maxCollaborators}
-          onChange={(e) => handleChange('maxCollaborators', e.target.value)}
-          onBlur={() => handleBlur('maxCollaborators')}
-          error={touched.maxCollaborators && errors.maxCollaborators}
         />
       </div>
 

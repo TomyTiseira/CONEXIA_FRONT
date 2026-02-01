@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiX, FiPlus, FiTrash2, FiUpload, FiLink, FiEdit2 } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
@@ -15,6 +16,7 @@ import { APPLICATION_TYPES, APPLICATION_TYPE_LABELS } from './ProjectRolesManage
  * Modal para crear o editar un rol del proyecto
  */
 export default function RoleFormModal({ role, onSave, onCancel }) {
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -34,6 +36,11 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
   const { data: collaborationTypes } = useCollaborationTypes();
   const { data: contractTypes } = useContractTypes();
   const { data: applicationTypes } = useApplicationTypes();
+
+  // Verificar que estamos en el cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Cargar datos si estamos editando
   useEffect(() => {
@@ -68,6 +75,11 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
         newTypes = currentTypes.filter(t => t !== type);
       } else {
         newTypes = [...currentTypes, type];
+      }
+      
+      // Limpiar error de applicationTypes si hay al menos uno seleccionado
+      if (newTypes.length > 0) {
+        setErrors(prevErrors => ({ ...prevErrors, applicationTypes: '' }));
       }
       
       return { ...prev, applicationTypes: newTypes };
@@ -139,20 +151,25 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
     }
 
     // Validaciones específicas por tipo de postulación
-    if (formData.applicationTypes?.includes(APPLICATION_TYPES.QUESTIONS) && formData.questions.length === 0) {
-      setErrors(prev => ({ ...prev, questions: 'Debe agregar al menos una pregunta' }));
-      isValid = false;
+    if (formData.applicationTypes?.includes(APPLICATION_TYPES.QUESTIONS)) {
+      if (formData.questions.length === 0) {
+        setErrors(prev => ({ ...prev, questions: 'Debe agregar al menos una pregunta' }));
+        isValid = false;
+      }
     }
 
-    if (formData.applicationTypes?.includes(APPLICATION_TYPES.EVALUATION) && (!formData.evaluation || !formData.evaluation.description?.trim())) {
-      setErrors(prev => ({ ...prev, evaluation: 'Debe agregar una descripción para la evaluación técnica' }));
-      isValid = false;
-    }
-
-    if (formData.applicationTypes?.includes(APPLICATION_TYPES.MIXED) && 
-        formData.questions.length === 0 && !formData.evaluation) {
-      setErrors(prev => ({ ...prev, mixed: 'Debe agregar preguntas o evaluación técnica' }));
-      isValid = false;
+    if (formData.applicationTypes?.includes(APPLICATION_TYPES.EVALUATION)) {
+      const evalErrors = [];
+      if (!formData.evaluation || !formData.evaluation.description?.trim()) {
+        evalErrors.push('descripción');
+      }
+      if (!formData.evaluation || !formData.evaluation.days || formData.evaluation.days < 1) {
+        evalErrors.push('cantidad de días');
+      }
+      if (evalErrors.length > 0) {
+        setErrors(prev => ({ ...prev, evaluation: `Debe completar: ${evalErrors.join(', ')}` }));
+        isValid = false;
+      }
     }
 
     return isValid;
@@ -170,18 +187,10 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
     onCancel(formData); // Pasar los datos actuales al cerrar
   };
 
-  const handleBackdropClick = (e) => {
-    // Cerrar solo si se hace click en el fondo (no en el modal)
-    if (e.target === e.currentTarget) {
-      handleClose();
-    }
-  };
+  if (!mounted) return null;
 
-  return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={handleBackdropClick}
-    >
+  const modalContent = (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -306,7 +315,9 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                 Selecciona uno o más métodos de postulación para este rol
               </p>
               <div className="relative max-h-64 overflow-y-auto border border-gray-200 rounded-md bg-white">
-                {Object.entries(APPLICATION_TYPE_LABELS).map(([type, label]) => (
+                {Object.entries(APPLICATION_TYPE_LABELS)
+                  .filter(([type]) => type !== APPLICATION_TYPES.PARTNER && type !== APPLICATION_TYPES.INVESTOR && type !== APPLICATION_TYPES.MIXED)
+                  .map(([type, label]) => (
                   <label 
                     key={type} 
                     className="flex items-start px-3 py-3 cursor-pointer hover:bg-conexia-green/10 border-b border-gray-100 last:border-b-0"
@@ -323,9 +334,6 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                         {type === APPLICATION_TYPES.CV_ONLY && 'El candidato solo adjuntará su CV'}
                         {type === APPLICATION_TYPES.CUSTOM_QUESTIONS && 'El candidato responderá preguntas personalizadas'}
                         {type === APPLICATION_TYPES.TECHNICAL_EVALUATION && 'El candidato completará una evaluación técnica'}
-                        {type === APPLICATION_TYPES.MIXED && 'El candidato adjuntará CV y completará preguntas/evaluación'}
-                        {type === APPLICATION_TYPES.INVESTOR && 'Para personas que buscan invertir capital'}
-                        {type === APPLICATION_TYPES.PARTNER && 'Para personas que buscan ser socios/cofundadores'}
                       </p>
                     </div>
                   </label>
@@ -360,7 +368,7 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                 questions={formData.questions}
                 onChange={(questions) => {
                   handleChange('questions', questions);
-                  setErrors(prev => ({ ...prev, questions: '', mixed: '' }));
+                  setErrors(prev => ({ ...prev, questions: '' }));
                 }}
                 error={errors.questions}
               />
@@ -372,15 +380,10 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
                 evaluation={formData.evaluation}
                 onChange={(evaluation) => {
                   handleChange('evaluation', evaluation);
-                  setErrors(prev => ({ ...prev, evaluation: '', mixed: '' }));
+                  setErrors(prev => ({ ...prev, evaluation: '' }));
                 }}
                 error={errors.evaluation}
               />
-            )}
-
-            {/* Error para modo mixto */}
-            {formData.applicationType === APPLICATION_TYPES.MIXED && errors.mixed && (
-              <p className="text-sm text-red-600">{errors.mixed}</p>
             )}
           </div>
 
@@ -397,6 +400,8 @@ export default function RoleFormModal({ role, onSave, onCancel }) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 /**
@@ -411,8 +416,9 @@ function QuestionBuilder({ questions, onChange, error }) {
   });
   const [newOption, setNewOption] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false); // Estado para controlar si se está creando una nueva pregunta
 
-  const handleAddQuestion = () => {
+  const handleConfirmQuestion = () => {
     if (newQuestion.questionText.trim()) {
       // Validar que si es opción múltiple tenga al menos 2 opciones
       if (newQuestion.questionType === 'MULTIPLE_CHOICE') {
@@ -438,7 +444,15 @@ function QuestionBuilder({ questions, onChange, error }) {
       
       setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
       setNewOption('');
+      setIsCreatingNew(false); // Ocultar el formulario después de confirmar
     }
+  };
+
+  const handleStartNewQuestion = () => {
+    setIsCreatingNew(true);
+    setEditingIndex(null);
+    setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
+    setNewOption('');
   };
 
   const handleRemoveQuestion = (index) => {
@@ -448,11 +462,13 @@ function QuestionBuilder({ questions, onChange, error }) {
       setEditingIndex(null);
       setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
       setNewOption('');
+      setIsCreatingNew(false);
     }
   };
 
   const handleEditQuestion = (index) => {
     setEditingIndex(index);
+    setIsCreatingNew(true); // Mostrar el formulario
     setNewQuestion({ ...questions[index] });
     setNewOption('');
   };
@@ -461,6 +477,7 @@ function QuestionBuilder({ questions, onChange, error }) {
     setEditingIndex(null);
     setNewQuestion({ questionText: '', questionType: 'OPEN', options: [], hasCorrectAnswers: true });
     setNewOption('');
+    setIsCreatingNew(false); // Ocultar el formulario
   };
 
   const handleAddOption = () => {
@@ -498,7 +515,7 @@ function QuestionBuilder({ questions, onChange, error }) {
     }));
   };
 
-  const canAddQuestion = () => {
+  const canConfirmQuestion = () => {
     if (!newQuestion.questionText.trim()) return false;
     if (newQuestion.questionType === 'MULTIPLE_CHOICE') {
       // Debe tener al menos 2 opciones
@@ -571,149 +588,167 @@ function QuestionBuilder({ questions, onChange, error }) {
       )}
 
       {/* Agregar/Editar pregunta */}
-      <div className="space-y-2">
-        {editingIndex !== null && (
-          <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
-            <span className="text-sm text-blue-700 font-medium">
-              ✏️ Editando pregunta
-            </span>
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-            >
-              Cancelar edición
-            </button>
-          </div>
-        )}
-        <InputField
-          placeholder="Escribe tu pregunta"
-          value={newQuestion.questionText}
-          onChange={(e) => setNewQuestion(prev => ({ ...prev, questionText: e.target.value }))}
-        />
-        <SelectField
-          options={[
-            { value: 'OPEN', label: 'Respuesta abierta' },
-            { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
-          ]}
-          value={newQuestion.questionType}
-          onChange={handleTypeChange}
-        />
-
-        {/* Opciones para preguntas de opción múltiple */}
-        {newQuestion.questionType === 'MULTIPLE_CHOICE' && (
-          <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-            {/* Checkbox para indicar si tiene respuestas correctas */}
-            <div className="mb-3 pb-3 border-b border-gray-200">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={newQuestion.hasCorrectAnswers}
-                  onChange={(e) => setNewQuestion(prev => ({ 
-                    ...prev, 
-                    hasCorrectAnswers: e.target.checked,
-                    // Si se desmarca, limpiar todas las respuestas correctas
-                    options: e.target.checked ? prev.options : prev.options.map(opt => ({ ...opt, isCorrect: false }))
-                  }))}
-                  className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green focus:ring-2 cursor-pointer"
-                />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-conexia-green transition-colors">
-                  Esta pregunta tiene respuesta(s) correcta(s)
-                </span>
-              </label>
-              <p className="text-xs text-gray-500 mt-1 ml-6">
-                {newQuestion.hasCorrectAnswers 
-                  ? 'Las respuestas serán evaluadas automáticamente'
-                  : 'Las respuestas solo serán revisadas sin evaluación automática'}
-              </p>
-            </div>
-
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              Opciones de respuesta
-            </label>
-
-            {/* Lista de opciones */}
-            {newQuestion.options.length > 0 && (
-              <div className="space-y-1.5 mb-2">
-                {newQuestion.options.map((opt, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200">
-                    {newQuestion.hasCorrectAnswers ? (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCorrect(index)}
-                        className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                          opt.isCorrect 
-                            ? 'bg-green-500 border-green-500 text-white' 
-                            : 'border-gray-300 hover:border-green-400'
-                        }`}
-                        title={opt.isCorrect ? 'Respuesta correcta' : 'Marcar como correcta'}
-                      >
-                        {opt.isCorrect && '✓'}
-                      </button>
-                    ) : (
-                      <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-gray-200 bg-gray-100" title="Sin evaluación automática">
-                        <span className="text-gray-400 text-xs">-</span>
-                      </div>
-                    )}
-                    <span className="flex-1 text-sm text-gray-900">{opt.text}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveOption(index)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                    >
-                      <FiTrash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Agregar nueva opción */}
-            <div className="flex gap-2 items-start">
-              <div className="flex-1">
-                <InputField
-                  placeholder="Escribe una opción"
-                  value={newOption}
-                  onChange={(e) => setNewOption(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddOption();
-                    }
-                  }}
-                />
-              </div>
+      {isCreatingNew && (
+        <div className="space-y-2">
+          {editingIndex !== null && (
+            <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium">
+                Editando pregunta
+              </span>
               <button
                 type="button"
-                onClick={handleAddOption}
-                disabled={!newOption.trim()}
-                className="w-10 h-10 bg-[#367d7d] text-white rounded-lg hover:bg-[#2b6a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
+                onClick={handleCancelEdit}
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
               >
-                <FiPlus className="w-4 h-4" />
+                Cancelar edición
               </button>
             </div>
-
-            {newQuestion.options.length > 0 && (
-              <p className="text-xs text-gray-600 mt-2">
-                {newQuestion.options.length < 2 && '⚠️ Agrega al menos 2 opciones'}
-                {newQuestion.options.length >= 2 && newQuestion.hasCorrectAnswers && !newQuestion.options.some(opt => opt.isCorrect) && '⚠️ Marca al menos una respuesta correcta'}
-                {newQuestion.options.length >= 2 && (!newQuestion.hasCorrectAnswers || newQuestion.options.some(opt => opt.isCorrect)) && '✓ Pregunta lista para agregar'}
-              </p>
-            )}
+          )}
+          <InputField
+            placeholder="Escribe tu pregunta"
+            value={newQuestion.questionText}
+            onChange={(e) => setNewQuestion(prev => ({ ...prev, questionText: e.target.value }))}
+          />
+          <div className="w-full overflow-hidden">
+            <SelectField
+              options={[
+                { value: 'OPEN', label: 'Respuesta abierta' },
+                { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
+              ]}
+              value={newQuestion.questionType}
+              onChange={handleTypeChange}
+              className="w-full"
+            />
           </div>
-        )}
 
+          {/* Opciones para preguntas de opción múltiple */}
+          {newQuestion.questionType === 'MULTIPLE_CHOICE' && (
+            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              {/* Checkbox para indicar si tiene respuestas correctas */}
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={newQuestion.hasCorrectAnswers}
+                    onChange={(e) => setNewQuestion(prev => ({ 
+                      ...prev, 
+                      hasCorrectAnswers: e.target.checked,
+                      // Si se desmarca, limpiar todas las respuestas correctas
+                      options: e.target.checked ? prev.options : prev.options.map(opt => ({ ...opt, isCorrect: false }))
+                    }))}
+                    className="w-4 h-4 text-conexia-green border-gray-300 rounded focus:ring-conexia-green focus:ring-2 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-conexia-green transition-colors">
+                    Esta pregunta tiene respuesta(s) correcta(s)
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1 ml-6">
+                  {newQuestion.hasCorrectAnswers 
+                    ? 'Las respuestas serán evaluadas automáticamente'
+                    : 'Las respuestas solo serán revisadas sin evaluación automática'}
+                </p>
+              </div>
+
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Opciones de respuesta
+              </label>
+
+              {/* Lista de opciones */}
+              {newQuestion.options.length > 0 && (
+                <div className="space-y-1.5 mb-2">
+                  {newQuestion.options.map((opt, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200">
+                      {newQuestion.hasCorrectAnswers ? (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCorrect(index)}
+                          className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            opt.isCorrect 
+                              ? 'bg-green-500 border-green-500 text-white' 
+                              : 'border-gray-300 hover:border-green-400'
+                          }`}
+                          title={opt.isCorrect ? 'Respuesta correcta' : 'Marcar como correcta'}
+                        >
+                          {opt.isCorrect && '✓'}
+                        </button>
+                      ) : (
+                        <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-gray-200 bg-gray-100" title="Sin evaluación automática">
+                          <span className="text-gray-400 text-xs">-</span>
+                        </div>
+                      )}
+                      <span className="flex-1 text-sm text-gray-900">{opt.text}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveOption(index)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Agregar nueva opción */}
+              <div className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <InputField
+                    placeholder="Escribe una opción"
+                    value={newOption}
+                    onChange={(e) => setNewOption(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddOption();
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddOption}
+                  disabled={!newOption.trim()}
+                  className="w-10 h-10 bg-[#367d7d] text-white rounded-lg hover:bg-[#2b6a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
+                >
+                  <FiPlus className="w-4 h-4" />
+                </button>
+              </div>
+
+              {newQuestion.options.length > 0 && (
+                <p className="text-xs text-gray-600 mt-2">
+                  {newQuestion.options.length < 2 && 'Agrega al menos 2 opciones'}
+                  {newQuestion.options.length >= 2 && newQuestion.hasCorrectAnswers && !newQuestion.options.some(opt => opt.isCorrect) && 'Marca al menos una respuesta correcta'}
+                  {newQuestion.options.length >= 2 && (!newQuestion.hasCorrectAnswers || newQuestion.options.some(opt => opt.isCorrect)) && 'Pregunta lista para confirmar'}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Botón para confirmar la pregunta */}
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleConfirmQuestion}
+            disabled={!canConfirmQuestion()}
+            className="w-full flex items-center justify-center gap-2"
+          >
+            {editingIndex !== null ? 'Guardar cambios' : 'Confirmar pregunta'}
+          </Button>
+        </div>
+      )}
+
+      {/* Botón para agregar nueva pregunta */}
+      {!isCreatingNew && (
         <Button
           type="button"
           variant="neutral"
-          onClick={handleAddQuestion}
-          disabled={!canAddQuestion()}
+          onClick={handleStartNewQuestion}
           className="w-full flex items-center justify-center gap-2"
         >
           <FiPlus className="w-4 h-4" />
-          {editingIndex !== null ? 'Guardar cambios' : 'Agregar pregunta'}
+          Agregar pregunta
         </Button>
-      </div>
+      )}
 
       {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
     </div>
@@ -772,7 +807,7 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
 
         <div className="-mt-4">
           <label className="block text-xs font-medium text-gray-700 mb-1.5">
-            Días para completar la evaluación
+            Días para completar la evaluación <span className="text-red-600">*</span>
           </label>
           <InputField
             type="number"
@@ -791,6 +826,7 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
                 }
               }
             }}
+            required
           />
           <p className="text-xs text-gray-500 mt-1">
             Entre 1 y 30 días (por defecto: 7 días)
@@ -816,9 +852,13 @@ function EvaluationBuilder({ evaluation, onChange, error }) {
                         file:bg-conexia-green file:text-white hover:file:bg-[#1a7a66]"
             />
           </div>
-          {formData.file && (
-            <p className="text-xs text-gray-600 mt-1">
+          {formData.file ? (
+            <p className="text-xs text-gray-600 mt-1 break-words">
               Archivo: {formData.file.name}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400 mt-1">
+              Ningún archivo seleccionado
             </p>
           )}
         </div>

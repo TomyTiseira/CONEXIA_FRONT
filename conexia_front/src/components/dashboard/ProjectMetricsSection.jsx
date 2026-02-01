@@ -26,7 +26,7 @@ export const ProjectMetricsSection = ({ projectsData, postulationsData }) => {
       <div className="flex items-center gap-2">
         <FolderCheck className="w-7 h-7 text-[#48a6a7]" />
         <h2 className="text-2xl font-bold text-gray-900">
-          Métricas de Proyectos
+          Métricas de proyectos
         </h2>
       </div>
 

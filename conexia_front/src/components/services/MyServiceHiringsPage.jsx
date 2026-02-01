@@ -367,7 +367,7 @@ export default function MyServiceHiringsPage() {
                   onClick={() => router.push('/services')}
                   className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition"
                 >
-                  Explorar Servicios
+                  Explorar servicios
                 </button>
               </div>
             ) : (
@@ -381,7 +381,7 @@ export default function MyServiceHiringsPage() {
                           Servicio
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Mi Solicitud
+                          Mi solicitud
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Estado

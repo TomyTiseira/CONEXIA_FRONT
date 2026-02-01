@@ -5,7 +5,7 @@ import BackButton from '@/components/ui/BackButton';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/navbar/Navbar';
-import { getPostulationsByProject, getPostulationStatuses } from '@/service/postulations/postulationService';
+import { getPostulationsByProject, getPostulationsByProjectAndRole, getPostulationStatuses } from '@/service/postulations/postulationService';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import PostulationsTable from './PostulationsTable';
@@ -18,9 +18,11 @@ export default function ProjectPostulations({ projectId }) {
   const router = useRouter();
   const [project, setProject] = useState(null);
   const [postulations, setPostulations] = useState([]);
+  const [projectRoles, setProjectRoles] = useState([]); // Roles del proyecto desde API
   const [postulationStatuses, setPostulationStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
@@ -39,7 +41,7 @@ export default function ProjectPostulations({ projectId }) {
     if (project && isOwner) {
       loadPostulations();
     }
-  }, [currentPage, selectedStatus, project, isOwner]);
+  }, [currentPage, selectedStatus, selectedRole, project, isOwner]);
 
   const loadInitialData = async () => {
     try {
@@ -65,9 +67,22 @@ export default function ProjectPostulations({ projectId }) {
       setLoadingProfiles(true);
       
       const statusId = selectedStatus ? parseInt(selectedStatus) : null;
-      const response = await getPostulationsByProject(projectId, currentPage, statusId);
+      const roleId = selectedRole ? parseInt(selectedRole) : null;
+      
+      // Usar el endpoint apropiado según si hay filtro por rol o no
+      let response;
+      if (roleId) {
+        response = await getPostulationsByProjectAndRole(projectId, roleId, currentPage, statusId);
+      } else {
+        response = await getPostulationsByProject(projectId, currentPage, statusId);
+      }
       
       if (response.success) {
+        // Guardar los roles del proyecto que vienen en la respuesta
+        if (response.data.roles) {
+          setProjectRoles(response.data.roles);
+        }
+        
         const postulationsWithProfiles = await Promise.all(
           response.data.postulations.map(async (postulation) => {
             try {
@@ -95,9 +110,19 @@ export default function ProjectPostulations({ projectId }) {
                 applicantName = profile.email.split('@')[0];
               }
               
+              // Obtener el nombre del rol desde response.data.roles
+              let roleName = 'Rol no especificado';
+              if (postulation.roleId && response.data.roles) {
+                const role = response.data.roles.find(r => r.id === postulation.roleId);
+                if (role) {
+                  roleName = role.title || role.name || `Rol ${postulation.roleId}`;
+                }
+              }
+              
               return {
                 ...postulation,
                 applicantName: applicantName,
+                roleName: roleName,
                 applicantProfile: profile
               };
             } catch (error) {
@@ -172,6 +197,11 @@ export default function ProjectPostulations({ projectId }) {
     setCurrentPage(1); // Reset to first page when changing filter
   };
 
+  const handleRoleChange = (roleId) => {
+    setSelectedRole(roleId);
+    setCurrentPage(1); // Reset to first page when changing filter
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -202,28 +232,60 @@ export default function ProjectPostulations({ projectId }) {
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
         <div className="w-full max-w-7xl flex flex-col gap-6">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green mb-4 md:mb-0">
+          <div className="flex items-center mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green">
               Postulaciones
             </h1>
+          </div>
+
+          {/* Filtros y Botón de Estadísticas */}
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+            {/* Filtro por rol */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Filtrar por rol:</label>
+              <select
+                value={selectedRole}
+                onChange={(e) => handleRoleChange(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+              >
+                <option value="">Todos los roles</option>
+                {projectRoles && projectRoles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.title || role.name || `Rol ${role.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
             
             {/* Filtro por estado */}
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700">Filtrar por estado:</label>
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
-                >
+              <select
+                value={selectedStatus}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+              >
                                  
-                  <option value="">Todos los estados</option>
-                  {postulationStatuses.map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.name}
-                    </option>
-                  ))}
-                </select>
+                <option value="">Todos los estados</option>
+                {postulationStatuses.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* Botón de Estadísticas */}
+            <button
+              onClick={() => router.push(`/project/${projectId}/stats`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2"
+              title="Ver estadísticas de postulaciones"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Estadísticas
+            </button>
           </div>
 
           {/* Project info */}
