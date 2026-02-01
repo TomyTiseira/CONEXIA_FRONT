@@ -197,12 +197,12 @@ export default function ServiceRequestsPage({ serviceId }) {
     setIsClaimModalOpen(false);
     setClaimHiring(null);
     // Recargar datos
-    loadRequests();
+    loadMyServiceRequests(filters);
     
-    // Redirigir a la página de reclamos después de 2 segundos
+    // Redirigir a la página de reclamos después de 2 segundos con el claimId
     if (createdClaim?.id) {
       setTimeout(() => {
-        router.push('/claims/my-claims');
+        router.push(`/claims/my-claims?claimId=${createdClaim.id}`);
       }, 2000);
     }
   };
@@ -297,7 +297,7 @@ export default function ServiceRequestsPage({ serviceId }) {
               </button>
               <div className="flex-1 text-center mr-8">
                 <h1 className="text-2xl font-bold text-conexia-green">
-                  Solicitudes del Servicio
+                  Solicitudes del servicio
                 </h1>
               </div>
               <div className="w-10"></div>
@@ -482,7 +482,7 @@ export default function ServiceRequestsPage({ serviceId }) {
                                 {/* Botón Ver Reclamo - Cuando está en estado in_claim */}
                                 {hiring.status?.code === 'in_claim' && hiring.claimId && (
                                   <button
-                                    onClick={() => router.push('/claims/my-claims')}
+                                    onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                                     className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
                                     title="Ver en Mis Reclamos"
                                     aria-label="Ver en Mis Reclamos"
@@ -633,7 +633,7 @@ export default function ServiceRequestsPage({ serviceId }) {
                           {/* Botón Ver Reclamo Mobile - Cuando está en estado in_claim */}
                           {hiring.status?.code === 'in_claim' && hiring.claimId && (
                             <button
-                              onClick={() => router.push('/claims/my-claims')}
+                              onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                               className="flex items-center justify-center w-7 h-7 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
                               title="Ver en Mis Reclamos"
                               aria-label="Ver en Mis Reclamos"

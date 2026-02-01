@@ -369,7 +369,16 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
   const characterCount = resolution.trim().length;
   const minLength = CLAIM_VALIDATION.RESOLUTION_MIN_LENGTH;
   const maxLength = CLAIM_VALIDATION.RESOLUTION_MAX_LENGTH;
-  const isValid = characterCount >= minLength && characterCount <= maxLength;
+  
+  // Validar que:
+  // 1. La resolución tenga la longitud correcta
+  // 2. No haya compromisos en edición
+  // 3. Todos los compromisos estén confirmados
+  const hasUnconfirmedCompliances = compliances.some(c => !c.isConfirmed);
+  const isValid = characterCount >= minLength && 
+                  characterCount <= maxLength && 
+                  editingComplianceId === null && 
+                  !hasUnconfirmedCompliances;
 
   if (!isOpen) return null;
 
@@ -378,7 +387,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
       <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={handleClose} />
       
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
           {/* Header (estático) */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -784,31 +793,38 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
                 );
               })()}
 
-                {/* Botón para agregar nuevo compromiso */}
+              {/* Botón agregar compromiso */}
                 {editingComplianceId === null && (
-                  <Button
-                    type="button"
-                    onClick={addCompliance}
-                    variant="primary"
-                    className="flex items-center gap-2 w-full justify-center"
-                    disabled={isSubmitting}
-                  >
-                    <Plus size={18} />
-                    Agregar Compromiso
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      onClick={addCompliance}
+                      variant="primary"
+                      className="flex items-center gap-2 w-full justify-center"
+                      disabled={isSubmitting || compliances.length >= 5}
+                    >
+                      <Plus size={18} />
+                      Agregar Compromiso {compliances.length > 0 && `(${compliances.length}/5)`}
+                    </Button>
+                    {compliances.length >= 5 && (
+                      <p className="text-xs text-center text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                        Has alcanzado el límite máximo de 5 compromisos por reclamo
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {compliances.length === 0 && (
                   <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 mt-4">
                     <p className="text-sm text-gray-600">No hay compromisos asignados</p>
-                    <p className="text-xs text-gray-500 mt-1">Los compromisos son opcionales. Haz clic en &quot;Agregar Compromiso&quot; si deseas crear uno</p>
+                    <p className="text-xs text-gray-500 mt-1">Los compromisos son opcionales. Puedes agregar hasta 5 compromisos</p>
                   </div>
                 )}
               </div>
             </div>
 
           {/* Footer (estático) */}
-          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
+          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0 rounded-b-xl">
             <Button type="button" onClick={handleClose} disabled={isSubmitting} variant="cancel">
               Cancelar
             </Button>
@@ -826,7 +842,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
               ) : (
                 <>
                   <CheckCircle size={18} />
-                  Resolver reclamo
+                  Resolver Reclamo
                 </>
               )}
             </Button>

@@ -35,8 +35,6 @@ export const validateFile = (file) => {
       'jpg': 'image/jpeg',
       'jpeg': 'image/jpeg',
       'png': 'image/png',
-      'gif': 'image/gif',
-      'mp4': 'video/mp4'
     };
     
     // Si la extensión está en el mapa, permitir el archivo

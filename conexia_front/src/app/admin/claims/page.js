@@ -5,7 +5,8 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AlertTriangle, Loader2, AlertCircle } from 'lucide-react';
 import { getClaims, markAsInReview } from '@/service/claims';
 import { ClaimsFilters } from '@/components/claims/ClaimsFilters';
@@ -15,6 +16,10 @@ import { ClaimActionsModal } from '@/components/claims/ClaimActionsModal';
 import { AddObservationsModal } from '@/components/claims/AddObservationsModal';
 import { ClaimResolutionModal } from '@/components/claims/ClaimResolutionModal';
 import { ClaimRejectionModal } from '@/components/claims/ClaimRejectionModal';
+import { SelectComplianceModal } from '@/components/claims/SelectComplianceModal';
+import { UploadComplianceEvidenceModal } from '@/components/claims/UploadComplianceEvidenceModal';
+import { SelectComplianceForReviewModal } from '@/components/claims/SelectComplianceForReviewModal';
+import { ReviewComplianceModal } from '@/components/claims/ReviewComplianceModal';
 import Navbar from '@/components/navbar/Navbar';
 import { ROLES } from '@/constants/roles';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -22,6 +27,7 @@ import Pagination from '@/components/common/Pagination';
 import Toast from '@/components/ui/Toast';
 
 function AdminClaimsContent() {
+  const searchParams = useSearchParams();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,6 +37,14 @@ function AdminClaimsContent() {
   const [showObservationsModal, setShowObservationsModal] = useState(false);
   const [showResolutionModal, setShowResolutionModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showSelectComplianceModal, setShowSelectComplianceModal] = useState(false);
+  const [showUploadEvidenceModal, setShowUploadEvidenceModal] = useState(false);
+  const [showSelectForReviewModal, setShowSelectForReviewModal] = useState(false);
+  const [showReviewComplianceModal, setShowReviewComplianceModal] = useState(false);
+  const [selectedCompliance, setSelectedCompliance] = useState(null);
+  const [isSubmittingEvidence, setIsSubmittingEvidence] = useState(false);
+  const [selectedClaimant, setSelectedClaimant] = useState(null);
+  const [selectedOtherUser, setSelectedOtherUser] = useState(null);
   const [toast, setToast] = useState({ isVisible: false, type: '', message: '' });
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -40,10 +54,14 @@ function AdminClaimsContent() {
     totalItems: 0,
   });
 
+  // Leer claimId de la URL
+  const claimIdFromUrl = searchParams.get('claimId') || '';
+
   const [filters, setFilters] = useState({
     searchTerm: '',
     status: null,
     claimantRole: null,
+    claimId: claimIdFromUrl,
     page: 1,
     limit: 12,
   });
@@ -91,6 +109,7 @@ function AdminClaimsContent() {
       searchTerm: '',
       status: null,
       claimantRole: null,
+      claimId: '',
       page: 1,
       limit: 12,
     });
@@ -151,6 +170,12 @@ function AdminClaimsContent() {
       case 'add_observations':
         setShowObservationsModal(true);
         break;
+      case 'submit_compliance_evidence':
+        setShowSelectComplianceModal(true);
+        break;
+      case 'review_compliance':
+        setShowSelectForReviewModal(true);
+        break;
       case 'resolve_claim':
         setShowResolutionModal(true);
         break;
@@ -198,6 +223,40 @@ function AdminClaimsContent() {
       }
     } catch (err) {
       console.error('Error reloading claims after resolution:', err);
+    }
+  };
+
+  const handleSelectComplianceForReview = (compliance, claimant, otherUser) => {
+    setSelectedCompliance(compliance);
+    setSelectedClaimant(claimant);
+    setSelectedOtherUser(otherUser);
+    setShowSelectForReviewModal(false);
+    setShowReviewComplianceModal(true);
+  };
+
+  const handleReviewSuccess = async (message) => {
+    setShowReviewComplianceModal(false);
+    setSelectedCompliance(null);
+    setSelectedClaimant(null);
+    setSelectedOtherUser(null);
+    
+    showToast('success', message);
+    
+    // Recargar reclamos
+    try {
+      const data = await getClaims(filters);
+      setClaims(data.claims || []);
+      if (data.pagination) {
+        setPagination({
+          currentPage: data.pagination.currentPage || 1,
+          totalPages: data.pagination.totalPages || 0,
+          hasNextPage: data.pagination.hasNextPage || false,
+          hasPreviousPage: data.pagination.hasPreviousPage || false,
+          totalItems: data.pagination.totalItems || 0,
+        });
+      }
+    } catch (err) {
+      console.error('Error reloading claims:', err);
     }
   };
 
@@ -277,6 +336,7 @@ function AdminClaimsContent() {
         <ClaimDetailModal
           claim={selectedClaim}
           onClose={() => setShowDetailModal(false)}
+          showToast={showToast}
         />
       )}
 
@@ -318,6 +378,94 @@ function AdminClaimsContent() {
         />
       )}
 
+      {showSelectComplianceModal && selectedClaim && (
+        <SelectComplianceModal
+          claim={selectedClaim}
+          currentUserId={null}
+          onClose={() => setShowSelectComplianceModal(false)}
+          onSelectCompliance={(compliance, claimant, otherUser) => {
+            setSelectedCompliance(compliance);
+            setSelectedClaimant(claimant);
+            setSelectedOtherUser(otherUser);
+            setShowUploadEvidenceModal(true);
+          }}
+        />
+      )}
+
+      {showUploadEvidenceModal && selectedCompliance && (
+        <UploadComplianceEvidenceModal
+          compliance={selectedCompliance}
+          onClose={() => {
+            setShowUploadEvidenceModal(false);
+            setSelectedCompliance(null);
+          }}
+          onSubmit={async (evidenceData) => {
+            try {
+              setIsSubmittingEvidence(true);
+              const { submitComplianceEvidence } = await import('@/service/claims');
+              
+              await submitComplianceEvidence(evidenceData.complianceId, {
+                userResponse: evidenceData.userResponse,
+                files: evidenceData.files
+              });
+              
+              setShowUploadEvidenceModal(false);
+              setSelectedCompliance(null);
+              showToast('success', 'Evidencia enviada correctamente. Tu evidencia será revisada pronto.');
+              
+              // Recargar claims
+              const data = await getClaims(filters);
+              setClaims(data.claims || []);
+              if (data.pagination) {
+                setPagination({
+                  currentPage: data.pagination.currentPage || 1,
+                  totalPages: data.pagination.totalPages || 0,
+                  hasNextPage: data.pagination.hasNextPage || false,
+                  hasPreviousPage: data.pagination.hasPreviousPage || false,
+                  totalItems: data.pagination.totalItems || 0,
+                });
+              }
+            } catch (err) {
+              console.error('Error submitting compliance evidence:', err);
+              showToast('error', err.message || 'Error al enviar la evidencia. Por favor, intenta nuevamente.');
+            } finally {
+              setIsSubmittingEvidence(false);
+            }
+          }}
+          isSubmitting={isSubmittingEvidence}
+          claimant={selectedClaimant}
+          otherUser={selectedOtherUser}
+          currentUserId={null}
+        />
+      )}
+
+      {/* Modal de selección para revisión de compromiso (moderador) */}
+      {showSelectForReviewModal && selectedClaim && (
+        <SelectComplianceForReviewModal
+          claimId={getSelectedClaimId(selectedClaim)}
+          onClose={() => setShowSelectForReviewModal(false)}
+          onSelectCompliance={handleSelectComplianceForReview}
+          currentUserId={null}
+          actionType="review_compliance"
+        />
+      )}
+
+      {/* Modal de revisión de compromiso (moderador) */}
+      {showReviewComplianceModal && selectedCompliance && (
+        <ReviewComplianceModal
+          compliance={selectedCompliance}
+          claimant={selectedClaimant}
+          otherUser={selectedOtherUser}
+          onClose={() => {
+            setShowReviewComplianceModal(false);
+            setSelectedCompliance(null);
+            setSelectedClaimant(null);
+            setSelectedOtherUser(null);
+          }}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
+
       <Toast
         type={toast.type}
         message={toast.message}
@@ -332,7 +480,18 @@ function AdminClaimsContent() {
 export default function AdminClaimsPage() {
   return (
     <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]}>
-      <AdminClaimsContent />
+      <Suspense fallback={
+        <div className="min-h-screen bg-gray-50">
+          <Navbar />
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex items-center justify-center py-12">
+              <Loader2 size={48} className="animate-spin text-conexia-green" />
+            </div>
+          </div>
+        </div>
+      }>
+        <AdminClaimsContent />
+      </Suspense>
     </ProtectedRoute>
   );
 }

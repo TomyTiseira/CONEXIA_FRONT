@@ -25,6 +25,7 @@ export const useMyClaims = (initialFilters = {}) => {
     limit: 12,
     status: '',
     role: 'all',
+    claimId: '',
     sortBy: 'createdAt',
     sortOrder: 'desc',
     ...initialFilters,
@@ -49,7 +50,7 @@ export const useMyClaims = (initialFilters = {}) => {
       });
     } catch (err) {
       console.error('Error fetching claims:', err);
-      setError(err.message || 'Error al cargar los reclamos');
+      setError(err.message || 'No pudimos obtener tus reclamos. Por favor, intenta nuevamente.');
       setClaims([]);
     } finally {
       setLoading(false);

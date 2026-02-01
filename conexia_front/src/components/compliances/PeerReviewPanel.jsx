@@ -91,7 +91,7 @@ export const PeerReviewPanel = ({
         {/* Header */}
         <div className="mb-6">
           <h3 className="text-xl font-bold text-gray-800 mb-2">
-            Revisar Evidencia de Cumplimiento
+            Revisar evidencia de cumplimiento
           </h3>
           <p className="text-sm text-gray-600">
             Puedes pre-aprobar u objetar la evidencia antes de que el moderador la revise.

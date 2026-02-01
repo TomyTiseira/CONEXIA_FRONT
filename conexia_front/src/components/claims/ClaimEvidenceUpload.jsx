@@ -77,7 +77,7 @@ export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = 
             <span className="font-semibold text-blue-600">Click para subir</span> o arrastra archivos aquí
           </p>
           <p className="text-xs text-gray-500">
-            JPG, PNG, GIF, PDF, DOCX, MP4 (máx. 10 MB por archivo)
+            JPG, PNG, PDF, DOCX (máx. 10 MB por archivo)
           </p>
           <p className="text-xs text-gray-500 mt-1">
             Puedes subir hasta {filesRemaining} archivo(s) más. ({files.length + existingFilesCount}/{maxFilesAllowed})
@@ -86,7 +86,7 @@ export const ClaimEvidenceUpload = ({ files, onAddFiles, onRemoveFile, errors = 
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".jpg,.jpeg,.png,.gif,.pdf,.docx,.mp4"
+            accept=".jpg,.jpeg,.png,.pdf,.docx,image/jpeg,image/png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             onChange={handleFileSelect}
             className="hidden"
           />

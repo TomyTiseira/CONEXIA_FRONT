@@ -6,7 +6,7 @@
 'use client';
 
 import React from 'react';
-import { Eye, MessageSquare, Upload, X, CheckCircle, Clock } from 'lucide-react';
+import { Eye, MessageSquare, Upload, X, CheckCircle, Clock, ThumbsUp, ThumbsDown, FileCheck } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { CLAIM_STATUS } from '@/constants/claims';
 
@@ -17,6 +17,14 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
 
   // Obtener availableActions desde el objeto claim correcto
   const availableActions = claim.availableActions || claim.claim?.availableActions || [];
+  
+  // Obtener compliances para revisar acciones a nivel de compliance
+  const compliances = claim.compliances || claim.claim?.compliances || [];
+  
+  // Verificar si algún compliance tiene peer_approve, peer_object o review_compliance
+  const hasPeerApprove = compliances.some(c => c.availableActions?.includes('peer_approve'));
+  const hasPeerObject = compliances.some(c => c.availableActions?.includes('peer_object'));
+  const hasReviewCompliance = compliances.some(c => c.availableActions?.includes('review_compliance'));
 
   // Siempre puede ver detalle
   actions.push({
@@ -115,6 +123,53 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
       borderColor: 'border-purple-200',
       hoverBg: 'hover:bg-purple-50',
       iconBg: 'text-purple-600',
+    });
+  }
+
+  // Si puede subir evidencia de compromisos (verificar tanto a nivel de claim como de compliance)
+  if (availableActions.includes('submit_compliance_evidence') || availableActions.includes('submit_evidence')) {
+    actions.push({
+      id: 'submit_compliance_evidence',
+      label: 'Subir evidencia de compromiso',
+      description: 'Subir evidencia de cumplimiento de compromisos pendientes',
+      icon: Upload,
+      color: 'text-indigo-800',
+      borderColor: 'border-indigo-200',
+      hoverBg: 'hover:bg-indigo-50',
+      iconBg: 'text-indigo-600',
+    });
+  }
+
+  // Si puede pre-aprobar evidencia de compromiso (peer review)
+  // Unificamos peer_approve y peer_object en una sola acción
+  if (availableActions.includes('peer_approve') || hasPeerApprove || 
+      availableActions.includes('peer_object') || hasPeerObject) {
+    // Solo agregar si no está ya en el array
+    if (!actions.find(a => a.id === 'peer_review')) {
+      actions.push({
+        id: 'peer_review',
+        label: 'Revisar Compromiso',
+        description: 'Pre-aprobar o pre-rechazar evidencia presentada',
+        icon: ThumbsUp,
+        color: 'text-purple-800',
+        borderColor: 'border-purple-200',
+        hoverBg: 'hover:bg-purple-50',
+        iconBg: 'text-purple-600',
+      });
+    }
+  }
+
+  // Si puede revisar evidencia de compromiso (moderator review)
+  if (availableActions.includes('review_compliance') || hasReviewCompliance) {
+    actions.push({
+      id: 'review_compliance',
+      label: 'Revisar Compromiso (Moderador)',
+      description: 'Aprobar o rechazar evidencia de compromiso como moderador',
+      icon: FileCheck,
+      color: 'text-indigo-800',
+      borderColor: 'border-indigo-200',
+      hoverBg: 'hover:bg-indigo-50',
+      iconBg: 'text-indigo-600',
     });
   }
 

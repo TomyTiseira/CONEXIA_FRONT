@@ -114,18 +114,18 @@ export const SubmitComplianceModal = ({
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full h-[90vh] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-purple-200 bg-purple-100 flex items-center justify-between flex-shrink-0 rounded-t-xl">
             <div>
-              <h2 className="text-xl font-bold">Cumplir con Resolución</h2>
-              <p className="text-sm text-blue-100 mt-1">
+              <h2 className="text-lg font-semibold text-gray-900">Cumplir con resolución</h2>
+              <p className="text-sm text-gray-600 mt-1">
                 Sube la evidencia solicitada para completar este cumplimiento
               </p>
             </div>
             <button
               onClick={handleClose}
-              className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all"
+              className="text-gray-400 hover:text-gray-600 rounded-full p-2 transition-colors disabled:opacity-50"
               disabled={isSubmitting}
             >
               <X size={24} />

@@ -171,30 +171,46 @@ export const CLAIM_RESOLUTION_CONFIG = {
 
 // Tipos de compliance (compromisos)
 export const COMPLIANCE_TYPES = {
+  // === COMPROMISOS MONETARIOS ===
   FULL_REFUND: 'full_refund',
   PARTIAL_REFUND: 'partial_refund',
   PAYMENT_REQUIRED: 'payment_required',
+  PARTIAL_PAYMENT: 'partial_payment',
+  
+  // === COMPROMISOS DE TRABAJO ===
   WORK_COMPLETION: 'work_completion',
   WORK_REVISION: 'work_revision',
-  APOLOGY_REQUIRED: 'apology_required',
-  SERVICE_DISCOUNT: 'service_discount',
-  PENALTY_FEE: 'penalty_fee',
-  ACCOUNT_RESTRICTION: 'account_restriction',
+  FULL_REDELIVERY: 'full_redelivery',
+  CORRECTED_DELIVERY: 'corrected_delivery',
+  ADDITIONAL_DELIVERY: 'additional_delivery',
+  
+  // === DOCUMENTACIÓN ===
+  EVIDENCE_UPLOAD: 'evidence_upload',
+  
+  // === FINALIZACIÓN ===
   CONFIRMATION_ONLY: 'confirmation_only',
   OTHER: 'other',
 };
 
 // Labels para tipos de compliance
 export const COMPLIANCE_TYPE_LABELS = {
+  // Compromisos monetarios
   [COMPLIANCE_TYPES.FULL_REFUND]: 'Reembolso total',
   [COMPLIANCE_TYPES.PARTIAL_REFUND]: 'Reembolso parcial',
   [COMPLIANCE_TYPES.PAYMENT_REQUIRED]: 'Pago requerido',
+  [COMPLIANCE_TYPES.PARTIAL_PAYMENT]: 'Pago parcial',
+  
+  // Compromisos de trabajo
   [COMPLIANCE_TYPES.WORK_COMPLETION]: 'Completar trabajo',
   [COMPLIANCE_TYPES.WORK_REVISION]: 'Revisión de trabajo',
-  [COMPLIANCE_TYPES.APOLOGY_REQUIRED]: 'Disculpa requerida',
-  [COMPLIANCE_TYPES.SERVICE_DISCOUNT]: 'Descuento en servicio',
-  [COMPLIANCE_TYPES.PENALTY_FEE]: 'Tarifa de penalización',
-  [COMPLIANCE_TYPES.ACCOUNT_RESTRICTION]: 'Restricción de cuenta',
+  [COMPLIANCE_TYPES.FULL_REDELIVERY]: 'Reentrega completa',
+  [COMPLIANCE_TYPES.CORRECTED_DELIVERY]: 'Entrega corregida',
+  [COMPLIANCE_TYPES.ADDITIONAL_DELIVERY]: 'Entrega adicional',
+  
+  // Documentación
+  [COMPLIANCE_TYPES.EVIDENCE_UPLOAD]: 'Subir evidencia',
+  
+  // Finalización
   [COMPLIANCE_TYPES.CONFIRMATION_ONLY]: 'Solo confirmación',
   [COMPLIANCE_TYPES.OTHER]: 'Otro',
 };
@@ -203,6 +219,10 @@ export const COMPLIANCE_TYPE_LABELS = {
 export const COMPLIANCE_STATUS = {
   PENDING: 'pending',
   SUBMITTED: 'submitted',
+  PEER_APPROVED: 'peer_approved',
+  PEER_OBJECTED: 'peer_objected',
+  IN_REVIEW: 'in_review',
+  REQUIRES_ADJUSTMENT: 'requires_adjustment',
   APPROVED: 'approved',
   REJECTED: 'rejected',
   OVERDUE: 'overdue',
@@ -214,6 +234,10 @@ export const COMPLIANCE_STATUS = {
 export const COMPLIANCE_STATUS_LABELS = {
   [COMPLIANCE_STATUS.PENDING]: 'Pendiente',
   [COMPLIANCE_STATUS.SUBMITTED]: 'Enviado',
+  [COMPLIANCE_STATUS.PEER_APPROVED]: 'Preaprobado',
+  [COMPLIANCE_STATUS.PEER_OBJECTED]: 'Prerechazado',
+  [COMPLIANCE_STATUS.IN_REVIEW]: 'En revisión',
+  [COMPLIANCE_STATUS.REQUIRES_ADJUSTMENT]: 'Requiere ajustes',
   [COMPLIANCE_STATUS.APPROVED]: 'Aprobado',
   [COMPLIANCE_STATUS.REJECTED]: 'Rechazado',
   [COMPLIANCE_STATUS.OVERDUE]: 'Vencido',
@@ -225,32 +249,47 @@ export const COMPLIANCE_STATUS_LABELS = {
 export const COMPLIANCE_STATUS_CONFIG = {
   [COMPLIANCE_STATUS.PENDING]: {
     label: 'Pendiente',
-    className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    className: 'bg-yellow-100 text-yellow-800 border-yellow-300',
   },
   [COMPLIANCE_STATUS.SUBMITTED]: {
     label: 'Enviado',
-    className: 'bg-blue-100 text-blue-800 border-blue-200',
-
+    className: 'bg-blue-100 text-blue-800 border-blue-300',
+  },
+  [COMPLIANCE_STATUS.PEER_APPROVED]: {
+    label: 'Preaprobado',
+    className: 'bg-green-100 text-green-800 border-green-300',
+  },
+  [COMPLIANCE_STATUS.PEER_OBJECTED]: {
+    label: 'Prerechazado',
+    className: 'bg-orange-100 text-orange-800 border-orange-300',
+  },
+  [COMPLIANCE_STATUS.IN_REVIEW]: {
+    label: 'En revisión',
+    className: 'bg-purple-100 text-purple-800 border-purple-300',
+  },
+  [COMPLIANCE_STATUS.REQUIRES_ADJUSTMENT]: {
+    label: 'Requiere ajustes',
+    className: 'bg-amber-100 text-amber-800 border-amber-300',
   },
   [COMPLIANCE_STATUS.APPROVED]: {
     label: 'Aprobado',
-    className: 'bg-green-100 text-green-800 border-green-200',
+    className: 'bg-green-100 text-green-800 border-green-300',
   },
   [COMPLIANCE_STATUS.REJECTED]: {
     label: 'Rechazado',
-    className: 'bg-gray-100 text-gray-800 border-gray-200',
+    className: 'bg-red-100 text-red-800 border-red-300',
   },
   [COMPLIANCE_STATUS.OVERDUE]: {
     label: 'Vencido',
-    className: 'bg-red-100 text-red-800 border-red-200',
+    className: 'bg-red-100 text-red-800 border-red-300',
   },
   [COMPLIANCE_STATUS.WARNING]: {
-    label: 'Advertencia',
-    className: 'bg-orange-100 text-orange-800 border-orange-200',
+    label: '2do Vencimiento',
+    className: 'bg-orange-100 text-orange-800 border-orange-300',
   },
   [COMPLIANCE_STATUS.ESCALATED]: {
-    label: 'Escalado',
-    className: 'bg-red-100 text-red-900 border-red-300',
+    label: '3er Vencimiento',
+    className: 'bg-red-100 text-red-900 border-red-400',
   },
 };
 
@@ -279,12 +318,10 @@ export const CLAIM_VALIDATION = {
   ALLOWED_FILE_TYPES: [
     'image/jpeg',
     'image/png',
-    'image/gif',
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'video/mp4',
   ],
-  ALLOWED_FILE_EXTENSIONS: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'docx', 'mp4'],
+  ALLOWED_FILE_EXTENSIONS: ['jpg', 'jpeg', 'png', 'pdf', 'docx'],
 };
 
 // Mensajes de error
@@ -297,7 +334,7 @@ export const CLAIM_ERROR_MESSAGES = {
   RESOLUTION_MAX_LENGTH: `La resolución no puede exceder ${CLAIM_VALIDATION.RESOLUTION_MAX_LENGTH} caracteres`,
   MAX_FILES: `No puedes subir más de ${CLAIM_VALIDATION.MAX_EVIDENCE_FILES} archivos`,
   MAX_SIZE: 'Cada archivo debe pesar máximo 10 MB',
-  INVALID_FORMAT: 'Formato no permitido. Solo JPG, PNG, GIF, PDF, DOCX, MP4',
+  INVALID_FORMAT: 'Formato no permitido. Solo JPG, PNG, PDF, DOCX',
   ALREADY_EXISTS: 'Ya existe un reclamo activo para este servicio',
   UPLOAD_ERROR: 'Error al subir archivo. Intenta nuevamente',
 };

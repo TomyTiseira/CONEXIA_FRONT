@@ -77,6 +77,7 @@ export const getClaims = async (filters = {}) => {
     if (filters.hiringId) queryParams.append('hiringId', filters.hiringId);
     if (filters.status) queryParams.append('status', filters.status);
     if (filters.claimantRole) queryParams.append('claimantRole', filters.claimantRole);
+    if (filters.claimId) queryParams.append('claimId', filters.claimId);
     if (filters.page) queryParams.append('page', filters.page);
     if (filters.limit) queryParams.append('limit', filters.limit);
 
@@ -291,6 +292,7 @@ export const getMyClaims = async (filters = {}) => {
     queryParams.append('limit', filters.limit || 12);
     if (filters.status) queryParams.append('status', filters.status);
     if (filters.role) queryParams.append('role', filters.role);
+    if (filters.claimId) queryParams.append('claimId', filters.claimId);
     if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
     if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
 
@@ -304,12 +306,20 @@ export const getMyClaims = async (filters = {}) => {
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.message || 'Error al obtener mis reclamos');
+      // Mejorar mensaje según el tipo de error
+      if (response.status >= 500) {
+        throw new Error('No pudimos conectar con el servidor. Por favor, intenta nuevamente en unos momentos.');
+      }
+      throw new Error(result.message || 'Error al obtener tus reclamos');
     }
 
     return result.data;
   } catch (error) {
     console.error('Error in getMyClaims:', error);
+    // Si es un error de red (no hay respuesta del servidor)
+    if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+      throw new Error('No pudimos conectar con el servidor. Por favor, verifica tu conexión a internet.');
+    }
     throw error;
   }
 };
@@ -406,12 +416,12 @@ export const submitObservations = async (claimId, data) => {
  * @param {File[]} data.evidenceFiles - Archivos de evidencia (opcional, máximo 5)
  * @returns {Promise<Object>} - Compliance actualizado
  */
-export const submitCompliance = async (claimId, data) => {
+export const submitCompliance = async (claimId, complianceId, data) => {
   try {
     const formData = new FormData();
     
     if (data instanceof FormData) {
-      return await fetch(`${API_URL}/${claimId}/compliance/submit`, {
+      return await fetch(`${API_URL}/${claimId}/compliance/${complianceId}/submit`, {
         method: 'POST',
         credentials: 'include',
         body: data,
@@ -433,7 +443,7 @@ export const submitCompliance = async (claimId, data) => {
       });
     }
 
-    const response = await fetch(`${API_URL}/${claimId}/compliance/submit`, {
+    const response = await fetch(`${API_URL}/${claimId}/compliance/${complianceId}/submit`, {
       method: 'POST',
       credentials: 'include',
       body: formData,
@@ -493,6 +503,65 @@ export const submitComplianceEvidence = async (complianceId, data) => {
   }
 };
 
+/**
+ * Revisar evidencia de un compromiso como peer (preaprobar o prerechazar)
+ * @param {string|number} complianceId - ID del compromiso
+ * @param {Object} data - Datos de la revisión
+ * @param {boolean} data.approved - true para preaprobar, false para prerechazar
+ * @param {string} [data.reason] - Razón (opcional para aprobar, requerida para rechazar)
+ * @returns {Promise<Object>} - Resultado de la revisión
+ */
+export const peerReviewCompliance = async (complianceId, data) => {
+  try {
+    const response = await fetch(`${config.API_URL}/compliances/${complianceId}/peer-review`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al revisar el compromiso');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error in peerReviewCompliance:', error);
+    throw error;
+  }
+};
+
+/**
+ * Revisar evidencia de un compromiso como moderador (aprobar o rechazar)
+ */
+export const reviewCompliance = async (complianceId, data) => {
+  try {
+    const response = await fetch(`${config.API_URL}/compliances/${complianceId}/review`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al revisar el compromiso');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error in reviewCompliance:', error);
+    throw error;
+  }
+};
+
 const claimsService = {
   createClaim,
   getClaims,
@@ -507,6 +576,8 @@ const claimsService = {
   submitObservations,
   submitCompliance,
   submitComplianceEvidence,
+  peerReviewCompliance,
+  reviewCompliance,
 };
 
 export default claimsService;

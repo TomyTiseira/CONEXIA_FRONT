@@ -38,13 +38,13 @@ export const useClaimActions = () => {
   /**
    * Subir cumplimiento
    */
-  const uploadCompliance = useCallback(async (claimId, data) => {
+  const uploadCompliance = useCallback(async (claimId, complianceId, data) => {
     try {
       setLoading(true);
       setError(null);
       setSuccess(false);
       
-      await submitCompliance(claimId, data);
+      await submitCompliance(claimId, complianceId, data);
       setSuccess(true);
       return { success: true };
     } catch (err) {

@@ -9,7 +9,8 @@ export default function Toast({
   isVisible, 
   onClose, 
   duration = 5000,
-  position = 'bottom-right' 
+  position = 'bottom-right',
+  useFixedPosition = true
 }) {
   const [show, setShow] = useState(false);
 
@@ -69,7 +70,7 @@ export default function Toast({
       case 'top-left':
         return 'top-4 left-4';
       case 'top-center':
-        return 'top-20 left-1/2 transform -translate-x-1/2';
+        return useFixedPosition ? 'top-20 left-1/2 transform -translate-x-1/2' : '';
       case 'bottom-left':
         return 'bottom-4 sm:bottom-4 bottom-20 left-4';
       case 'bottom-right':
@@ -87,7 +88,7 @@ export default function Toast({
 
   return (
     <div
-      className={`fixed ${getPositionClasses()} ${getColors()} p-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 transition-all duration-300 max-w-sm sm:max-w-sm ${
+      className={`${useFixedPosition ? 'fixed' : ''} ${getPositionClasses()} ${getColors()} p-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 transition-all duration-300 min-w-[320px] max-w-md ${
         position === 'top-center' ? '' : 'mx-2 sm:mx-0'
       } ${getAnimationClasses()}`}
     >

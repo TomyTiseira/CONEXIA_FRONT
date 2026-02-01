@@ -302,33 +302,39 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
           const assignedModerator = claimData.assignedModerator;
           
           return (
-            <div key={claim.id} className="bg-white rounded-xl shadow-sm p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs font-mono font-semibold text-gray-900" title={String(claim.id)}>
-                      {formatShortId(claim.id)}
+            <div key={claim.id} className="bg-gray-50 rounded-lg p-4">
+              <div className="flex justify-between items-start gap-3 mb-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-xs font-mono font-semibold text-gray-900 break-all" title={String(claim.id)}>
+                      {String(claim.id)}
                     </p>
                     <button
                       type="button"
                       onClick={() => copyToClipboard(claim.id)}
-                      className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                      className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded flex-shrink-0"
                       title="Copiar ID completo"
                     >
                       <FaRegCopy size={14} />
                     </button>
                   </div>
-                  <ClaimTypeBadge
-                    claimType={claim.claimType}
-                    labelOverride={getTableClaimTypeLabelOverride(claim)}
-                  />
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-600 mb-1">Tipo de Reclamo</p>
+                    <ClaimTypeBadge
+                      claimType={claim.claimType}
+                      labelOverride={getTableClaimTypeLabelOverride(claim)}
+                      showIcon={false}
+                    />
+                  </div>
                 </div>
-                <ClaimStatusBadge status={claim.status} />
+                <div className="flex-shrink-0">
+                  <ClaimStatusBadge status={claim.status} />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-gray-600">Reclamante</p>
+              <div className="mb-3">
+                <div className="mb-2">
+                  <p className="text-xs text-gray-600 mb-1">Reclamante</p>
                   <div className="flex items-center gap-2">
                     <img
                       src={getProfileImageSrc(claimant)}
@@ -341,8 +347,8 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
                     <p className="text-sm font-medium text-gray-900">{getDisplayName(claimant)}</p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-600">Reclamado</p>
+                <div className="mb-2">
+                  <p className="text-xs text-gray-600 mb-1">Reclamado</p>
                   <div className="flex items-center gap-2">
                     <img
                       src={getProfileImageSrc(otherUser)}
@@ -355,37 +361,80 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
                     <p className="text-sm font-medium text-gray-900">{getDisplayName(otherUser)}</p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-600">Asignado</p>
+                <div className="mb-2">
+                  <p className="text-xs text-gray-600 mb-1">Asignado</p>
                   {assignedModerator?.email ? (
-                    <p className="text-sm font-medium text-gray-900">
-                      {getModeratorNameFromEmail(assignedModerator.email)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={DEFAULT_AVATAR_SRC}
+                        alt="Moderador"
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                      <p className="text-sm font-medium text-gray-900">
+                        {getModeratorNameFromEmail(assignedModerator.email)}
+                      </p>
+                    </div>
                   ) : (
                     <p className="text-sm text-gray-500 italic">Sin asignar</p>
                   )}
                 </div>
-                {claimData.compliance && (
-                  <div>
-                    <p className="text-xs text-gray-600">Compromiso</p>
-                    <ComplianceStatusBadge status={claimData.compliance.status} />
+                {claimData.compliances && claimData.compliances.length > 0 && (
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-600 mb-1">Compromisos</p>
+                    {(() => {
+                      const total = claimData.compliances.length;
+                      const pending = claimData.compliances.filter(c => c.status === 'pending').length;
+                      const approved = claimData.compliances.filter(c => c.status === 'approved').length;
+                      const submitted = claimData.compliances.filter(c => c.status === 'submitted').length;
+                      
+                      if (approved === total) {
+                        return (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                            {total} completado{total !== 1 ? 's' : ''}
+                          </span>
+                        );
+                      }
+                      
+                      if (pending > 0 || submitted > 0) {
+                        return (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                            {pending + submitted} en curso
+                          </span>
+                        );
+                      }
+                      
+                      return (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                          {total} {total === 1 ? 'compromiso' : 'compromisos'}
+                        </span>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
 
-              <div className="flex gap-2 pt-2 border-t">
-                <button
-                  onClick={() => onViewDetail(claimData)}
-                  className="flex-1 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
-                >
-                  Ver Detalle
-                </button>
-                <button
-                  onClick={() => onOpenActions(claimData)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  <FaEllipsisH size={18} />
-                </button>
+              <div className="flex justify-end items-center">
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+                    <button
+                      onClick={() => onViewDetail(claimData)}
+                      className="flex items-center justify-center w-8 h-8 text-blue-600 hover:text-white hover:bg-blue-600 rounded-md transition-all duration-200 group"
+                      title="Ver detalle"
+                      aria-label="Ver detalle"
+                    >
+                      <FaRegEye className="text-[15px] group-hover:scale-110 transition-transform" />
+                    </button>
+                    
+                    <button
+                      onClick={() => onOpenActions(claimData)}
+                      className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
+                      title="Más acciones"
+                      aria-label="Más acciones"
+                    >
+                      <FaEllipsisH className="text-[16px] group-hover:scale-110 transition-transform" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           );

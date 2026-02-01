@@ -5,6 +5,7 @@
 
 'use client';
 
+import { Suspense } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { NotFound } from '@/components/ui';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -31,10 +32,10 @@ export default function MyClaimsRoute() {
       allowedRoles={[ROLES.USER]}
       fallbackComponent={isLoggingOut ? <LoadingSpinner message="Cerrando sesión..." size="large" /> : <NotFound />}
     >
-      <>
+      <Suspense fallback={<LoadingSpinner message="Cargando reclamos..." size="large" />}>
         <MyClaimsPage />
         <MessagingWidget avatar={avatar} />
-      </>
+      </Suspense>
     </ProtectedRoute>
   );
 }

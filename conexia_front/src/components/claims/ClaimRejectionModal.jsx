@@ -187,7 +187,7 @@ export const ClaimRejectionModal = ({ isOpen, onClose, claim, onSuccess, showToa
       <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
       
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
           {/* Header (estático) */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -295,7 +295,7 @@ export const ClaimRejectionModal = ({ isOpen, onClose, claim, onSuccess, showToa
             </div>
 
             {/* Footer (estático) */}
-            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
+            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0 rounded-b-xl">
               <Button type="button" onClick={onClose} disabled={isSubmitting} variant="cancel">
                 Cancelar
               </Button>

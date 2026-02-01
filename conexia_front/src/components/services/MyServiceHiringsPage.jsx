@@ -148,7 +148,7 @@ export default function MyServiceHiringsPage() {
   const handleClaimSuccess = (createdClaim) => {
     setToast({
       type: 'success',
-      message: 'Reclamo creado exitosamente',
+      message: 'Reclamo creado exitosamente. Redirigiendo a Mis Reclamos...',
       isVisible: true
     });
     setIsClaimModalOpen(false);
@@ -156,10 +156,10 @@ export default function MyServiceHiringsPage() {
     // Recargar datos
     loadMyHirings(filters);
     
-    // Opcionalmente, redirigir a la página de reclamos después de 2 segundos
+    // Redirigir a la página de reclamos después de 2 segundos con el claimId
     if (createdClaim?.id) {
       setTimeout(() => {
-        router.push('/claims/my-claims');
+        router.push(`/claims/my-claims?claimId=${createdClaim.id}`);
       }, 2000);
     }
   };
@@ -308,7 +308,7 @@ export default function MyServiceHiringsPage() {
                 </div>
               </button>
               <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
-                Mis Solicitudes
+                Mis solicitudes
               </h1>
               <div className="w-10"></div>
             </div>
@@ -504,7 +504,7 @@ export default function MyServiceHiringsPage() {
                                 {/* Botón Ver Reclamo - Cuando está en estado in_claim */}
                                 {hiring.status?.code === 'in_claim' && hiring.claimId && (
                                   <button
-                                    onClick={() => router.push('/claims/my-claims')}
+                                    onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                                     className="flex items-center justify-center w-9 h-9 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
                                     title="Ver en Mis Reclamos"
                                     aria-label="Ver en Mis Reclamos"
@@ -684,7 +684,7 @@ export default function MyServiceHiringsPage() {
                             {/* Botón Ver Reclamo Mobile - Cuando está en estado in_claim */}
                             {hiring.status?.code === 'in_claim' && hiring.claimId && (
                               <button
-                                onClick={() => router.push('/claims/my-claims')}
+                                onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                                 className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
                                 title="Ver en Mis Reclamos"
                                 aria-label="Ver en Mis Reclamos"
