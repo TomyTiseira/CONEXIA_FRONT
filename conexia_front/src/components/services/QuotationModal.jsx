@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { X, Clock, DollarSign, FileText, AlertCircle, Briefcase, User } from 'lucide-react';
+import { X, Clock, DollarSign, FileText, AlertCircle, Briefcase, User, CheckCircle, XCircle, Trash2, MessageSquare } from 'lucide-react';
 import { isExpired, getVigencyStatus } from '@/utils/quotationVigency';
 import { getUnitLabel, getUnitLabelPlural } from '@/utils/timeUnit';
 import Button from '@/components/ui/Button';
@@ -21,11 +21,49 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
   
   const [actionLoading, setActionLoading] = useState(false);
   const [negotiationDescription, setNegotiationDescription] = useState('');
-  const [showNegotiationInput, setShowNegotiationInput] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   if (!isOpen || !hiring) return null;
 
   // Datos listos para renderizar (logs de depuración eliminados)
+
+  const getActionConfig = (action) => {
+    const configs = {
+      accept: {
+        title: 'Aceptar cotización',
+        description: 'Al aceptar esta cotización, confirmas que estás de acuerdo con el precio y tiempo estimado. El proveedor podrá comenzar a trabajar en tu solicitud.',
+        buttonText: 'Sí, Aceptar',
+        buttonClass: 'bg-green-600 hover:bg-green-700 text-white',
+        icon: CheckCircle,
+        iconColor: 'text-green-600'
+      },
+      reject: {
+        title: 'Rechazar cotización',
+        description: 'Al rechazar esta cotización, la solicitud se marcará como rechazada y no podrás volver a aceptarla. El proveedor será notificado de tu decisión.',
+        buttonText: 'Sí, Rechazar',
+        buttonClass: 'bg-red-600 hover:bg-red-700 text-white',
+        icon: XCircle,
+        iconColor: 'text-red-600'
+      },
+      cancel: {
+        title: 'Cancelar Solicitud',
+        description: 'Al cancelar esta solicitud, se eliminará permanentemente y no podrás recuperarla. Esta acción no se puede deshacer.',
+        buttonText: 'Sí, Cancelar',
+        buttonClass: 'bg-gray-600 hover:bg-gray-700 text-white',
+        icon: Trash2,
+        iconColor: 'text-gray-600'
+      },
+      negotiate: {
+        title: 'Iniciar Negociación',
+        description: 'Al iniciar una negociación, el proveedor será notificado que deseas discutir los términos de la cotización. Podrás comunicarte directamente para llegar a un acuerdo.',
+        buttonText: 'Sí, Negociar',
+        buttonClass: 'bg-orange-600 hover:bg-orange-700 text-white',
+        icon: MessageSquare,
+        iconColor: 'text-orange-600'
+      }
+    };
+    return configs[action];
+  };
 
   const getStatusLabel = (statusCode) => {
     const statusMap = {
@@ -75,12 +113,6 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           message = 'Solicitud cancelada exitosamente';
           break;
         case 'negotiate':
-          // Mostrar el input de descripción en lugar de enviar directamente
-          if (!showNegotiationInput) {
-            setShowNegotiationInput(true);
-            setActionLoading(false);
-            return;
-          }
           // Iniciar negociación con la descripción
           result = await negotiateHiring(hiring.id, { 
             negotiationDescription: negotiationDescription.trim() || undefined 
@@ -97,6 +129,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
       onError?.(error.message || 'Error al procesar la acción');
     } finally {
       setActionLoading(false);
+      setConfirmAction(null);
     }
   };
 
@@ -147,6 +180,94 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
     : 'Usuario';
   const ownerImage = ownerRaw?.profileImage || ownerRaw?.profilePicture || null;
 
+  // Modal de confirmación de acción
+  if (confirmAction) {
+    const actionConfig = getActionConfig(confirmAction);
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+          {/* Header fijo */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
+            <h3 className="text-xl font-bold text-orange-600 flex items-center gap-2">
+              <AlertCircle size={20} />
+              Confirmar Acción
+            </h3>
+            <button
+              onClick={() => setConfirmAction(null)}
+              className="text-gray-400 hover:text-gray-600"
+              disabled={actionLoading}
+            >
+              <X size={24} />
+            </button>
+          </div>
+          
+          {/* Contenido */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="text-center mb-6">
+              <div className="flex justify-center mb-4">
+                <actionConfig.icon size={48} className={actionConfig.iconColor} />
+              </div>
+              <h4 className="text-lg font-medium text-gray-900 mb-2">
+                {actionConfig.title}
+              </h4>
+              <p className="text-gray-600 text-sm">
+                {actionConfig.description}
+              </p>
+            </div>
+
+            {/* Campo de descripción de negociación */}
+            {confirmAction === 'negotiate' && (
+              <div className="mt-4">
+                <label htmlFor="negotiationDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción de la Negociación
+                </label>
+                <textarea
+                  id="negotiationDescription"
+                  value={negotiationDescription}
+                  onChange={(e) => setNegotiationDescription(e.target.value.slice(0, 1000))}
+                  placeholder="Describe los términos que deseas negociar (precio, tiempo, alcance, etc.)"
+                  maxLength={1000}
+                  rows={5}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                />
+                <div className="flex justify-between mt-1">
+                  <p className="text-xs text-gray-500">
+                    Describe qué aspectos deseas negociar con el proveedor
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {negotiationDescription.length}/1000
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="border-t border-gray-200 px-6 py-4 rounded-b-lg flex-shrink-0 bg-gray-50">
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setConfirmAction(null)}
+                variant="cancel"
+                className="flex-1"
+                disabled={actionLoading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => handleAction(confirmAction)}
+                className={`flex-1 ${actionConfig.buttonClass}`}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'Procesando...' : actionConfig.buttonText}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] flex flex-col">
@@ -156,11 +277,11 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             <h3 className="text-xl font-bold text-conexia-green flex items-center gap-2">
               {hasQuotation ? (
                 <>
-                  Cotización Recibida
+                  Cotización recibida
                 </>
               ) : (
                 <>
-                  Detalle de Solicitud
+                  Detalle de solicitud
                 </>
               )}
             </h3>
@@ -292,86 +413,52 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             <div className="border-t border-gray-200 pt-6">
               <h4 className="font-medium text-gray-900 mb-4">Acciones Disponibles</h4>
               
-              {/* Input de descripción de negociación */}
-              {showNegotiationInput && (
-                <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <label htmlFor="negotiationDescription" className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción de la negociación (opcional)
-                  </label>
-                  <textarea
-                    id="negotiationDescription"
-                    value={negotiationDescription}
-                    onChange={(e) => setNegotiationDescription(e.target.value.slice(0, 1000))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                    rows={4}
-                    placeholder="Describe los cambios que propones en esta negociación..."
-                    maxLength={1000}
-                  />
-                  <div className="flex justify-between items-center mt-2">
-                    <p className="text-xs text-gray-500">
-                      {negotiationDescription.length}/1000 caracteres
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => {
-                          setShowNegotiationInput(false);
-                          setNegotiationDescription('');
-                        }}
-                        className="bg-gray-500 hover:bg-gray-600 text-white text-sm"
-                        disabled={actionLoading}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        onClick={() => handleAction('negotiate')}
-                        className="bg-orange-600 hover:bg-orange-700 text-white text-sm"
-                        disabled={actionLoading}
-                      >
-                        {actionLoading ? 'Procesando...' : 'Enviar Negociación'}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {actions.includes('accept') && (
                   <Button
-                    onClick={() => handleAction('accept')}
-                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+                    onClick={() => setConfirmAction('accept')}
+                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center gap-2"
                     disabled={actionLoading}
                   >
-                    {actionLoading ? 'Procesando...' : '✓ Aceptar Cotización'}
+                    {actionLoading ? 'Procesando...' : (
+                      <>
+                        <CheckCircle size={16} />
+                        Aceptar cotización
+                      </>
+                    )}
                   </Button>
                 )}
                 
                 {actions.includes('reject') && (
                   <Button
-                    onClick={() => handleAction('reject')}
-                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+                    onClick={() => setConfirmAction('reject')}
+                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center gap-2"
                     disabled={actionLoading}
                   >
-                    ✗ Rechazar
+                    <XCircle size={16} />
+                    Rechazar
                   </Button>
                 )}
                 
-                {actions.includes('negotiate') && !showNegotiationInput && (
+                {actions.includes('negotiate') && (
                   <Button
-                    onClick={() => handleAction('negotiate')}
-                    className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+                    onClick={() => setConfirmAction('negotiate')}
+                    className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center gap-2"
                     disabled={actionLoading}
                   >
-                    ⇄ Negociar
+                    <MessageSquare size={16} />
+                    Negociar
                   </Button>
                 )}
                 
                 {actions.includes('cancel') && (
                   <Button
-                    onClick={() => handleAction('cancel')}
-                    className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+                    onClick={() => setConfirmAction('cancel')}
+                    className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center gap-2"
                     disabled={actionLoading}
                   >
-                    ⊘ Cancelar Solicitud
+                    <Trash2 size={16} />
+                    Cancelar solicitud
                   </Button>
                 )}
               </div>

@@ -16,6 +16,7 @@ import ProviderRequestDetailModal from '@/components/services/ProviderRequestDet
 import DeliveryModal from '@/components/deliveries/DeliveryModal';
 import ClaimModal from '@/components/claims/ClaimModal';
 import Toast from '@/components/ui/Toast';
+import BackButton from '@/components/ui/BackButton';
 import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabel } from '@/utils/timeUnit';
 import { useUserStore } from '@/store/userStore';
@@ -187,16 +188,23 @@ export default function ServiceRequestsPage({ serviceId }) {
     setIsClaimModalOpen(true);
   };
 
-  const handleClaimSuccess = () => {
+  const handleClaimSuccess = (createdClaim) => {
     setToast({
       type: 'success',
-      message: 'Reclamo creado exitosamente',
+      message: 'Reclamo creado exitosamente. Redirigiendo a Mis Reclamos...',
       isVisible: true
     });
     setIsClaimModalOpen(false);
     setClaimHiring(null);
     // Recargar datos
     loadMyServiceRequests(filters);
+    
+    // Redirigir a la página de reclamos después de 2 segundos con el claimId
+    if (createdClaim?.id) {
+      setTimeout(() => {
+        router.push(`/claims/my-claims?claimId=${createdClaim.id}`);
+      }, 2000);
+    }
   };
 
   // Función para verificar si puede crear claim (como proveedor)
@@ -244,16 +252,55 @@ export default function ServiceRequestsPage({ serviceId }) {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-white rounded-lg transition"
-            >
-              <ArrowLeft size={24} className="text-conexia-green" />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-conexia-green">Solicitudes del Servicio</h1>
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+              <div className="flex-1 text-center mr-8">
+                <h1 className="text-2xl font-bold text-conexia-green">
+                  Solicitudes del servicio
+                </h1>
+              </div>
+              <div className="w-10"></div>
             </div>
           </div>
 
@@ -435,11 +482,11 @@ export default function ServiceRequestsPage({ serviceId }) {
                                 {/* Botón Ver Reclamo - Cuando está en estado in_claim */}
                                 {hiring.status?.code === 'in_claim' && hiring.claimId && (
                                   <button
-                                    onClick={() => router.push(`/claims/${hiring.claimId}`)}
+                                    onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                                     className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
-                                    title="Ver reclamo activo"
-                                    aria-label="Ver reclamo"
-                                    data-action="ver-reclamo"
+                                    title="Ver en Mis Reclamos"
+                                    aria-label="Ver en Mis Reclamos"
+                                    data-action="ver-mis-reclamos"
                                   >
                                     <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />
                                   </button>
@@ -586,11 +633,11 @@ export default function ServiceRequestsPage({ serviceId }) {
                           {/* Botón Ver Reclamo Mobile - Cuando está en estado in_claim */}
                           {hiring.status?.code === 'in_claim' && hiring.claimId && (
                             <button
-                              onClick={() => router.push(`/claims/${hiring.claimId}`)}
+                              onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                               className="flex items-center justify-center w-7 h-7 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
-                              title="Ver reclamo activo"
-                              aria-label="Ver reclamo"
-                              data-action="ver-reclamo"
+                              title="Ver en Mis Reclamos"
+                              aria-label="Ver en Mis Reclamos"
+                              data-action="ver-mis-reclamos"
                             >
                               <AlertCircle size={14} className="group-hover:scale-110 transition-transform" />
                             </button>

@@ -16,6 +16,7 @@ import RequireVerification from '@/components/common/RequireVerification';
 import Pagination from '@/components/common/Pagination';
 import { UpgradePlanButton } from '@/components/plans';
 import Toast from '@/components/ui/Toast';
+import BackButton from '@/components/ui/BackButton';
 
 export default function MyServicesPage() {
   const router = useRouter();
@@ -221,15 +222,54 @@ export default function MyServicesPage() {
             <UpgradePlanButton context="services" />
           </div>
 
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-white rounded-lg transition"
-            >
-              <ArrowLeft size={24} className="text-conexia-green" />
-            </button>
-            <h1 className="text-3xl font-bold text-conexia-green">Mis servicios</h1>
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+              <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
+                Mis Servicios
+              </h1>
+              <div className="w-10"></div>
+            </div>
           </div>
 
           {/* Estadísticas rápidas */}

@@ -7,4 +7,6 @@ export * from './postulations';
 export * from './messaging';
 export * from './publications';
 export * from './verification';
-export * from './moderation';export * from './serviceReviews';
+export * from './moderation';
+export * from './serviceReviews';
+export * from './compliances';

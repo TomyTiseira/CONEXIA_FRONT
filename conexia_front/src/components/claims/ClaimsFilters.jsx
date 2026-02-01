@@ -10,6 +10,16 @@ import { X, ChevronDown } from 'lucide-react';
 import { CLAIM_STATUS, CLAIM_STATUS_LABELS } from '@/constants/claims';
 import { MdCleaningServices } from 'react-icons/md';
 
+const ADMIN_STATUS_OPTIONS = [
+  CLAIM_STATUS.OPEN,
+  CLAIM_STATUS.IN_REVIEW,
+  CLAIM_STATUS.PENDING_CLARIFICATION,
+  CLAIM_STATUS.REQUIRES_STAFF_RESPONSE,
+  CLAIM_STATUS.RESOLVED,
+  CLAIM_STATUS.REJECTED,
+  CLAIM_STATUS.CANCELLED,
+];
+
 export const ClaimsFilters = ({ filters, onFilterChange, onClearFilters }) => {
   const [searchTerm, setSearchTerm] = useState(filters.searchTerm || '');
   const debounceTimerRef = useRef(null);
@@ -102,7 +112,7 @@ export const ClaimsFilters = ({ filters, onFilterChange, onClearFilters }) => {
                 className="h-10 w-full lg:min-w-[180px] border border-conexia-green rounded-lg pl-3 pr-10 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-conexia-green/40 transition cursor-pointer appearance-none"
               >
                 <option value="">Todos los estados</option>
-                {Object.values(CLAIM_STATUS).map((status) => (
+                {ADMIN_STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
                     {CLAIM_STATUS_LABELS[status]}
                   </option>

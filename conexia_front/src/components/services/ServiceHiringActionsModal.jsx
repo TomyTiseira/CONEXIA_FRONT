@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { X, AlertTriangle, AlertCircle } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle, CheckCircle, XCircle, Trash2, MessageSquare, RefreshCw } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ContractServiceButton from './ContractServiceButton';
 import { isExpired } from '@/utils/quotationVigency';
@@ -71,39 +71,44 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
   const getActionConfig = (action) => {
     const configs = {
       accept: {
-        title: 'Aceptar Cotización',
+        title: 'Aceptar cotización',
         description: 'Al aceptar esta cotización, confirmas que estás de acuerdo con el precio y tiempo estimado. El proveedor podrá comenzar a trabajar en tu solicitud.',
         buttonText: 'Sí, Aceptar',
         buttonClass: 'bg-green-600 hover:bg-green-700 text-white',
-        icon: '✅'
+        icon: CheckCircle,
+        iconColor: 'text-green-600'
       },
       reject: {
-        title: 'Rechazar Cotización',
+        title: 'Rechazar cotización',
         description: 'Al rechazar esta cotización, la solicitud se marcará como rechazada y no podrás volver a aceptarla. Puedes crear una nueva solicitud si lo deseas.',
         buttonText: 'Sí, Rechazar',
         buttonClass: 'bg-red-600 hover:bg-red-700 text-white',
-        icon: '❌'
+        icon: XCircle,
+        iconColor: 'text-red-600'
       },
       cancel: {
         title: 'Cancelar Solicitud',
         description: 'Al cancelar esta solicitud, se eliminará permanentemente y no podrás recuperarla. Esta acción no se puede deshacer.',
         buttonText: 'Sí, Cancelar',
         buttonClass: 'bg-gray-600 hover:bg-gray-700 text-white',
-        icon: '🗑️'
+        icon: Trash2,
+        iconColor: 'text-gray-600'
       },
       negotiate: {
         title: 'Iniciar Negociación',
         description: 'Al iniciar una negociación, el proveedor será notificado que deseas discutir los términos de la cotización. Podrás comunicarte directamente para llegar a un acuerdo.',
         buttonText: 'Sí, Negociar',
         buttonClass: 'bg-orange-600 hover:bg-orange-700 text-white',
-        icon: '🤝'
+        icon: MessageSquare,
+        iconColor: 'text-orange-600'
       },
       requote: {
         title: 'Solicitar Re-cotización',
         description: 'Al solicitar una re-cotización, el proveedor será notificado para que actualice los términos de la cotización vencida. Esto renovará la vigencia de la solicitud.',
         buttonText: 'Sí, Solicitar Re-cotización',
         buttonClass: 'bg-blue-600 hover:bg-blue-700 text-white',
-        icon: '🔄'
+        icon: RefreshCw,
+        iconColor: 'text-blue-600'
       }
     };
     return configs[action];
@@ -142,7 +147,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
             <h3 className="text-xl font-bold text-orange-600 flex items-center gap-2">
               <AlertTriangle size={20} />
-              ⚠️ Confirmar Acción
+              Confirmar Acción
             </h3>
             <button
               onClick={() => setConfirmAction(null)}
@@ -156,7 +161,9 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
           {/* Contenido con scroll */}
           <div className="flex-1 overflow-y-auto p-6">
             <div className="text-center mb-6">
-              <div className="text-4xl mb-3">{actionConfig.icon}</div>
+              <div className="flex justify-center mb-4">
+                <actionConfig.icon size={48} className={actionConfig.iconColor} />
+              </div>
               <h4 className="text-lg font-medium text-gray-900 mb-2">
                 {actionConfig.title}
               </h4>
@@ -277,7 +284,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 onClick={() => setConfirmAction('requote')}
                 className="w-full flex items-center gap-3 p-4 border border-blue-200 bg-blue-600 rounded-lg hover:bg-blue-700 transition text-left"
               >
-                <span className="text-2xl">🔄</span>
+                <RefreshCw size={24} className="text-white flex-shrink-0" />
                 <div>
                   <p className="font-medium text-white">Solicitar Re-cotización</p>
                   <p className="text-sm text-blue-100">Pedir al proveedor que actualice la cotización</p>
@@ -289,7 +296,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 onClick={() => setConfirmAction('cancel')}
                 className="w-full flex items-center gap-3 p-4 border border-gray-200 bg-gray-500 rounded-lg hover:bg-gray-600 transition text-left"
               >
-                <span className="text-2xl">🗑️</span>
+                <Trash2 size={24} className="text-white flex-shrink-0" />
                 <div>
                   <p className="font-medium text-white">Cancelar Solicitud</p>
                   <p className="text-sm text-gray-100">Eliminar esta solicitud vencida</p>
@@ -303,7 +310,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 onClick={() => setConfirmAction('accept')}
                 className="w-full flex items-center gap-3 p-4 border border-green-200 rounded-lg hover:bg-green-50 transition text-left"
               >
-                <span className="text-2xl">✅</span>
+                <CheckCircle size={24} className="text-green-600 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-green-800">Aceptar Cotización</p>
                   <p className="text-sm text-green-600">Confirmar y proceder con el servicio</p>
@@ -316,7 +323,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 onClick={() => setConfirmAction('negotiate')}
                 className="w-full flex items-center gap-3 p-4 border border-orange-200 rounded-lg hover:bg-orange-50 transition text-left"
               >
-                <span className="text-2xl">🤝</span>
+                <MessageSquare size={24} className="text-orange-600 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-orange-800">Negociar</p>
                   <p className="text-sm text-orange-600">Discutir términos con el proveedor</p>
@@ -329,7 +336,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 onClick={() => setConfirmAction('reject')}
                 className="w-full flex items-center gap-3 p-4 border border-red-200 bg-red-500 rounded-lg hover:bg-red-600 transition text-left"
               >
-                <span className="text-2xl">❌</span>
+                <XCircle size={24} className="text-white flex-shrink-0" />
                 <div>
                   <p className="font-medium text-white">Rechazar</p>
                   <p className="text-sm text-red-100">No aceptar la cotización</p>
@@ -342,7 +349,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 onClick={() => setConfirmAction('cancel')}
                 className="w-full flex items-center gap-3 p-4 border border-gray-200 bg-gray-500 rounded-lg hover:bg-gray-600 transition text-left"
               >
-                <span className="text-2xl">🗑️</span>
+                <Trash2 size={24} className="text-white flex-shrink-0" />
                 <div>
                   <p className="font-medium text-white">Cancelar Solicitud</p>
                   <p className="text-sm text-gray-100">Eliminar esta solicitud</p>

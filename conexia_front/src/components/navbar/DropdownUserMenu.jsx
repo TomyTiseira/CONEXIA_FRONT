@@ -87,10 +87,10 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 top-12 w-64 bg-white border rounded shadow-md z-50 py-3 text-conexia-green"
+      className="absolute right-0 top-12 w-64 bg-white border rounded shadow-md z-50 py-2 text-conexia-green"
     >
       {/* Perfil */}
-      <div className="flex flex-col gap-3 px-4 pb-3 border-b">
+      <div className="flex flex-col gap-2 px-4 pb-2 border-b">
         <div className="flex gap-3 items-center">
           <div className="w-10 h-10 relative rounded-full overflow-hidden shrink-0">
             <Image
@@ -127,7 +127,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
 
       {/* Plan del usuario (solo para rol USER y si hay datos del plan) */}
       {roleName === ROLES.USER && userPlan && !planError && (
-        <div className="px-4 py-3 border-b">
+        <div className="px-4 py-2 border-b">
           <PlanBadge 
             useCurrentPlan={true}
             variant="compact"
@@ -139,14 +139,14 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
       {/* Servicios (solo para usuarios con rol USER) */}
       {roleName === ROLES.USER && (
         <>
-          <div className="pt-1 mt-1">
-            <div className="px-4 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <div className="pt-0.5 mt-0.5">
+            <div className="px-4 py-0.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
               Servicios
             </div>
             <Link
               href="/services/my-hirings"
               onClick={handleClose}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+              className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
             >
               <FileText size={16} />
               Mis solicitudes
@@ -154,20 +154,28 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
             <Link
               href="/services/my-services"
               onClick={handleClose}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+              className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
             >
               <Briefcase size={16} />
               Mis servicios
             </Link>
+            <Link
+              href="/claims/my-claims"
+              onClick={handleClose}
+              className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
+            >
+              <FileText size={16} />
+              Mis reclamos
+            </Link>
           </div>
-          <div className="border-t pt-1 mt-1">
-            <div className="px-4 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <div className="border-t pt-0.5 mt-0.5">
+            <div className="px-4 py-0.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
               Proyectos
             </div>
             <Link
               href="/project/my-postulations"
               onClick={handleClose}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+              className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
             >
               <FileText size={16} />
               Mis postulaciones
@@ -175,7 +183,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
             <Link
               href="/my-projects"
               onClick={handleClose}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+              className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
             >
               <FaRegLightbulb size={16} />
               Mis proyectos
@@ -185,13 +193,13 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
       )}
 
       {/* Acciones */}
-      <div className="border-t pt-1 mt-1">
+      <div className="border-t pt-0.5 mt-0.5">
         {/* Dashboard solo para usuarios USER */}
         {roleName === ROLES.USER && (
           <Link
             href="/dashboard"
             onClick={handleClose}
-            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+            className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
           >
             <BarChart3 size={16} />
             Métricas
@@ -200,14 +208,14 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
         <Link
           href="/settings"
           onClick={handleClose}
-          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+          className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
         >
           <Settings size={16} />
           Configuraciones y privacidad
         </Link>
         <button
           onClick={onLogout}
-          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left hover:bg-conexia-green/10"
+          className="flex items-center gap-2 w-full px-4 py-1.5 text-sm text-left hover:bg-conexia-green/10"
         >
           <LogOut size={16} />
           Cerrar sesión

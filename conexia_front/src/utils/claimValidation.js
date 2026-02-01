@@ -35,8 +35,6 @@ export const validateFile = (file) => {
       'jpg': 'image/jpeg',
       'jpeg': 'image/jpeg',
       'png': 'image/png',
-      'gif': 'image/gif',
-      'mp4': 'video/mp4'
     };
     
     // Si la extensión está en el mapa, permitir el archivo
@@ -128,13 +126,42 @@ export const validateResolution = (resolution) => {
  * @returns {string} - Nombre del archivo
  */
 export const getFileNameFromUrl = (url) => {
+  if (!url) return 'Documento.pdf';
+  
   try {
-    const urlObj = new URL(url);
-    const pathname = urlObj.pathname;
-    const segments = pathname.split('/');
-    return segments[segments.length - 1] || 'archivo';
-  } catch {
-    return 'archivo';
+    // Si es una URL completa
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      const segments = pathname.split('/').filter(Boolean);
+      const lastSegment = segments[segments.length - 1];
+      
+      if (lastSegment && lastSegment.includes('.')) {
+        // Decodificar caracteres URL y retornar el nombre del archivo
+        return decodeURIComponent(lastSegment);
+      }
+    } else {
+      // Si es una ruta relativa
+      const segments = url.split('/').filter(Boolean);
+      const lastSegment = segments[segments.length - 1];
+      
+      if (lastSegment && lastSegment.includes('.')) {
+        return decodeURIComponent(lastSegment);
+      }
+    }
+    
+    // Si llegamos aquí, intentar obtener la extensión de la URL
+    const extension = url.toLowerCase().match(/\.(pdf|docx?|xlsx?|pptx?|txt|jpg|jpeg|png|gif|mp4|mov|avi)$/i);
+    if (extension) {
+      return `Documento${extension[0]}`;
+    }
+    
+    return 'Documento.pdf';
+  } catch (error) {
+    console.error('Error extracting filename from URL:', error);
+    // Intentar obtener extensión incluso en caso de error
+    const extension = url.toLowerCase().match(/\.(pdf|docx?|xlsx?|pptx?|txt|jpg|jpeg|png|gif|mp4|mov|avi)$/i);
+    return extension ? `Documento${extension[0]}` : 'Documento.pdf';
   }
 };
 

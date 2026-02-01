@@ -171,6 +171,17 @@ export default function ClaimDetailPage({ params }) {
   const isClaimant = user?.id === claim.claimantUserId;
   const canSubsanar = isClaimant && claim.status === CLAIM_STATUS.PENDING_CLARIFICATION;
 
+  const rawClarificationEvidenceUrls =
+    claim.clarificationEvidenceUrls ||
+    claim.clarificationEvidence ||
+    claim.additionalEvidenceUrls ||
+    claim.newEvidenceUrls;
+  const clarificationEvidenceUrls = Array.isArray(rawClarificationEvidenceUrls)
+    ? rawClarificationEvidenceUrls
+    : rawClarificationEvidenceUrls
+      ? [rawClarificationEvidenceUrls]
+      : [];
+
   return (
     <>
       <Navbar />
@@ -183,7 +194,7 @@ export default function ClaimDetailPage({ params }) {
         {/* Información del Reclamo */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Información del Reclamo</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Información del reclamo</h2>
           <ClaimStatusBadge status={claim.status} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,7 +292,7 @@ export default function ClaimDetailPage({ params }) {
                 onClick={() => setIsSubsanarModalOpen(true)}
                 className="w-full sm:w-auto px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold shadow-md hover:shadow-lg"
               >
-                Subsanar Reclamo
+                Subsanar reclamo
               </button>
               <p className="text-sm text-gray-600 mt-2">
                 Proporciona la información adicional solicitada por el moderador
@@ -305,6 +316,13 @@ export default function ClaimDetailPage({ params }) {
                 {claim.clarificationResponse}
               </p>
             </div>
+
+            {clarificationEvidenceUrls.length > 0 && (
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Evidencias de subsanación</p>
+                <ClaimEvidenceViewer evidenceUrls={clarificationEvidenceUrls} />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -334,7 +352,7 @@ export default function ClaimDetailPage({ params }) {
                 onClick={() => setIsObservationsModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
               >
-                Agregar Observaciones
+                Agregar observaciones
               </button>
             )}
 

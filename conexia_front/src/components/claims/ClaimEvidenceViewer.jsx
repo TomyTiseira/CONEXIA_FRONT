@@ -1,14 +1,16 @@
 /**
  * ClaimEvidenceViewer Component
  * Componente para ver las evidencias de un reclamo
+ * Muestra thumbnails de imágenes que abren modal con carrusel
  */
 
 'use client';
 
-import React, { useState } from 'react';
-import { FileText, Image, Film, File, ExternalLink, Download, X, Loader2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { FileText, Image, Film, File, Download, Loader2 } from 'lucide-react';
 import { getFileType, getFileNameFromUrl } from '@/utils/claimValidation';
 import { config } from '@/config/env';
+import ImageZoomModalClaims from './ImageZoomModalClaims';
 
 /**
  * Convierte una ruta relativa en URL absoluta
@@ -46,29 +48,9 @@ const getFileIcon = (url) => {
   }
 };
 
-/**
- * Modal para vista previa de imágenes
- */
-const ImagePreviewModal = ({ url, onClose }) => {
-  if (!url) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
-      <div className="relative max-w-4xl max-h-[90vh]">
-        <button
-          onClick={onClose}
-          className="absolute -top-10 right-0 text-white hover:text-gray-300"
-        >
-          <X size={32} />
-        </button>
-        <img src={url} alt="Evidence" className="max-w-full max-h-[90vh] object-contain" />
-      </div>
-    </div>
-  );
-};
-
 export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [showImageZoom, setShowImageZoom] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
   const [downloading, setDownloading] = useState(null); // índice del archivo que se está descargando
 
   if (!evidenceUrls || evidenceUrls.length === 0) {
@@ -80,15 +62,9 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
     );
   }
 
-  const handlePreview = (url) => {
-    const absoluteUrl = getAbsoluteUrl(url);
-    const type = getFileType(url);
-    if (type === 'image') {
-      setPreviewUrl(absoluteUrl);
-    } else {
-      // Para otros archivos, abrir en nueva pestaña
-      window.open(absoluteUrl, '_blank');
-    }
+  const handleImageClick = (imageIndex) => {
+    setZoomIndex(imageIndex);
+    setShowImageZoom(true);
   };
 
   const handleDownload = async (url, fileName, index) => {
@@ -118,55 +94,227 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
     }
   };
 
+  const grouped = useMemo(() => {
+    const images = [];
+    const pdfs = [];
+    const videos = [];
+    const others = [];
+
+    (evidenceUrls || []).forEach((url) => {
+      const type = getFileType(url);
+      if (type === 'image') {
+        images.push(url);
+      } else if (type === 'document' && url.toLowerCase().endsWith('.pdf')) {
+        pdfs.push(url);
+      } else if (type === 'video') {
+        videos.push(url);
+      } else {
+        others.push(url);
+      }
+    });
+
+    return { images, pdfs, videos, others };
+  }, [evidenceUrls]);
+
   return (
     <>
-      <div className="space-y-3">
-        {evidenceUrls.map((url, index) => {
-          const absoluteUrl = getAbsoluteUrl(url);
-          const fileName = getFileNameFromUrl(url);
-          const fileType = getFileType(url);
+      {grouped.images.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {grouped.images.map((url, index) => {
+            const absoluteUrl = getAbsoluteUrl(url);
+            const fileName = getFileNameFromUrl(url);
 
-          return (
-            <div
-              key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors group"
-            >
-              <div className="flex items-center flex-1 min-w-0">
-                {getFileIcon(url)}
-                <span className="text-sm font-medium text-gray-900 truncate">{fileName}</span>
+            return (
+              <div
+                key={`${url}-${index}`}
+                className="relative group border border-gray-200 rounded-lg overflow-hidden bg-gray-50 cursor-pointer"
+                onClick={() => handleImageClick(index)}
+              >
+                <img
+                  src={absoluteUrl}
+                  alt={fileName}
+                  className="w-full h-32 object-cover"
+                  loading="lazy"
+                />
+
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+
+                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownload(url, fileName, `img-${index}`);
+                    }}
+                    disabled={downloading === `img-${index}`}
+                    className="bg-black/60 hover:bg-black/75 text-white rounded-full p-2 disabled:opacity-50"
+                    title="Descargar"
+                  >
+                    {downloading === `img-${index}` ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Download size={16} />
+                    )}
+                  </button>
+                </div>
               </div>
+            );
+          })}
+        </div>
+      )}
 
-              <div className="flex items-center gap-2 ml-3">
-                {/* Botón de vista previa */}
-                <button
-                  onClick={() => handlePreview(url)}
-                  className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
-                  title={fileType === 'image' ? 'Ver imagen' : 'Abrir archivo'}
-                >
-                  <ExternalLink size={18} />
-                </button>
+      {/* PDFs con thumbnails */}
+      {grouped.pdfs.length > 0 && (
+        <div className={grouped.images.length > 0 ? 'mt-4' : ''}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {grouped.pdfs.map((url, index) => {
+              const absoluteUrl = getAbsoluteUrl(url);
+              const fileName = getFileNameFromUrl(url);
 
-                {/* Botón de descarga */}
-                <button
-                  onClick={() => handleDownload(url, fileName, index)}
-                  disabled={downloading === index}
-                  className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Descargar"
+              return (
+                <div
+                  key={`${url}-${index}`}
+                  className="relative group border border-gray-200 rounded-lg overflow-hidden bg-gray-50 cursor-pointer"
+                  onClick={() => window.open(absoluteUrl, '_blank')}
                 >
-                  {downloading === index ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <Download size={18} />
-                  )}
-                </button>
+                  <div className="w-full h-32 flex flex-col items-center justify-center bg-red-50">
+                    <FileText size={48} className="text-red-500 mb-2" />
+                    <span className="text-xs text-gray-600 px-2 text-center truncate max-w-full">
+                      {fileName}
+                    </span>
+                  </div>
+
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+
+                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(url, fileName, `pdf-${index}`);
+                      }}
+                      disabled={downloading === `pdf-${index}`}
+                      className="bg-black/60 hover:bg-black/75 text-white rounded-full p-2 disabled:opacity-50"
+                      title="Descargar"
+                    >
+                      {downloading === `pdf-${index}` ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Download size={16} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Videos con thumbnails */}
+      {grouped.videos.length > 0 && (
+        <div className={grouped.images.length > 0 || grouped.pdfs.length > 0 ? 'mt-4' : ''}>
+          <p className="text-sm font-medium text-gray-700 mb-2">Videos</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {grouped.videos.map((url, index) => {
+              const absoluteUrl = getAbsoluteUrl(url);
+              const fileName = getFileNameFromUrl(url);
+
+              return (
+                <div
+                  key={`${url}-${index}`}
+                  className="relative group border border-gray-200 rounded-lg overflow-hidden bg-gray-50 cursor-pointer"
+                  onClick={() => window.open(absoluteUrl, '_blank')}
+                >
+                  <div className="w-full h-32 flex flex-col items-center justify-center bg-purple-50">
+                    <Film size={48} className="text-purple-500 mb-2" />
+                    <span className="text-xs text-gray-600 px-2 text-center truncate max-w-full">
+                      {fileName}
+                    </span>
+                  </div>
+
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+
+                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(url, fileName, `video-${index}`);
+                      }}
+                      disabled={downloading === `video-${index}`}
+                      className="bg-black/60 hover:bg-black/75 text-white rounded-full p-2 disabled:opacity-50"
+                      title="Descargar"
+                    >
+                      {downloading === `video-${index}` ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Download size={16} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Otros archivos */}
+      {grouped.others.length > 0 && (
+        <div className={grouped.images.length > 0 || grouped.pdfs.length > 0 || grouped.videos.length > 0 ? 'mt-4 space-y-3' : 'space-y-3'}>
+          <p className="text-sm font-medium text-gray-700 mb-2">Otros archivos</p>
+          {grouped.others.map((url, index) => {
+            const fileName = getFileNameFromUrl(url);
+            const fileType = getFileType(url);
+
+            return (
+              <div
+                key={`${url}-${index}`}
+                className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors group"
+              >
+                <div className="flex items-center flex-1 min-w-0">
+                  {getFileIcon(url)}
+                  <span className="text-sm font-medium text-gray-900 truncate">{fileName}</span>
+                </div>
+
+                <div className="flex items-center gap-2 ml-3">
+                  <button
+                    type="button"
+                    onClick={() => window.open(getAbsoluteUrl(url), '_blank')}
+                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                    title="Abrir archivo"
+                  >
+                    <File size={18} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(url, fileName, `file-${index}`)}
+                    disabled={downloading === `file-${index}`}
+                    className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Descargar"
+                  >
+                    {downloading === `file-${index}` ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Download size={18} />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Modal de preview */}
-      {previewUrl && <ImagePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />}
+      {/* Modal de zoom con carrusel */}
+      <ImageZoomModalClaims
+        open={showImageZoom}
+        onClose={() => setShowImageZoom(false)}
+        images={grouped.images}
+        initialIndex={zoomIndex}
+      />
     </>
   );
 };
