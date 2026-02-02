@@ -46,7 +46,7 @@ export default function LockedDeliverableCard({ deliverable, userRole }) {
             <AlertCircle size={20} className="text-yellow-600 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-yellow-800 mb-1">
-                {isProvider ? '🔒 Debes entregar el entregable anterior primero' : 'ℹ️ Este entregable no está disponible'}
+                {isProvider ? '🔒 Debes entregar el entregable anterior primero' : 'Este entregable no está disponible'}
               </p>
               <p className="text-sm text-yellow-700">
                 {deliverable.lockReason || (isProvider 

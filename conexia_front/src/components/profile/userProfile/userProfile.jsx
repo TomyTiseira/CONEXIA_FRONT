@@ -86,8 +86,9 @@ export default function UserProfile() {
         } else {
           setEditing(false);
         }
-      } catch (err) {         
-        setError(err.message || "Error al cargar el perfil");
+      } catch (err) {
+        // Para cualquier error, mostrar el modal NotFound estándar
+        setError("not_found");
         setProfile(null);
         setIsOwner(false);
       } finally {
@@ -158,10 +159,8 @@ export default function UserProfile() {
   if (error) {
     return (
       <NotFound
-        title="Error al cargar el perfil"
-        message={error}
         showHomeButton={true}
-        showBackButton={false}
+        showBackButton={true}
       />
     );
   }
@@ -169,10 +168,8 @@ export default function UserProfile() {
   if (!profile) {
     return (
       <NotFound
-        title="Usuario no encontrado"
-        message="No se encontró el usuario solicitado."
         showHomeButton={true}
-        showBackButton={false}
+        showBackButton={true}
       />
     );
   }
@@ -530,7 +527,7 @@ export default function UserProfile() {
                       className="flex-shrink-0" 
                       title="Identidad verificada"
                     >
-                      <ShieldCheck className="text-blue-600" size={28} strokeWidth={2} />
+                      <ShieldCheck className="text-conexia-green" size={28} strokeWidth={2} />
                     </div>
                   )}
                 </div>
@@ -552,17 +549,10 @@ export default function UserProfile() {
                     />
                   </div>
                 )}
-                {/* Botones de conexión y mensaje (la lógica de visibilidad está dentro del componente) */}
-                <ProfileConnectionButtons 
-                  profile={profile} 
-                  id={storeUser?.id} 
-                  isOwner={isOwner} 
-                  receiverId={Number(id)}
-                />
               </div>
             </div>
-            {/* Botón de editar (solo dueño) y botón para ver proyectos (todos) */}
-            <div className="flex gap-2 justify-center sm:justify-end mt-4 sm:mt-0">
+            {/* Botones de editar (solo dueño) y botones de conexión */}
+            <div className="flex gap-2 justify-center sm:justify-end mt-4 sm:mt-0 sm:absolute sm:right-0 sm:top-0">
               {isOwner && (
                 <button
                   onClick={() => setEditing(true)}
@@ -574,11 +564,25 @@ export default function UserProfile() {
                   </svg>
                 </button>
               )}
+              <ProfileConnectionButtons 
+                profile={profile} 
+                id={storeUser?.id} 
+                isOwner={isOwner} 
+                receiverId={Number(id)}
+              />
             </div>
           </div>
+          
+          {/* Banner horizontal de mejora de plan (solo dueño, no admin/moderador, plan no Premium) */}
+          {isOwner && !(isAdmin || isModerator) && profile.plan?.name !== 'Premium' && (
+            <div className="mt-4">
+              <UpgradeBanner variant="horizontal" />
+            </div>
+          )}
+          
           {/* Banner horizontal refinado para solicitud de conexión */}
           {!isOwner && !isAdmin && !isModerator && profile.profile?.connectionData?.state === 'pending' && profile.profile?.connectionData?.senderId !== storeUser?.id && !accepting && (
-            <div className="w-full py-2 px-4 mb-4 rounded-lg shadow-sm border border-[#d0ecec] bg-[#e6f7f7] flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div className="w-full py-2 px-4 mt-4 rounded-lg shadow-sm border border-[#d0ecec] bg-[#e6f7f7] flex flex-col sm:flex-row sm:items-center sm:justify-between">
               {/* Texto e ícono */}
               <div className="flex items-center gap-2 mb-2 sm:mb-0 justify-center sm:justify-start text-center sm:text-left">
                 <HiUserAdd className="w-5 h-5 text-conexia-green" />
@@ -634,6 +638,7 @@ export default function UserProfile() {
               </div>
             </div>
           )}
+          
           {/* Información en bloques */}
           <div className="mt-6 space-y-6">
             {user.description && (
@@ -651,7 +656,7 @@ export default function UserProfile() {
                 <p>{user.phoneNumber}</p>
               </Section>
             )}
-            {Array.isArray(user.skills) && user.skills.length > 0 && (
+            {!profile.isBanned && Array.isArray(user.skills) && user.skills.length > 0 && (
               <Section title="Habilidades">
                 <SkillsDisplay skills={user.skills} />
               </Section>
@@ -746,22 +751,15 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* Banner de upgrade para mejorar plan (solo dueño del perfil) - Antes de verificación */}
-        {isOwner && !(isAdmin || isModerator) && (
-          <div className="mt-6">
-            <UpgradeBanner variant="compact" />
-          </div>
-        )}
-
         {/* Sección de Verificación de Identidad (solo visible para el dueño) */}
         {isOwner && (
-          <div className="mt-6">
-            <VerificationSection />
-          </div>
+          <VerificationSection />
         )}
 
-        {/* Apartado de conexiones del usuario */}
-        <UserConnections userId={id} profile={profile} isOwner={isOwner} />
+        {/* Apartado de conexiones del usuario (oculto si está baneado) */}
+        {!profile.isBanned && (
+          <UserConnections userId={id} profile={profile} isOwner={isOwner} />
+        )}
         
         {/* Secciones ocultas si el usuario está baneado */}
         {!profile.isBanned && (

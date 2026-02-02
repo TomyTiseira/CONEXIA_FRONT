@@ -526,8 +526,8 @@ export default function MyServiceHiringsPage() {
                                   </button>
                                 )}
 
-                                {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
-                                {(['approved', 'in_progress', 'delivered', 'revision_requested', 'completed'].includes(hiring.status?.code)) && 
+                                {/* Botón Ver Entregables - Para contratos aprobados, entregados o terminados por moderación con by_deliverables */}
+                                {(['approved', 'in_progress', 'delivered', 'revision_requested', 'completed', 'terminated_by_moderation', 'finished_by_moderation'].includes(hiring.status?.code)) && 
                                  hiring.paymentModality?.code === 'by_deliverables' && (
                                   <button
                                     onClick={() => router.push(`/service-delivery/${hiring.id}`)}
@@ -540,8 +540,8 @@ export default function MyServiceHiringsPage() {
                                   </button>
                                 )}
 
-                                {/* Botón Ver Entrega - Para contratos entregados con full_payment */}
-                                {(['in_progress', 'delivered', 'completed'].includes(hiring.status?.code)) && 
+                                {/* Botón Ver Entrega - Para contratos entregados o terminados por moderación con full_payment */}
+                                {(['in_progress', 'delivered', 'completed', 'terminated_by_moderation', 'finished_by_moderation'].includes(hiring.status?.code)) && 
                                  hiring.paymentModality?.code === 'full_payment' && (
                                   <button
                                     onClick={() => router.push(`/service-delivery/${hiring.id}`)}
@@ -706,8 +706,8 @@ export default function MyServiceHiringsPage() {
                               </button>
                             )}
 
-                            {/* Botón Ver Entregables - Para contratos aprobados o entregados con by_deliverables */}
-                            {(['approved', 'in_progress', 'delivered', 'completed'].includes(hiring.status?.code)) && 
+                            {/* Botón Ver Entregables - Para contratos aprobados, entregados o terminados por moderación con by_deliverables */}
+                            {(['approved', 'in_progress', 'delivered', 'completed', 'terminated_by_moderation', 'finished_by_moderation'].includes(hiring.status?.code)) && 
                              hiring.paymentModality?.code === 'by_deliverables' && (
                               <button
                                 onClick={() => router.push(`/service-delivery/${hiring.id}`)}
@@ -720,8 +720,8 @@ export default function MyServiceHiringsPage() {
                               </button>
                             )}
 
-                            {/* Botón Ver Entrega - Para contratos entregados con full_payment */}
-                            {(['in_progress', 'delivered', 'completed'].includes(hiring.status?.code)) && 
+                            {/* Botón Ver Entrega - Para contratos entregados o terminados por moderación con full_payment */}
+                            {(['in_progress', 'delivered', 'completed', 'terminated_by_moderation', 'finished_by_moderation'].includes(hiring.status?.code)) && 
                              hiring.paymentModality?.code === 'full_payment' && (
                               <button
                                 onClick={() => router.push(`/service-delivery/${hiring.id}`)}

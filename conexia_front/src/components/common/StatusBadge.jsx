@@ -35,6 +35,10 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
     rejected: {
       label: 'Rechazado',
       className: 'bg-red-200 text-red-800'
+    },
+    cancelled_by_moderation: {
+      label: 'Cancelado por Moderación',
+      className: 'bg-slate-200 text-slate-800 border border-slate-300'
     }
   };
 
@@ -63,6 +67,10 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
     rejected: {
       label: 'Rechazado',
       className: 'bg-red-100 text-red-700'
+    },
+    cancelled_by_moderation: {
+      label: 'Cancelado por Moderación',
+      className: 'bg-slate-100 text-slate-700 border border-slate-300'
     }
   };
 

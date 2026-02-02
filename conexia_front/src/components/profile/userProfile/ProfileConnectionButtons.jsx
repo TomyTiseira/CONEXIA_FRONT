@@ -185,7 +185,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           </Button>
         </div>
         {/* Desktop: extremo derecho, apilados verticalmente (Conectado arriba, Enviar abajo) */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
+        <div className="hidden sm:flex flex-col items-end gap-2">
           <div className="relative" ref={dropdownRef}>
             <Button
               variant="informative"
@@ -345,7 +345,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
         </div>
         
         {/* Desktop: extremo derecho, apilados verticalmente (Conectar/Pendiente arriba, Enviar abajo) */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
+        <div className="hidden sm:flex flex-col items-end gap-2">
           {!sent ? (
             <Button
               variant="connect"
