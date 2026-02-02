@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
-import { applyToProjectRole, getMyPostulationsByProjectAndRole, cancelPostulation, createCancelledPostulation } from '@/service/postulations/postulationService';
+import { applyToProjectRole, getMyPostulationsByProjectAndRole } from '@/service/postulations/postulationService';
 import Navbar from '@/components/navbar/Navbar';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
