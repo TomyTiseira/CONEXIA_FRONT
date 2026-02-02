@@ -136,13 +136,14 @@ export async function deleteMyUser({ motivo }) {
 
 // src/service/users/usersFetch.js
 
-export async function fetchUsers({ search = '', page = 1, limit = 3 } = {}) {
-  const url = `http://localhost:8080/api/users?page=${page}&search=${encodeURIComponent(search)}`;
-  const res = await fetch(url, {
+export async function fetchUsers({ search = '', page = 1, limit = 6 } = {}) {
+  const url = `${config.API_URL}/users?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`;
+  const res = await fetchWithRefresh(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
   });
   if (!res.ok) throw new Error('Error fetching users');
   const json = await res.json();
