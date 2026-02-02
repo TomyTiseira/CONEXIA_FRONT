@@ -8,12 +8,19 @@ import { useBenefits } from '@/hooks/memberships/useBenefits';
 
 export default function EditPlanModal({ plan, onClose, onSave, loading }) {
   const { benefits, loading: loadingBenefits } = useBenefits();
+  
+  // Función para limpiar los benefits y dejar solo key y value
+  const cleanBenefits = (benefits) => {
+    if (!benefits || !Array.isArray(benefits)) return [];
+    return benefits.map(b => ({ key: b.key, value: b.value }));
+  };
+  
   const [formData, setFormData] = useState({
     name: plan?.name || '',
     description: plan?.description || '',
     monthlyPrice: plan?.monthlyPrice || '',
     annualPrice: plan?.annualPrice || '',
-    benefits: plan?.benefits || [],
+    benefits: cleanBenefits(plan?.benefits) || [],
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -25,7 +32,7 @@ export default function EditPlanModal({ plan, onClose, onSave, loading }) {
             description: plan.description || '',
             monthlyPrice: plan.monthlyPrice || '',
             annualPrice: plan.annualPrice || '',
-            benefits: plan.benefits || [],
+            benefits: cleanBenefits(plan.benefits) || [],
           });
         }
       }, [plan]);
