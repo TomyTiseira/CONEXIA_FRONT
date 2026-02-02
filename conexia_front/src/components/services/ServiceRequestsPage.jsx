@@ -512,8 +512,8 @@ export default function ServiceRequestsPage({ serviceId }) {
                                   </button>
                                 )}
 
-                                {/* Botón Ver Entregables - Para contratos aprobados, entregados o en revisión con by_deliverables */}
-                                {(['approved', 'in_progress', 'delivered', 'revision_requested'].includes(hiring.status?.code)) && 
+                                {/* Botón Ver Entregables - Para contratos aprobados, entregados, en revisión o terminados por moderación con by_deliverables */}
+                                {(['approved', 'in_progress', 'delivered', 'revision_requested', 'terminated_by_moderation', 'finished_by_moderation'].includes(hiring.status?.code)) && 
                                  hiring.paymentModality?.code === 'by_deliverables' && (
                                   <button
                                     onClick={() => router.push(`/deliveries/${hiring.id}`)}
@@ -535,8 +535,8 @@ export default function ServiceRequestsPage({ serviceId }) {
                                   </button>
                                 )}
 
-                                {/* Botón Ver Entrega - Para contratos entregados o en revisión con full_payment */}
-                                {(['in_progress', 'delivered', 'revision_requested'].includes(hiring.status?.code)) && hiring.paymentModality?.code === 'full_payment' && (
+                                {/* Botón Ver Entrega - Para contratos entregados, en revisión o terminados por moderación con full_payment */}
+                                {(['in_progress', 'delivered', 'revision_requested', 'terminated_by_moderation', 'finished_by_moderation'].includes(hiring.status?.code)) && hiring.paymentModality?.code === 'full_payment' && (
                                   <button
                                     onClick={() => router.push(`/service-delivery/${hiring.id}`)}
                                     className="flex items-center justify-center w-8 h-8 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"
@@ -663,8 +663,8 @@ export default function ServiceRequestsPage({ serviceId }) {
                             </button>
                           )}
 
-                          {/* Botón Ver Entregables - Para contratos aprobados, entregados o en revisión con by_deliverables */}
-                          {(['approved', 'in_progress', 'delivered', 'revision_requested'].includes(hiring.status?.code)) && 
+                          {/* Botón Ver Entregables - Para contratos aprobados, entregados, en revisión o terminados por moderación con by_deliverables */}
+                          {(['approved', 'in_progress', 'delivered', 'revision_requested', 'terminated_by_moderation', 'finished_by_moderation'].includes(hiring.status?.code)) && 
                            hiring.paymentModality?.code === 'by_deliverables' && (
                             <button
                               onClick={() => router.push(`/deliveries/${hiring.id}`)}
@@ -686,8 +686,8 @@ export default function ServiceRequestsPage({ serviceId }) {
                             </button>
                           )}
 
-                          {/* Botón Ver Entrega - Para contratos entregados o en revisión con full_payment */}
-                          {(['in_progress', 'delivered', 'revision_requested'].includes(hiring.status?.code)) && hiring.paymentModality?.code === 'full_payment' && (
+                          {/* Botón Ver Entrega - Para contratos entregados, en revisión o terminados por moderación con full_payment */}
+                          {(['in_progress', 'delivered', 'revision_requested', 'terminated_by_moderation', 'finished_by_moderation'].includes(hiring.status?.code)) && hiring.paymentModality?.code === 'full_payment' && (
                             <button
                               onClick={() => router.push(`/service-delivery/${hiring.id}`)}
                               className="flex items-center justify-center w-7 h-7 text-purple-600 hover:text-white hover:bg-purple-600 rounded-md transition-all duration-200 group"

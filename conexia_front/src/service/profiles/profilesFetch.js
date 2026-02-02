@@ -52,7 +52,9 @@ export async function getProfileById(id) {
   });
 
   if (!res.ok) {
-    throw new Error("No se pudo obtener el perfil");
+    const error = new Error("No se pudo obtener el perfil");
+    error.status = res.status;
+    throw error;
   }
 
   const data = await res.json();

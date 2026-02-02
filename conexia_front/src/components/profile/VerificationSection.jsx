@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CheckCircle, AlertCircle, Shield, Calendar } from 'lucide-react';
 import { useVerificationStatus } from '@/hooks';
 import VerificationModal from './VerificationModal';
+import Button from '@/components/ui/Button';
 
 export default function VerificationSection() {
   const { isVerified, latestVerification, loading, refresh } = useVerificationStatus();
@@ -25,91 +26,91 @@ export default function VerificationSection() {
   };
 
   if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-        <div className="flex items-center space-x-3 mb-4">
-          <Shield className="text-blue-600" size={24} />
-          <h2 className="text-xl font-semibold text-gray-800">Verificación de Identidad</h2>
-        </div>
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-        <div className="flex items-center space-x-3 mb-4">
-          <Shield className="text-blue-600" size={24} />
-          <h2 className="text-xl font-semibold text-gray-800">Verificación de Identidad</h2>
-        </div>
-
-        {isVerified ? (
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={24} />
-              <div className="flex-1">
-                <p className="font-semibold text-green-800 mb-1">Identidad Verificada</p>
-                {latestVerification?.createdAt && (
-                  <div className="flex items-center text-sm text-green-700 space-x-2">
-                    <Calendar size={16} />
-                    <span>Verificado el {formatDate(latestVerification.createdAt)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <p className="text-sm text-gray-600 mt-3">
-              Tu identidad ha sido verificada correctamente. Ahora puedes acceder a todas las funciones de Conexia.
-            </p>
+      <div className="mt-8">
+        <div className="bg-white border border-[#e0e0e0] rounded-xl shadow-md p-4 md:p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Shield className="w-6 h-6 text-conexia-green" />
+            <h3 className="text-base md:text-lg font-bold text-conexia-green">
+              Verificación de Identidad
+            </h3>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={24} />
-              <div className="flex-1">
-                <p className="font-semibold text-amber-800 mb-1">Identidad no verificada</p>
-                <p className="text-sm text-amber-700">
-                  Verifica tu identidad para acceder a todas las funciones de Conexia.
+          
+          {isVerified ? (
+            <>
+              <div className="text-gray-500 text-xs md:text-sm mb-4">
+                Tu identidad ha sido verificada correctamente.
+              </div>
+              <div className="flex items-start gap-3 p-4 bg-[#f0f9f4] border border-[#c6e8d4] rounded-lg">
+                <CheckCircle className="text-[#367d7d] flex-shrink-0 mt-0.5" size={20} />
+                <div className="flex-1">
+                  <p className="font-semibold text-[#367d7d] mb-1 text-sm">Identidad Verificada</p>
+                  {latestVerification?.createdAt && (
+                    <div className="flex items-center text-xs text-[#4a9b7f] gap-1.5">
+                      <Calendar size={14} />
+                      <span>Verificado el {formatDate(latestVerification.createdAt)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-gray-500 text-xs md:text-sm mb-4">
+                Verifica tu identidad para acceder a todas las funciones de Conexia.
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 bg-[#fef9f0] border border-[#f5d68f] rounded-lg mb-4">
+                <AlertCircle className="text-[#d4930f] flex-shrink-0 mt-0.5" size={20} />
+                <div className="flex-1">
+                  <p className="font-semibold text-[#d4930f] mb-1 text-sm">Identidad no verificada</p>
+                  <p className="text-xs text-[#9c7a2e]">
+                    Completa el proceso de verificación para desbloquear todas las funcionalidades.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-[#f8faf9] rounded-lg p-4 mb-4 border border-[#e3ebe7]">
+                <p className="text-sm font-semibold text-[#367d7d] mb-3">
+                  Con la verificación podrás:
                 </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={16} className="text-[#48a6a7] flex-shrink-0" />
+                    <span className="text-xs text-gray-700">Crear proyectos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={16} className="text-[#48a6a7] flex-shrink-0" />
+                    <span className="text-xs text-gray-700">Postularte a proyectos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={16} className="text-[#48a6a7] flex-shrink-0" />
+                    <span className="text-xs text-gray-700">Crear servicios</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={16} className="text-[#48a6a7] flex-shrink-0" />
+                    <span className="text-xs text-gray-700">Solicitar cotizaciones</span>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <p className="text-sm font-medium text-gray-700 mb-2">
-                Con la verificación podrás:
-              </p>
-              <ul className="space-y-1 text-sm text-gray-600">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle size={16} className="text-blue-600 flex-shrink-0" />
-                  <span>Crear y publicar proyectos</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle size={16} className="text-blue-600 flex-shrink-0" />
-                  <span>Postularte a proyectos</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle size={16} className="text-blue-600 flex-shrink-0" />
-                  <span>Crear servicios</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle size={16} className="text-blue-600 flex-shrink-0" />
-                  <span>Solicitar cotizaciones</span>
-                </li>
-              </ul>
-            </div>
-
-            <button
-              onClick={() => setShowModal(true)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-            >
-              <Shield size={20} />
-              <span>Verificar mi Identidad</span>
-            </button>
-          </div>
-        )}
+              <div className="flex justify-center sm:justify-end">
+                <Button
+                  onClick={() => setShowModal(true)}
+                  variant="primary"
+                  className="w-full sm:w-auto flex items-center gap-2"
+                >
+                  <Shield size={18} />
+                  <span>Verificar mi Identidad</span>
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {showModal && (

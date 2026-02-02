@@ -10,7 +10,7 @@ import { X, ThumbsDown, Loader2 } from 'lucide-react';
 import { ComplianceCard } from './ComplianceCard';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
-import { peerObjectCompliance } from '@/service/claims';
+import { peerReviewCompliance } from '@/service/claims';
 
 const MIN_OBJECTION_LENGTH = 20;
 const MAX_OBJECTION_LENGTH = 500;
@@ -48,8 +48,9 @@ export const PeerObjectComplianceModal = ({
     setError(null);
 
     try {
-      await peerObjectCompliance(compliance.id, {
-        objectionReason: trimmedReason,
+      await peerReviewCompliance(compliance.id, {
+        approved: false,
+        reason: trimmedReason,
       });
 
       onClose();

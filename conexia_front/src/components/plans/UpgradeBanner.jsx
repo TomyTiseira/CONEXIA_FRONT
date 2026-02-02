@@ -73,6 +73,52 @@ export default function UpgradeBanner({
     return null;
   }
 
+  if (variant === 'horizontal') {
+    return (
+      <div className={`w-full ${className}`}>
+        {/* Banner horizontal similar al de solicitud de conexión */}
+        <div className="relative w-full py-3 px-4 rounded-lg shadow-sm border border-[#c6e8d4] bg-gradient-to-r from-[#e6f7f7] via-[#f0f9f4] to-[#e6f7f7] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 overflow-hidden">
+          {/* Patrón de fondo sutil */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSg3MiwxNjYsMTY3LDAuMDIpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40"></div>
+          
+          {/* Contenido del banner */}
+          <div className="relative flex items-center gap-3 flex-1 justify-center sm:justify-start">
+            {/* Icono destacado */}
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-[#48a6a7]/30 to-[#367d7d]/30 border border-[#48a6a7]/40 flex items-center justify-center shadow-sm">
+              <FiZap className="w-5 h-5 text-[#367d7d]" />
+            </div>
+            
+            {/* Texto del mensaje */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-[#367d7d] leading-snug">
+                {getMessage.highlight}
+              </p>
+              <p className="text-xs text-[#367d7d]/80 mt-0.5">
+                {getMessage.description}
+              </p>
+            </div>
+          </div>
+          
+          {/* Botón de acción */}
+          {showButton && (
+            <div className="relative flex justify-center sm:justify-end">
+              {/* Resplandor sutil detrás del botón */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-[#48a6a7]/20 via-[#419596]/30 to-[#367d7d]/20 rounded-lg blur-md opacity-70"></div>
+              
+              <Link
+                href="/settings/my-plan"
+                className="relative inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-6 py-2 rounded-lg font-semibold text-sm hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-md hover:shadow-lg transform hover:scale-105 group min-w-[140px]"
+              >
+                <FiStar className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+                <span>Mejorar plan</span>
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (variant === 'compact') {
     return (
       <div className={`w-full ${className}`}>

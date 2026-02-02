@@ -10,7 +10,7 @@ import { X, ThumbsUp, Loader2 } from 'lucide-react';
 import { ComplianceCard } from './ComplianceCard';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
-import { peerApproveCompliance } from '@/service/claims';
+import { peerReviewCompliance } from '@/service/claims';
 
 export const PeerApproveComplianceModal = ({
   compliance,
@@ -30,8 +30,9 @@ export const PeerApproveComplianceModal = ({
     setIsSubmitting(true);
 
     try {
-      await peerApproveCompliance(compliance.id, {
-        peerNotes: notes.trim() || undefined,
+      await peerReviewCompliance(compliance.id, {
+        approved: true,
+        reason: notes.trim() || undefined,
       });
 
       onClose();
