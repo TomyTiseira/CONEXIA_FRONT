@@ -22,14 +22,6 @@ export const ProjectMetricsSection = ({ projectsData, postulationsData }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <FolderCheck className="w-7 h-7 text-[#48a6a7]" />
-        <h2 className="text-2xl font-bold text-gray-900">
-          Métricas de proyectos
-        </h2>
-      </div>
-
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <KPICard

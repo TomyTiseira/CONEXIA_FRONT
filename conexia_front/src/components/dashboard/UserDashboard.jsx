@@ -177,10 +177,11 @@ export const UserDashboard = () => {
           <div data-swapy-slot="kpi-1" className="h-full">
             <div data-swapy-item="services">
               <KPICard
-                title="Servicios completados"
+                title="Servicios contratados"
                 value={services.totalServicesHired || 0}
                 icon={Briefcase}
                 color="blue"
+                subtitle="Servicios completados"
               />
             </div>
           </div>

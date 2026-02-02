@@ -238,103 +238,17 @@ export const ServiceMetricsSection = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-6"
         >
-          {/* Ingreso Total - Izquierda */}
-          <div className="lg:col-span-4">
-            <KPICard
-              title="Ingresos generados"
-              value={`$${data.totalRevenueGenerated.toLocaleString('es-AR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}`}
-              icon={DollarSign}
-              color="green"
-              subtitle="Pesos Argentinos (ARS)"
-            />
-          </div>
-
-          {/* Desglose por Servicio - Derecha con scroll */}
-          {data.serviceRevenueBreakdown && data.serviceRevenueBreakdown.length > 0 && (
-            <div className="lg:col-span-8">
-              <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-100 h-full hover:shadow-xl hover:border-green-200 transition-all duration-300">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 rounded-lg bg-green-50">
-                    <DollarSign className="w-6 h-6 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Ingresos por Servicio
-                  </h3>
-                </div>
-                
-                <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-                  <table className="w-full text-left min-w-[600px]">
-                    <thead className="sticky top-0 bg-white border-b-2 border-gray-200">
-                      <tr>
-                        <th className="pb-3 pr-4 text-sm font-semibold text-gray-700">#</th>
-                        <th className="pb-3 pr-4 text-sm font-semibold text-gray-700">Servicio</th>
-                        <th className="pb-3 pr-4 text-sm font-semibold text-gray-700 text-right whitespace-nowrap">
-                          Ingresos
-                        </th>
-                        <th className="pb-3 pr-4 text-sm font-semibold text-gray-700 text-right whitespace-nowrap">
-                          Completados
-                        </th>
-                        <th className="pb-3 text-sm font-semibold text-gray-700 text-right whitespace-nowrap">
-                          Promedio
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.serviceRevenueBreakdown.map((service, index) => {
-                        const avgRevenue = service.timesCompleted > 0
-                          ? service.totalRevenue / service.timesCompleted
-                          : 0;
-                        
-                        return (
-                          <tr
-                            key={service.serviceId}
-                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="py-3 pr-4">
-                              <span className="text-gray-400 font-semibold text-sm">
-                                {index + 1}
-                              </span>
-                            </td>
-                            <td className="py-3 pr-4">
-                              <span className="text-gray-900 font-medium text-sm">
-                                {service.serviceTitle}
-                              </span>
-                            </td>
-                            <td className="py-3 pr-4 text-right">
-                              <span className="text-green-600 font-bold text-sm whitespace-nowrap">
-                                ${service.totalRevenue.toLocaleString('es-AR', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </span>
-                            </td>
-                            <td className="py-3 pr-4 text-right">
-                              <span className="text-gray-700 font-medium text-sm">
-                                {service.timesCompleted}x
-                              </span>
-                            </td>
-                            <td className="py-3 text-right">
-                              <span className="text-gray-600 text-sm whitespace-nowrap">
-                                ${avgRevenue.toLocaleString('es-AR', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+          <KPICard
+            title="Ingresos generados"
+            value={`$${data.totalRevenueGenerated.toLocaleString('es-AR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`}
+            icon={DollarSign}
+            color="green"
+            subtitle="Pesos Argentinos (ARS)"
+          />
         </motion.div>
       )}
 
@@ -345,46 +259,7 @@ export const ServiceMetricsSection = () => {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          {/* Estado de servicios + Gráfico */}
-          <div className="space-y-6">
-            {/* Tarjetas horizontales - Arriba */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <KPICard
-                title="Servicios completados"
-                value={data.servicesCompleted || 0}
-                icon={CheckCircle}
-                color="green"
-                subtitle="Finalizados exitosamente"
-              />
-              
-              <KPICard
-                title="Servicios cancelados"
-                value={data.servicesCancelled || 0}
-                icon={XCircle}
-                color="red"
-                subtitle="No completados"
-              />
-              
-              <KPICard
-                title="Servicios reclamados"
-                value={data.servicesWithClaims || 0}
-                icon={AlertTriangle}
-                color="gold"
-                subtitle="Servicios con disputas"
-              />
-            </div>
-
-            {/* Gráfico - Abajo (ancho completo pero limitado) */}
-            <div className="max-w-3xl mx-auto">
-              <ServicesDistributionChart
-                completed={data.servicesCompleted}
-                cancelled={data.servicesCancelled}
-                withClaims={data.servicesWithClaims}
-              />
-            </div>
-          </div>
-
-          {/* Top 5 Servicios Más Contratados - Fila completa */}
+          {/* Top 5 Servicios Más Contratados */}
           {data.topHiredServices && data.topHiredServices.length > 0 && (
             <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-[#48a6a7]/20 hover:shadow-xl hover:border-[#48a6a7]/40 transition-all duration-300">
               <div className="flex items-center gap-3 mb-6">
