@@ -137,7 +137,7 @@ export const AdminDashboard = () => {
             title="Usuarios verificados"
             value={users.verifiedUsers.verified || 0}
             icon={UserCheck}
-            color="green"
+            color="yellow"
             subtitle={`${users.verifiedUsers.verificationPercentage.toFixed(1)}% del total`}
           />
 
@@ -282,14 +282,14 @@ export const AdminDashboard = () => {
             title="Total proyectos"
             value={projects.totalProjects || 0}
             icon={FolderCheck}
-            color="purple"
+            color="blue"
           />
 
           <KPICard
             title="Proyectos activos"
             value={projects.activeProjects || 0}
             icon={TrendingUp}
-            color="blue"
+            color="purple"
           />
 
           <KPICard
@@ -354,10 +354,11 @@ export const AdminDashboard = () => {
           />
 
           <KPICard
-            title="Ingresos generados"
+            title="Ingresos totales"
             value={`$${(services.totalRevenue || 0).toLocaleString('es-AR')}`}
             icon={DollarSign}
-            color="blue"
+            color="gold"
+            subtitle="ARS en servicios"
           />
 
           <KPICard
