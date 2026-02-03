@@ -50,13 +50,14 @@ export default function RoleApplicationModal({
     
     // Marcar este rol como visto cuando el usuario entra al formulario
     if (projectId && role.id) {
-      const newViewedRoles = new Set(viewedRoles);
-      newViewedRoles.add(role.id);
-      setViewedRoles(newViewedRoles);
-      
-      // Guardar en localStorage
-      const storageKey = `project_${projectId}_viewed_roles`;
-      localStorage.setItem(storageKey, JSON.stringify([...newViewedRoles]));
+      setViewedRoles((prevViewedRoles) => {
+        const updatedViewedRoles = new Set(prevViewedRoles);
+        updatedViewedRoles.add(role.id);
+        // Guardar en localStorage con el valor actualizado
+        const storageKey = `project_${projectId}_viewed_roles`;
+        localStorage.setItem(storageKey, JSON.stringify([...updatedViewedRoles]));
+        return updatedViewedRoles;
+      });
     }
   };
 
