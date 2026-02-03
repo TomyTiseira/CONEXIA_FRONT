@@ -19,8 +19,12 @@ export const MultipleChoiceDistribution = ({ questions = [] }) => {
 
   return (
     <div className="space-y-6">
-      {questions.map((question, qIndex) => {
-        const totalResponses = question.options.reduce((sum, opt) => sum + opt.count, 0);
+      {questions
+        .filter(question => question && typeof question === 'object')
+        .map((question, qIndex) => {
+        // Manejar caso donde options puede ser undefined o vacío
+        const options = question.options || [];
+        const totalResponses = options.reduce((sum, opt) => sum + (opt.count || 0), 0);
 
         return (
           <motion.div
@@ -46,7 +50,7 @@ export const MultipleChoiceDistribution = ({ questions = [] }) => {
 
             {/* Distribución de opciones */}
             <div className="space-y-3">
-              {question.options.map((option, oIndex) => {
+              {options.map((option, oIndex) => {
                 const percentage = totalResponses > 0 
                   ? ((option.count / totalResponses) * 100).toFixed(1) 
                   : 0;
@@ -83,7 +87,7 @@ export const MultipleChoiceDistribution = ({ questions = [] }) => {
             {/* Gráfico circular simple (opcional) */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex flex-wrap gap-3 justify-center">
-                {question.options.map((option, oIndex) => {
+                {options.map((option, oIndex) => {
                   const percentage = totalResponses > 0 
                     ? ((option.count / totalResponses) * 100).toFixed(1) 
                     : 0;
