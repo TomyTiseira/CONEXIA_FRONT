@@ -151,7 +151,7 @@ export default function PlanInfoCard({ className = '' }) {
                       {benefit.name || benefit.description || benefit.key}
                       {isNumeric && benefit.value > 0 && (
                         <span className="ml-2 px-2 py-0.5 bg-conexia-green text-white text-xs font-bold rounded-full">
-                          {benefit.value} mensual{benefit.value !== 1 ? 'es' : ''}
+                          {benefit.value}{['publish_services', 'publish_projects'].includes(benefit.key) ? ' por mes' : ''}
                         </span>
                       )}
                       {isString && formattedValue && (

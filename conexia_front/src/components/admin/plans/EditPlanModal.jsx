@@ -345,7 +345,7 @@ export default function EditPlanModal({ plan, onClose, onSave, loading }) {
             Cancelar
           </Button>
           <Button type="submit" onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Guardando...' : 'Guardar Cambios'}
+            {loading ? 'Guardando...' : 'Guardar cambios'}
           </Button>
         </div>
       </div>

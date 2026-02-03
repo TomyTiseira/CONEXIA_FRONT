@@ -266,7 +266,7 @@ function AdminClaimsContent() {
       <main className="bg-[#eaf5f2] min-h-screen p-8 space-y-6 max-w-7xl mx-auto pb-24">
         <div className="bg-white px-6 py-4 rounded-xl shadow-sm">
           <h1 className="text-2xl font-bold text-conexia-green text-center">
-            Gestión de Reclamos
+            Gestión de reclamos
           </h1>
         </div>
 

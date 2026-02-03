@@ -143,7 +143,7 @@ export default function PlanCard({
                 {benefit.name || benefit.key}
                 {isNumeric && benefit.value > 0 && (
                   <span className="ml-1 font-bold text-conexia-green">
-                    ({benefit.value})
+                    ({benefit.value}){['publish_services', 'publish_projects'].includes(benefit.key) && ' por mes'}
                   </span>
                 )}
                 {isString && formattedValue && (

@@ -735,7 +735,7 @@ ${messageText.trim()}`;
               {/* Header de roles - siempre visible */}
               <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-conexia-green">Roles Disponibles</h2>
+                  <h2 className="text-xl font-bold text-conexia-green">Roles disponibles</h2>
                   <p className="text-gray-600 text-sm mt-1">
                     {project.roles.length} {project.roles.length === 1 ? 'rol disponible' : 'roles disponibles'}
                   </p>

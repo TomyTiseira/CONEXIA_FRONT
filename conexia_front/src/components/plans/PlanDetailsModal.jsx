@@ -91,12 +91,6 @@ export default function PlanDetailsModal({
                 Facturado anualmente
               </p>
             )}
-
-            {billingCycle === 'monthly' && !isFree && (
-              <p className="text-center text-sm text-gray-600">
-                Plan mensual: ${parseFloat(plan.monthlyPrice).toFixed(2)} ARS
-              </p>
-            )}
           </div>
 
           {/* Beneficios incluidos */}
@@ -125,7 +119,7 @@ export default function PlanDetailsModal({
                           {benefit.name || benefit.key}
                           {isNumeric && benefit.value > 0 && (
                             <span className="ml-2 px-2 py-0.5 bg-conexia-green text-white text-xs font-bold rounded-full">
-                              {benefit.value}
+                              {benefit.value}{['publish_services', 'publish_projects'].includes(benefit.key) ? ' por mes' : ''}
                             </span>
                           )}
                           {isString && formattedValue && (

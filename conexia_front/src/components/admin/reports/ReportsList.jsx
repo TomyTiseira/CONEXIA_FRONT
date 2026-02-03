@@ -150,54 +150,44 @@ export default function ReportsList() {
                 className="px-5 py-2 text-sm font-semibold"
                 onClick={() => router.push('/admin/moderation')}
               >
-                Panel de Moderación IA
+                Panel de moderación IA
               </Button>
             )}
           </div>
         </div>
-  <div className="bg-white p-4 rounded-xl shadow-sm border mb-8 mx-4 md:mx-0">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 flex-wrap">
+  <div className="bg-white p-4 rounded-xl shadow-sm border mb-8 mx-4 md:mx-0" style={{ overflow: 'visible', zIndex: 10, position: 'relative' }}>
+        <div className="flex flex-col gap-4">
           {/* Filtro tipo de reporte */}
-          <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto relative">
-            <label className="text-sm text-conexia-green whitespace-nowrap">Tipo de reporte:</label>
-            <div className="relative w-full md:w-auto">
-              <select value={filter} onChange={e => setFilter(e.target.value)}
-                className="h-9 border border-conexia-green rounded px-3 pr-8 text-sm text-conexia-green focus:outline-none focus:ring-1 focus:ring-conexia-green transition w-full md:w-auto appearance-none bg-white">
-                {FILTERS.map(f => (
-                  <option key={f.value} value={f.value} disabled={f.disabled}>{f.label}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green text-xl">
-                <MdKeyboardArrowDown />
-              </span>
-            </div>
+          <div className="flex flex-col gap-2 relative" style={{ isolation: 'isolate' }}>
+            <label className="text-sm text-conexia-green font-medium">Tipo de reporte:</label>
+            <select value={filter} onChange={e => setFilter(e.target.value)}
+              className="h-10 border border-conexia-green rounded px-3 text-sm text-conexia-green focus:outline-none focus:ring-2 focus:ring-conexia-green bg-white w-full appearance-auto">
+              {FILTERS.map(f => (
+                <option key={f.value} value={f.value} disabled={f.disabled}>{f.label}</option>
+              ))}
+            </select>
           </div>
           {/* Filtro ordenar por */}
-          <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto relative">
-            <label className="text-sm text-conexia-green whitespace-nowrap">Ordenar por:</label>
-            <div className="relative w-full md:w-auto">
-              <select value={order} onChange={e => setOrder(e.target.value)}
-                className="h-9 border border-conexia-green rounded px-3 pr-8 text-sm text-conexia-green focus:outline-none focus:ring-1 focus:ring-conexia-green transition w-full md:w-auto appearance-none bg-white">
-                {ORDER_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green text-xl">
-                <MdKeyboardArrowDown />
-              </span>
-            </div>
+          <div className="flex flex-col gap-2 relative" style={{ isolation: 'isolate' }}>
+            <label className="text-sm text-conexia-green font-medium">Ordenar por:</label>
+            <select value={order} onChange={e => setOrder(e.target.value)}
+              className="h-10 border border-conexia-green rounded px-3 text-sm text-conexia-green focus:outline-none focus:ring-2 focus:ring-conexia-green bg-white w-full appearance-auto">
+              {ORDER_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
       {/* Tabla con márgenes y fondo celeste en mobile, paginado reutilizable */}
       <div className="relative">
         <div className="bg-white rounded-xl shadow-sm border p-0 overflow-x-auto mx-4 md:mx-0" style={{ zIndex: 1, position: 'relative' }}>
-          <table className="w-full table-fixed text-sm mb-0">
+          <table className="w-full table-auto text-sm mb-0 min-w-[800px]">
             <colgroup>
-              <col style={{ width: '28%' }} />
-              <col style={{ width: '18%' }} />
-              <col style={{ width: '30%' }} />
-              <col style={{ width: '24%' }} />
+              <col className="w-[30%]" />
+              <col className="w-[15%]" />
+              <col className="w-[25%]" />
+              <col className="w-[30%]" />
             </colgroup>
             <thead>
               <tr className="text-left border-b">
@@ -237,17 +227,17 @@ export default function ReportsList() {
                       <td className="p-4 text-center align-middle">{p.reportCount}</td>
                       <td className="p-4 text-center align-middle">{new Date(p.lastReportDate).toLocaleString()}</td>
                       <td className="p-4 text-center align-middle">
-                        <div className="flex justify-center gap-x-2">
+                        <div className="flex flex-col items-center gap-y-2">
                           <Button
                             variant="add"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/reports/project/${p.projectId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/project/${p.projectId}?from=reports`)}
                           >
                             Ver proyecto
@@ -275,17 +265,17 @@ export default function ReportsList() {
                       <td className="p-4 text-center align-middle">{pub.reportCount}</td>
                       <td className="p-4 text-center align-middle">{new Date(pub.lastReportDate).toLocaleString()}</td>
                       <td className="p-4 text-center align-middle">
-                        <div className="flex justify-center gap-x-2">
+                        <div className="flex flex-col items-center gap-y-2">
                           <Button
                             variant="add"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/reports/publication/${pub.publicationId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/publication/${pub.publicationId}?from=reports`)}
                           >
                             Ver publicación
@@ -311,17 +301,17 @@ export default function ReportsList() {
                       <td className="p-4 text-center align-middle">{comment.reportCount}</td>
                       <td className="p-4 text-center align-middle">{new Date(comment.lastReportDate).toLocaleString()}</td>
                       <td className="p-4 text-center align-middle">
-                        <div className="flex justify-center gap-x-2">
+                        <div className="flex flex-col items-center gap-y-2">
                           <Button
                             variant="add"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/reports/comment/${comment.commentId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => {
                               if (comment.publicationId) {
                                 router.push(`/publication/${comment.publicationId}?from=reports&fromReportsPublicationId=${comment.publicationId}&commentId=${comment.commentId}`);
@@ -354,17 +344,17 @@ export default function ReportsList() {
                       <td className="p-4 text-center align-middle">{s.reportCount}</td>
                       <td className="p-4 text-center align-middle">{new Date(s.lastReportDate).toLocaleString()}</td>
                       <td className="p-4 text-center align-middle">
-                        <div className="flex justify-center gap-x-2">
+                        <div className="flex flex-col items-center gap-y-2">
                           <Button
                             variant="add"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/reports/service/${s.serviceId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/services/${s.serviceId}?from=reports&filter=${filter}&order=${order}&page=${page}`)}
                           >
                             Ver servicio
@@ -394,17 +384,17 @@ export default function ReportsList() {
                       <td className="p-4 text-center align-middle">{review.reportCount}</td>
                       <td className="p-4 text-center align-middle">{new Date(review.lastReportDate).toLocaleString()}</td>
                       <td className="p-4 text-center align-middle">
-                        <div className="flex justify-center gap-x-2">
+                        <div className="flex flex-col items-center gap-y-2">
                           <Button
                             variant="add"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/reports/review?reviewId=${review.id || review.userReviewId}&filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/profile/${review.reviewedUser?.id}/reviews?highlightReviewId=${review.id || review.userReviewId}`)}
                           >
                             Ver reseña
@@ -432,17 +422,17 @@ export default function ReportsList() {
                       <td className="p-4 text-center align-middle">{review.reportCount}</td>
                       <td className="p-4 text-center align-middle">{new Date(review.lastReportDate).toLocaleString()}</td>
                       <td className="p-4 text-center align-middle">
-                        <div className="flex justify-center gap-x-2">
+                        <div className="flex flex-col items-center gap-y-2">
                           <Button
                             variant="add"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/reports/service-review/${review.serviceReviewId}?filter=${filter}&order=${order}&returnPage=${page}`)}
                           >
                             Ver reportes
                           </Button>
                           <Button
                             variant="edit"
-                            className="px-3 py-1 text-xs"
+                            className="px-3 py-1 text-xs w-full max-w-[140px]"
                             onClick={() => router.push(`/services/${review.serviceId}?from=reports-service-review&highlightReviewId=${review.serviceReviewId}&fromReportsServiceReviewId=${review.serviceReviewId}`)}
                           >
                             Ver reseña
