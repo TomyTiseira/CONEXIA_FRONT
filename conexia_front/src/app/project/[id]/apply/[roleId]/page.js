@@ -23,6 +23,7 @@ export default function ProjectApplicationPage() {
   const [existingPostulations, setExistingPostulations] = useState([]);
   const [hasExistingPostulation, setHasExistingPostulation] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [showWarningModal, setShowWarningModal] = useState(false);
   const [applicationData, setApplicationData] = useState({
     cv: null,
     answers: [],
@@ -230,6 +231,12 @@ export default function ProjectApplicationPage() {
     
     if (!validateApplication()) return;
 
+    // Mostrar modal de advertencia antes de enviar
+    setShowWarningModal(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+
     setSubmitting(true);
     try {
       const applicationTypes = role.applicationTypes || [];
@@ -285,16 +292,28 @@ export default function ProjectApplicationPage() {
       console.log('Datos de postulación a enviar:', postulationData);
 
       const result = await applyToProjectRole(postulationData);
+      
+      console.log('Resultado de la postulación:', result);
 
       if (result.success) {
-        setToast({ type: 'success', message: 'Postulación enviada correctamente' });
+        // Si hay evaluación técnica, redirigir directamente a la página de evaluación
+        const hasEvaluation = applicationTypes.includes('EVALUATION') || 
+                             applicationType === 'EVALUATION' || 
+                             applicationType === 'MIXED';
         
-        // Si hay evaluación técnica, redirigir a la página de evaluación
-        if (applicationTypes.includes('EVALUATION') && result.data?.postulationId) {
-          setTimeout(() => {
-            router.push(`/project/${projectId}/evaluation/${result.data.postulationId}`);
-          }, 2000);
+        // Extraer el ID de la postulación (puede venir como postulationId, id, o dentro de data)
+        const postulationId = result.postulationId || result.id || result.data?.postulationId || result.data?.id;
+        
+        console.log('hasEvaluation:', hasEvaluation);
+        console.log('postulationId:', postulationId);
+        console.log('role.evaluation:', role.evaluation);
+        
+        if (hasEvaluation && postulationId && role.evaluation) {
+          console.log('Redirigiendo a evaluación:', `/project/${projectId}/evaluation/${postulationId}`);
+          router.push(`/project/${projectId}/evaluation/${postulationId}?from=apply`);
+          return; // Importante: salir aquí para evitar el timeout
         } else {
+          setToast({ type: 'success', message: 'Postulación enviada correctamente' });
           setTimeout(() => {
             router.push(`/project/${projectId}`);
           }, 2000);
@@ -335,6 +354,7 @@ export default function ProjectApplicationPage() {
       setToast({ type: 'error', message: errorMessage });
     } finally {
       setSubmitting(false);
+      setShowWarningModal(false);
     }
   };
 
@@ -527,45 +547,6 @@ export default function ProjectApplicationPage() {
               </div>
             )}
 
-            {/* Evaluación técnica */}
-            {applicationTypes.includes('EVALUATION') && role.evaluation && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-blue-900 mb-2">Evaluación Técnica</h3>
-                <p className="text-blue-800 mb-3">{role.evaluation.description}</p>
-                {role.evaluation.link && (
-                  <p className="text-blue-700 text-sm mb-2">
-                    <span className="font-medium">Enlace:</span>{' '}
-                    <a href={role.evaluation.link} target="_blank" rel="noopener noreferrer" className="hover:underline text-blue-600">
-                      {role.evaluation.link}
-                    </a>
-                  </p>
-                )}
-                {role.evaluation.fileUrl && (
-                  <div className="text-blue-700 text-sm mb-2">
-                    <span className="font-medium">Archivo adjunto:</span>{' '}
-                    <a 
-                      href={role.evaluation.fileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      download={role.evaluation.fileName || 'evaluacion-tecnica.pdf'}
-                      className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {role.evaluation.fileName || 'Descargar archivo de evaluación'}
-                    </a>
-                  </div>
-                )}
-                <p className="text-blue-700 text-sm font-medium">
-                  Tienes {role.evaluation.days} días para completar esta evaluación después de postularte.
-                </p>
-                <p className="text-blue-600 text-xs mt-2">
-                  Al postularte, se creará una evaluación técnica en tu perfil donde podrás subir tu solución.
-                </p>
-              </div>
-            )}
-
             {/* Campos adicionales para socio/inversor */}
             {isPartnerRole && (
               <div>
@@ -661,12 +642,69 @@ export default function ProjectApplicationPage() {
                 disabled={submitting}
                 className="bg-conexia-green hover:bg-conexia-green/90"
               >
-                {submitting ? 'Enviando...' : 'Enviar Postulación'}
+                {submitting 
+                  ? 'Enviando...' 
+                  : (role?.applicationTypes?.includes('EVALUATION') || 
+                     role?.applicationType === 'EVALUATION' || 
+                     role?.applicationType === 'MIXED')
+                    ? 'Continuar con prueba técnica'
+                    : 'Enviar Postulación'
+                }
               </Button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Modal de advertencia antes de enviar */}
+      {showWarningModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Importante: Postulación Única</h3>
+            </div>
+            
+            <div className="mb-6 space-y-3">
+              <p className="text-gray-700">
+                Estás a punto de postularte al rol <span className="font-semibold text-conexia-green">{role?.title}</span>.
+              </p>
+              <p className="text-gray-700 font-medium">
+                Ten en cuenta que:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-gray-600 ml-2">
+                <li>Solo puedes postularte <strong>una vez</strong> a este rol</li>
+                <li>No podrás volver a postularte aunque canceles, te rechacen o expire tu postulación</li>
+                <li>Asegúrate de completar toda la información requerida correctamente</li>
+              </ul>
+              <p className="text-sm text-gray-500 mt-3 p-3 bg-yellow-50 rounded border border-yellow-200">
+                💡 Revisa cuidadosamente todos los requisitos antes de continuar.
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowWarningModal(false)}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+              >
+                Revisar formulario
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors font-medium disabled:opacity-50"
+              >
+                {submitting ? 'Enviando...' : 'Confirmar y enviar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <Toast

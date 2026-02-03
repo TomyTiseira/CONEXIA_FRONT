@@ -123,8 +123,8 @@ export default function ProjectRoles({ roles = [], onApply, isOwner = false }) {
                     </div>
                   )}
 
-                  {/* Detalles según tipo de postulación */}
-                  {role.questions && role.questions.length > 0 && (
+                  {/* Solo mostrar preguntas si es el dueño del proyecto */}
+                  {isOwner && role.questions && role.questions.length > 0 && (
                     <div>
                       <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                         Preguntas a responder ({role.questions.length})
@@ -145,7 +145,8 @@ export default function ProjectRoles({ roles = [], onApply, isOwner = false }) {
                     </div>
                   )}
 
-                  {role.evaluation && (
+                  {/* Solo mostrar evaluación técnica si es el dueño del proyecto */}
+                  {isOwner && role.evaluation && (
                     <div>
                       <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                         Evaluación técnica requerida

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import RoleFormModal from './RoleFormModal';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 /**
  * Tipos de postulación disponibles (actualizado según la API)
@@ -225,6 +226,8 @@ export default function ProjectRolesManager({ roles = [], onChange, error }) {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [draftRole, setDraftRole] = useState(null); // Borrador del rol en edición
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState(null);
 
   const handleToggleExpand = (index) => {
     setExpandedRoles(prev => ({
@@ -246,10 +249,22 @@ export default function ProjectRolesManager({ roles = [], onChange, error }) {
   };
 
   const handleDeleteRole = (index) => {
-    if (confirm('¿Estás seguro de eliminar este rol?')) {
-      const updatedRoles = roles.filter((_, i) => i !== index);
+    setRoleToDelete(index);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteRole = () => {
+    if (roleToDelete !== null) {
+      const updatedRoles = roles.filter((_, i) => i !== roleToDelete);
       onChange(updatedRoles);
+      setShowDeleteModal(false);
+      setRoleToDelete(null);
     }
+  };
+
+  const cancelDeleteRole = () => {
+    setShowDeleteModal(false);
+    setRoleToDelete(null);
   };
 
   const handleSaveRole = (roleData) => {
@@ -332,6 +347,18 @@ export default function ProjectRolesManager({ roles = [], onChange, error }) {
           onCancel={handleCancelRole}
         />
       )}
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={cancelDeleteRole}
+        onConfirm={confirmDeleteRole}
+        title="Eliminar rol"
+        message="¿Estás seguro de eliminar este rol? Esta acción no se puede deshacer."
+        confirmButtonText="Eliminar"
+        cancelButtonText="Cancelar"
+        variant="danger"
+      />
     </div>
   );
 }
