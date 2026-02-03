@@ -136,28 +136,6 @@ export const cancelPostulation = async (postulationId) => {
 // Alias para compatibilidad
 export const cancelPostulationById = cancelPostulation;
 
-// Crear postulación cancelada (para cuando el usuario cancela desde el formulario)
-export const createCancelledPostulation = async (projectId, roleId) => {
-  const res = await fetchWithRefresh(`${config.API_URL}/postulations/cancel-from-form`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-    body: JSON.stringify({ 
-      projectId, 
-      roleId
-    }),
-  });
-
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || 'Error al crear postulación cancelada');
-  }
-
-  return res.json();
-};
-
 // Rechazar postulación
 export const rejectPostulation = async (postulationId) => {
   const res = await fetchWithRefresh(`${config.API_URL}/postulations/reject`, {
