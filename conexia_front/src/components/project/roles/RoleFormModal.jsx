@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiPlus, FiEdit2, FiTrash2, FiUpload, FiLink, FiCheck } from 'react-icons/fi';
+import { FiX, FiPlus, FiEdit2, FiTrash2, FiCheck } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
 import SelectField from '@/components/form/SelectField';
