@@ -167,7 +167,7 @@ export default function RoleApplicationModal({
                     const alreadyViewed = isRoleAlreadyViewed(role.id);
                     
                     return (
-                      <div key={index} className="relative">
+                      <div key={role.id} className="relative">
                         <button
                           onClick={() => !alreadyViewed && handleRoleSelect(role)}
                           disabled={alreadyViewed}
