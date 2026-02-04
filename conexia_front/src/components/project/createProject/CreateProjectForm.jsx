@@ -261,7 +261,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Descripción e Imagen - lado a lado */}
-      <div className="md:col-span-1 flex flex-col justify-start min-h-[90px] gap-1.5 -mt-6">
+      <div className="md:col-span-1 flex flex-col justify-start min-h-[90px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Descripción del proyecto
         </label>
@@ -281,7 +281,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Imagen representativa */}
-      <div className="md:col-span-1 flex flex-col justify-start gap-1.5 -mt-6">
+      <div className="md:col-span-1 flex flex-col justify-start gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Imagen representativa del proyecto (Opcional)
         </label>
