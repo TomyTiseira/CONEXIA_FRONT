@@ -43,7 +43,7 @@ export const ProjectEngagementChart = ({
       transition={{ duration: 0.4 }}
       className="bg-white rounded-xl shadow-lg border-2 border-purple-200 p-6 h-full"
     >
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <div className="p-3 rounded-lg bg-purple-50">
           <TrendingUp className="w-6 h-6 text-purple-600" />
         </div>
@@ -54,8 +54,8 @@ export const ProjectEngagementChart = ({
       </div>
 
       {/* Gráfico circular */}
-      <div className="flex items-center justify-center mb-6">
-        <div className="relative w-48 h-48">
+      <div className="flex items-center justify-center mb-4">
+        <div className="relative w-44 h-44">
           <svg viewBox="0 0 100 100" className="transform -rotate-90">
             {/* Círculo de fondo */}
             <circle
@@ -118,20 +118,20 @@ export const ProjectEngagementChart = ({
       </div>
 
       {/* Leyenda */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between p-2.5 bg-purple-50 rounded-lg">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-purple-600" />
             <span className="text-sm font-medium text-gray-700">Con postulaciones</span>
           </div>
-          <span className="text-lg font-bold text-purple-600">{projectsWithPostulations}</span>
+          <span className="text-base font-bold text-purple-600">{projectsWithPostulations}</span>
         </div>
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
           <div className="flex items-center gap-2">
             <FolderCheck className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">Sin postulaciones</span>
           </div>
-          <span className="text-lg font-bold text-gray-600">{projectsWithoutPostulations}</span>
+          <span className="text-base font-bold text-gray-600">{projectsWithoutPostulations}</span>
         </div>
       </div>
     </motion.div>

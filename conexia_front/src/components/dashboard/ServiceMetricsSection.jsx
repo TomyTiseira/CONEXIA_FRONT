@@ -198,7 +198,7 @@ export const ServiceMetricsSection = () => {
           value={data.totalServicesHired}
           icon={Package}
           color="blue"
-          subtitle={`de ${data.totalServicesPublished} publicados`}
+          subtitle={`de ${data.totalServicesPublished} ofrecidos (activos e inactivos)`}
         />
         
         <KPICard

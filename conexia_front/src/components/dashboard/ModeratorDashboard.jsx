@@ -238,7 +238,7 @@ export const ModeratorDashboard = () => {
                 <Shield className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Información sobre Reclamos</h3>
+                <h3 className="text-lg font-bold text-gray-800">Información sobre reclamos</h3>
                 <p className="text-sm text-gray-500">Cálculo de métricas</p>
               </div>
             </div>
@@ -247,7 +247,7 @@ export const ModeratorDashboard = () => {
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-bold text-amber-700 mb-2 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
-                  Tasa de Reclamos
+                  Tasa de reclamos
                 </h4>
                 <p className="text-sm text-gray-600">
                   Porcentaje de servicios <strong>en progreso</strong> que tienen reclamos activos.
@@ -260,7 +260,7 @@ export const ModeratorDashboard = () => {
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-bold text-green-700 mb-2 flex items-center gap-2">
                   <Shield className="w-4 h-4" />
-                  Tasa de Resolución
+                  Tasa de resolución
                 </h4>
                 <p className="text-sm text-gray-600">
                   Porcentaje de reclamos que han sido <strong>resueltos completamente</strong>.
@@ -273,7 +273,7 @@ export const ModeratorDashboard = () => {
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-bold text-blue-700 mb-2 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  Tiempo de Resolución
+                  Tiempo de resolución
                 </h4>
                 <p className="text-sm text-gray-600">
                   Promedio de tiempo entre la <strong>creación</strong> del reclamo y su <strong>resolución</strong>.

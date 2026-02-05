@@ -48,7 +48,7 @@ export const ReportsBreakdown = ({ reportType, reportData }) => {
 
       {/* Por Estado */}
       <div className="mb-6">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">Por Estado</h4>
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">Por estado</h4>
         <div className="grid grid-cols-2 gap-3">
           {reportData.byStatus?.map((status, index) => {
             const colors = statusColors[status.status] || statusColors['pending'];
@@ -72,7 +72,7 @@ export const ReportsBreakdown = ({ reportType, reportData }) => {
       {/* Por Razón */}
       {reportData.byReason && reportData.byReason.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Por Razón</h4>
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Por razón</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {reportData.byReason.map((reason, index) => (
               <div

@@ -38,7 +38,7 @@ export const QuotationsChart = ({ quotations }) => {
       transition={{ duration: 0.4 }}
       className="bg-white rounded-xl shadow-lg border-2 border-purple-200 p-6 h-full"
     >
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <div className="p-3 rounded-lg bg-purple-50">
           <DollarSign className="w-6 h-6 text-purple-600" />
         </div>
@@ -49,8 +49,8 @@ export const QuotationsChart = ({ quotations }) => {
       </div>
 
       {/* Gráfico circular */}
-      <div className="flex items-center justify-center mb-6">
-        <div className="relative w-48 h-48">
+      <div className="flex items-center justify-center mb-4">
+        <div className="relative w-44 h-44">
           <svg viewBox="0 0 100 100" className="transform -rotate-90">
             {/* Círculo de fondo - Total enviadas */}
             <circle
@@ -113,20 +113,20 @@ export const QuotationsChart = ({ quotations }) => {
       </div>
 
       {/* Leyenda */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between p-2.5 bg-purple-50 rounded-lg">
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-purple-600" />
             <span className="text-sm font-medium text-gray-700">Enviadas</span>
           </div>
-          <span className="text-lg font-bold text-purple-600">{quotations.sent}</span>
+          <span className="text-base font-bold text-purple-600">{quotations.sent}</span>
         </div>
-        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+        <div className="flex items-center justify-between p-2.5 bg-green-50 rounded-lg">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-green-600" />
             <span className="text-sm font-medium text-gray-700">Aceptadas</span>
           </div>
-          <span className="text-lg font-bold text-green-600">{quotations.accepted}</span>
+          <span className="text-base font-bold text-green-600">{quotations.accepted}</span>
         </div>
       </div>
     </motion.div>
