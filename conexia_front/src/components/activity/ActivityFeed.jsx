@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { closeAllPublicationCommentsExcept } from '@/utils/publicationUtils';
 import Toast from '@/components/ui/Toast';
 
-export default function ActivityFeed({ publications, isOwner, userId }) {
+export default function ActivityFeed({ publications, isOwner, userId, onPublicationDeleted }) {
   
   const visiblePublications = publications.slice(0, 2);
   const [toast, setToast] = useState(null);
@@ -41,6 +41,7 @@ export default function ActivityFeed({ publications, isOwner, userId }) {
                 publication={pub}
                 isGridItem={true}
                 onShowToast={(t)=> setToast(t)}
+                onPublicationDeleted={onPublicationDeleted}
               />
             ))}
           </div>
@@ -76,5 +77,6 @@ export default function ActivityFeed({ publications, isOwner, userId }) {
 ActivityFeed.propTypes = {
   publications: PropTypes.array.isRequired,
   isOwner: PropTypes.bool,
-  userId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  userId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onPublicationDeleted: PropTypes.func
 };
