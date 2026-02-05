@@ -72,7 +72,7 @@ export default function PlanDetailsModal({
 
           {/* Precio */}
           <div className="bg-gradient-to-br from-conexia-soft/30 to-white border border-conexia-green/20 rounded-xl p-6">
-            <div className="flex items-baseline justify-center gap-2 mb-3">
+            <div className="flex items-baseline justify-center gap-2">
               <span className="text-5xl font-extrabold text-conexia-green">
                 ${isFree ? '0' : displayPrice.toFixed(2)}
               </span>
@@ -85,12 +85,6 @@ export default function PlanDetailsModal({
                 </span>
               </div>
             </div>
-            
-            {billingCycle === 'annual' && !isFree && (
-              <p className="text-center text-sm text-gray-600">
-                Facturado anualmente
-              </p>
-            )}
           </div>
 
           {/* Beneficios incluidos */}
@@ -119,7 +113,7 @@ export default function PlanDetailsModal({
                           {benefit.name || benefit.key}
                           {isNumeric && benefit.value > 0 && (
                             <span className="ml-2 px-2 py-0.5 bg-conexia-green text-white text-xs font-bold rounded-full">
-                              {benefit.value}{['publish_services', 'publish_projects'].includes(benefit.key) ? ' por mes' : ''}
+                              {benefit.value}{['publish_services', 'publish_projects', 'highlight_services'].includes(benefit.key) ? ' por mes' : ''}
                             </span>
                           )}
                           {isString && formattedValue && (
