@@ -162,7 +162,12 @@ export async function fetchUsers({ search = '', page = 1, limit = 6 } = {}) {
   });
   if (!res.ok) throw new Error('Error fetching users');
   const json = await res.json();
-  return json?.data?.users || [];
+  
+  // Retornar tanto los usuarios como la paginación
+  return {
+    users: json?.data?.users || [],
+    pagination: json?.data?.pagination || null
+  };
 }
 
 /**

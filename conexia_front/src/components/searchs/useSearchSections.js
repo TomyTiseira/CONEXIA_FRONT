@@ -28,14 +28,17 @@ export function useSearchSections(query) {
     setProjects([]);
     setProjectsPage(1);
     setProjectsHasMore(true);
+    setShowAllProjects(false);
 
     setPeople([]);
     setPeoplePage(1);
     setPeopleHasMore(true);
+    setShowAllPeople(false);
 
     setServices([]);
     setServicesPage(1);
     setServicesHasMore(true);
+    setShowAllServices(false);
   }, [query]);
 
   // --- Fetch inicial y paginado para proyectos ---
@@ -61,10 +64,10 @@ export function useSearchSections(query) {
     let ignore = false;
     async function fetchMorePeople() {
       try {
-        const users = await fetchUsers({ search: query, page: peoplePage, limit: 6 });
+        const { users, pagination } = await fetchUsers({ search: query, page: peoplePage, limit: 6 });
         if (!ignore) {
           setPeople(prev => peoplePage === 1 ? users : [...prev, ...users]);
-          setPeopleHasMore((users?.length || 0) === 6);
+          setPeopleHasMore(pagination?.hasNextPage ?? false);
         }
       } catch (e) {
         if (!ignore) setPeopleHasMore(false);

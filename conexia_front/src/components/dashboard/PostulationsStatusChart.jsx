@@ -60,9 +60,9 @@ export const PostulationsStatusChart = ({ postulationsByStatus, postulationAppro
         </div>
       </div>
 
-      {/* Gráfico circular - Tasa de aprobación */}
+      {/* Gráfico circular - Tasa de aprobación - Más compacto */}
       <div className="flex items-center justify-center mb-6">
-        <div className="relative w-48 h-48">
+        <div className="relative w-40 h-40">
           <svg viewBox="0 0 100 100" className="transform -rotate-90">
             {/* Círculo de fondo */}
             <circle
@@ -71,7 +71,7 @@ export const PostulationsStatusChart = ({ postulationsByStatus, postulationAppro
               r="40"
               fill="none"
               stroke="#E5E7EB"
-              strokeWidth={hoveredSection === 'other' ? "22" : "20"}
+              strokeWidth={hoveredSection === 'other' ? "20" : "18"}
               onMouseEnter={() => setHoveredSection('other')}
               onMouseLeave={() => setHoveredSection(null)}
               style={{ 
@@ -90,7 +90,7 @@ export const PostulationsStatusChart = ({ postulationsByStatus, postulationAppro
               r="40"
               fill="none"
               stroke="#10B981"
-              strokeWidth={hoveredSection === 'approved' ? "22" : "20"}
+              strokeWidth={hoveredSection === 'approved' ? "20" : "18"}
               strokeLinecap="round"
               onMouseEnter={() => setHoveredSection('approved')}
               onMouseLeave={() => setHoveredSection(null)}
@@ -104,27 +104,27 @@ export const PostulationsStatusChart = ({ postulationsByStatus, postulationAppro
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             {hoveredSection === 'approved' ? (
               <>
-                <span className="text-3xl font-bold text-green-600">{acceptedPostulations}</span>
-                <span className="text-sm text-gray-500">Aceptadas</span>
+                <span className="text-2xl font-bold text-green-600">{acceptedPostulations}</span>
+                <span className="text-xs text-gray-500">Aceptadas</span>
                 <span className="text-xs text-gray-400">{approvalRate.toFixed(1)}%</span>
               </>
             ) : hoveredSection === 'other' ? (
               <>
-                <span className="text-3xl font-bold text-gray-600">{evaluatedPostulations}</span>
-                <span className="text-sm text-gray-500">Evaluadas</span>
+                <span className="text-2xl font-bold text-gray-600">{evaluatedPostulations}</span>
+                <span className="text-xs text-gray-500">Evaluadas</span>
               </>
             ) : (
               <>
-                <span className="text-3xl font-bold text-green-600">{approvalRate.toFixed(1)}%</span>
-                <span className="text-sm text-gray-500">Aprobación</span>
+                <span className="text-2xl font-bold text-green-600">{approvalRate.toFixed(1)}%</span>
+                <span className="text-xs text-gray-500">Aprobación</span>
               </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Desglose por estado */}
-      <div className="space-y-3">
+      {/* Desglose por estado - Grid de 2 columnas */}
+      <div className="grid grid-cols-2 gap-3">
         {postulationsByStatus.map((status, index) => {
           const config = statusConfig[status.statusName] || statusConfig['Activa'];
           const Icon = config.icon;
@@ -136,14 +136,14 @@ export const PostulationsStatusChart = ({ postulationsByStatus, postulationAppro
           return (
             <div
               key={index}
-              className={`flex items-center justify-between p-3 ${config.bg} rounded-lg`}
+              className={`flex items-center justify-between p-2.5 ${config.bg} rounded-lg`}
             >
               <div className="flex items-center gap-2">
                 <Icon className={`w-4 h-4 ${config.color}`} />
                 <span className="text-sm font-medium text-gray-700">{status.statusName}</span>
               </div>
               <div className="text-right">
-                <div className={`text-lg font-bold ${config.color}`}>{status.count}</div>
+                <div className={`text-base font-bold ${config.color}`}>{status.count}</div>
                 <div className="text-xs text-gray-500">{percentage}%</div>
               </div>
             </div>

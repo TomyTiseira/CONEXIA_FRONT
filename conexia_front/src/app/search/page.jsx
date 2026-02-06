@@ -35,6 +35,25 @@ function SearchResultsPageContent() {
     services, servicesPage, setServicesPage, servicesHasMore, showAllServices, setShowAllServices, showServices, setShowServices
   } = useSearchSections(query);
 
+  // Cargar más resultados automáticamente cuando se activa "Ver todos" y hay más páginas disponibles
+  React.useEffect(() => {
+    if (showAllPeople && peopleHasMore && people.length === peoplePage * 6) {
+      setPeoplePage(p => p + 1);
+    }
+  }, [showAllPeople, peopleHasMore, people.length, peoplePage, setPeoplePage]);
+
+  React.useEffect(() => {
+    if (showAllProjects && projectsHasMore && projects.length === projectsPage * 6) {
+      setProjectsPage(p => p + 1);
+    }
+  }, [showAllProjects, projectsHasMore, projects.length, projectsPage, setProjectsPage]);
+
+  React.useEffect(() => {
+    if (showAllServices && servicesHasMore && services.length === servicesPage * 6) {
+      setServicesPage(p => p + 1);
+    }
+  }, [showAllServices, servicesHasMore, services.length, servicesPage, setServicesPage]);
+
   // Sidebar sections dinámico
   const sections = [];
   if (projects.length > 0) {

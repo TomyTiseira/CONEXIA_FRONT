@@ -24,13 +24,13 @@ import { DashboardSkeleton } from './LoadingStates';
 import { ErrorState } from './ErrorStates';
 import { KPICard } from './KPICard';
 import { UsersVerificationChart } from './UsersVerificationChart';
-import { ProjectsByCategorySummary } from './ProjectsByCategorySummary';
+import { ProjectsByCategoryChart } from './ProjectsByCategoryChart';
 import { ProjectEngagementChart } from './ProjectEngagementChart';
 import { NewProjectsChart } from './NewProjectsChart';
 import { PostulationsStatusChart } from './PostulationsStatusChart';
 import { UsersByPlanChart } from './UsersByPlanChart';
 import { ReportsSummary } from './ReportsSummary';
-import { ServicesByTypeSummary } from './ServicesByTypeSummary';
+import { ServicesByTypeChart } from './ServicesByTypeChart';
 import { QuotationsChart } from './QuotationsChart';
 import { ClaimsChart } from './ClaimsChart';
 import { ServicesCompletedChart } from './ServicesCompletedChart';
@@ -277,7 +277,7 @@ export const AdminDashboard = () => {
         iconColor="purple"
       >
         {/* KPIs principales */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           <KPICard
             title="Total proyectos"
             value={projects.totalProjects || 0}
@@ -293,13 +293,6 @@ export const AdminDashboard = () => {
           />
 
           <KPICard
-            title="Con postulaciones"
-            value={projects.projectsWithPostulations || 0}
-            icon={Users}
-            color="green"
-          />
-
-          <KPICard
             title="Promedio postulaciones"
             value={(projects.averagePostulationsPerProject || 0).toFixed(1)}
             icon={Award}
@@ -309,7 +302,7 @@ export const AdminDashboard = () => {
         </div>
 
         {/* Gráficos visuales */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ProjectEngagementChart
             projectsWithPostulations={projects.projectsWithPostulations || 0}
             totalProjects={projects.totalProjects || 0}
@@ -321,7 +314,10 @@ export const AdminDashboard = () => {
             last30Days={data.projects?.newProjectsLast30Days || 0}
             last90Days={data.projects?.newProjectsLast90Days || 0}
           />
+        </div>
 
+        {/* Gráfico de postulaciones - Ancho completo pero más compacto */}
+        <div className="mb-6">
           <PostulationsStatusChart
             postulationsByStatus={projects.postulationsByStatus || []}
             postulationApprovalRate={projects.postulationApprovalRate || 0}
@@ -330,7 +326,7 @@ export const AdminDashboard = () => {
 
         {/* Gráfico de proyectos por categoría */}
         {projects.projectsByCategory && projects.projectsByCategory.length > 0 && (
-          <ProjectsByCategorySummary projectsByCategory={projects.projectsByCategory} />
+          <ProjectsByCategoryChart projectsByCategory={projects.projectsByCategory} />
         )}
       </DashboardSection>
 
@@ -345,7 +341,7 @@ export const AdminDashboard = () => {
         iconColor="green"
       >
         {/* KPIs principales */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           <KPICard
             title="Servicios completados"
             value={services.totalServicesHired || 0}
@@ -359,14 +355,6 @@ export const AdminDashboard = () => {
             icon={DollarSign}
             color="gold"
             subtitle="ARS en servicios"
-          />
-
-          <KPICard
-            title="Cotizaciones enviadas"
-            value={services.quotations?.sent || 0}
-            icon={Award}
-            color="purple"
-            subtitle={`${services.quotations?.accepted || 0} aceptadas`}
           />
 
           <KPICard
@@ -390,9 +378,9 @@ export const AdminDashboard = () => {
           <ClaimsChart claims={services.claims} />
         </div>
 
-        {/* Servicios por tipo con desplegable */}
+        {/* Servicios por tipo con gráfico */}
         {services.byType && services.byType.length > 0 && (
-          <ServicesByTypeSummary servicesByType={services.byType} />
+          <ServicesByTypeChart servicesByType={services.byType} />
         )}
       </DashboardSection>
 

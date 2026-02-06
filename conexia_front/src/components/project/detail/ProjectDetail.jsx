@@ -632,7 +632,7 @@ ${messageText.trim()}`;
                 className="bg-conexia-green text-white px-3 md:px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
                 onClick={() => router.push(`/project/${projectId}/postulations`)}
               >
-                Ver Postulaciones
+                Ver postulaciones
               </button>
               {!project.isActive || !project.deletedAt && (
                 <button

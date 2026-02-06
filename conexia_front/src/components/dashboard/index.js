@@ -24,6 +24,7 @@ export { ProjectsStatusChart } from './ProjectsStatusChart';
 export { ServicesByTypeChart } from './ServicesByTypeChart';
 export { UsersVerificationChart } from './UsersVerificationChart';
 export { ProjectsByCategorySummary } from './ProjectsByCategorySummary';
+export { ProjectsByCategoryChart } from './ProjectsByCategoryChart';
 export { ProjectEngagementChart } from './ProjectEngagementChart';
 export { NewProjectsChart } from './NewProjectsChart';
 export { PostulationsStatusChart } from './PostulationsStatusChart';
