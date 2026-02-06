@@ -195,48 +195,97 @@ export default function LoginForm() {
 
       {/* Modal de Éxito - Overlay con LoadingSpinner */}
       {msg && msg.type === 'success' && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-fade-in">
+        <div className="fixed inset-0 bg-gradient-to-br from-conexia-green/5 via-teal-50 to-white flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-10 relative overflow-hidden border-2 border-conexia-green/10">
+            {/* Patrón decorativo de fondo */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-conexia-green rounded-full -mr-32 -mt-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500 rounded-full -ml-24 -mb-24"></div>
+            </div>
+
+            {/* Confetti/Sparkles decorativos */}
+            <div className="absolute top-8 left-8 w-3 h-3 bg-conexia-green rounded-full animate-ping"></div>
+            <div className="absolute top-12 right-12 w-2 h-2 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+            <div className="absolute bottom-16 left-16 w-2 h-2 bg-conexia-green rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+            <div className="absolute bottom-12 right-8 w-3 h-3 bg-teal-300 rounded-full animate-ping" style={{ animationDelay: '0.4s' }}></div>
+            
             {/* Contenido */}
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold text-conexia-green">
-                ¡Bienvenido!
-              </h2>
-              <p className="text-base text-gray-700">
-                Sesión iniciada con éxito.
-              </p>
+            <div className="relative z-10 text-center space-y-6">
+              {/* Icono de éxito con checkmark */}
+              <div className="flex justify-center mb-2">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-br from-conexia-green to-teal-600 rounded-full flex items-center justify-center shadow-lg animate-scale-in">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="absolute inset-0 bg-conexia-green rounded-full animate-ping opacity-20"></div>
+                </div>
+              </div>
+
+              <div>
+                <h2 className="text-4xl font-extrabold bg-gradient-to-r from-conexia-green via-teal-600 to-teal-700 bg-clip-text text-transparent mb-2">
+                  ¡Bienvenido!
+                </h2>
+                <p className="text-lg text-gray-600">
+                  Sesión iniciada con <span className="text-conexia-green font-semibold">éxito</span>
+                </p>
+              </div>
               
-              {/* LoadingSpinner con logo - con tamaño fijo para mantener proporciones circulares */}
-              <div className="flex flex-col items-center justify-center py-4">
-                <div className="relative w-24 h-24 flex items-center justify-center">
-                  {/* Círculo giratorio externo */}
+              {/* LoadingSpinner con logo - diseño mejorado */}
+              <div className="flex flex-col items-center justify-center py-6">
+                <div className="relative w-32 h-32 flex items-center justify-center">
+                  {/* Círculo giratorio externo con gradiente */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-24 h-24 border-4 border-gray-200 border-t-conexia-green rounded-full animate-spin"></div>
+                    <div className="w-32 h-32 rounded-full animate-spin" style={{
+                      background: 'conic-gradient(from 0deg, transparent 0deg, #0d9488 360deg)',
+                      WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), white calc(100% - 3px))',
+                      mask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), white calc(100% - 3px))'
+                    }}></div>
                   </div>
                   
-                  {/* Logo de Conexia */}
+                  {/* Segundo círculo para efecto de doble anillo */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-40">
+                    <div className="w-28 h-28 rounded-full animate-spin" style={{
+                      animation: 'spin 2s linear infinite reverse',
+                      background: 'conic-gradient(from 0deg, transparent 0deg, #14b8a6 360deg)',
+                      WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), white calc(100% - 2px))',
+                      mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), white calc(100% - 2px))'
+                    }}></div>
+                  </div>
+                  
+                  {/* Logo de Conexia con efecto de pulso suave */}
                   <div className="relative z-10 animate-pulse">
                     <Image 
                       src="/logo.png" 
                       alt="Conexia" 
-                      width={64}
-                      height={64}
-                      className="drop-shadow-lg"
+                      width={72}
+                      height={72}
+                      className="drop-shadow-2xl"
                       priority
                     />
                   </div>
                 </div>
               </div>
               
-              <p className="text-sm text-gray-500">
-                Redirigiendo...
-              </p>
+              <div className="flex items-center justify-center gap-2">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-conexia-green rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                  <div className="w-2 h-2 bg-conexia-green rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-conexia-green rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+                <p className="text-base text-gray-600 font-medium">
+                  Redirigiendo
+                </p>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="w-full max-w-md">
+      {/* Formulario - se oculta cuando el modal de éxito está visible */}
+      {(!msg || msg.type !== 'success') && (
+        <div className="w-full max-w-md">
       {/* Card principal */}
       <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10">
         {/* Logo y header */}
@@ -373,6 +422,7 @@ export default function LoginForm() {
         )}
       </div>
       </div>
+      )}
     </>
   );
 }

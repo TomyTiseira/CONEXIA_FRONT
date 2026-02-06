@@ -8,7 +8,9 @@ import { Trophy, TrendingUp, Medal, Award } from 'lucide-react';
  * @param {string} props.title - Título de la tarjeta
  * @param {Array} props.projects - Array de proyectos con {projectId, projectTitle, postulationsCount}
  */
-export const ProjectRankingCard = ({ title = 'Top 10 Proyectos Más Populares', projects = [] }) => {
+export const ProjectRankingCard = ({ title = 'Top 5 Proyectos Más Populares', projects = [] }) => {
+  // Limitar a los primeros 5 proyectos
+  const topProjects = projects.slice(0, 5);
   if (!projects || projects.length === 0) {
     return (
       <motion.div
@@ -59,7 +61,7 @@ export const ProjectRankingCard = ({ title = 'Top 10 Proyectos Más Populares', 
 
       {/* Lista de proyectos */}
       <div className="space-y-3">
-        {projects.map((project, index) => {
+        {topProjects.map((project, index) => {
           const medal = getMedalIcon(index);
           const MedalIcon = medal.icon;
           const isTopThree = index < 3;
@@ -140,16 +142,16 @@ export const ProjectRankingCard = ({ title = 'Top 10 Proyectos Más Populares', 
       </div>
 
       {/* Footer con stats */}
-      {projects.length > 0 && (
+      {topProjects.length > 0 && (
         <div className="mt-6 pt-4 border-t border-gray-200">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Total de proyectos:</span>
-            <span className="font-bold text-gray-800">{projects.length}</span>
+            <span className="text-gray-600">Top proyectos:</span>
+            <span className="font-bold text-gray-800">{topProjects.length}</span>
           </div>
           <div className="flex items-center justify-between text-sm mt-2">
-            <span className="text-gray-600">Postulaciones totales:</span>
+            <span className="text-gray-600">Postulaciones (Top 5):</span>
             <span className="font-bold text-amber-600">
-              {projects.reduce((sum, p) => sum + p.postulationsCount, 0)}
+              {topProjects.reduce((sum, p) => sum + p.postulationsCount, 0)}
             </span>
           </div>
         </div>

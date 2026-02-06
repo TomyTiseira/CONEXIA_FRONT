@@ -67,6 +67,15 @@ const statusConfig = {
     borderClass: 'border-gray-200',
     iconClass: 'text-gray-500',
   },
+  cancelada_moderacion: {
+    label: 'Canceladas por Moderación',
+    icon: Ban,
+    color: 'purple',
+    bgClass: 'bg-purple-50',
+    textClass: 'text-purple-700',
+    borderClass: 'border-purple-200',
+    iconClass: 'text-purple-500',
+  },
 };
 
 /**
