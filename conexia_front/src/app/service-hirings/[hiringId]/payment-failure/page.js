@@ -41,7 +41,7 @@ export default function PaymentFailurePage() {
                 <XCircle size={48} className="text-red-500" />
               </div>
               <h1 className="text-3xl font-bold text-white mb-2">
-                Pago No Procesado
+                Pago no procesado
               </h1>
               <p className="text-red-100 text-sm">
                 No se pudo completar tu pago
@@ -106,7 +106,7 @@ export default function PaymentFailurePage() {
                   className="w-full"
                 >
                   <RefreshCw size={18} className="mr-2" />
-                  Intentar Nuevamente
+                  Intentar nuevamente
                 </Button>
 
                 <button
@@ -114,14 +114,14 @@ export default function PaymentFailurePage() {
                   className="w-full flex items-center justify-center text-gray-600 hover:text-gray-800 text-sm py-2 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   <ArrowLeft size={16} className="mr-2" />
-                  Volver a la Entrega
+                  Volver a la entrega
                 </button>
 
                 <button
                   onClick={handleGoToMyServices}
                   className="w-full text-gray-600 hover:text-gray-800 text-sm py-2 transition-colors"
                 >
-                  Ir a Mis Servicios Solicitados
+                  Ir a mis servicios solicitados
                 </button>
               </div>
             </div>

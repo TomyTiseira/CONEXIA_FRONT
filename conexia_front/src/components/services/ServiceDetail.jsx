@@ -1076,7 +1076,7 @@ ${messageText.trim()}`;
                           >
                             <FaHandshake size={16} />
                             {service?.hasPendingQuotation
-                              ? 'Cancelar Solicitud'
+                              ? 'Cancelar solicitud'
                               : showViewQuotation
                                 ? 'Ver cotización'
                                 : 'Solicitar cotización'}
@@ -1210,7 +1210,7 @@ ${messageText.trim()}`;
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <FaTrash size={20} className="text-orange-500" />
-                Confirmar Acción
+                Confirmar acción
               </h3>
               <button
                 onClick={() => setShowCancelModal(false)}
@@ -1224,7 +1224,7 @@ ${messageText.trim()}`;
               <div className="text-center mb-6">
                 <div className="text-4xl mb-3">🗑️</div>
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
-                  Cancelar Solicitud
+                  Cancelar solicitud
                 </h4>
                 <p className="text-gray-600 text-sm">
                   Al cancelar esta solicitud, se eliminará permanentemente y no podrás recuperarla. Esta acción no se puede deshacer.
@@ -1243,7 +1243,7 @@ ${messageText.trim()}`;
                   onClick={handleDirectCancel}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
                 >
-                  Sí, Cancelar
+                  Sí, cancelar
                 </Button>
               </div>
             </div>

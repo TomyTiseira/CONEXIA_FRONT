@@ -127,7 +127,7 @@ export default function RequestedServicesPage() {
               Volver
             </button>
             <h1 className="text-3xl font-bold text-gray-900">
-              Mis Servicios Solicitados
+              Mis servicios solicitados
             </h1>
             <p className="text-gray-600 mt-2">
               Servicios que he contratado

@@ -45,7 +45,7 @@ export default function UserServices({ userId }) {
         <div className="flex items-center gap-2 mb-1">
           <Briefcase className="w-6 h-6 text-conexia-green" />
           <h3 className="text-base md:text-lg font-bold text-conexia-green">
-            {isOwner ? 'Mis Servicios' : `Servicios`}
+            {isOwner ? 'Mis servicios' : `Servicios`}
           </h3>
         </div>
         <div className="text-gray-500 text-xs md:text-sm mb-2">
