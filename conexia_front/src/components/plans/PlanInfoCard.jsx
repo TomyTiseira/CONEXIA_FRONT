@@ -63,6 +63,7 @@ export default function PlanInfoCard({ className = '' }) {
   const isExpired = subscriptionStatus === 'expired';
   const isPendingPayment = subscriptionStatus === 'pending_payment';
   const isPaymentFailed = subscriptionStatus === 'payment_failed';
+  const isPendingCancellation = subscriptionStatus === 'pending_cancellation';
 
   // Calcular días hasta renovación o vencimiento
   let daysUntilRenewal = null;
@@ -71,6 +72,22 @@ export default function PlanInfoCard({ className = '' }) {
     const today = new Date();
     daysUntilRenewal = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
   }
+
+  // Calcular días hasta que expire el plan cancelado
+  let daysUntilExpiration = null;
+  if (isPendingCancellation && subscription.endDate) {
+    const endDate = new Date(subscription.endDate);
+    const today = new Date();
+    daysUntilExpiration = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+  }
+
+  // Handler para abrir el modal de cancelación
+  const handleCancelClick = () => {
+    const event = new CustomEvent('openCancelSubscriptionModal', {
+      detail: { subscription, planName: plan.name }
+    });
+    window.dispatchEvent(event);
+  };
 
   return (
     <div className={`bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
@@ -302,6 +319,45 @@ export default function PlanInfoCard({ className = '' }) {
                 </div>
               </div>
             )}
+
+            {/* Alerta de cancelación pendiente */}
+            {isPendingCancellation && (
+              <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <FiAlertCircle className="w-5 h-5 text-orange-600 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-orange-900 mb-1">
+                      Cancelación Programada
+                    </h3>
+                    <p className="text-sm text-orange-700 mb-2">
+                      Tu suscripción se cancelará al finalizar el período de facturación actual.
+                    </p>
+                    {subscription.endDate && (
+                      <div className="text-sm text-orange-700">
+                        <p className="flex items-center gap-2">
+                          <FiCalendar className="w-4 h-4" />
+                          Fecha de finalización:{' '}
+                          <span className="font-medium">
+                            {format(new Date(subscription.endDate), "d 'de' MMMM, yyyy", { locale: es })}
+                          </span>
+                          {daysUntilExpiration !== null && (
+                            <span className="text-xs ml-2">
+                              ({daysUntilExpiration} {daysUntilExpiration === 1 ? 'día' : 'días'})
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                    {subscription.cancellationReason && (
+                      <div className="mt-3 pt-3 border-t border-orange-200">
+                        <p className="text-xs text-orange-600 font-medium mb-1">Motivo de cancelación:</p>
+                        <p className="text-sm text-orange-700 italic">"{subscription.cancellationReason}"</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -352,15 +408,27 @@ export default function PlanInfoCard({ className = '' }) {
         )}
 
         {/* Acciones - Solo para planes de pago */}
-        {!isFreePlan && isExpired && (
-          <div className="pt-4 border-t">
+        {!isFreePlan && (
+          <div className="pt-4 border-t space-y-3">
             {/* Botón Renovar para suscripciones vencidas */}
-            <Link
-              href="/settings/my-plan?action=renew"
-              className="block w-full text-center px-4 py-2.5 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg"
-            >
-              Renovar Suscripción
-            </Link>
+            {isExpired && (
+              <Link
+                href="/settings/my-plan?action=renew"
+                className="block w-full text-center px-4 py-2.5 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                Renovar Suscripción
+              </Link>
+            )}
+
+            {/* Botón Cancelar suscripción - Solo para suscripciones activas no canceladas */}
+            {hasActiveSubscription && !isPendingCancellation && (
+              <button
+                onClick={handleCancelClick}
+                className="w-full px-4 py-2.5 border-2 border-red-300 text-red-700 rounded-lg font-medium hover:bg-red-50 transition-colors"
+              >
+                Cancelar suscripción
+              </button>
+            )}
           </div>
         )}
       </div>

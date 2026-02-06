@@ -114,6 +114,13 @@ export const getSubscriptionStatusInfo = (status) => {
       borderClass: 'border-yellow-300',
       icon: '⏳'
     },
+    'pending_cancellation': {
+      label: 'Cancelación Pendiente',
+      colorClass: 'text-orange-700',
+      bgClass: 'bg-orange-100',
+      borderClass: 'border-orange-300',
+      icon: '⚠️'
+    },
     'payment_failed': {
       label: 'Pago Fallido',
       colorClass: 'text-red-700',
