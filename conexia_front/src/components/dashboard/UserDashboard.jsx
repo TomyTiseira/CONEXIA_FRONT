@@ -333,6 +333,7 @@ export const UserDashboard = () => {
               totalPostulations={postulations.totalPostulations}
               acceptedPostulations={postulations.acceptedPostulations}
               successRate={(postulations.successRate || 0).toFixed(1)}
+              byStatus={projectDashboard.sentPostulations?.byStatus}
             />
 
             {/* Placeholder para futuro gráfico */}

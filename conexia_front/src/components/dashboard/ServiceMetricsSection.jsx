@@ -247,7 +247,7 @@ export const ServiceMetricsSection = () => {
             })}`}
             icon={DollarSign}
             color="green"
-            subtitle="Pesos Argentinos (ARS)"
+            subtitle="Pesos argentinos (ARS)"
           />
         </motion.div>
       )}
