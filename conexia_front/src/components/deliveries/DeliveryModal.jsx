@@ -14,6 +14,7 @@ export default function DeliveryModal({
   deliverableInfo = null,
   totalPrice = null,
   previousDelivery = null,
+  isResubmission = false,
   onSuccess
 }) {
   const { createDelivery, loading } = useCreateDelivery();
@@ -25,6 +26,18 @@ export default function DeliveryModal({
 
   const isDeliverableDelivery = !!deliverableId;
   const price = deliverableInfo?.price || totalPrice || 0;
+  const isRedelivery = Boolean(
+    isResubmission ||
+    (previousDelivery && previousDelivery.status === 'revision_requested')
+  );
+
+  const modalTitle = isDeliverableDelivery
+    ? (isRedelivery
+      ? `Re-entrega N° ${deliverableInfo?.orderIndex}`
+      : `Entrega N° ${deliverableInfo?.orderIndex}`)
+    : (isRedelivery
+      ? 'Re-entrega total del servicio'
+      : 'Entrega total del servicio');
 
   const validateForm = () => {
     if (content.trim().length < 10) {
@@ -167,31 +180,35 @@ export default function DeliveryModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                {isDeliverableDelivery 
-                  ? `Entrega N° ${deliverableInfo?.orderIndex || ''} - ${deliverableInfo?.title || ''}`
-                  : 'Entrega Total del Servicio'}
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Precio: ${price.toLocaleString()}
-              </p>
+      <div className="fixed inset-0 z-[100]" onClick={handleClose}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+          <div
+            className="relative z-10 bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header fijo */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {modalTitle}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Precio: ${price.toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={handleClose}
+                disabled={loading}
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
+                <X size={24} />
+              </button>
             </div>
-            <button
-              onClick={handleClose}
-              disabled={loading}
-              className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
-            >
-              <X size={24} />
-            </button>
-          </div>
 
-          {/* Body */}
-          <form onSubmit={handleSubmit} className="p-6">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+              {/* Body (scrolleable) */}
+              <div className="flex-1 overflow-y-auto p-6 min-h-0">
             {/* Notas de revisión (si aplica) */}
             {previousDelivery && previousDelivery.status === 'revision_requested' && previousDelivery.revisionNotes && (
               <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4 mb-6">
@@ -348,35 +365,39 @@ export default function DeliveryModal({
                 <li>• Archivos adjuntos: {attachments.length > 0 ? `${attachments.length} archivo${attachments.length !== 1 ? 's' : ''}` : 'Ninguno'}</li>
               </ul>
             </div>
+              </div>
 
-            {/* Botones */}
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="cancel"
-                onClick={handleClose}
-                className="flex-1"
-                disabled={loading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                className="flex-1"
-                disabled={loading || content.trim().length < 10}
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Enviando...
-                  </div>
-                ) : (
-                  'Entregar'
-                )}
-              </Button>
-            </div>
-          </form>
+              {/* Footer fijo */}
+              <div className="border-t border-gray-200 px-6 py-4 flex-shrink-0 bg-gray-50">
+                <div className="flex justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="cancel"
+                    onClick={handleClose}
+                    className="min-w-[140px]"
+                    disabled={loading}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className="min-w-[180px]"
+                    disabled={loading || content.trim().length < 10}
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Enviando...
+                      </div>
+                    ) : (
+                      'Entregar'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 

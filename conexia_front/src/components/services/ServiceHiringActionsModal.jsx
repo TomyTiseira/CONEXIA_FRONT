@@ -141,8 +141,13 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
     const actionConfig = getActionConfig(confirmAction);
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+      <div className="fixed inset-0 z-[110]" onClick={() => setConfirmAction(null)}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+          <div
+            className="relative z-10 bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* Header fijo */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
             <h3 className="text-xl font-bold text-orange-600 flex items-center gap-2">
@@ -218,6 +223,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               </Button>
             </div>
           </div>
+          </div>
         </div>
       </div>
     );
@@ -225,8 +231,13 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
 
   // Mostrar lista de acciones
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+        <div
+          className="relative z-10 bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header fijo */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
           <h3 className="text-xl font-bold text-conexia-green">
@@ -374,6 +385,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
           <Button onClick={onClose} variant="cancel">
             Cerrar
           </Button>
+        </div>
         </div>
       </div>
     </div>

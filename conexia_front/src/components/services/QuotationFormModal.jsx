@@ -139,35 +139,34 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-        {/* Header fijo */}
-        <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold text-conexia-green flex items-center gap-2">
-              {isEditing ? (
-                <>
-                  Editar Cotización
-                </>
-              ) : (
-                <>
-                  Crear Cotización
-                </>
-              )}
-            </h3>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-              disabled={loading}
-            >
-              <X size={24} />
-            </button>
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col min-h-0">
-          <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-            {/* Contenido scrolleable: incluye servicio, solicitud y formulario */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 min-h-0">
+    <>
+      <div className="fixed inset-0 z-[100]" onClick={onClose}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+          <div
+            className="relative z-10 bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header fijo */}
+            <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-conexia-green flex items-center gap-2">
+                  {isEditing ? <>Editar cotización</> : <>Crear cotización</>}
+                </h3>
+                <button
+                  onClick={onClose}
+                  className="text-gray-400 hover:text-gray-600"
+                  disabled={loading}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col min-h-0">
+              <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+                {/* Contenido scrolleable: incluye servicio, solicitud y formulario */}
+                <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 min-h-0">
               {/* Información del servicio */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-medium text-conexia-green mb-2 flex items-center gap-2">
@@ -366,7 +365,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                       )}
                       <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
                         <p className="text-xs text-blue-800 leading-relaxed">
-                          <strong>💡 Transparencia para el cliente:</strong> Indicar las horas diarias ayuda al cliente a comparar cotizaciones de manera más inteligente. Por ejemplo, si dos proveedores cotizan 5 días pero uno trabaja 2 horas/día y otro 8 horas/día, el cliente puede evaluar mejor el valor real del servicio.
+                          <strong>Transparencia para el cliente:</strong> Indicar las horas diarias ayuda al cliente a comparar cotizaciones de manera más inteligente. Por ejemplo, si dos proveedores cotizan 5 días pero uno trabaja 2 horas/día y otro 8 horas/día, el cliente puede evaluar mejor el valor real del servicio.
                         </p>
                       </div>
                     </div>
@@ -456,7 +455,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
               </div>
               {/* Información adicional */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h5 className="font-medium text-blue-900 mb-2">💡 Consejos para una buena cotización</h5>
+                <h5 className="font-medium text-blue-900 mb-2">Consejos para una buena cotización</h5>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• Sé específico sobre qué incluye el precio</li>
                   <li>• Menciona si hay costos adicionales no incluidos</li>
@@ -465,33 +464,30 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                 </ul>
               </div>
             </div>
-            {/* Footer fijo */}
-            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-lg flex-shrink-0">
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  onClick={onClose}
-                  variant="cancel"
-                  className="flex-1"
-                  disabled={loading}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1"
-                  disabled={loading}
-                >
-                  {loading 
-                    ? 'Procesando...' 
-                    : isEditing 
-                      ? 'Actualizar Cotización' 
-                      : 'Enviar Cotización'
-                  }
-                </Button>
-              </div>
+                {/* Footer fijo */}
+                <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-lg flex-shrink-0">
+                  <div className="flex justify-end gap-3">
+                    <Button
+                      type="button"
+                      onClick={onClose}
+                      variant="cancel"
+                      className="min-w-[140px]"
+                      disabled={loading}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button type="submit" className="min-w-[180px]" disabled={loading}>
+                      {loading
+                        ? 'Procesando...'
+                        : isEditing
+                          ? 'Actualizar Cotización'
+                          : 'Enviar Cotización'}
+                    </Button>
+                  </div>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
       </div>
 
@@ -518,6 +514,6 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
           onClose();
         }}
       />
-    </div>
+    </>
   );
 }

@@ -7,6 +7,7 @@ export * from './useVerificationStatus';
 export * from './useAccountRestrictions';
 export * from './useAccountStatus';
 export * from './useOwnerStatus';
+export * from './useOnboardingStatus';
 export * from './project/useRecommendations';
 
 // Hooks de conexiones

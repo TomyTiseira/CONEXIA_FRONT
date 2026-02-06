@@ -79,16 +79,9 @@ const handlePaste = (e) => {
       const response = await verifyUser({ email, verificationCode });
       setMsg({ ok: true, text: "¡Usuario verificado con éxito!" });
       
-      // Si viene desde login, redirigir a login; si no, a creación de perfil
-      if (fromLogin) {
-        setTimeout(() => router.push("/login"), 1500);
-      } else {
-        // El usuario ya está logueado en el backend (cookies HTTP-only)
-        // Actualizar el estado de autenticación en el frontend
-        await refreshAuth();
-        // Redirigir a creación de perfil
-        setTimeout(() => router.push("/profile/create"), 1500);
-      }
+      // Siempre redirigir a creación de perfil
+      // El backend envía el onboarding_token (HttpOnly cookie) al verificar
+      setTimeout(() => router.push("/profile/create"), 1500);
     } catch (err) {
       if (
         err.message.includes("is already active") ||

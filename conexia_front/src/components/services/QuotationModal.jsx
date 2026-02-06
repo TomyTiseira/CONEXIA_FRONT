@@ -185,8 +185,13 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
     const actionConfig = getActionConfig(confirmAction);
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+      <div className="fixed inset-0 z-[110]" onClick={() => setConfirmAction(null)}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+          <div
+            className="relative z-10 bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* Header fijo */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
             <h3 className="text-xl font-bold text-orange-600 flex items-center gap-2">
@@ -263,14 +268,20 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
               </Button>
             </div>
           </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+        <div
+          className="relative z-10 bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header fijo */}
         <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
           <div className="flex justify-between items-center">
@@ -344,7 +355,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           {/* Título Mi Solicitud */}
           <h4 className="font-medium text-blue-600 text-lg mb-2 flex items-center gap-2">
             <FileText size={18} className="text-blue-600" />
-            Mi Solicitud
+            Mi solicitud
           </h4>
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             {hiring.createdAt && (
@@ -362,7 +373,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             <>
               <h4 className="font-medium text-green-700 text-lg mb-3 flex items-center gap-2">
                 <DollarSign size={18} className="text-green-700" />
-                Cotización del Proveedor
+                Cotización del proveedor
               </h4>
               {showExpiredBlock ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -482,6 +493,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
               Cerrar
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </div>

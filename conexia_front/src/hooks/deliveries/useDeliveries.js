@@ -26,9 +26,12 @@ export function useDeliveries(hiringId) {
       setDeliveries(data.deliveries || []);
       return data;
     } catch (err) {
-      console.error('Error al cargar entregas:', err);
-      setError(err.message);
-      throw err;
+      const statusCode = err?.statusCode || err?.status;
+      if (![401, 403, 404].includes(statusCode)) {
+        console.error('Error al cargar entregas:', err);
+      }
+      setError(err);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -125,9 +128,13 @@ export function useHiringWithDeliveries(hiringId) {
       setHiring(data);
       return data;
     } catch (err) {
-      console.error('Error al cargar contratación:', err);
-      setError(err.message);
-      throw err;
+      const statusCode = err?.statusCode || err?.status;
+      if (![401, 403, 404].includes(statusCode)) {
+        console.error('Error al cargar contratación:', err);
+      }
+      setHiring(null);
+      setError(err);
+      return null;
     } finally {
       setLoading(false);
     }
