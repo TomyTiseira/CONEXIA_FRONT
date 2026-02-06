@@ -371,6 +371,7 @@ export default function MyServicesPage() {
         onClose={() => setShowDeliveryModal(false)}
         hiringId={selectedHiring?.id}
         totalPrice={selectedHiring?.quotedPrice}
+        isResubmission={selectedHiring?.status?.code === 'revision_requested'}
         onSuccess={handleDeliverySuccess}
       />
 

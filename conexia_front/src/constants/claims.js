@@ -17,6 +17,7 @@ export const CLAIM_STATUS = {
   REVIEWING_COMPLIANCE: 'reviewing_compliance',  // Revisando cumplimiento
   RESOLVED: 'resolved',  // Resuelto completamente
   REJECTED: 'rejected',  // Rechazado
+  FINISHED_BY_MODERATION: 'finished_by_moderation',  // Finalizado por moderación
 };
 
 // Tipos de reclamos para clientes
@@ -59,6 +60,7 @@ export const CLAIM_STATUS_LABELS = {
   [CLAIM_STATUS.REVIEWING_COMPLIANCE]: 'Revisando Cumplimiento',
   [CLAIM_STATUS.RESOLVED]: 'Resuelto',
   [CLAIM_STATUS.REJECTED]: 'Rechazado',
+  [CLAIM_STATUS.FINISHED_BY_MODERATION]: 'Finalizado por moderación',
 };
 
 // Configuración de colores para badges
@@ -132,6 +134,13 @@ export const CLAIM_STATUS_CONFIG = {
     color: 'text-gray-700',
     bg: 'bg-gray-100',
     className: 'bg-gray-100 text-gray-800',
+  },
+  [CLAIM_STATUS.FINISHED_BY_MODERATION]: {
+    variant: 'info',
+    label: 'Finalizado por moderación',
+    color: 'text-slate-700',
+    bg: 'bg-slate-100',
+    className: 'bg-slate-100 text-slate-800',
   },
 };
 
@@ -228,6 +237,7 @@ export const COMPLIANCE_STATUS = {
   OVERDUE: 'overdue',
   WARNING: 'warning',
   ESCALATED: 'escalated',
+  FINISHED_BY_MODERATION: 'finished_by_moderation',
 };
 
 // Labels para estados de compliance
@@ -243,6 +253,7 @@ export const COMPLIANCE_STATUS_LABELS = {
   [COMPLIANCE_STATUS.OVERDUE]: 'Vencido',
   [COMPLIANCE_STATUS.WARNING]: 'Advertencia',
   [COMPLIANCE_STATUS.ESCALATED]: 'Escalado',
+  [COMPLIANCE_STATUS.FINISHED_BY_MODERATION]: 'Finalizado por moderación',
 };
 
 // Configuración de colores para estados de compliance
@@ -290,6 +301,10 @@ export const COMPLIANCE_STATUS_CONFIG = {
   [COMPLIANCE_STATUS.ESCALATED]: {
     label: '3er Vencimiento',
     className: 'bg-red-100 text-red-900 border-red-400',
+  },
+  [COMPLIANCE_STATUS.FINISHED_BY_MODERATION]: {
+    label: 'Finalizado por moderación',
+    className: 'bg-slate-100 text-slate-800 border-slate-300',
   },
 };
 

@@ -610,20 +610,22 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
                     {isRejected ? '✕ Rechazado' : '✓ Resuelto'}
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-600 mb-1.5">Tipo de Resolución</p>
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm ${
-                    isClientFavor
-                      ? 'bg-green-100 text-green-700 border border-green-300'
-                      : isProviderFavor
-                      ? 'bg-red-100 text-red-700 border border-red-300'
-                      : 'bg-yellow-100 text-yellow-700 border border-yellow-300'
-                  }`}>
-                    {isClientFavor && '✓ A favor del cliente'}
-                    {isProviderFavor && '✓ A favor del proveedor'}
-                    {isPartialAgreement && '✓ Acuerdo parcial'}
+                {data.claim.resolutionType && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-1.5">Tipo de Resolución</p>
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm ${
+                      isClientFavor
+                        ? 'bg-green-100 text-green-700 border border-green-300'
+                        : isProviderFavor
+                        ? 'bg-red-100 text-red-700 border border-red-300'
+                        : 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+                    }`}>
+                      {isClientFavor && '✓ A favor del cliente'}
+                      {isProviderFavor && '✓ A favor del proveedor'}
+                      {isPartialAgreement && '✓ Acuerdo parcial'}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Resuelto por */}

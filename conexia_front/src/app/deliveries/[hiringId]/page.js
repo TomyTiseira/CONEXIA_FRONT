@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { useHiringWithDeliveries } from '@/hooks/deliveries';
 import { fetchDeliverablesWithValidation } from '@/service/deliveries';
-import { ArrowLeft, Package, Calendar, DollarSign, CheckCircle, Clock, AlertCircle, Upload, Eye, Lock } from 'lucide-react';
+import { Package, Calendar, DollarSign, CheckCircle, Clock, AlertCircle, Upload, Eye, Lock } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import StatusBadge from '@/components/common/StatusBadge';
 import Button from '@/components/ui/Button';
+import { NotFound } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import DeliveryModal from '@/components/deliveries/DeliveryModal';
 import Toast from '@/components/ui/Toast';
 import { getUserDisplayName } from '@/utils/formatUserName';
@@ -17,31 +20,46 @@ export default function DeliverablesPage() {
   const params = useParams();
   const hiringId = parseInt(params.hiringId);
 
-  const { hiring, loading: hiringLoading, loadHiring } = useHiringWithDeliveries(hiringId);
+  const { user, isLoading: authLoading } = useAuth();
+
+  const { hiring, loading: hiringLoading, error: hiringError, loadHiring } = useHiringWithDeliveries(hiringId);
 
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [selectedDeliverable, setSelectedDeliverable] = useState(null);
   const [deliverables, setDeliverables] = useState([]);
   const [deliverablesLoading, setDeliverablesLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  // null = chequeando, true/false = resuelto
+  const [accessDenied, setAccessDenied] = useState(null);
 
   useEffect(() => {
     if (hiringId) {
-      loadHiring();
+      loadHiring().catch(() => null);
     }
   }, [hiringId, loadHiring]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!hiring) return;
+
+    const providerId = hiring?.service?.userId || hiring?.service?.owner?.id;
+    const isProvider = !!user?.id && !!providerId && user.id === providerId;
+
+    setAccessDenied(!isProvider);
+  }, [authLoading, hiring, user]);
 
   // Cargar entregables con validaciones
   useEffect(() => {
     const loadDeliverablesWithValidation = async () => {
       if (!hiringId || !hiring) return;
+      if (authLoading || accessDenied) return;
 
       setDeliverablesLoading(true);
       try {
         const data = await fetchDeliverablesWithValidation(hiringId);
         setDeliverables(data || []);
       } catch (error) {
-        console.error('Error al cargar entregables con validaciones:', error);
+        // Evitar ruido en consola para errores esperados (403/404)
         // Fallback a los entregables del hiring si falla
         setDeliverables(hiring?.deliverables || []);
       } finally {
@@ -50,7 +68,7 @@ export default function DeliverablesPage() {
     };
 
     loadDeliverablesWithValidation();
-  }, [hiringId, hiring]);
+  }, [hiringId, hiring, authLoading, accessDenied]);
 
   const handleOpenDeliveryModal = (deliverable) => {
     // Verificar si puede entregar este entregable
@@ -135,8 +153,8 @@ export default function DeliverablesPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gray-50 py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
+          <div className="max-w-7xl mx-auto">
             <div className="bg-white rounded-lg shadow-sm p-8 text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-conexia-green mx-auto"></div>
               <p className="text-gray-600 mt-4">Cargando entregables...</p>
@@ -147,58 +165,159 @@ export default function DeliverablesPage() {
     );
   }
 
-  if (!hiring) {
+  // Primer render: todavía no terminó de cargar y no hay error
+  if (!hiring && !hiringError) {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gray-50 py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <AlertCircle size={64} className="mx-auto text-red-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Servicio no encontrado
-              </h3>
-              <Button variant="primary" onClick={() => router.push('/my-services')}>
-                Volver a Mis Servicios
-              </Button>
-            </div>
-          </div>
-        </div>
+        <LoadingSpinner message="Cargando entregables..." fullScreen={true} />
       </>
+    );
+  }
+
+  // Esperar a que cargue auth antes de decidir permisos
+  if (authLoading) {
+    return (
+      <>
+        <Navbar />
+        <LoadingSpinner message="Cargando..." fullScreen={true} />
+      </>
+    );
+  }
+
+  // Ya tengo el hiring, pero todavía no resolví permisos
+  if (hiring && accessDenied === null) {
+    return (
+      <>
+        <Navbar />
+        <LoadingSpinner message="Cargando..." fullScreen={true} />
+      </>
+    );
+  }
+
+  if (hiringError) {
+    const statusCode = hiringError?.statusCode || hiringError?.status;
+    const title = statusCode === 403
+      ? 'Página no encontrada'
+      : statusCode === 404
+        ? 'Servicio no encontrado'
+        : 'No se pudo cargar la página';
+
+    const message = statusCode === 403
+      ? 'La página que buscas no existe o no tienes permisos para acceder a ella.'
+      : (hiringError?.message || 'Ocurrió un error al cargar la página.');
+
+    return (
+      <NotFound
+        title={title}
+        message={message}
+        showBackButton={true}
+        showHomeButton={true}
+      />
+    );
+  }
+
+  // Página solo para prestador: si no coincide, mostrar NotFound
+  if (accessDenied) {
+    return (
+      <NotFound
+        title="Página no encontrada"
+        message="La página que buscas no existe o no tienes permisos para acceder a ella."
+        showBackButton={true}
+        showHomeButton={true}
+      />
+    );
+  }
+
+  if (!hiring) {
+    return (
+      <NotFound
+        title="Servicio no encontrado"
+        message="La contratación solicitada no existe o no se encuentra disponible."
+        showBackButton={true}
+        showHomeButton={true}
+      />
     );
   }
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-6">
-            <button
-              onClick={() => {
-                const serviceId = hiring?.service?.id || hiring?.serviceId;
-                if (serviceId) {
-                  router.push(`/services/my-services/${serviceId}/requests`);
-                } else {
-                  router.back();
-                }
-              }}
-              className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
-            >
-              <ArrowLeft size={20} className="mr-2" />
-              Volver
-            </button>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Entregables del Servicio
-            </h1>
-            <p className="text-gray-600 mt-2">
-              {hiring.service?.title}
-            </p>
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => {
+                  const serviceId = hiring?.service?.id || hiring?.serviceId;
+                  if (serviceId) {
+                    router.push(`/services/my-services/${serviceId}/requests`);
+                  } else {
+                    router.back();
+                  }
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+                aria-label="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+
+              <div className="flex-1 text-center mr-8 min-w-0">
+                <h1 className="text-2xl font-bold text-conexia-green">
+                  Entregables del servicio
+                </h1>
+              </div>
+
+              <div className="w-10" />
+            </div>
           </div>
 
           {/* Info del servicio */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="mb-5">
+              <h2 className="text-lg font-semibold text-gray-900 break-words">
+                {hiring.service?.title}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Entrega por entregables
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Cliente</p>
@@ -475,6 +594,7 @@ export default function DeliverablesPage() {
         deliverableId={selectedDeliverable?.id}
         deliverableInfo={selectedDeliverable}
         previousDelivery={selectedDeliverable?.previousDelivery}
+        isResubmission={selectedDeliverable?.status === 'revision_requested'}
         onSuccess={handleDeliverySuccess}
       />
 

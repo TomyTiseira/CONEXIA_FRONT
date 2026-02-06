@@ -759,6 +759,7 @@ export default function ServiceRequestsPage({ serviceId }) {
         }}
         hiringId={selectedHiringForDelivery?.id}
         totalPrice={selectedHiringForDelivery?.quotedPrice}
+        isResubmission={selectedHiringForDelivery?.status?.code === 'revision_requested'}
         onSuccess={handleDeliverySuccess}
       />
 

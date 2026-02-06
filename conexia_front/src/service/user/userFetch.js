@@ -56,6 +56,21 @@ export async function verifyUser(data) {
   return res.json();
 }
 
+/**
+ * Verifica si el usuario tiene un onboarding_token válido
+ * Este endpoint es usado para proteger la ruta /profile/create
+ * 
+ * @returns {Promise<Response>} - Respuesta del fetch (200 si válido, 401 si no)
+ */
+export async function checkOnboardingStatus() {
+  const res = await fetch(`${config.API_URL}/users/onboarding/status`, {
+    method: "GET",
+    credentials: 'include', // Importante: envía las cookies HttpOnly
+  });
+
+  return res;
+}
+
 export async function resendVerification(email) {
   const response = await fetch(`${config.API_URL}/users/resend-verification`, {
     method: "POST",
