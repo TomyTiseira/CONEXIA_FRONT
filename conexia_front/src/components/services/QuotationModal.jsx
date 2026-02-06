@@ -46,17 +46,17 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
         iconColor: 'text-red-600'
       },
       cancel: {
-        title: 'Cancelar Solicitud',
+        title: 'Cancelar solicitud',
         description: 'Al cancelar esta solicitud, se eliminará permanentemente y no podrás recuperarla. Esta acción no se puede deshacer.',
-        buttonText: 'Sí, Cancelar',
+        buttonText: 'Sí, cancelar',
         buttonClass: 'bg-gray-600 hover:bg-gray-700 text-white',
         icon: Trash2,
         iconColor: 'text-gray-600'
       },
       negotiate: {
-        title: 'Iniciar Negociación',
+        title: 'Iniciar negociación',
         description: 'Al iniciar una negociación, el proveedor será notificado que deseas discutir los términos de la cotización. Podrás comunicarte directamente para llegar a un acuerdo.',
-        buttonText: 'Sí, Negociar',
+        buttonText: 'Sí, negociar',
         buttonClass: 'bg-orange-600 hover:bg-orange-700 text-white',
         icon: MessageSquare,
         iconColor: 'text-orange-600'
@@ -76,12 +76,12 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
       rejected: 'Rechazado',
       cancelled: 'Cancelado',
       negotiating: 'Negociando',
-      in_progress: 'En Progreso',
+      in_progress: 'En progreso',
       delivered: 'Entregado',
-      revision_requested: 'Revisión Solicitada',
+      revision_requested: 'Revisión solicitada',
       completed: 'Completado',
       expired: 'Vencida',
-      in_claim: 'En Reclamo',
+      in_claim: 'En reclamo',
       cancelled_by_claim: 'Cancelado por reclamo',
       completed_by_claim: 'Finalizado por reclamo',
       completed_with_agreement: 'Finalizado con acuerdo'
@@ -196,7 +196,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
             <h3 className="text-xl font-bold text-orange-600 flex items-center gap-2">
               <AlertCircle size={20} />
-              Confirmar Acción
+              Confirmar acción
             </h3>
             <button
               onClick={() => setConfirmAction(null)}
@@ -225,7 +225,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             {confirmAction === 'negotiate' && (
               <div className="mt-4">
                 <label htmlFor="negotiationDescription" className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción de la Negociación
+                  Descripción de la negociación
                 </label>
                 <textarea
                   id="negotiationDescription"
@@ -311,7 +311,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           {/* Título Servicio Solicitado */}
           <h4 className="font-medium text-conexia-green text-lg mb-2 flex items-center gap-2">
             <Briefcase size={20} className="text-conexia-green" />
-            Servicio Solicitado
+            Servicio solicitado
           </h4>
           {/* Información del servicio */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -321,7 +321,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                 <p className="font-medium text-gray-900 break-words overflow-wrap-anywhere line-clamp-2 leading-tight">{hiring.service?.title}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Precio Base</p>
+                <p className="text-sm text-gray-600">Precio base</p>
                 <p className="font-medium text-conexia-green">
                   ${hiring.service?.price?.toLocaleString()}{hiring.service?.timeUnit ? ` por ${getUnitLabel(hiring.service.timeUnit)}` : ''}
                 </p>
@@ -390,7 +390,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                           className="bg-gray-600 hover:bg-gray-700 text-white"
                           disabled={actionLoading}
                         >
-                          {actionLoading ? 'Procesando...' : 'Cancelar Solicitud'}
+                          {actionLoading ? 'Procesando...' : 'Cancelar solicitud'}
                         </Button>
                       </div>
                     </div>

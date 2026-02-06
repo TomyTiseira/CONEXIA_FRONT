@@ -36,7 +36,7 @@ export const hasActiveQuotation = (service) => {
  */
 export const getQuotationButtonText = (service) => {
   if (hasPendingQuotation(service)) {
-    return 'Cancelar Solicitud';
+    return 'Cancelar solicitud';
   }
   
   if (hasActiveQuotation(service)) {

@@ -171,7 +171,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-medium text-conexia-green mb-2 flex items-center gap-2">
                   <Briefcase size={18} className="text-conexia-green" />
-                  Mi Servicio
+                  Mi servicio
                 </h4>
                 <p className="text-sm font-medium text-gray-900 mb-1 break-words">
                   {hiring.service?.title}
@@ -198,7 +198,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
               {hiring.negotiationDescription && hiring.status?.code === 'negotiating' && (
                 <div className="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-300">
                   <h4 className="font-medium text-orange-700 mb-2 flex items-center gap-2">
-                    🤝 <span>Solicitud de Negociación</span>
+                    🤝 <span>Solicitud de negociación</span>
                   </h4>
                   <p className="text-sm text-gray-600 mb-2">
                     El cliente quiere negociar:
@@ -211,7 +211,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
 
               {/* Formulario de cotización */}
               <div className="space-y-5">
-                <h4 className="font-medium text-gray-900">Detalles de la Cotización</h4>
+                <h4 className="font-medium text-gray-900">Detalles de la cotización</h4>
                 
                 {/* Selector de modalidad de pago */}
                 {loadingModalities ? (
@@ -238,7 +238,7 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                       <div>
                         <label htmlFor="quotedPrice" className="block text-sm font-medium text-gray-700 mb-2">
                           <DollarSign size={16} className="inline mr-1" />
-                          Precio Total *
+                          Precio total *
                         </label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
@@ -480,8 +480,8 @@ export default function QuotationFormModal({ hiring, isOpen, isEditing = false, 
                       {loading
                         ? 'Procesando...'
                         : isEditing
-                          ? 'Actualizar Cotización'
-                          : 'Enviar Cotización'}
+                          ? 'Actualizar cotización'
+                          : 'Enviar cotización'}
                     </Button>
                   </div>
                 </div>
