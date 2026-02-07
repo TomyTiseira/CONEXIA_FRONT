@@ -506,8 +506,8 @@ export default function MyServiceHiringsPage() {
                                   <button
                                     onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                                     className="flex items-center justify-center w-9 h-9 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
-                                    title="Ver en Mis Reclamos"
-                                    aria-label="Ver en Mis Reclamos"
+                                    title="Ver en mis reclamos"
+                                    aria-label="Ver en mis reclamos"
                                     data-action="ver-mis-reclamos"
                                   >
                                     <AlertCircle size={18} className="group-hover:scale-110 transition-transform" />
@@ -686,8 +686,8 @@ export default function MyServiceHiringsPage() {
                               <button
                                 onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                                 className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
-                                title="Ver en Mis Reclamos"
-                                aria-label="Ver en Mis Reclamos"
+                                title="Ver en mis reclamos"
+                                aria-label="Ver en mis reclamos"
                                 data-action="ver-mis-reclamos"
                               >
                                 <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />
