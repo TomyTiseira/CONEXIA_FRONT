@@ -1,0 +1,94 @@
+"use client";
+import { Eye, EyeOff } from "lucide-react";
+
+export default function InputField({
+  type,
+  placeholder,
+  value,
+  onChange,
+  onFocus,
+  onBlur,
+  error,
+  showToggle = false,
+  show = false,
+  onToggle,
+  disabled = false,
+  name,
+  required = false,
+  multiline = false,
+  rows = 3,
+  className = "",
+  showCharCount = false,
+  maxLength,
+}) {
+  if (multiline) {
+    return (
+      <div className="min-h-[64px] relative">
+        <textarea
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          disabled={disabled}
+          required={required}
+          rows={rows}
+          maxLength={maxLength}
+          className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring resize-none ${
+            error
+              ? "border-red-500 ring-red-300"
+              : "border-gray-300 focus:ring-conexia-green/40"
+          } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""} ${
+            showCharCount ? "pb-8" : ""
+          } ${className}`}
+        />
+        {showCharCount && (
+          <div className="absolute right-3 bottom-2 text-xs text-gray-500 pointer-events-none">
+            {value.length}{maxLength ? ` / ${maxLength}` : ''}
+          </div>
+        )}
+        {error && <p className="text-xs text-red-600 mt-1 text-left">{error}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-[64px] relative">
+      <input
+        type={show && type === "password" ? "text" : type}
+        name={name}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        disabled={disabled}
+        required={required}
+        maxLength={maxLength}
+        className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring ${
+          showToggle ? "pr-10" : showCharCount ? "pr-28" : ""
+        } ${
+          error
+            ? "border-red-500 ring-red-300"
+            : "border-gray-300 focus:ring-conexia-green/40"
+        } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""} ${className}`}
+      />
+      {showToggle && !disabled && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-3 top-2.5 text-conexia-green"
+        >
+          {show ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      )}
+      {showCharCount && !showToggle && (
+        <div className="absolute right-3 top-2.5 text-xs text-gray-500 pointer-events-none">
+          {value.length}{maxLength ? ` / ${maxLength}` : ''}
+        </div>
+      )}
+      {error && <p className="text-xs text-red-600 mt-1 text-left">{error}</p>}
+    </div>
+  );
+}

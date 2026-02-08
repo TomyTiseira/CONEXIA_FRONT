@@ -3,12 +3,13 @@ Principal normal: #48a6a7
 Principal hover: #419596
 Principal :active: #3a8586
 Principal light: #edf6f6
-Principal light hover: #e4f2f2
-Principal light active: #c6e3e4
+Principal light hover: #d6ececff
+Principal light active: #d3e0e0ff
 Principal dark: #367d7d
 Principal dark hover: #2b6a6a
 Principal dark active: #204b4b
 principal darker: #193a3a
+#1f6363ff
 
 Secundario: #ff4953
 Secundario hover: #e6424b
@@ -89,7 +90,7 @@ export const colors = {
   },
   secondary: {
     normal: '#ff4953',
-    hover: '#e6424b',
+    hover: '#f36970ff',
     active: '#cc3a42',
     light: {
       normal: '#ffedee',

@@ -1,26 +1,690 @@
-@import "tailwindcss";
+/* Tailwind directives */
+/* stylelint-disable at-rule-no-unknown */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ========================================
+   Swapy Dashboard Drag & Drop Styles
+   ======================================== */
+
+/* Estilos base para slots - Sin fondo visible, bordes redondeados */
+[data-swapy-slot] {
+  position: relative;
+  min-height: 100px;
+  background: transparent !important;
+  border-radius: 16px !important;
+  overflow: visible !important;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Estilos para items arrastrables - Sin transición mientras se arrastra */
+[data-swapy-item] {
+  cursor: grab;
+  transition: none;
+  user-select: none;
+  touch-action: none;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  background: transparent !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  transform-origin: center center;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+[data-swapy-item]:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+[data-swapy-item]:active {
+  cursor: grabbing;
+}
+
+/* Mientras se arrastra - Respuesta inmediata sin transición */
+.swapy-item.is-dragging,
+[data-swapy-item].is-dragging {
+  opacity: 0.92 !important;
+  transform: scale(1.01) !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2), 
+              0 0 0 1px rgba(72, 166, 167, 0.15) !important;
+  cursor: grabbing !important;
+  z-index: 9999 !important;
+  transition: none !important;
+  border-radius: 16px !important;
+  transform-origin: center center !important;
+}
+
+/* Slot objetivo cuando se arrastra encima - Muy sutil y redondeado */
+[data-swapy-slot].swapy-highlighted {
+  background: rgba(72, 166, 167, 0.03) !important;
+  border-radius: 16px !important;
+  border: 2px dashed rgba(72, 166, 167, 0.25);
+  animation: slotPulse 2s ease-in-out infinite;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slotPulse {
+  0%, 100% { 
+    background: rgba(72, 166, 167, 0.03) !important;
+    border-color: rgba(72, 166, 167, 0.25);
+    transform: scale(1);
+  }
+  50% { 
+    background: rgba(53, 186, 91, 0.05) !important;
+    border-color: rgba(53, 186, 91, 0.3);
+    transform: scale(1.003);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Animación ultra suave al soltar - Misma velocidad que el arrastre */
+.swapy-item.is-dropping,
+[data-swapy-item].is-dropping {
+  animation: none !important;
+  transition: transform 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+              opacity 0.8s ease !important;
+  border-radius: 16px !important;
+  transform-origin: center center !important;
+  transform: scale(1) !important;
+  opacity: 1 !important;
+}
+
+/* ========================================
+   Plan Styles (Free, Basic, Premium)
+   ======================================== */
+
+:root {
+  /* Plan Free */
+  --plan-free-bg: #f9fafb;
+  --plan-free-bg-light: #f3f4f6;
+  --plan-free-text: #374151;
+  --plan-free-text-light: #6b7280;
+  --plan-free-border: #d1d5db;
+  --plan-free-gradient-from: #9ca3af;
+  --plan-free-gradient-to: #6b7280;
+
+  /* Plan Basic */
+  --plan-basic-bg: #eff6ff;
+  --plan-basic-bg-light: #dbeafe;
+  --plan-basic-text: #1e40af;
+  --plan-basic-text-light: #3b82f6;
+  --plan-basic-border: #93c5fd;
+  --plan-basic-gradient-from: #3b82f6;
+  --plan-basic-gradient-to: #2563eb;
+
+  /* Plan Premium */
+  --plan-premium-bg: #fffbeb;
+  --plan-premium-bg-light: #fef3c7;
+  --plan-premium-text: #92400e;
+  --plan-premium-text-light: #d97706;
+  --plan-premium-border: #fbbf24;
+  --plan-premium-gradient-from: #f59e0b;
+  --plan-premium-gradient-to: #d97706;
+}
+
+/* Plan Badge Animations */
+@keyframes planPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes planShine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.plan-badge-premium {
+  animation: planPulse 2s ease-in-out infinite;
+}
+
+.plan-badge-shine {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: planShine 3s linear infinite;
+}
+
+/* Plan-specific utility classes */
+.plan-free-gradient {
+  background: linear-gradient(135deg, var(--plan-free-gradient-from), var(--plan-free-gradient-to));
+}
+
+.plan-basic-gradient {
+  background: linear-gradient(135deg, var(--plan-basic-gradient-from), var(--plan-basic-gradient-to));
+}
+
+.plan-premium-gradient {
+  background: linear-gradient(135deg, var(--plan-premium-gradient-from), var(--plan-premium-gradient-to));
+}
+
+/* Soft white/gray scrollbar styling */
+.scrollbar-soft::-webkit-scrollbar {
+  width: 10px;
+}
+.scrollbar-soft::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+.scrollbar-soft::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb; /* gray-200 */
+  border-radius: 6px;
+  border: 2px solid #ffffff;
+}
+.scrollbar-soft::-webkit-scrollbar-thumb:hover {
+  background-color: #d1d5db; /* gray-300 */
+}
+/* Firefox */
+.scrollbar-soft {
+  scrollbar-color: #e5e7eb #ffffff; /* thumb track */
+  scrollbar-width: thin;
+}
+
+/* Estilos para tarjetas de publicación en cuadrícula */
+.grid-publication-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-publication-card.publication-card-open {
+  height: auto;
+}
+
+.grid-publication-card[data-comment-open="true"] {
+  height: auto;
+}
+
+.grid-publication-card[data-comment-open="false"] {
+  height: auto;
+  min-height: 0;
+}
+
+/* Asegurar que las tarjetas en la cuadrícula tengan comportamiento independiente */
+.grid-cols-2 > div {
+  align-self: flex-start;
+  height: fit-content;
+}
+
+/* Forzar que las publicaciones en la cuadrícula no afecten a las demás */
+div[class*="grid-cols-1"][class*="md:grid-cols-2"][class*="gap-6"][class*="items-start"] {
+  display: grid;
+  grid-auto-rows: auto;
+}
+
+/* Utility class para truncar texto con múltiples líneas */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Utility class para manejar palabras muy largas que podrían romper el layout */
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Estilos para el carousel de medios */
+.publication-carousel {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f5f5;
+  margin: 8px 0;
+}
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  overflow: hidden;
+}
+
+.carousel-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-image,
+.carousel-video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.prev-btn {
+  left: 10px;
+}
+
+.next-btn {
+  right: 10px;
+}
+
+.carousel-indicators {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.indicator.active,
+.indicator:hover {
+  background: white;
+  transform: scale(1.2);
+}
+
+.carousel-counter {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  z-index: 2;
+}
+
+/* Estilos para el preview durante creación/edición */
+.media-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.media-preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e1e5e9;
+  background: #f5f5f5;
+}
+
+.preview-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e1e5e9;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.remove-btn:hover {
+  background: rgba(255, 0, 0, 1);
+}
+
+.order-indicator {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+}
+
+/* Responsive para dispositivos móviles */
+@media (max-width: 768px) {
+  .carousel-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .prev-btn {
+    left: 5px;
+  }
+
+  .next-btn {
+    right: 5px;
+  }
+
+  .indicator {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .media-preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+}
+
+/* Animación fadeIn para modales */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Estilos para react-phone-number-input */
+.phone-input-wrapper .PhoneInputCountry {
+  margin-right: 0.5rem;
+}
+
+.phone-input-wrapper .PhoneInputCountryIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.phone-input-wrapper .PhoneInputCountrySelect {
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.phone-input-wrapper .PhoneInputCountrySelect:hover {
+  background-color: #f3f4f6;
+}
+
+.phone-input-wrapper .PhoneInputCountrySelectArrow {
+  color: #6b7280;
+  opacity: 0.75;
+  margin-left: 0.25rem;
+}
+
+/* Estilos para react-datepicker */
+.react-datepicker {
+  font-family: inherit;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.react-datepicker__header {
+  background-color: #047857;
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding-top: 0.75rem;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: white;
+  font-weight: 600;
+}
+
+.react-datepicker__day {
+  color: #374151;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.react-datepicker__day:hover {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: #047857 !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+.react-datepicker__day--today {
+  font-weight: 600;
+  color: #047857;
+}
+
+.react-datepicker__day--disabled {
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: transparent;
+  color: #d1d5db;
+}
+
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+  color: #047857;
+  cursor: pointer;
+}
+
+.react-datepicker__navigation {
+  top: 0.75rem;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: white;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: #d1fae5;
+}
+
+/* 3D Flip Card Animation */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Hero Home Card specific styles */
+.perspective-1000 > div {
+  transform-style: preserve-3d;
+}
+
+/* Animated gradient for CONEXIA hero borders */
+@keyframes gradient-xy {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-xy {
+  background-size: 200% 200%;
+  animation: gradient-xy 3s ease infinite;
+}
+
+/* Efecto de resplandor pulsante tipo Google para el CTA */
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Animación para modal de login - fade in suave */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Animación para check de éxito */
+@keyframes check {
+  0% {
+    stroke-dasharray: 0, 100;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dasharray: 100, 0;
+    opacity: 1;
+  }
+}
+
+.animate-check {
+  animation: check 0.6s ease-in-out forwards;
+}
+
+/* Gradiente cónico para efectos especiales */
+.bg-gradient-conic {
+  background: conic-gradient(from 0deg, #48a6a7, #d6ecec, #48a6a7, #367d7d, #48a6a7);
+}
+
+/* ========================================
+   Modales de Suspensión/Baneo - Estilos
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* ========================================
+   Login Success Modal - Animaciones
+   ======================================== */
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
