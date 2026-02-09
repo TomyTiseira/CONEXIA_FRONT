@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { fetchMyProjects } from '@/service/projects/projectsFetch';
@@ -17,14 +17,18 @@ import NavbarModerator from '@/components/navbar/NavbarModerator';
 import { PlanComparisonBanner } from '@/components/plans';
 import { UpgradePlanButton } from '@/components/plans';
 import { config } from '@/config';
+import { useAccountStatus } from '@/hooks/useAccountStatus';
+
+const ITEMS_PER_PAGE = 10;
 
 export default function MyProjectsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { canCreateContent, suspensionMessage } = useAccountStatus();
   const [projects, setProjects] = useState([]);
   const [pagination, setPagination] = useState({ 
     currentPage: 1, 
-    itemsPerPage: 10, 
+    itemsPerPage: ITEMS_PER_PAGE, 
     totalItems: 0, 
     totalPages: 1 
   });
@@ -38,12 +42,8 @@ export default function MyProjectsPage() {
   const [activeProjects, setActiveProjects] = useState(0);
   const [totalAllProjects, setTotalAllProjects] = useState(0);
 
-  useEffect(() => {
+  const loadProjects = useCallback(async () => {
     if (!user?.id) return;
-    loadProjects();
-  }, [user?.id, filters, showInactive]);
-
-  const loadProjects = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -54,10 +54,10 @@ export default function MyProjectsPage() {
         ownerId: user.id, 
         active: activeFilter, 
         page: filters.page, 
-        limit: pagination.itemsPerPage 
+        limit: ITEMS_PER_PAGE 
       });
       setProjects(res.projects || []);
-      setPagination(res.pagination || pagination);
+      setPagination((prev) => res.pagination || prev);
       
       // Obtener el total de TODOS los proyectos (activos + inactivos) para la estadística
       const resAll = await fetchMyProjects({ 
@@ -81,7 +81,11 @@ export default function MyProjectsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, filters.page, showInactive]);
+
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
 
   const handlePageChange = (newPage) => {
     setFilters(prev => ({ ...prev, page: newPage }));
@@ -109,22 +113,61 @@ export default function MyProjectsPage() {
   return (
     <>
       {renderNavbar()}
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
+        <div className="max-w-7xl mx-auto">
           {/* Banner Mejorar Plan */}
-          <div className="mb-6">
+          <div className="mb-6 empty:hidden">
             <UpgradePlanButton context="projects" />
           </div>
 
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-white rounded-lg transition"
-            >
-              <ArrowLeft size={24} className="text-conexia-green" />
-            </button>
-            <h1 className="text-3xl font-bold text-conexia-green">Mis proyectos</h1>
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+              <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
+                Mis proyectos
+              </h1>
+              <div className="w-10"></div>
+            </div>
           </div>
 
           {/* Estadísticas rápidas */}
@@ -181,13 +224,24 @@ export default function MyProjectsPage() {
                 </label>
               </div>
               
-              <button
-                onClick={() => router.push('/project/create')}
-                className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
-              >
-                <Briefcase size={16} />
-                Crear nuevo proyecto
-              </button>
+              {canCreateContent ? (
+                <button
+                  onClick={() => router.push('/project/create')}
+                  className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
+                >
+                  <Briefcase size={16} />
+                  Crear nuevo proyecto
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed flex items-center gap-2"
+                  title={suspensionMessage}
+                >
+                  <Briefcase size={16} />
+                  Crear nuevo proyecto
+                </button>
+              )}
             </div>
           </div>
 
@@ -370,18 +424,20 @@ export default function MyProjectsPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Paginación */}
-              {pagination.totalPages > 1 && (
-                <div className="mt-6">
-                  <Pagination
-                    currentPage={pagination.currentPage}
-                    totalPages={pagination.totalPages}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
             </>
+          )}
+
+          {/* Paginación (siempre visible) */}
+          {!loading && !error && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages || 1}
+                hasPreviousPage={pagination.currentPage > 1}
+                hasNextPage={pagination.currentPage < (pagination.totalPages || 1)}
+                onPageChange={handlePageChange}
+              />
+            </div>
           )}
         </div>
       </div>

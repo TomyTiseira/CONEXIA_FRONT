@@ -214,7 +214,7 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
           {/* Header (estático) */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
@@ -248,7 +248,7 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
               </div>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Tipo de Reclamo</p>
+                  <p className="text-sm text-gray-600 mb-1">Tipo de reclamo</p>
                   <ClaimTypeBadge
                     claimType={normalized.claimType}
                     labelOverride={normalized.claimTypeLabel}
@@ -332,7 +332,7 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
           </div>
 
           {/* Footer (estático) */}
-          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0 rounded-b-xl">
+          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0 rounded-b-lg">
             <Button
               type="button"
               onClick={handleClose}

@@ -308,7 +308,7 @@ export function SubsanarClaimModal({
               <h3 className="font-semibold text-lg text-gray-900 mb-3">Información del reclamo</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Tipo de Reclamo</p>
+                  <p className="text-sm text-gray-600 mb-1">Tipo de reclamo</p>
                   <ClaimTypeBadge
                     claimType={claimObj.claimType}
                     labelOverride={claimTypeLabel}
@@ -412,7 +412,7 @@ export function SubsanarClaimModal({
           {/* Nuevas Evidencias (opcional) */}
           <div className="bg-white border rounded-lg p-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Agregar Evidencias (opcional)
+              Agregar evidencias (opcional)
             </label>
             <p className="text-sm text-gray-600 mb-3">
               Puedes adjuntar hasta {MAX_SUBSANAR_EVIDENCE_FILES} archivo(s) en esta subsanación.

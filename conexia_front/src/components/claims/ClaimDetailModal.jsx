@@ -592,7 +592,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
             }`}>
               <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
                 <Scale size={20} className={isRejected ? 'text-red-600' : isClientFavor ? 'text-green-600' : isProviderFavor ? 'text-red-600' : 'text-yellow-600'} />
-                {isRejected ? 'Reclamo Rechazado' : 'Resolución del Reclamo'}
+                {isRejected ? 'Reclamo rechazado' : 'Resolución del reclamo'}
               </h3>
             </div>
 

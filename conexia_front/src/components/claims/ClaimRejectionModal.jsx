@@ -218,7 +218,7 @@ export const ClaimRejectionModal = ({ isOpen, onClose, claim, onSuccess, showToa
                 </div>
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Tipo de Reclamo</p>
+                    <p className="text-sm text-gray-600 mb-1">Tipo de reclamo</p>
                     <ClaimTypeBadge
                       claimType={normalized.claimType}
                       labelOverride={normalized.claimTypeLabel}

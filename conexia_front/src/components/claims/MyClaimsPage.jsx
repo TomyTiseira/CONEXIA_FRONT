@@ -574,7 +574,7 @@ export default function MyClaimsPage() {
                             </button>
                           </div>
                           <div className="mb-2">
-                            <p className="text-xs text-gray-600 mb-1">Tipo de Reclamo</p>
+                            <p className="text-xs text-gray-600 mb-1">Tipo de reclamo</p>
                             <ClaimTypeBadge claimType={claim.claimType} showIcon={false} />
                           </div>
                         </div>

@@ -163,7 +163,7 @@ export const ComplianceCard = ({
           {/* ID del Compromiso */}
           {compliance.id && (
             <div className="pb-4 border-b border-gray-300">
-              <p className="text-xs font-medium text-gray-600 mb-2">ID del Compromiso:</p>
+              <p className="text-xs font-medium text-gray-600 mb-2">ID del compromiso:</p>
               <code className="text-sm bg-purple-100 text-purple-900 px-3 py-1.5 rounded-lg font-mono font-semibold border border-purple-300 inline-block">
                 {String(compliance.id)}
               </code>
@@ -236,7 +236,7 @@ export const ComplianceCard = ({
           {compliance.moderatorInstructions && (
             <div className={compliance.deadline ? 'pt-4 border-t border-gray-300' : ''}>
               <p className="text-xs font-medium text-gray-600 mb-2">
-                Instrucciones del Moderador:
+                Instrucciones del moderador:
               </p>
               <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                 {compliance.moderatorInstructions}
@@ -513,7 +513,7 @@ export const ComplianceCard = ({
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
             >
               <Scale size={16} />
-              <span>Revisar Compromiso (Moderador)</span>
+              <span>Revisar compromiso (Moderador)</span>
             </button>
           ) : showUploadButton ? (
             <button
@@ -767,7 +767,7 @@ const HistorialRechazos = ({ compliance, isResponsible }) => {
             'text-yellow-700'
           } />
           <p className="text-base font-bold text-gray-900">
-            {isResponsible ? 'Advertencia de Reenvío' : 'Información de Intentos'}
+            {isResponsible ? 'Advertencia de reenvío' : 'Información de intentos'}
           </p>
         </div>
       </div>
@@ -879,7 +879,7 @@ const HistorialRechazos = ({ compliance, isResponsible }) => {
               <div className="flex items-center gap-2">
                 <FileText size={16} className="text-gray-700" />
                 <span className="text-sm font-bold text-gray-900">
-                  Historial de Intentos ({submissions.length})
+                  Historial de intentos ({submissions.length})
                 </span>
               </div>
               {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
