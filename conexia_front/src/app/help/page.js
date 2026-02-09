@@ -10,7 +10,7 @@ export default function HelpCenter() {
   const categories = [
     {
       icon: Users,
-      title: 'Primeros Pasos',
+      title: 'Primeros pasos',
       color: 'from-blue-400 to-blue-600',
       faqs: [
         {
@@ -29,12 +29,12 @@ export default function HelpCenter() {
     },
     {
       icon: BookOpen,
-      title: 'Servicios y Proyectos',
+      title: 'Servicios y proyectos',
       color: 'from-purple-400 to-purple-600',
       faqs: [
         {
           q: '¿Cómo publico un servicio?',
-          a: 'Ve a "Mis Servicios" > "Crear servicio". Describe tu oferta, establece precio, plazos de entrega y sube ejemplos de tu trabajo.'
+          a: 'Ve a "Mis servicios" > "Crear servicio". Describe tu oferta, establece precio, plazos de entrega y sube ejemplos de tu trabajo.'
         },
         {
           q: '¿Cómo busco profesionales?',
@@ -48,7 +48,7 @@ export default function HelpCenter() {
     },
     {
       icon: CreditCard,
-      title: 'Pagos y Facturación',
+      title: 'Pagos y facturación',
       color: 'from-green-400 to-green-600',
       faqs: [
         {
@@ -67,7 +67,7 @@ export default function HelpCenter() {
     },
     {
       icon: Shield,
-      title: 'Seguridad y Confianza',
+      title: 'Seguridad y confianza',
       color: 'from-amber-400 to-amber-600',
       faqs: [
         {
@@ -110,7 +110,7 @@ export default function HelpCenter() {
             </div>
           </div>
           <h1 className="text-5xl md:text-6xl font-bold drop-shadow-lg mb-4">
-            Centro de Ayuda
+            Centro de ayuda
           </h1>
           <p className="text-xl text-white/90 drop-shadow mb-8">
             ¿En qué podemos ayudarte hoy?
@@ -155,7 +155,7 @@ export default function HelpCenter() {
             <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <Settings className="text-purple-600" size={32} />
             </div>
-            <h3 className="font-bold text-gray-800 mb-2">Políticas y Términos</h3>
+            <h3 className="font-bold text-gray-800 mb-2">Políticas y términos</h3>
             <p className="text-sm text-gray-600">Consulta nuestras condiciones de uso y políticas</p>
           </Link>
 
@@ -171,7 +171,7 @@ export default function HelpCenter() {
         {/* Categorías de FAQs */}
         <div className="space-y-8">
           <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">
-            Preguntas Frecuentes
+            Preguntas frecuentes
           </h2>
 
           {categories.map((category, idx) => {

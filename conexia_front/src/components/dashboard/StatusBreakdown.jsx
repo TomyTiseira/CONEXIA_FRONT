@@ -23,7 +23,7 @@ const statusConfig = {
     iconClass: 'text-blue-500',
   },
   pendiente_evaluacion: {
-    label: 'Pendiente de Evaluación',
+    label: 'Pendiente de evaluación',
     icon: AlertCircle,
     color: 'yellow',
     bgClass: 'bg-yellow-50',
@@ -32,7 +32,7 @@ const statusConfig = {
     iconClass: 'text-yellow-500',
   },
   evaluacion_expirada: {
-    label: 'Evaluación Expirada',
+    label: 'Evaluación expirada',
     icon: Timer,
     color: 'orange',
     bgClass: 'bg-orange-50',
@@ -66,6 +66,15 @@ const statusConfig = {
     textClass: 'text-gray-700',
     borderClass: 'border-gray-200',
     iconClass: 'text-gray-500',
+  },
+  cancelada_moderacion: {
+    label: 'Canceladas por moderación',
+    icon: Ban,
+    color: 'purple',
+    bgClass: 'bg-purple-50',
+    textClass: 'text-purple-700',
+    borderClass: 'border-purple-200',
+    iconClass: 'text-purple-500',
   },
 };
 

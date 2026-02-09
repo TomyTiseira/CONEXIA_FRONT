@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Navbar from '@/components/navbar/Navbar';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
 import { Shield, RefreshCw, Sparkles } from 'lucide-react';
 import { useModerationAnalysis } from '@/hooks/moderation/useModerationAnalysis';
 import { useModerationActions } from '@/hooks/moderation/useModerationActions';
@@ -111,115 +110,232 @@ export default function ModerationPage() {
   }
 
   return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Botón Volver */}
-          <div className="mb-6">
-            <Button
-              variant="back"
-              className="flex items-center gap-2 px-3 py-2 font-medium"
-              onClick={() => router.push('/reports')}
-            >
-              <ChevronLeft className="w-5 h-5" />
-              Volver a Reportes
-            </Button>
+    <>
+    <Navbar />
+    <main className="bg-[#eaf5f2] min-h-screen p-8 space-y-6 max-w-7xl mx-auto pb-24">
+      {/* Header card */}
+      <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative">
+        {/* Desktop header */}
+        <div className="hidden sm:block">
+          <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-4">
+            <div className="flex items-center justify-start">
+              <button
+                onClick={() => router.push('/reports')}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+            </div>
+
+            <h1 className="text-2xl font-bold text-conexia-green text-center whitespace-nowrap">
+              Panel de Moderación con IA
+            </h1>
+
+            <div className="flex items-center justify-end">
+              <div className="flex flex-col gap-2 w-[220px]">
+                <Button
+                  onClick={handleAnalyze}
+                  disabled={analyzing || loading}
+                  variant="add"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white rounded-lg font-semibold text-sm hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-md hover:shadow-lg transform hover:scale-[1.01] border border-[#48a6a7]/30"
+                >
+                  {analyzing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Analizando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>Analizar reportes</span>
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={refresh}
+                  disabled={loading || analyzing}
+                  variant="informative"
+                  className="w-full inline-flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span>Refrescar</span>
+                </Button>
+              </div>
+            </div>
           </div>
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="w-8 h-8 text-conexia-green" />
-            <h1 className="text-3xl font-bold text-gray-900">
+        </div>
+
+        {/* Mobile header */}
+        <div className="sm:hidden">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => router.push('/reports')}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Volver atrás"
+            >
+              <div className="relative w-6 h-6">
+                <svg
+                  className="w-6 h-6 text-conexia-green"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    cx="10"
+                    cy="10"
+                    r="8.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    fill="none"
+                  />
+                  <line
+                    x1="6.5"
+                    y1="10"
+                    x2="13.5"
+                    y2="10"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <polyline
+                    points="9,7 6,10 9,13"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </button>
+
+            <div className="w-10" />
+          </div>
+
+          <div className="mt-2 text-center">
+            <h1 className="text-2xl font-bold text-conexia-green text-center">
               Panel de Moderación con IA
             </h1>
           </div>
-          <p className="text-gray-600">
-            Analiza reportes de usuarios y toma acciones basadas en inteligencia artificial
-          </p>
-        </div>
 
-        {/* Botones de acción principales */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-3">
-          <Button
-            onClick={handleAnalyze}
-            disabled={analyzing || loading}
-            variant="primary"
-            className="flex items-center justify-center gap-2 px-6 py-3"
-          >
-            {analyzing ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>Analizando...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5" />
-                <span>Analizar Reportes</span>
-              </>
-            )}
-          </Button>
+          <div className="mt-4 flex flex-col gap-2">
+            <Button
+              onClick={handleAnalyze}
+              disabled={analyzing || loading}
+              variant="add"
+              className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white rounded-lg font-semibold text-sm hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-md hover:shadow-lg transform hover:scale-[1.01] border border-[#48a6a7]/30"
+            >
+              {analyzing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Analizando...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Analizar reportes</span>
+                </>
+              )}
+            </Button>
 
-          <Button
-            onClick={refresh}
-            disabled={loading || analyzing}
-            variant="informative"
-            className="flex items-center justify-center gap-2 px-6 py-3"
-          >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refrescar</span>
-          </Button>
-        </div>
-
-        {/* Filtros */}
-        <AnalysisFilters filters={filters} onFilterChange={updateFilters} />
-
-        {/* Información de resultados */}
-        {meta.total > 0 && (
-          <div className="mb-4 text-sm text-gray-600">
-            Mostrando {results.length} de {meta.total} resultados
+            <Button
+              onClick={refresh}
+              disabled={loading || analyzing}
+              variant="informative"
+              className="w-full inline-flex items-center justify-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span>Refrescar</span>
+            </Button>
           </div>
-        )}
-
-        {/* Tabla de resultados */}
-        <ModerationTable
-          results={Array.isArray(results) ? results : []}
-          onViewDetails={handleViewDetails}
-          loading={loading}
-        />
-
-        {/* Paginación */}
-        {meta.totalPages > 1 && (
-          <Pagination
-            currentPage={meta.page}
-            totalPages={meta.totalPages}
-            hasNextPage={meta.page < meta.totalPages}
-            hasPreviousPage={meta.page > 1}
-            onPageChange={(newPage) => updateFilters({ page: newPage })}
-          />
-        )}
-
-        {/* Modal de detalles */}
-        {selectedAnalysis && (
-          <AnalysisDetailsModal
-            analysis={selectedAnalysis}
-            onClose={handleCloseModal}
-            onResolve={handleResolve}
-            loading={resolving}
-          />
-        )}
-
-        {/* Toast de notificaciones */}
-        {toast.isVisible && (
-          <Toast
-            type={toast.type}
-            message={toast.message}
-            isVisible={toast.isVisible}
-            onClose={closeToast}
-            duration={5000}
-            position="top-center"
-          />
-        )}
+        </div>
       </div>
-    </div>
+
+      {/* Filtros */}
+      <AnalysisFilters filters={filters} onFilterChange={updateFilters} />
+
+      {/* Información de resultados */}
+      {meta.total > 0 && (
+      <div className="text-sm text-gray-600">
+        Mostrando {results.length} de {meta.total} resultados
+      </div>
+      )}
+
+      {/* Tabla de resultados */}
+      <ModerationTable
+      results={Array.isArray(results) ? results : []}
+      onViewDetails={handleViewDetails}
+      loading={loading}
+      />
+
+      {/* Paginación */}
+      {meta.totalPages > 1 && (
+      <Pagination
+        currentPage={meta.page}
+        totalPages={meta.totalPages}
+        hasNextPage={meta.page < meta.totalPages}
+        hasPreviousPage={meta.page > 1}
+        onPageChange={(newPage) => updateFilters({ page: newPage })}
+      />
+      )}
+    </main>
+
+    {/* Modal de detalles */}
+    {selectedAnalysis && (
+      <AnalysisDetailsModal
+      analysis={selectedAnalysis}
+      onClose={handleCloseModal}
+      onResolve={handleResolve}
+      loading={resolving}
+      />
+    )}
+
+    {/* Toast de notificaciones */}
+    {toast.isVisible && (
+      <Toast
+      type={toast.type}
+      message={toast.message}
+      isVisible={toast.isVisible}
+      onClose={closeToast}
+      duration={5000}
+      position="top-center"
+      />
+    )}
+    </>
   );
 }

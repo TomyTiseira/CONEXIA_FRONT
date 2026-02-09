@@ -294,7 +294,7 @@ export default function MyClaimsPage() {
               </div>
             </button>
             <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
-              Mis Reclamos
+              Mis reclamos
             </h1>
             <div className="w-10"></div>
           </div>

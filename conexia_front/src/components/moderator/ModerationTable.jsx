@@ -61,7 +61,7 @@ export default function ModerationTable({ results, onViewDetails, loading }) {
 
   if (!results || results.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg shadow">
+      <div className="text-center py-12 bg-white rounded-xl shadow-sm border">
         <AlertTriangle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
         <p className="text-gray-500 text-lg">No hay análisis disponibles</p>
         <p className="text-gray-400 text-sm mt-2">
@@ -72,7 +72,7 @@ export default function ModerationTable({ results, onViewDetails, loading }) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
       {/* Tabla para pantallas grandes */}
       <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">

@@ -191,7 +191,7 @@ export default function ServiceRequestsPage({ serviceId }) {
   const handleClaimSuccess = (createdClaim) => {
     setToast({
       type: 'success',
-      message: 'Reclamo creado exitosamente. Redirigiendo a Mis Reclamos...',
+      message: 'Reclamo creado exitosamente. Redirigiendo a Mis reclamos...',
       isVisible: true
     });
     setIsClaimModalOpen(false);

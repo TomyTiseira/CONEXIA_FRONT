@@ -43,19 +43,35 @@ export function SubsanarClaimModal({
 
   const baseClaimId = claim?.claim?.id || claim?.id;
 
+  const normalizeDetail = (rawDetail) => {
+    if (!rawDetail) return rawDetail;
+    if (rawDetail.claimant && rawDetail.otherUser) return rawDetail;
+
+    const userRole = rawDetail?.claim?.userRole;
+    if (userRole && rawDetail?.yourProfile && rawDetail?.otherUserProfile) {
+      return {
+        ...rawDetail,
+        claimant: userRole === 'claimant' ? rawDetail.yourProfile : rawDetail.otherUserProfile,
+        otherUser: userRole === 'claimant' ? rawDetail.otherUserProfile : rawDetail.yourProfile,
+      };
+    }
+
+    return rawDetail;
+  };
+
   useEffect(() => {
     const fetchDetail = async () => {
       if (!isOpen || !baseClaimId) return;
 
       if (claim?.claim && claim?.claimant && claim?.otherUser) {
-        setDetail(claim);
+        setDetail(normalizeDetail(claim));
         return;
       }
 
       try {
         setIsLoadingDetail(true);
         const result = await getClaimDetail(baseClaimId);
-        setDetail(result);
+        setDetail(normalizeDetail(result));
       } catch (err) {
         console.error('Error fetching claim detail for subsanar modal:', err);
         setDetail(null);
@@ -97,15 +113,27 @@ export function SubsanarClaimModal({
   };
 
   const claimantName = useMemo(() => {
-    return detail?.claimant?.profile
-      ? displayFromProfile(detail.claimant.profile)
-      : claimObj?.claimantName || 'N/A';
+    const profile = detail?.claimant?.profile || detail?.claimant || null;
+    if (profile) return displayFromProfile(profile);
+
+    // Fallback (cuando se abre desde Mis reclamos sin detalle): otherUser es la contraparte
+    if (claimObj?.otherUser && claimObj?.userRole === 'respondent') {
+      return displayFromProfile({ name: claimObj.otherUser.name, lastName: claimObj.otherUser.lastName });
+    }
+
+    return claimObj?.claimantName || 'N/A';
   }, [detail, claimObj]);
 
   const claimedName = useMemo(() => {
-    return detail?.otherUser?.profile
-      ? displayFromProfile(detail.otherUser.profile)
-      : claimObj?.claimedUserName || 'N/A';
+    const profile = detail?.otherUser?.profile || detail?.otherUser || null;
+    if (profile) return displayFromProfile(profile);
+
+    // Fallback (cuando se abre desde Mis reclamos sin detalle): otherUser es la contraparte
+    if (claimObj?.otherUser && claimObj?.userRole === 'claimant') {
+      return displayFromProfile({ name: claimObj.otherUser.name, lastName: claimObj.otherUser.lastName });
+    }
+
+    return claimObj?.claimedUserName || 'N/A';
   }, [detail, claimObj]);
 
   const trimmedResponse = clarificationResponse.trim();

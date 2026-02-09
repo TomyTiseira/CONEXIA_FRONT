@@ -204,7 +204,7 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
               <ul className="list-disc list-inside space-y-1 ml-2">
                 <li>Esperar a que se complete la solicitud actual</li>
                 <li>Cancelar la solicitud pendiente si es necesario</li>
-                <li>Revisar el estado en "Mis Servicios Solicitados"</li>
+                <li>Revisar el estado en "Mis servicios solicitados"</li>
               </ul>
             </div>
           </div>
@@ -221,7 +221,7 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
                 }}
                 className="flex-1"
               >
-                Ver Mis solicitudes
+                Ver mis solicitudes
               </Button>
             </div>
           </div>

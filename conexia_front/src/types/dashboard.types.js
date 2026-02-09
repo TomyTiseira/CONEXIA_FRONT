@@ -8,6 +8,7 @@
  * @property {number} byStatus.aceptada
  * @property {number} byStatus.rechazada
  * @property {number} byStatus.cancelada
+ * @property {number} byStatus.cancelada_moderacion
  */
 
 /**
@@ -37,7 +38,8 @@
  * @property {Object} data.postulations
  * @property {number} data.postulations.totalPostulations - Total de postulaciones realizadas
  * @property {number} data.postulations.acceptedPostulations - Postulaciones aceptadas
- * @property {number} data.postulations.successRate - % de éxito (0-100)
+ * @property {number} data.postulations.successRate - % de éxito (0-100), excluye canceladas
+ * @property {Object} [data.postulations.byStatus] - Desglose opcional por estado
  * @property {ProjectDashboardMetrics} [data.projectDashboard] - Métricas de proyectos colaborativos
  * @property {string} timestamp
  */

@@ -64,7 +64,7 @@ export default function UserServicesPage({ userId }) {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight">
-                  {isOwner ? 'Mis Servicios' : 'Servicios del Usuario'}
+                  {isOwner ? 'Mis servicios' : 'Servicios del usuario'}
                 </h1>
                 <p className="text-conexia-green-dark mt-2 text-base md:text-lg">
                   {isOwner 
