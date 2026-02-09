@@ -162,7 +162,7 @@ export default function ModerationPage() {
             </div>
 
             <h1 className="text-2xl font-bold text-conexia-green text-center whitespace-nowrap">
-              Panel de Moderación con IA
+              Panel de moderación con IA
             </h1>
 
             <div className="flex items-center justify-end">
@@ -249,7 +249,7 @@ export default function ModerationPage() {
 
           <div className="mt-2 text-center">
             <h1 className="text-2xl font-bold text-conexia-green text-center">
-              Panel de Moderación con IA
+              Panel de moderación con IA
             </h1>
           </div>
 

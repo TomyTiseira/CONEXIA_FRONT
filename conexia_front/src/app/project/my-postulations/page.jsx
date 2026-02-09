@@ -183,7 +183,7 @@ export default function MyPostulationsPage() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <h1 className="text-2xl md:text-3xl font-bold text-conexia-green">
-              Mis Postulaciones
+              Mis postulaciones
             </h1>
             
             <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
