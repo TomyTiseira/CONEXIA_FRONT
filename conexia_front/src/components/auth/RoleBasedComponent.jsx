@@ -32,7 +32,7 @@ export const RoleBasedComponent = () => {
       {/* Contenido para admin y moderador */}
       {hasAnyRole(['admin', 'moderador']) && (
         <div className="bg-yellow-100 p-4 rounded mb-4">
-          <h3 className="font-semibold text-yellow-800">Panel de Moderación</h3>
+          <h3 className="font-semibold text-yellow-800">Panel de moderación</h3>
           <p className="text-yellow-700">Solo administradores y moderadores pueden ver esto</p>
         </div>
       )}

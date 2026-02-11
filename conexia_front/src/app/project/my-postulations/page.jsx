@@ -9,7 +9,7 @@ import { getMyPostulations, cancelPostulation } from '@/service/postulations/pos
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import Pagination from '@/components/common/Pagination';
 import { ROLES } from '@/constants/roles';
-import BackButton from '@/components/ui/BackButton';
+import { Filter } from 'lucide-react';
 
 export default function MyPostulationsPage() {
   const { user } = useAuth();
@@ -180,20 +180,69 @@ export default function MyPostulationsPage() {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green">
-              Mis Postulaciones
-            </h1>
-            
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-              {/* Filtro por proyecto */}
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+              <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
+                Mis postulaciones
+              </h1>
+              <div className="w-10"></div>
+            </div>
+          </div>
+
+          {/* Filtros */}
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Filtrar por proyecto:</label>
+                <Filter size={20} className="text-gray-500" />
+                <span className="font-medium text-gray-700">Filtros:</span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <select
                   value={selectedProject}
                   onChange={(e) => handleProjectFilterChange(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green w-full sm:w-auto"
                 >
                   <option value="">Todos los proyectos</option>
                   {uniqueProjects.map((project) => (
@@ -203,13 +252,6 @@ export default function MyPostulationsPage() {
                   ))}
                 </select>
               </div>
-              
-              <button
-                onClick={() => router.push('/project/search')}
-                className="bg-conexia-green text-white px-4 py-2 rounded font-medium hover:bg-conexia-green/90 transition text-sm"
-              >
-                Buscar Proyectos
-              </button>
             </div>
           </div>
 
@@ -346,26 +388,17 @@ export default function MyPostulationsPage() {
             )}
           </div>
 
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex justify-center mt-6">
-              <Pagination
-                page={currentPage}
-                hasPreviousPage={pagination.hasPreviousPage}
-                hasNextPage={pagination.hasNextPage}
-                totalPages={pagination.totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
-
-          {/* Back Button */}
-          <div className="flex justify-start mt-6">
-            <BackButton
-              text="Volver a Proyectos"
-              onClick={() => router.push('/project')}
+          {/* Pagination (siempre visible) */}
+          <div className="flex justify-center mt-6">
+            <Pagination
+              page={currentPage}
+              hasPreviousPage={pagination?.hasPreviousPage || false}
+              hasNextPage={pagination?.hasNextPage || false}
+              totalPages={pagination?.totalPages || 1}
+              onPageChange={setCurrentPage}
             />
           </div>
+
         </div>
       </div>
 

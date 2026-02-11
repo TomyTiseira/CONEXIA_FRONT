@@ -418,7 +418,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
               </div>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Tipo de Reclamo</p>
+                  <p className="text-sm text-gray-600 mb-1">Tipo de reclamo</p>
                   <ClaimTypeBadge
                     claimType={normalized.claimType}
                     labelOverride={normalized.claimTypeLabel}
@@ -466,7 +466,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
 
             {/* Tipo de Resolución y Descripción agrupados */}
             <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <h3 className="text-xl font-semibold text-conexia-green-dark mb-4">Resolución del Reclamo</h3>
+              <h3 className="text-xl font-semibold text-conexia-green-dark mb-4">Resolución del reclamo</h3>
               
               {/* Tipo de resolución */}
               <div className="mb-6">

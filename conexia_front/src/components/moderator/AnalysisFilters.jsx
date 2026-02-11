@@ -5,7 +5,7 @@
  */
 export default function AnalysisFilters({ filters, onFilterChange }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
+    <div className="bg-white rounded-xl shadow-sm border px-6 py-4">
       <div className="flex flex-col md:flex-row gap-4">
         {/* Filtro de estado */}
         <div className="flex-1">
