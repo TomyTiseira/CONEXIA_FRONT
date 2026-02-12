@@ -311,7 +311,7 @@ export const UploadComplianceEvidenceModal = ({
                 ) : (
                   <>
                     <Upload size={18} />
-                    Enviar Evidencia {rejectionCount > 0 && `(Intento ${currentAttempt})`}
+                    Enviar evidencia {rejectionCount > 0 && `(Intento ${currentAttempt})`}
                   </>
                 )}
               </Button>
@@ -329,10 +329,10 @@ export const UploadComplianceEvidenceModal = ({
 const SubmissionHistoryCard = ({ submission, formatDate }) => {
   const getStatusBadge = (status) => {
     const badges = {
-      pending_review: { color: 'bg-blue-100 text-blue-700 border-blue-300', text: 'En Revisión' },
+      pending_review: { color: 'bg-blue-100 text-blue-700 border-blue-300', text: 'En revisión' },
       approved: { color: 'bg-green-100 text-green-700 border-green-300', text: 'Aprobado' },
       rejected: { color: 'bg-red-100 text-red-700 border-red-300', text: 'Rechazado' },
-      requires_adjustment: { color: 'bg-yellow-100 text-yellow-700 border-yellow-300', text: 'Requiere Ajustes' },
+      requires_adjustment: { color: 'bg-yellow-100 text-yellow-700 border-yellow-300', text: 'Requiere ajustes' },
     };
     return badges[status] || { color: 'bg-gray-100 text-gray-700 border-gray-300', text: status };
   };

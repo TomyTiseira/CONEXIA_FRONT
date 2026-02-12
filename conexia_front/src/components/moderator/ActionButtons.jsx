@@ -16,10 +16,10 @@ export default function ActionButtons({ analysis, onResolve, disabled = false })
   // Si ya está resuelto, mostrar la acción tomada
   if (analysis.resolved) {
     const actionLabels = {
-      ban_user: 'Usuario Baneado',
-      suspend_user: 'Usuario Suspendido',
-      release_user: 'Usuario Liberado',
-      keep_monitoring: 'En Monitoreo',
+      ban_user: 'Usuario baneado',
+      suspend_user: 'Usuario suspendido',
+      release_user: 'Usuario liberado',
+      keep_monitoring: 'En monitoreo',
     };
 
     const actionColors = {
@@ -82,10 +82,10 @@ export default function ActionButtons({ analysis, onResolve, disabled = false })
 
   if (showConfirm) {
     const actionLabels = {
-      ban_user: 'Banear Usuario',
-      suspend_user: 'Suspender Usuario',
-      release_user: 'Liberar Usuario',
-      keep_monitoring: 'Seguir Monitoreando',
+      ban_user: 'Banear usuario',
+      suspend_user: 'Suspender usuario',
+      release_user: 'Liberar usuario',
+      keep_monitoring: 'Seguir monitoreando',
     };
 
     return (
@@ -202,7 +202,7 @@ export default function ActionButtons({ analysis, onResolve, disabled = false })
           <Ban className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 text-left">
-          <div className="font-semibold text-red-800">Banear Usuario</div>
+          <div className="font-semibold text-red-800">Banear usuario</div>
           <div className="text-xs text-red-600">
             Suspensión permanente de la cuenta
           </div>
@@ -219,7 +219,7 @@ export default function ActionButtons({ analysis, onResolve, disabled = false })
           <Clock className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 text-left">
-          <div className="font-semibold text-orange-800">Suspender Usuario</div>
+          <div className="font-semibold text-orange-800">Suspender usuario</div>
           <div className="text-xs text-orange-600">
             Suspensión temporal por 7, 15 o 30 días
           </div>
@@ -236,7 +236,7 @@ export default function ActionButtons({ analysis, onResolve, disabled = false })
           <ShieldCheck className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 text-left">
-          <div className="font-semibold text-green-800">Liberar Usuario</div>
+          <div className="font-semibold text-green-800">Liberar usuario</div>
           <div className="text-xs text-green-600">
             Los reportes son infundados, no se toma acción
           </div>
@@ -253,7 +253,7 @@ export default function ActionButtons({ analysis, onResolve, disabled = false })
           <Eye className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 text-left">
-          <div className="font-semibold text-yellow-800">Seguir Monitoreando</div>
+          <div className="font-semibold text-yellow-800">Seguir monitoreando</div>
           <div className="text-xs text-yellow-600">
             Marca como resuelto pero continúa vigilando al usuario
           </div>

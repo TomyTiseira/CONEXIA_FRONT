@@ -238,7 +238,6 @@ export const getPendingCompliancesCount = async (userId) => {
     return response.total || 0;
   } catch (error) {
     // Fallar silenciosamente - el endpoint puede no estar disponible aún
-    console.warn('[Compliances] Endpoint no disponible o error en getPendingCompliancesCount');
     return 0;
   }
 };

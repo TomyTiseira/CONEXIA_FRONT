@@ -268,7 +268,7 @@ export const ComplianceCard = ({
               <div className="flex items-center gap-2">
                 <Info size={20} className="text-blue-700" />
                 <p className="text-base font-bold text-gray-900">
-                  Sistema de Intentos
+                  Sistema de intentos
                 </p>
               </div>
             </div>
@@ -305,14 +305,14 @@ export const ComplianceCard = ({
           <div className="bg-purple-50 border-2 border-purple-300 rounded-xl overflow-hidden">
             <div className="px-4 py-3 bg-purple-200 border-b border-purple-300">
               <h4 className="font-bold text-base text-gray-900">
-                Cumplimiento Enviado
+                Cumplimiento enviado
               </h4>
             </div>
             <div className="p-4 space-y-4">
               {/* Descripción/Notas del usuario */}
               {compliance.userNotes && (
                 <div>
-                  <p className="text-xs font-bold text-gray-700 mb-2">Descripción del Cumplimiento:</p>
+                  <p className="text-xs font-bold text-gray-700 mb-2">Descripción del cumplimiento:</p>
                   <div className="bg-white border border-purple-200 rounded-lg p-3">
                     <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {compliance.userNotes}
@@ -324,7 +324,7 @@ export const ComplianceCard = ({
               {/* Evidencias Adjuntas */}
               <div>
                 <p className="text-xs font-bold text-gray-700 mb-2">
-                  Evidencias Adjuntas ({compliance.evidenceUrls.length}):
+                  Evidencias adjuntas ({compliance.evidenceUrls.length}):
                 </p>
                 <ClaimEvidenceViewer evidenceUrls={compliance.evidenceUrls} />
               </div>
@@ -409,7 +409,7 @@ export const ComplianceCard = ({
               <div className="flex items-center gap-2">
                 <CheckCircle size={20} className="text-green-700" />
                 <p className="text-base font-bold text-green-900">
-                  Compromiso Aprobado por Moderador
+                  Compromiso aprobado por moderador
                 </p>
               </div>
             </div>
@@ -422,7 +422,7 @@ export const ComplianceCard = ({
               </div>
               {compliance.moderatorNotes && (
                 <div>
-                  <p className="text-xs font-bold text-gray-700 mb-2">Notas del Moderador:</p>
+                  <p className="text-xs font-bold text-gray-700 mb-2">Notas del moderador:</p>
                   <div className="bg-white border border-green-200 rounded-lg p-3">
                     <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {compliance.moderatorNotes}
@@ -533,7 +533,7 @@ export const ComplianceCard = ({
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
             >
               <CheckCircle size={16} />
-              <span>Revisar Compromiso</span>
+              <span>Revisar compromiso</span>
             </button>
           ) : compliance.status === COMPLIANCE_STATUS.SUBMITTED ? (
             <div className="flex items-center gap-2 text-purple-700 text-sm font-medium bg-purple-50 px-3 py-2 rounded-lg border-2 border-purple-200">
@@ -573,7 +573,7 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
           headerBg: 'bg-yellow-100',
           headerBorder: 'border-yellow-300',
           iconColor: 'text-yellow-700',
-          title: 'Primera Advertencia - Plazo Vencido',
+          title: 'Primera advertencia - Plazo vencido',
           diasAdicionales: 3,
           mensaje: isResponsible 
             ? 'Tu plazo venció. Se te otorgaron 3 días adicionales para cumplir.'
@@ -589,7 +589,7 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
           headerBg: 'bg-orange-100',
           headerBorder: 'border-orange-400',
           iconColor: 'text-orange-700',
-          title: 'Cuenta Suspendida - Última Oportunidad',
+          title: 'Cuenta suspendida - Última oportunidad',
           diasAdicionales: 2,
           mensaje: isResponsible
             ? 'Tu cuenta fue suspendida por 15 días. Tienes 2 días adicionales finales para subir evidencia.'
@@ -606,7 +606,7 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
           headerBorder: 'border-red-500',
           iconColor: 'text-red-700',
           titleColor: 'text-red-900',
-          title: 'Usuario Baneado Permanentemente',
+          title: 'Usuario baneado permanentemente',
           mensaje: isResponsible
             ? 'Tu cuenta fue baneada permanentemente por incumplimiento grave.'
             : 'La cuenta fue baneada permanentemente por incumplimiento grave.',
@@ -911,10 +911,10 @@ const SubmissionHistoryCard = ({ submission, formatDate }) => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      pending_review: { color: 'bg-blue-100 text-blue-700 border-blue-300', text: 'En Revisión' },
+      pending_review: { color: 'bg-blue-100 text-blue-700 border-blue-300', text: 'En revisión' },
       approved: { color: 'bg-green-100 text-green-700 border-green-300', text: 'Aprobado' },
       rejected: { color: 'bg-red-100 text-red-700 border-red-300', text: 'Rechazado' },
-      requires_adjustment: { color: 'bg-yellow-100 text-yellow-700 border-yellow-300', text: 'Requiere Ajustes' },
+      requires_adjustment: { color: 'bg-yellow-100 text-yellow-700 border-yellow-300', text: 'Requiere ajustes' },
     };
     return badges[status] || { color: 'bg-gray-100 text-gray-700 border-gray-300', text: status };
   };

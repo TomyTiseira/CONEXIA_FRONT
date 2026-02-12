@@ -234,7 +234,7 @@ export default function ServiceHiringModal({ service, isOpen, onClose, onSuccess
     <ConexiaModalWrapper onClose={handleClose}>
       <div className="bg-white rounded-lg w-full max-w-md min-w-[300px] max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
-          <h3 className="text-lg font-semibold text-gray-900">Contratar Servicio</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Contratar servicio</h3>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-600" disabled={loading}>
             <X size={24} />
           </button>

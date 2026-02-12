@@ -326,21 +326,21 @@ export default function DeliverablesPage() {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Precio Total</p>
+                <p className="text-sm text-gray-500 mb-1">Precio total</p>
                 <p className="font-semibold text-gray-900 flex items-center">
                   <DollarSign size={16} className="mr-1" />
                   ${((parseFloat(hiring.quotedPrice) || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 }))}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Entregado</p>
+                <p className="text-sm text-gray-500 mb-1">Total entregado</p>
                 <p className="font-semibold text-green-600 flex items-center">
                   <CheckCircle size={16} className="mr-1" />
                   ${(getTotalDelivered()).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Pendiente</p>
+                <p className="text-sm text-gray-500 mb-1">Total pendiente</p>
                 <p className="font-semibold text-orange-600 flex items-center">
                   <Clock size={16} className="mr-1" />
                   ${(getTotalPending()).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
@@ -351,7 +351,7 @@ export default function DeliverablesPage() {
             {/* Barra de progreso */}
             <div className="mt-6">
               <div className="flex justify-between items-center mb-2">
-                <p className="text-sm font-medium text-gray-700">Progreso de Entregas</p>
+                <p className="text-sm font-medium text-gray-700">Progreso de entregas</p>
                 <p className="text-sm font-semibold text-conexia-green">
                   {getDeliverableProgress()}%
                 </p>
@@ -393,7 +393,7 @@ export default function DeliverablesPage() {
                         Descripción
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fecha Estimada
+                        Fecha estimada
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Precio
