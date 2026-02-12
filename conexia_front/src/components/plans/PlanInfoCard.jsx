@@ -172,7 +172,7 @@ export default function PlanInfoCard({ className = '' }) {
           <div className="border-b pb-4">
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <FiCreditCard className="w-5 h-5 text-conexia-green" />
-              Información de Pago
+              Información de pago
             </h3>
 
             <div className="space-y-4">
@@ -277,7 +277,7 @@ export default function PlanInfoCard({ className = '' }) {
                   <FiCheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
                   <div className="flex-1">
                     <h3 className="font-semibold text-green-900 mb-1">
-                      Suscripción Activa
+                      Suscripción activa
                     </h3>
                     <div className="text-sm text-green-700 space-y-1">
                       <p className="flex items-center gap-2">

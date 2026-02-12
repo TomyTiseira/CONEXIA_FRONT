@@ -325,7 +325,7 @@ export default function ServiceDeliveryPage() {
               <div className="flex flex-col items-end gap-2">
                 <StatusBadge status={hiring.status?.code} type="hiring" />
                 <div className="text-right">
-                  <p className="text-sm text-gray-500">Precio Total</p>
+                  <p className="text-sm text-gray-500">Precio total</p>
                   <p className="text-2xl font-bold text-gray-900 flex items-center">
                     <DollarSign size={20} />
                     {hiring.quotedPrice?.toLocaleString()}

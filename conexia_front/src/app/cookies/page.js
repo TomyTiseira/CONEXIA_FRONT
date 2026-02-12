@@ -25,7 +25,7 @@ export default function CookiePolicy() {
           <div className="flex items-center gap-4 mb-4">
             <Cookie size={48} className="text-yellow-300" />
             <h1 className="text-4xl md:text-5xl font-bold drop-shadow-lg">
-              Política de Cookies
+              Política de cookies
             </h1>
           </div>
           <p className="text-lg text-white/90 drop-shadow">
@@ -46,7 +46,7 @@ export default function CookiePolicy() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                 <Cookie size={24} className="text-conexia-green" />
-                ¿Qué son las Cookies?
+                ¿Qué son las cookies?
               </h2>
               <p className="text-gray-700 leading-relaxed">
                 Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando visitas 
@@ -60,7 +60,7 @@ export default function CookiePolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <Settings className="text-conexia-green" size={28} />
-              1. Tipos de Cookies que Usamos
+              1. Tipos de cookies que usamos
             </h2>
             <div className="space-y-4">
               
@@ -68,7 +68,7 @@ export default function CookiePolicy() {
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">🔐</div>
                   <div>
-                    <h3 className="font-bold text-gray-800 mb-2">Cookies Esenciales</h3>
+                    <h3 className="font-bold text-gray-800 mb-2">Cookies esenciales</h3>
                     <p className="text-sm text-gray-700 mb-2">
                       Necesarias para el funcionamiento básico de la plataforma. No se pueden desactivar.
                     </p>
@@ -94,7 +94,7 @@ export default function CookiePolicy() {
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">📊</div>
                   <div>
-                    <h3 className="font-bold text-gray-800 mb-2">Cookies Analíticas</h3>
+                    <h3 className="font-bold text-gray-800 mb-2">Cookies analíticas</h3>
                     <p className="text-sm text-gray-700 mb-2">
                       Nos ayudan a entender cómo los usuarios interactúan con la plataforma.
                     </p>
@@ -120,7 +120,7 @@ export default function CookiePolicy() {
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">⚙️</div>
                   <div>
-                    <h3 className="font-bold text-gray-800 mb-2">Cookies Funcionales</h3>
+                    <h3 className="font-bold text-gray-800 mb-2">Cookies funcionales</h3>
                     <p className="text-sm text-gray-700 mb-2">
                       Mejoran la funcionalidad y personalizan tu experiencia.
                     </p>
@@ -146,7 +146,7 @@ export default function CookiePolicy() {
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">🎯</div>
                   <div>
-                    <h3 className="font-bold text-gray-800 mb-2">Cookies de Marketing</h3>
+                    <h3 className="font-bold text-gray-800 mb-2">Cookies de marketing</h3>
                     <p className="text-sm text-gray-700 mb-2">
                       Usadas para mostrar contenido relevante y medir la efectividad de campañas.
                     </p>
@@ -174,7 +174,7 @@ export default function CookiePolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <BarChart3 className="text-conexia-green" size={28} />
-              2. Cookies de Terceros
+              2. Cookies de terceros
             </h2>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-700 mb-4 leading-relaxed">
@@ -182,7 +182,7 @@ export default function CookiePolicy() {
               </p>
               <div className="grid md:grid-cols-2 gap-3">
                 <div className="bg-white p-3 rounded border border-gray-200">
-                  <p className="font-semibold text-gray-800 text-sm">Google Analytics</p>
+                  <p className="font-semibold text-gray-800 text-sm">Google analytics</p>
                   <p className="text-xs text-gray-600">Para análisis de tráfico y comportamiento</p>
                 </div>
                 <div className="bg-white p-3 rounded border border-gray-200">
@@ -205,7 +205,7 @@ export default function CookiePolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <CheckSquare className="text-conexia-green" size={28} />
-              3. Cómo Gestionar las Cookies
+              3. Cómo gestionar las cookies
             </h2>
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -237,7 +237,7 @@ export default function CookiePolicy() {
                 <div className="flex items-start gap-2">
                   <Shield size={20} className="text-yellow-600 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">Nota Importante</h3>
+                    <h3 className="font-semibold text-gray-800 mb-1">Nota importante</h3>
                     <p className="text-sm text-gray-700">
                       Bloquear todas las cookies puede afectar la funcionalidad de CONEXIA. 
                       Algunas características pueden no funcionar correctamente sin cookies esenciales.
@@ -250,16 +250,16 @@ export default function CookiePolicy() {
 
           {/* Duración */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">4. Duración de las Cookies</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">4. Duración de las cookies</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-gradient-to-br from-blue-50 to-transparent p-4 rounded-lg border border-blue-200">
-                <h3 className="font-semibold text-gray-800 mb-2">🕐 Cookies de Sesión</h3>
+                <h3 className="font-semibold text-gray-800 mb-2">🕐 Cookies de sesión</h3>
                 <p className="text-sm text-gray-600">
                   Se eliminan automáticamente cuando cierras el navegador. Se usan para mantener tu sesión activa.
                 </p>
               </div>
               <div className="bg-gradient-to-br from-purple-50 to-transparent p-4 rounded-lg border border-purple-200">
-                <h3 className="font-semibold text-gray-800 mb-2">📅 Cookies Persistentes</h3>
+                <h3 className="font-semibold text-gray-800 mb-2">📅 Cookies persistentes</h3>
                 <p className="text-sm text-gray-600">
                   Permanecen en tu dispositivo por un tiempo definido. Se usan para recordar preferencias.
                 </p>

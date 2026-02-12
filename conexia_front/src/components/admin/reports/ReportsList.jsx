@@ -395,7 +395,6 @@ export default function ReportsList() {
                   </tr>
                 ) : (
                   reviews.map(review => {
-                    console.log('Review object:', review);
                     return (
                     <tr key={`review-${review.id || review.userReviewId}`} className="border-b hover:bg-gray-50 h-auto align-top">
                       <td className="p-4 align-top max-w-[300px]">

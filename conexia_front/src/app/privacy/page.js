@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
           <div className="flex items-center gap-4 mb-4">
             <Lock size={48} className="text-yellow-300" />
             <h1 className="text-4xl md:text-5xl font-bold drop-shadow-lg">
-              Políticas de Privacidad
+              Políticas de privacidad
             </h1>
           </div>
           <p className="text-lg text-white/90 drop-shadow">
@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                 <Shield size={24} className="text-conexia-green" />
-                Nuestro Compromiso con tu Privacidad
+                Nuestro compromiso con tu privacidad
               </h2>
               <p className="text-gray-700 leading-relaxed">
                 En <strong>CONEXIA</strong>, protegemos tus datos personales con los más altos estándares de seguridad. 
@@ -59,13 +59,13 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <Database className="text-conexia-green" size={28} />
-              1. Información que Recopilamos
+              1. Información que recopilamos
             </h2>
             <div className="space-y-4">
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
                   <span className="text-xl">👤</span>
-                  Información Personal
+                  Información personal
                 </h3>
                 <ul className="space-y-1 text-gray-700 text-sm ml-6">
                   <li className="flex items-start gap-2">
@@ -86,7 +86,7 @@ export default function PrivacyPolicy() {
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
                   <span className="text-xl">📊</span>
-                  Información de Uso
+                  Información de uso
                 </h3>
                 <ul className="space-y-1 text-gray-700 text-sm ml-6">
                   <li className="flex items-start gap-2">
@@ -110,13 +110,13 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <Eye className="text-conexia-green" size={28} />
-              2. Cómo Usamos tu Información
+              2. Cómo usamos tu información
             </h2>
             <div className="grid gap-3">
               <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-blue-50 to-transparent rounded-lg border border-blue-200">
                 <div className="text-2xl">🔐</div>
                 <div>
-                  <p className="font-semibold text-gray-800">Seguridad y Autenticación</p>
+                  <p className="font-semibold text-gray-800">Seguridad y autenticación</p>
                   <p className="text-sm text-gray-600">Verificar tu identidad y proteger tu cuenta</p>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function PrivacyPolicy() {
               <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-green-50 to-transparent rounded-lg border border-green-200">
                 <div className="text-2xl">🤝</div>
                 <div>
-                  <p className="font-semibold text-gray-800">Conexiones Profesionales</p>
+                  <p className="font-semibold text-gray-800">Conexiones profesionales</p>
                   <p className="text-sm text-gray-600">Facilitar el contacto entre profesionales y clientes</p>
                 </div>
               </div>
@@ -140,7 +140,7 @@ export default function PrivacyPolicy() {
               <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-yellow-50 to-transparent rounded-lg border border-yellow-200">
                 <div className="text-2xl">📈</div>
                 <div>
-                  <p className="font-semibold text-gray-800">Mejora del Servicio</p>
+                  <p className="font-semibold text-gray-800">Mejora del servicio</p>
                   <p className="text-sm text-gray-600">Analizar el uso para optimizar la experiencia del usuario</p>
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <UserCheck className="text-conexia-green" size={28} />
-              3. Compartir tu Información
+              3. Compartir tu información
             </h2>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-gray-700 leading-relaxed mb-3">
@@ -176,7 +176,7 @@ export default function PrivacyPolicy() {
 
           {/* Seguridad */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">4. Seguridad de tus Datos</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">4. Seguridad de tus datos</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-gradient-to-br from-conexia-green/10 to-blue-50 p-4 rounded-lg border border-conexia-green/20">
                 <div className="flex items-center gap-2 mb-2">
@@ -200,7 +200,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <AlertTriangle className="text-conexia-green" size={28} />
-              5. Tus Derechos
+              5. Tus derechos
             </h2>
             <div className="space-y-3 text-gray-700">
               <p className="leading-relaxed">Tienes derecho a:</p>
