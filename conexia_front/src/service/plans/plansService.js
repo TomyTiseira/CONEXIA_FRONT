@@ -88,21 +88,19 @@ export async function contractPlan(planId, billingCycle, cardTokenId) {
 
 /**
  * Cancelar la suscripción actual del usuario
- * @param {string|null} reason - Motivo de cancelación (opcional, máx 1000 caracteres)
  * @returns {Promise<Object>} - Respuesta con confirmación de cancelación
+ * Respuesta exitosa incluye: { success, message, subscription: { id, status, planId, planName, endDate, mercadoPagoSubscriptionId } }
+ * Errores posibles: 404 (no hay suscripción activa), 400 (ya está cancelada), 500 (error en MercadoPago)
  */
-export async function cancelSubscription(reason = null) {
-  const url = `${config.API_URL}/memberships/me/subscription/cancel`;
+export async function cancelSubscription() {
+  const url = `${config.API_URL}/memberships/me/subscription`;
   
   const res = await fetchWithRefresh(url, {
-    method: 'POST',
+    method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify({
-      reason: reason || null,
-    }),
   });
 
   if (!res.ok) {
@@ -113,6 +111,29 @@ export async function cancelSubscription(reason = null) {
       throw {
         statusCode: res.status,
         message: `Error ${res.status}: ${res.statusText}`,
+      };
+    }
+    
+    // Manejar casos específicos
+    if (res.status === 404) {
+      throw {
+        statusCode: 404,
+        message: errorData?.message || 'No tienes una suscripción activa para cancelar',
+      };
+    }
+    
+    if (res.status === 400) {
+      throw {
+        statusCode: 400,
+        message: errorData?.message || 'La suscripción ya está cancelada',
+      };
+    }
+    
+    // El backend a veces devuelve 500 cuando la suscripción ya está cancelada
+    if (res.status === 500 && errorData?.message?.toLowerCase().includes('cancelad')) {
+      throw {
+        statusCode: 400,
+        message: 'La suscripción ya está cancelada',
       };
     }
     

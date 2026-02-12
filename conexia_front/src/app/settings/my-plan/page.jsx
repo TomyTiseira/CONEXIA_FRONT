@@ -140,9 +140,21 @@ export default function MyPlanPage() {
     } catch (err) {
       console.error('Error al cancelar suscripción:', err);
       
-      // Mostrar toast de error
+      // Cerrar el modal también en caso de error
+      setIsCancelModalOpen(false);
+      setSubscriptionToCancel(null);
+      
+      // Refrescar los datos para asegurar que la UI esté actualizada
+      await refetchUserPlan();
+      
+      // Determinar el tipo de toast según el error
+      const isAlreadyCancelled = err?.statusCode === 400 || 
+                                  err?.message?.toLowerCase().includes('ya está cancelada') ||
+                                  err?.message?.toLowerCase().includes('ya esta cancelada');
+      
+      // Mostrar toast de error o advertencia
       setToast({
-        type: 'error',
+        type: isAlreadyCancelled ? 'warning' : 'error',
         message: err?.message || 'Error al cancelar la suscripción',
         isVisible: true
       });

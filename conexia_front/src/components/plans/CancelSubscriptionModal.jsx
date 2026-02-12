@@ -33,7 +33,14 @@ export default function CancelSubscriptionModal({
   // Formatear la fecha de fin
   const endDateFormatted = subscription?.endDate
     ? format(new Date(subscription.endDate), "d 'de' MMMM, yyyy", { locale: es })
-    : '';
+    : null;
+
+  // Intentar obtener fecha de nextPaymentDate como fallback
+  const fallbackDateFormatted = subscription?.nextPaymentDate
+    ? format(new Date(subscription.nextPaymentDate), "d 'de' MMMM, yyyy", { locale: es })
+    : null;
+
+  const displayDate = endDateFormatted || fallbackDateFormatted || 'la fecha de finalización de tu período actual';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -67,7 +74,7 @@ export default function CancelSubscriptionModal({
               <div>
                 <h3 className="font-semibold text-conexia-green mb-2">Información importante</h3>
                 <p className="text-sm text-gray-800 font-medium mb-1">
-                  Seguirás teniendo acceso hasta {endDateFormatted}.
+                  Seguirás teniendo acceso hasta el <span className="text-conexia-green font-bold">{displayDate}</span>.
                 </p>
                 <p className="text-sm text-gray-700">
                   Luego de esa fecha ya no tendrás los beneficios de tu plan {planName}.
@@ -86,7 +93,7 @@ export default function CancelSubscriptionModal({
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-gray-400 mt-0.5">•</span>
-                <span>Mantendrás todos los beneficios hasta {endDateFormatted}</span>
+                <span>Mantendrás todos los beneficios hasta el <span className="font-medium">{displayDate}</span></span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-gray-400 mt-0.5">•</span>

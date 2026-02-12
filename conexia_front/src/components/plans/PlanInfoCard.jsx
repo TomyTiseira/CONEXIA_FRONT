@@ -64,6 +64,8 @@ export default function PlanInfoCard({ className = '' }) {
   const isPendingPayment = subscriptionStatus === 'pending_payment';
   const isPaymentFailed = subscriptionStatus === 'payment_failed';
   const isPendingCancellation = subscriptionStatus === 'pending_cancellation';
+  const isCancelled = subscriptionStatus === 'cancelled';
+  const canCancelSubscription = hasActiveSubscription && !isPendingCancellation && !isCancelled;
 
   // Calcular días hasta renovación o vencimiento
   let daysUntilRenewal = null;
@@ -148,9 +150,16 @@ export default function PlanInfoCard({ className = '' }) {
         {/* Beneficios del plan */}
         {plan.benefits && plan.benefits.length > 0 && (
           <div className="border-b pb-4">
-            <h3 className="font-semibold text-gray-900 mb-3">
-              Beneficios incluidos
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-900">
+                {isPendingCancellation || isCancelled ? 'Beneficios vigentes' : 'Beneficios incluidos'}
+              </h3>
+              {(isPendingCancellation || isCancelled) && subscription.endDate && (
+                <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-medium">
+                  Hasta {format(new Date(subscription.endDate), "d MMM", { locale: es })}
+                </span>
+              )}
+            </div>
             <ul className="space-y-2">
               {plan.benefits.map((benefit, index) => {
                 const isActive = isBenefitActive(benefit.value);
@@ -332,6 +341,14 @@ export default function PlanInfoCard({ className = '' }) {
                     <p className="text-sm text-orange-700 mb-2">
                       Tu suscripción se cancelará al finalizar el período de facturación actual.
                     </p>
+                    <div className="bg-orange-100 border border-orange-200 rounded-lg p-3 mb-3">
+                      <p className="text-sm text-orange-800 font-medium mb-1">
+                        ✓ Seguirás disfrutando de todos los beneficios del plan {plan.name}
+                      </p>
+                      <p className="text-xs text-orange-700">
+                        Tienes acceso completo hasta la fecha de finalización
+                      </p>
+                    </div>
                     {subscription.endDate && (
                       <div className="text-sm text-orange-700">
                         <p className="flex items-center gap-2">
@@ -352,6 +369,37 @@ export default function PlanInfoCard({ className = '' }) {
                       <div className="mt-3 pt-3 border-t border-orange-200">
                         <p className="text-xs text-orange-600 font-medium mb-1">Motivo de cancelación:</p>
                         <p className="text-sm text-orange-700 italic">"{subscription.cancellationReason}"</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Alerta de suscripción cancelada */}
+            {isCancelled && (
+              <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <FiAlertCircle className="w-5 h-5 text-gray-600 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      Suscripción Cancelada
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-2">
+                      Tu suscripción ha sido cancelada y ya no tienes acceso a los beneficios del plan {plan.name}.
+                    </p>
+                    {subscription.endDate && (
+                      <p className="text-sm text-gray-600">
+                        Fecha de cancelación:{' '}
+                        <span className="font-medium">
+                          {format(new Date(subscription.endDate), "d 'de' MMMM, yyyy", { locale: es })}
+                        </span>
+                      </p>
+                    )}
+                    {subscription.cancellationReason && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-xs text-gray-600 font-medium mb-1">Motivo de cancelación:</p>
+                        <p className="text-sm text-gray-700 italic">"{subscription.cancellationReason}"</p>
                       </div>
                     )}
                   </div>

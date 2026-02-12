@@ -12,7 +12,9 @@ export function useCancelSubscription() {
       setError(null);
       setSuccess(false);
 
-      const response = await cancelSubscription(reason);
+      // El backend no acepta reason en el body (DELETE sin body)
+      // Se mantiene el parámetro para compatibilidad, pero no se envía
+      const response = await cancelSubscription();
       
       setSuccess(true);
       return response;
