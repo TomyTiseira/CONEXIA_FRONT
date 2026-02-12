@@ -18,7 +18,6 @@ export const formatMemberSince = (date) => {
     // Capitalizar la primera letra del mes
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   } catch (error) {
-    console.error('Error al formatear memberSince:', error);
     return 'Fecha no disponible';
   }
 };
@@ -40,7 +39,6 @@ export const formatCurrency = (amount, currency = 'ARS') => {
     
     return `$${formatted} ${currency}`;
   } catch (error) {
-    console.error('Error al formatear monto:', error);
     return `$${amount} ${currency}`;
   }
 };
@@ -66,7 +64,6 @@ export const formatPaymentDate = (date) => {
   try {
     return format(new Date(date), "d 'de' MMMM, yyyy", { locale: es });
   } catch (error) {
-    console.error('Error al formatear fecha de pago:', error);
     return 'Fecha no disponible';
   }
 };
@@ -108,7 +105,7 @@ export const getSubscriptionStatusInfo = (status) => {
       icon: ''
     },
     'pending_payment': {
-      label: 'Pago Pendiente',
+      label: 'Pago pendiente',
       colorClass: 'text-yellow-700',
       bgClass: 'bg-yellow-100',
       borderClass: 'border-yellow-300',
@@ -122,7 +119,7 @@ export const getSubscriptionStatusInfo = (status) => {
       icon: '⚠️'
     },
     'payment_failed': {
-      label: 'Pago Fallido',
+      label: 'Pago fallido',
       colorClass: 'text-red-700',
       bgClass: 'bg-red-100',
       borderClass: 'border-red-300',

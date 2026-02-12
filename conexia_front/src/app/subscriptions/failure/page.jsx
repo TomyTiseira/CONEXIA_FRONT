@@ -151,7 +151,7 @@ function FailureContent() {
             {/* Help text */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
               <p className="text-sm text-blue-900">
-                <strong>💡 Consejo:</strong> Verifica los datos de tu tarjeta y asegúrate de tener fondos suficientes. 
+                <strong>Consejo:</strong> Verifica los datos de tu tarjeta y asegúrate de tener fondos suficientes. 
                 Si el problema persiste, contacta a tu banco o prueba con otro medio de pago.
               </p>
             </div>

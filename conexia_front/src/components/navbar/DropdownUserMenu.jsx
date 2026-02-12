@@ -27,8 +27,8 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
   const { user } = useAuth();
   const userId = user?.id;
   
-  // Obtener información del plan solo si es USER
-  const { data: userPlan, error: planError } = roleName === ROLES.USER ? useUserPlan() : { data: null, error: null };
+  // Obtener información del plan (siempre llamar el hook, no condicionalmente)
+  const { data: userPlan, error: planError } = useUserPlan();
 
   useEffect(() => {
     // Si es admin o moderador, no buscar perfil

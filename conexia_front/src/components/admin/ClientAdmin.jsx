@@ -60,7 +60,48 @@ export default function ClientAdmin() {
 
   return (
     <main className="p-4 md:p-8 bg-[#f8fcfc] min-h-screen pb-24 md:pb-8">
-      <h1 className="text-2xl font-bold text-conexia-green mb-6">¡Bienvenido Admin!</h1>
+      {/* Tarjeta de Bienvenida para Admin */}
+      <div className="w-full max-w-2xl mx-auto mb-6">
+        <div className="bg-gradient-to-br from-conexia-green via-teal-600 to-teal-700 rounded-xl shadow-lg overflow-hidden">
+          <div className="p-4 md:p-5 relative">
+            {/* Patrón decorativo de fondo */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-white rounded-full -mr-24 -mt-24"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full -ml-16 -mb-16"></div>
+            </div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-3">
+              {/* Icono de Admin */}
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
+                  <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Texto de bienvenida */}
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
+                  ¡Bienvenido, Admin!
+                </h1>
+                <p className="text-white/90 text-xs md:text-sm">
+                  Administra la plataforma y supervisa la comunidad de Conexia
+                </p>
+              </div>
+              
+              {/* Badge de rol */}
+              <div className="flex-shrink-0">
+                <div className="bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-full px-3 py-1.5">
+                  <span className="text-white font-semibold text-xs">Administrador</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Feed de publicaciones */}
       <div className="flex flex-col gap-0 w-full max-w-2xl mx-auto">
         {errorPublications && <div className="text-red-500">{errorPublications}</div>}
         {!loadingPublications && publications.length === 0 && !errorPublications && (

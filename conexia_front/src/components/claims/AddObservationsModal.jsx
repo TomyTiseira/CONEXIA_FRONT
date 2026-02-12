@@ -28,29 +28,18 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
   useEffect(() => {
     const fetchDetail = async () => {
       if (!isOpen || !baseClaimId) {
-        console.log('[AddObservationsModal] No open or no baseClaimId:', { isOpen, baseClaimId });
         return;
       }
 
-      console.log('[AddObservationsModal] Starting fetch, claim structure:', {
-        hasClaim: !!claim?.claim,
-        hasClaimant: !!claim?.claimant,
-        hasOtherUser: !!claim?.otherUser,
-        baseClaimId
-      });
-
       // Si ya tenemos estructura completa, no hacer fetch.
       if (claim?.claim && claim?.claimant && claim?.otherUser) {
-        console.log('[AddObservationsModal] Using existing claim data');
         setDetail(claim);
         return;
       }
 
       try {
         setIsLoadingDetail(true);
-        console.log('[AddObservationsModal] Fetching detail for:', baseClaimId);
         const result = await getClaimDetail(baseClaimId);
-        console.log('[AddObservationsModal] Fetch successful:', result);
         setDetail(result);
       } catch (err) {
         console.error('[AddObservationsModal] Error fetching claim detail:', err);
@@ -67,15 +56,6 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
   const normalized = useMemo(() => {
     const claimData = detail?.claim ? detail : (claim?.claim ? claim : null);
     const claimObj = claimData?.claim || claim || null;
-
-    console.log('[AddObservationsModal] normalized data:', {
-      hasDetail: !!detail,
-      hasClaimData: !!claimData,
-      hasClaimObj: !!claimObj,
-      claimObjKeys: claimObj ? Object.keys(claimObj) : [],
-      description: claimObj?.description,
-      evidenceUrls: claimObj?.evidenceUrls
-    });
 
     const getFirstName = (fullName) => {
       if (!fullName) return '';
@@ -137,8 +117,6 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
       evidenceUrls,
       status: currentStatus,
     };
-
-    console.log('[AddObservationsModal] Returning normalized:', normalizedData);
     
     return normalizedData;
   }, [claim, claimId, detail]);
@@ -214,7 +192,7 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
           {/* Header (estático) */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
@@ -248,7 +226,7 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
               </div>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Tipo de Reclamo</p>
+                  <p className="text-sm text-gray-600 mb-1">Tipo de reclamo</p>
                   <ClaimTypeBadge
                     claimType={normalized.claimType}
                     labelOverride={normalized.claimTypeLabel}
@@ -279,7 +257,6 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
             </div>
 
             {/* Descripción del Reclamo */}
-            {console.log('[AddObservationsModal] Rendering description section. normalized.description:', normalized.description)}
             <div className="bg-white border rounded-lg p-4">
               <h3 className="font-semibold text-lg text-gray-900 mb-2">Descripción del reclamo</h3>
               <p className="text-sm text-gray-700 whitespace-pre-wrap">
@@ -288,7 +265,6 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
             </div>
 
             {/* Evidencias actuales */}
-            {console.log('[AddObservationsModal] Rendering evidences section. evidenceUrls length:', normalized.evidenceUrls?.length)}
             {normalized.evidenceUrls?.length > 0 && (
               <div className="bg-white border rounded-lg p-4">
                 <h3 className="font-semibold text-lg text-gray-900 mb-2">Evidencias</h3>
@@ -332,7 +308,7 @@ export const AddObservationsModal = ({ isOpen, onClose, claim, claimId, onSucces
           </div>
 
           {/* Footer (estático) */}
-          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0 rounded-b-xl">
+          <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0 rounded-b-lg">
             <Button
               type="button"
               onClick={handleClose}

@@ -73,7 +73,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
       accept: {
         title: 'Aceptar cotización',
         description: 'Al aceptar esta cotización, confirmas que estás de acuerdo con el precio y tiempo estimado. El proveedor podrá comenzar a trabajar en tu solicitud.',
-        buttonText: 'Sí, Aceptar',
+        buttonText: 'Sí, aceptar',
         buttonClass: 'bg-green-600 hover:bg-green-700 text-white',
         icon: CheckCircle,
         iconColor: 'text-green-600'
@@ -81,31 +81,31 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
       reject: {
         title: 'Rechazar cotización',
         description: 'Al rechazar esta cotización, la solicitud se marcará como rechazada y no podrás volver a aceptarla. Puedes crear una nueva solicitud si lo deseas.',
-        buttonText: 'Sí, Rechazar',
+        buttonText: 'Sí, rechazar',
         buttonClass: 'bg-red-600 hover:bg-red-700 text-white',
         icon: XCircle,
         iconColor: 'text-red-600'
       },
       cancel: {
-        title: 'Cancelar Solicitud',
+        title: 'Cancelar solicitud',
         description: 'Al cancelar esta solicitud, se eliminará permanentemente y no podrás recuperarla. Esta acción no se puede deshacer.',
-        buttonText: 'Sí, Cancelar',
+        buttonText: 'Sí, cancelar',
         buttonClass: 'bg-gray-600 hover:bg-gray-700 text-white',
         icon: Trash2,
         iconColor: 'text-gray-600'
       },
       negotiate: {
-        title: 'Iniciar Negociación',
+        title: 'Iniciar negociación',
         description: 'Al iniciar una negociación, el proveedor será notificado que deseas discutir los términos de la cotización. Podrás comunicarte directamente para llegar a un acuerdo.',
-        buttonText: 'Sí, Negociar',
+        buttonText: 'Sí, negociar',
         buttonClass: 'bg-orange-600 hover:bg-orange-700 text-white',
         icon: MessageSquare,
         iconColor: 'text-orange-600'
       },
       requote: {
-        title: 'Solicitar Re-cotización',
+        title: 'Solicitar re-cotización',
         description: 'Al solicitar una re-cotización, el proveedor será notificado para que actualice los términos de la cotización vencida. Esto renovará la vigencia de la solicitud.',
-        buttonText: 'Sí, Solicitar Re-cotización',
+        buttonText: 'Sí, solicitar re-cotización',
         buttonClass: 'bg-blue-600 hover:bg-blue-700 text-white',
         icon: RefreshCw,
         iconColor: 'text-blue-600'
@@ -141,8 +141,13 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
     const actionConfig = getActionConfig(confirmAction);
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+      <div className="fixed inset-0 z-[110]" onClick={() => setConfirmAction(null)}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+          <div
+            className="relative z-10 bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* Header fijo */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
             <h3 className="text-xl font-bold text-orange-600 flex items-center gap-2">
@@ -176,7 +181,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
             {confirmAction === 'negotiate' && (
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción de la Negociación
+                  Descripción de la negociación
                 </label>
                 <textarea
                   value={negotiationDescription}
@@ -218,6 +223,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               </Button>
             </div>
           </div>
+          </div>
         </div>
       </div>
     );
@@ -225,8 +231,13 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
 
   // Mostrar lista de acciones
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+        <div
+          className="relative z-10 bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header fijo */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
           <h3 className="text-xl font-bold text-conexia-green">
@@ -255,7 +266,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               <div className="flex items-start gap-3">
                 <AlertCircle className="text-blue-600 mt-0.5" size={20} />
                 <div>
-                  <h4 className="font-medium text-blue-800 mb-1">Re-cotización Solicitada</h4>
+                  <h4 className="font-medium text-blue-800 mb-1">Re-cotización solicitada</h4>
                   <p className="text-sm text-blue-600">
                     Ya has solicitado una re-cotización. El proveedor está trabajando en actualizar los términos. 
                     Recibirás una notificación cuando esté lista.
@@ -271,7 +282,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
                 <div className="flex items-start gap-3">
                   <AlertCircle className="text-red-600 mt-0.5" size={20} />
                   <div>
-                    <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
+                    <h4 className="font-medium text-red-800 mb-1">Cotización vencida</h4>
                     <p className="text-sm text-red-600">
                       Esta cotización ha expirado. Puedes solicitar una re-cotización al proveedor o cancelar la solicitud.
                     </p>
@@ -286,7 +297,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               >
                 <RefreshCw size={24} className="text-white flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-white">Solicitar Re-cotización</p>
+                  <p className="font-medium text-white">Solicitar re-cotización</p>
                   <p className="text-sm text-blue-100">Pedir al proveedor que actualice la cotización</p>
                 </div>
               </button>
@@ -298,7 +309,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               >
                 <Trash2 size={24} className="text-white flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-white">Cancelar Solicitud</p>
+                  <p className="font-medium text-white">Cancelar solicitud</p>
                   <p className="text-sm text-gray-100">Eliminar esta solicitud vencida</p>
                 </div>
               </button>
@@ -312,7 +323,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               >
                 <CheckCircle size={24} className="text-green-600 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-green-800">Aceptar Cotización</p>
+                  <p className="font-medium text-green-800">Aceptar cotización</p>
                   <p className="text-sm text-green-600">Confirmar y proceder con el servicio</p>
                 </div>
               </button>
@@ -351,7 +362,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
               >
                 <Trash2 size={24} className="text-white flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-white">Cancelar Solicitud</p>
+                  <p className="font-medium text-white">Cancelar solicitud</p>
                   <p className="text-sm text-gray-100">Eliminar esta solicitud</p>
                 </div>
               </button>
@@ -374,6 +385,7 @@ export default function ServiceHiringActionsModal({ hiring, isOpen, onClose, onS
           <Button onClick={onClose} variant="cancel">
             Cerrar
           </Button>
+        </div>
         </div>
       </div>
     </div>

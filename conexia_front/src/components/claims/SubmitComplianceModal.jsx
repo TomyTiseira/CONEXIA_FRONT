@@ -238,7 +238,7 @@ export const SubmitComplianceModal = ({ claim, compliance, onClose, onSuccess })
               {/* Descripción del Cumplimiento */}
               <div className="bg-white border rounded-lg p-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción del Cumplimiento <span className="text-red-500">*</span>
+                  Descripción del cumplimiento <span className="text-red-500">*</span>
                 </label>
                 <InputField
                   multiline
@@ -264,7 +264,7 @@ export const SubmitComplianceModal = ({ claim, compliance, onClose, onSuccess })
               {/* Evidencias del Cumplimiento */}
               <div className="bg-white border rounded-lg p-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Evidencias del Cumplimiento (opcional)
+                  Evidencias del cumplimiento (opcional)
                 </label>
                 <p className="text-sm text-gray-600 mb-3">
                   Puedes adjuntar hasta {MAX_FILES} archivos que respalden tu cumplimiento.
@@ -309,7 +309,7 @@ export const SubmitComplianceModal = ({ claim, compliance, onClose, onSuccess })
                 ) : (
                   <>
                     <Upload size={18} />
-                    Enviar Cumplimiento
+                    Enviar cumplimiento
                   </>
                 )}
               </Button>

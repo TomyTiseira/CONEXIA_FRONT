@@ -177,11 +177,11 @@ export const UserDashboard = () => {
           <div data-swapy-slot="kpi-1" className="h-full">
             <div data-swapy-item="services">
               <KPICard
-                title="Servicios contratados"
+                title="Servicios completados"
                 value={services.totalServicesHired || 0}
                 icon={Briefcase}
                 color="blue"
-                subtitle="Servicios completados"
+                subtitle="Finalizados exitosamente"
               />
             </div>
           </div>
@@ -310,10 +310,10 @@ export const UserDashboard = () => {
             </div>
           )}
 
-          {/* Top 10 Proyectos (Plan Premium) */}
+          {/* Top 5 Proyectos (Plan Premium) */}
           {projectDashboard.topProjectsByPostulations && projectDashboard.topProjectsByPostulations.length > 0 && (
             <ProjectRankingCard 
-              title="Top 10 proyectos más populares"
+              title="Top 5 proyectos más populares"
               projects={projectDashboard.topProjectsByPostulations}
             />
           )}
@@ -333,6 +333,7 @@ export const UserDashboard = () => {
               totalPostulations={postulations.totalPostulations}
               acceptedPostulations={postulations.acceptedPostulations}
               successRate={(postulations.successRate || 0).toFixed(1)}
+              byStatus={projectDashboard.sentPostulations?.byStatus}
             />
 
             {/* Placeholder para futuro gráfico */}

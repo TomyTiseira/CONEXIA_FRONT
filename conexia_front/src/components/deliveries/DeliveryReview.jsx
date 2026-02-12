@@ -7,15 +7,23 @@ import Button from '@/components/ui/Button';
 import { useReviewDelivery } from '@/hooks/deliveries';
 import Toast from '@/components/ui/Toast';
 import { buildMediaUrl } from '@/utils/mediaUrl';
+import RequestRevisionModal from '@/components/deliveries/RequestRevisionModal';
+import ConfirmApproveDeliveryModal from '@/components/deliveries/ConfirmApproveDeliveryModal';
 
-export default function DeliveryReview({ delivery, isClient = false, onReviewSuccess, hasActiveClaim = false }) {
+export default function DeliveryReview({
+  delivery,
+  isClient = false,
+  onReviewSuccess,
+  hasActiveClaim = false,
+  showToast,
+}) {
   const { reviewDelivery, loading } = useReviewDelivery();
-  const [showRevisionForm, setShowRevisionForm] = useState(false);
+  const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
   const [revisionNotes, setRevisionNotes] = useState('');
-  const [toast, setToast] = useState(null);
-  const [showConfirmApprove, setShowConfirmApprove] = useState(false);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [previewSrc, setPreviewSrc] = useState(null);
+  const [localToast, setLocalToast] = useState(null);
 
   // Función para obtener attachments (con retrocompatibilidad)
   const getAttachments = () => {
@@ -53,41 +61,56 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
   const handleApprove = async () => {
     try {
       const response = await reviewDelivery(delivery.id, { action: 'approve' });
-      
-      setToast({
-        type: 'success',
-        message: 'Entrega aprobada! Redirigiendo a Mercado Pago...',
-        isVisible: true
-      });
 
-      // Si hay URL de pago, redirigir a MercadoPago
-      if (response.paymentUrl) {
-        setTimeout(() => {
-          window.location.href = response.paymentUrl;
-        }, 1500);
-      } else {
-        // Si no hay URL, solo cerrar y refrescar
-        setTimeout(() => {
-          if (onReviewSuccess) {
-            onReviewSuccess();
-          }
-          setShowConfirmApprove(false);
-        }, 1500);
-      }
+      // Cerrar modal inmediatamente
+      setIsApproveModalOpen(false);
+
+      // Esperar un momento para que el modal se cierre, luego mostrar toast
+      setTimeout(() => {
+        const successMessage = response?.paymentUrl
+          ? 'Entrega aprobada! Redirigiendo a Mercado Pago...'
+          : 'Entrega aprobada exitosamente';
+        
+        if (showToast) {
+          showToast('success', successMessage);
+        }
+
+        // Si hay pago, redirigir después del toast
+        if (response?.paymentUrl) {
+          setTimeout(() => {
+            window.location.href = response.paymentUrl;
+          }, 1500);
+        } else if (onReviewSuccess) {
+          // Refrescar datos
+          onReviewSuccess();
+        }
+      }, 300);
     } catch (error) {
-      setToast({
-        type: 'error',
-        message: error.message || 'Error al aprobar la entrega',
-        isVisible: true
-      });
+      setIsApproveModalOpen(false);
+      setTimeout(() => {
+        if (showToast) {
+          showToast('error', error.message || 'Error al aprobar la entrega');
+        }
+      }, 300);
     }
   };
 
   const handleRequestRevision = async () => {
-    if (!revisionNotes.trim()) {
-      setToast({
+    const trimmedNotes = revisionNotes.trim();
+
+    if (!trimmedNotes) {
+      setLocalToast({
         type: 'error',
         message: 'Debes proporcionar notas para solicitar la revisión',
+        isVisible: true
+      });
+      return;
+    }
+
+    if (trimmedNotes.length < 20) {
+      setLocalToast({
+        type: 'error',
+        message: 'Las notas deben tener al menos 20 caracteres para solicitar la revisión',
         isVisible: true
       });
       return;
@@ -96,28 +119,30 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
     try {
       await reviewDelivery(delivery.id, {
         action: 'request_revision',
-        notes: revisionNotes.trim()
+        notes: trimmedNotes
       });
 
-      setToast({
-        type: 'success',
-        message: 'Solicitud de revisión enviada',
-        isVisible: true
-      });
+      // Cerrar modal inmediatamente
+      setIsRevisionModalOpen(false);
+      setRevisionNotes('');
 
+      // Esperar a que modal se cierre, luego mostrar toast en padre
       setTimeout(() => {
+        if (showToast) {
+          showToast('success', 'Solicitud de revisión enviada');
+        }
         if (onReviewSuccess) {
           onReviewSuccess();
         }
-        setShowRevisionForm(false);
-        setRevisionNotes('');
-      }, 1500);
+      }, 300);
     } catch (error) {
-      setToast({
-        type: 'error',
-        message: error.message || 'Error al solicitar revisión',
-        isVisible: true
-      });
+      setIsRevisionModalOpen(false);
+      setRevisionNotes('');
+      setTimeout(() => {
+        if (showToast) {
+          showToast('error', error.message || 'Error al solicitar revisión');
+        }
+      }, 300);
     }
   };
 
@@ -175,14 +200,14 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
 
-      setToast({
+      setLocalToast({
         type: 'success',
         message: 'Archivo descargado correctamente',
         isVisible: true
       });
     } catch (error) {
       console.error('Error downloading file:', error);
-      setToast({
+      setLocalToast({
         type: 'error',
         message: 'Error al descargar el archivo. Intenta nuevamente.',
         isVisible: true
@@ -361,7 +386,7 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
             <div className="mb-6">
               <label className="flex items-center font-semibold text-gray-900 mb-3">
                 <Download size={18} className="mr-2" />
-                {attachments.length === 1 ? 'Archivo Adjunto' : `Archivos Adjuntos (${attachments.length})`}
+                {attachments.length === 1 ? 'Archivo adjunto' : `Archivos adjuntos (${attachments.length})`}
                 {isClient && delivery.needsWatermark && (
                   <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">
                     Pendiente de pago
@@ -494,27 +519,27 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
           )}
 
           {/* Acciones según estado - Solo para el cliente */}
-          {isClient && delivery.status === 'delivered' && !showConfirmApprove && !showRevisionForm && (
+          {isClient && delivery.status === 'delivered' && !isApproveModalOpen && !isRevisionModalOpen && (
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="primary"
-                onClick={() => setShowConfirmApprove(true)}
+                onClick={() => setIsApproveModalOpen(true)}
                 className="flex-1 bg-green-600 hover:bg-green-700 flex items-center justify-center"
                 disabled={loading || hasActiveClaim}
                 title={hasActiveClaim ? 'No se puede aprobar mientras hay un reclamo activo' : ''}
               >
                 <CheckCircle size={18} className="mr-2" />
-                Aceptar Entrega
+                Aceptar entrega
               </Button>
               <Button
-                variant="secondary"
-                onClick={() => setShowRevisionForm(true)}
+                variant="warning"
+                onClick={() => setIsRevisionModalOpen(true)}
                 className="flex-1 flex items-center justify-center"
                 disabled={loading || hasActiveClaim}
                 title={hasActiveClaim ? 'No se puede solicitar revisión mientras hay un reclamo activo' : ''}
               >
                 <RefreshCw size={18} className="mr-2" />
-                Solicitar Revisión
+                Solicitar revisión
               </Button>
             </div>
           )}
@@ -575,94 +600,24 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
             </div>
           )}
 
-          {/* Confirmación de aprobación */}
-          {showConfirmApprove && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-start mb-4">
-                <AlertCircle size={20} className="text-green-600 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold text-green-900 mb-1">
-                    ¿Confirmar aprobación de entrega?
-                  </h4>
-                  <p className="text-sm text-green-800">
-                    Esta acción no se puede deshacer. Se procesará el pago correspondiente al prestador.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="cancel"
-                  onClick={() => setShowConfirmApprove(false)}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleApprove}
-                  disabled={loading}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Procesando...
-                    </div>
-                  ) : (
-                    'Sí, aprobar'
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
+          <ConfirmApproveDeliveryModal
+            isOpen={isApproveModalOpen}
+            onClose={() => setIsApproveModalOpen(false)}
+            onConfirm={handleApprove}
+            loading={loading}
+          />
 
-          {/* Formulario de revisión */}
-          {showRevisionForm && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <h4 className="font-semibold text-orange-900 mb-3">
-                Solicitar Revisión
-              </h4>
-              <textarea
-                value={revisionNotes}
-                onChange={(e) => setRevisionNotes(e.target.value)}
-                placeholder="Explica qué necesita ser modificado o corregido..."
-                className="w-full border border-orange-300 rounded-lg p-3 mb-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                rows={4}
-              />
-              <p className="text-xs text-orange-700 mb-3">
-                {revisionNotes.length} / 500 caracteres
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="cancel"
-                  onClick={() => {
-                    setShowRevisionForm(false);
-                    setRevisionNotes('');
-                  }}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  Volver
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleRequestRevision}
-                  disabled={loading || !revisionNotes.trim()}
-                  className="flex-1"
-                >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Enviando...
-                    </div>
-                  ) : (
-                    'Enviar Solicitud'
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
+          <RequestRevisionModal
+            isOpen={isRevisionModalOpen}
+            onClose={() => {
+              setIsRevisionModalOpen(false);
+              setRevisionNotes('');
+            }}
+            onSubmit={handleRequestRevision}
+            notes={revisionNotes}
+            setNotes={setRevisionNotes}
+            loading={loading}
+          />
 
           {/* Estado: Aprobado */}
           {delivery.status === 'approved' && (
@@ -718,13 +673,13 @@ export default function DeliveryReview({ delivery, isClient = false, onReviewSuc
         </div>
       </div>
 
-      {/* Toast */}
-      {toast && (
+      {/* Toast local (solo para validaciones/descargas dentro del componente) */}
+      {localToast && (
         <Toast
-          type={toast.type}
-          message={toast.message}
-          isVisible={toast.isVisible}
-          onClose={() => setToast(null)}
+          type={localToast.type}
+          message={localToast.message}
+          isVisible={localToast.isVisible}
+          onClose={() => setLocalToast(null)}
           position="top-center"
         />
       )}

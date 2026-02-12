@@ -81,10 +81,6 @@ function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwne
     try {
       const postulations = await getMyPostulationsByProjectAndRole(projectId, role.id);
       
-      console.log('Postulaciones encontradas:', postulations);
-      console.log('ID del rol actual:', role.id);
-      console.log('ID del proyecto actual:', projectId);
-      
       // NUEVA REGLA: Verificar si ya tiene CUALQUIER postulación previa
       if (postulations && postulations.length > 0) {
         const lastPostulation = postulations[0];
@@ -106,7 +102,6 @@ function RoleCard({ role, project, isOwner, user, projectId, isModerated, isOwne
           message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
         }
         
-        console.log('Postulación previa encontrada:', lastPostulation);
         setToast({ 
           type: 'error', 
           message: message
@@ -632,7 +627,7 @@ ${messageText.trim()}`;
                 className="bg-conexia-green text-white px-3 md:px-5 py-2 rounded font-semibold hover:bg-conexia-green/90 transition text-sm"
                 onClick={() => router.push(`/project/${projectId}/postulations`)}
               >
-                Ver Postulaciones
+                Ver postulaciones
               </button>
               {!project.isActive || !project.deletedAt && (
                 <button

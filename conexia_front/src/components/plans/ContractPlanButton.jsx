@@ -22,15 +22,6 @@ export default function ContractPlanButton({ plan, billingCycle, onError }) {
   const handleContractPlan = async () => {
     setProcessing(true);
     try {
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🔄 Iniciando contratación de plan (Redirect Flow)');
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('📋 Plan ID:', plan.id);
-      console.log('📝 Plan Name:', plan.name);
-      console.log('💰 Monto:', amount);
-      console.log('📅 Ciclo:', billingCycle);
-      console.log('═══════════════════════════════════════════════════════');
-
       // Guardar datos de la suscripción pendiente en localStorage
       const subscriptionData = {
         planId: plan.id,
@@ -66,13 +57,6 @@ export default function ContractPlanButton({ plan, billingCycle, onError }) {
       // El backend retorna data anidado: response.data.data
       const data = responseData.data?.data || responseData.data || responseData;
 
-      console.log('✅ Respuesta del backend:', data);
-      console.log('🔗 Mercado Pago URL:', data.mercadoPagoUrl);
-      console.log('🆔 Subscription ID:', data.subscriptionId);
-      console.log('📅 Expires At:', data.expiresAt);
-      console.log('💬 Message:', responseData.data?.message);
-      console.log('═══════════════════════════════════════════════════════');
-
       // Actualizar datos con la info del backend
       subscriptionData.subscriptionId = data.subscriptionId;
       subscriptionData.expiresAt = data.expiresAt;
@@ -82,7 +66,6 @@ export default function ContractPlanButton({ plan, billingCycle, onError }) {
       // ✅ REDIRIGIR A MERCADOPAGO
       const redirectUrl = data.mercadoPagoUrl || data.initPoint;
       if (redirectUrl) {
-        console.log('🚀 Redirigiendo a MercadoPago...');
         // Usar window.location.href para redirección completa
         window.location.href = redirectUrl;
       } else {
@@ -90,7 +73,6 @@ export default function ContractPlanButton({ plan, billingCycle, onError }) {
       }
 
     } catch (error) {
-      console.error('❌ ERROR al contratar plan:', error);
       // Limpiar datos pendientes en caso de error
       localStorage.removeItem('pendingSubscription');
       // Usar el handler para mostrar mensaje limpio

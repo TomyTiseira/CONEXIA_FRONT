@@ -46,17 +46,17 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
         iconColor: 'text-red-600'
       },
       cancel: {
-        title: 'Cancelar Solicitud',
+        title: 'Cancelar solicitud',
         description: 'Al cancelar esta solicitud, se eliminará permanentemente y no podrás recuperarla. Esta acción no se puede deshacer.',
-        buttonText: 'Sí, Cancelar',
+        buttonText: 'Sí, cancelar',
         buttonClass: 'bg-gray-600 hover:bg-gray-700 text-white',
         icon: Trash2,
         iconColor: 'text-gray-600'
       },
       negotiate: {
-        title: 'Iniciar Negociación',
+        title: 'Iniciar negociación',
         description: 'Al iniciar una negociación, el proveedor será notificado que deseas discutir los términos de la cotización. Podrás comunicarte directamente para llegar a un acuerdo.',
-        buttonText: 'Sí, Negociar',
+        buttonText: 'Sí, negociar',
         buttonClass: 'bg-orange-600 hover:bg-orange-700 text-white',
         icon: MessageSquare,
         iconColor: 'text-orange-600'
@@ -76,12 +76,12 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
       rejected: 'Rechazado',
       cancelled: 'Cancelado',
       negotiating: 'Negociando',
-      in_progress: 'En Progreso',
+      in_progress: 'En progreso',
       delivered: 'Entregado',
-      revision_requested: 'Revisión Solicitada',
+      revision_requested: 'Revisión solicitada',
       completed: 'Completado',
       expired: 'Vencida',
-      in_claim: 'En Reclamo',
+      in_claim: 'En reclamo',
       cancelled_by_claim: 'Cancelado por reclamo',
       completed_by_claim: 'Finalizado por reclamo',
       completed_with_agreement: 'Finalizado con acuerdo'
@@ -185,13 +185,18 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
     const actionConfig = getActionConfig(confirmAction);
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+      <div className="fixed inset-0 z-[110]" onClick={() => setConfirmAction(null)}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+          <div
+            className="relative z-10 bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* Header fijo */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
             <h3 className="text-xl font-bold text-orange-600 flex items-center gap-2">
               <AlertCircle size={20} />
-              Confirmar Acción
+              Confirmar acción
             </h3>
             <button
               onClick={() => setConfirmAction(null)}
@@ -220,7 +225,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             {confirmAction === 'negotiate' && (
               <div className="mt-4">
                 <label htmlFor="negotiationDescription" className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción de la Negociación
+                  Descripción de la negociación
                 </label>
                 <textarea
                   id="negotiationDescription"
@@ -263,14 +268,20 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
               </Button>
             </div>
           </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+        <div
+          className="relative z-10 bg-white rounded-lg w-full max-w-2xl min-w-[300px] max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header fijo */}
         <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
           <div className="flex justify-between items-center">
@@ -300,7 +311,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           {/* Título Servicio Solicitado */}
           <h4 className="font-medium text-conexia-green text-lg mb-2 flex items-center gap-2">
             <Briefcase size={20} className="text-conexia-green" />
-            Servicio Solicitado
+            Servicio solicitado
           </h4>
           {/* Información del servicio */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -310,7 +321,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                 <p className="font-medium text-gray-900 break-words overflow-wrap-anywhere line-clamp-2 leading-tight">{hiring.service?.title}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Precio Base</p>
+                <p className="text-sm text-gray-600">Precio base</p>
                 <p className="font-medium text-conexia-green">
                   ${hiring.service?.price?.toLocaleString()}{hiring.service?.timeUnit ? ` por ${getUnitLabel(hiring.service.timeUnit)}` : ''}
                 </p>
@@ -344,7 +355,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
           {/* Título Mi Solicitud */}
           <h4 className="font-medium text-blue-600 text-lg mb-2 flex items-center gap-2">
             <FileText size={18} className="text-blue-600" />
-            Mi Solicitud
+            Mi solicitud
           </h4>
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             {hiring.createdAt && (
@@ -362,7 +373,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
             <>
               <h4 className="font-medium text-green-700 text-lg mb-3 flex items-center gap-2">
                 <DollarSign size={18} className="text-green-700" />
-                Cotización del Proveedor
+                Cotización del proveedor
               </h4>
               {showExpiredBlock ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -379,7 +390,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
                           className="bg-gray-600 hover:bg-gray-700 text-white"
                           disabled={actionLoading}
                         >
-                          {actionLoading ? 'Procesando...' : 'Cancelar Solicitud'}
+                          {actionLoading ? 'Procesando...' : 'Cancelar solicitud'}
                         </Button>
                       </div>
                     </div>
@@ -482,6 +493,7 @@ export default function QuotationModal({ hiring, isOpen, onClose, onSuccess, onE
               Cerrar
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </div>

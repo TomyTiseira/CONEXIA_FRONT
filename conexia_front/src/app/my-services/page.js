@@ -152,7 +152,7 @@ export default function MyServicesPage() {
               Volver
             </button>
             <h1 className="text-3xl font-bold text-gray-900">
-              Mis Servicios Contratados
+              Mis servicios contratados
             </h1>
             <p className="text-gray-600 mt-2">
               Servicios donde soy el prestador
@@ -371,6 +371,7 @@ export default function MyServicesPage() {
         onClose={() => setShowDeliveryModal(false)}
         hiringId={selectedHiring?.id}
         totalPrice={selectedHiring?.quotedPrice}
+        isResubmission={selectedHiring?.status?.code === 'revision_requested'}
         onSuccess={handleDeliverySuccess}
       />
 

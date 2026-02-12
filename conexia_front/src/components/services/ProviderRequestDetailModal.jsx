@@ -34,12 +34,12 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
       rejected: 'Rechazado',
       cancelled: 'Cancelado',
       negotiating: 'Negociando',
-      in_progress: 'En Progreso',
+      in_progress: 'En progreso',
       delivered: 'Entregado',
-      revision_requested: 'Revisión Solicitada',
+      revision_requested: 'Revisión solicitada',
       completed: 'Completado',
       expired: 'Vencida',
-      in_claim: 'En Reclamo',
+      in_claim: 'En reclamo',
       cancelled_by_claim: 'Cancelado por reclamo',
       completed_by_claim: 'Finalizado por reclamo',
       completed_with_agreement: 'Finalizado con acuerdo',
@@ -100,14 +100,21 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
     (hiring?.estimatedHours && hiring?.estimatedTimeUnit)
   );
 
+  const clientImage = hiring?.profileImage || hiring?.user?.profileImage || hiring?.user?.profilePicture || null;
+
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+      <div className="fixed inset-0 flex justify-center items-center p-4 z-10">
+        <div
+          className="relative z-10 bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header fijo */}
         <div className="px-6 py-4 border-b border-gray-200 rounded-t-xl flex-shrink-0">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-conexia-green">
-              Detalle de Solicitud Recibida
+              Detalle de solicitud recibida
             </h2>
             <button
               onClick={onClose}
@@ -127,15 +134,15 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
               Cliente
             </h3>
             <div className="flex items-center gap-3">
-              {hiring.user?.profilePicture ? (
+              {clientImage ? (
                 <img
-                  src={`${config.IMAGE_URL}/${hiring.user.profilePicture}`}
+                  src={`${config.IMAGE_URL}/${clientImage}`}
                   alt={derivedDisplayName}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full object-cover border"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                  <User size={24} className="text-blue-600" />
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center border">
+                  <User size={16} className="text-blue-600" />
                 </div>
               )}
               <div>
@@ -148,7 +155,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <FileText size={20} className="text-conexia-green" />
-              Mi Servicio Solicitado
+              Mi servicio solicitado
             </h3>
             <div className="space-y-2">
               <div>
@@ -176,7 +183,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
           <div className="bg-orange-50 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <FileText size={20} className="text-orange-600" />
-              Solicitud del Cliente
+              Solicitud del cliente
             </h3>
             <div className="space-y-2">
               <div>
@@ -209,7 +216,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
           {hiring.negotiationDescription && hiring.status?.code === 'negotiating' && (
             <div className="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-300">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                🤝 <span className="text-orange-700">Solicitud de Negociación</span>
+                🤝 <span className="text-orange-700">Solicitud de negociación</span>
               </h3>
               <div>
                 <span className="font-medium text-gray-700">El cliente quiere negociar:</span>
@@ -225,7 +232,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
             <div className="bg-green-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <DollarSign size={20} className="text-green-700" />
-                Mi Cotización
+                Mi cotización
               </h3>
               {/* Regla: solo mostrar "Cotización Vencida" cuando el estado es 'quoted' Y está vencida */}
               {isExpired(hiring) && hiring.status?.code === 'quoted' ? (
@@ -233,7 +240,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
                   <div className="flex items-start gap-3">
                     <AlertCircle className="text-red-600 mt-0.5" size={20} />
                     <div>
-                      <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
+                      <h4 className="font-medium text-red-800 mb-1">Cotización vencida</h4>
                       <p className="text-sm text-red-600">
                         Esta cotización ha expirado.
                       </p>
@@ -272,6 +279,7 @@ export default function ProviderRequestDetailModal({ hiring, isOpen, onClose, cl
               Cerrar
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </div>

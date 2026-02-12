@@ -13,7 +13,7 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       className: 'bg-gray-200 text-gray-800'
     },
     in_progress: {
-      label: 'En Progreso',
+      label: 'En progreso',
       className: 'bg-blue-200 text-blue-800'
     },
     delivered: {
@@ -29,7 +29,7 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       className: 'bg-green-200 text-green-800'
     },
     revision_requested: {
-      label: 'Revisión Solicitada',
+      label: 'Revisión solicitada',
       className: 'bg-orange-200 text-orange-800'
     },
     rejected: {
@@ -37,7 +37,7 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       className: 'bg-red-200 text-red-800'
     },
     cancelled_by_moderation: {
-      label: 'Cancelado por Moderación',
+      label: 'Cancelado por moderación',
       className: 'bg-slate-200 text-slate-800 border border-slate-300'
     }
   };
@@ -61,7 +61,7 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       className: 'bg-green-100 text-green-700'
     },
     revision_requested: {
-      label: 'Revisión Solicitada',
+      label: 'Revisión solicitada',
       className: 'bg-orange-100 text-orange-700'
     },
     rejected: {
@@ -69,7 +69,7 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       className: 'bg-red-100 text-red-700'
     },
     cancelled_by_moderation: {
-      label: 'Cancelado por Moderación',
+      label: 'Cancelado por moderación',
       className: 'bg-slate-100 text-slate-700 border border-slate-300'
     }
   };
@@ -109,7 +109,7 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       className: 'bg-orange-200 text-orange-800'
     },
     in_progress: {
-      label: 'En Progreso',
+      label: 'En progreso',
       className: 'bg-purple-200 text-purple-800'
     },
     delivered: {
@@ -117,7 +117,7 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       className: 'bg-teal-200 text-teal-800'
     },
     revision_requested: {
-      label: 'Revisión Solicitada',
+      label: 'Revisión solicitada',
       className: 'bg-orange-200 text-orange-800'
     },
     completed: {
@@ -125,28 +125,28 @@ export default function StatusBadge({ status, type = 'delivery', className = '' 
       className: 'bg-green-200 text-green-800'
     },
     in_claim: {
-      label: 'En Reclamo',
+      label: 'En reclamo',
       className: 'bg-red-100 text-red-700'
     },
     cancelled_by_claim: {
-      label: 'Cancelado por Reclamo',
+      label: 'Cancelado por reclamo',
       className: 'bg-red-200 text-red-800'
     },
     completed_by_claim: {
-      label: 'Finalizado por Reclamo',
+      label: 'Finalizado por reclamo',
       className: 'bg-purple-200 text-purple-800'
     },
     completed_with_agreement: {
-      label: 'Finalizado con Acuerdo',
+      label: 'Finalizado con acuerdo',
       className: 'bg-teal-200 text-teal-800'
     },
     // Estados de moderación para servicios
     terminated_by_moderation: {
-      label: 'Terminado por Moderación',
+      label: 'Terminado por moderación',
       className: 'bg-red-100 text-red-700 border border-red-300'
     },
     finished_by_moderation: {
-      label: 'Finalizado por Moderación',
+      label: 'Finalizado por moderación',
       className: 'bg-amber-100 text-amber-700 border border-amber-300'
     }
   };

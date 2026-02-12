@@ -97,8 +97,13 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+      <div className="fixed inset-0 flex justify-center items-center p-4 z-10">
+        <div
+          className="relative z-10 bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header fijo */}
         <div className="px-6 py-4 border-b border-gray-200 rounded-t-xl flex-shrink-0">
           <div className="flex justify-between items-center">
@@ -120,7 +125,7 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <FileText size={20} className="text-conexia-green" />
-              Servicio Solicitado
+              Servicio solicitado
             </h3>
             <div className="space-y-2">
               <div>
@@ -167,7 +172,7 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
           <div className="bg-blue-50 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <User size={20} className="text-blue-600" />
-              Mi Solicitud
+              Mi solicitud
             </h3>
             <div className="space-y-2">
               <div>
@@ -201,7 +206,7 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
             <div className="bg-green-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <DollarSign size={20} className="text-green-700" />
-                Cotización del Proveedor
+                Cotización del proveedor
               </h3>
               {/* Regla: solo mostrar "Cotización Vencida" cuando el estado es 'quoted' Y está vencida */}
               {isExpired(hiring) && hiring.status?.code === 'quoted' ? (
@@ -209,7 +214,7 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="text-red-600 mt-0.5" size={20} />
                     <div>
-                      <h4 className="font-medium text-red-800 mb-1">Cotización Vencida</h4>
+                      <h4 className="font-medium text-red-800 mb-1">Cotización vencida</h4>
                       <p className="text-sm text-red-600">
                         Esta cotización ha expirado. La única acción disponible es cancelar la solicitud para poder volver a cotizar este servicio.
                       </p>
@@ -250,6 +255,7 @@ export default function RequestDetailModal({ hiring, isOpen, onClose }) {
             </Button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

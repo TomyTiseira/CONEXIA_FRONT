@@ -13,8 +13,13 @@ export default function ServiceDeleteConflictModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl border border-yellow-200 w-full max-w-md mx-4 animate-fadeIn flex flex-col">
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+        <div
+          className="relative z-10 bg-white rounded-2xl shadow-2xl border border-yellow-200 w-full max-w-md mx-4 animate-fadeIn flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
@@ -74,6 +79,7 @@ export default function ServiceDeleteConflictModal({
               Entendido
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </div>

@@ -31,9 +31,6 @@ export default function CreateProjectForm() {
     isLoading: limitsLoading 
   } = useSubscriptionLimits();
   
-  console.log('CreateProjectForm - showLimitModal:', showLimitModal);
-  console.log('CreateProjectForm - projectsLimit:', projectsLimit);
-
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -190,9 +187,7 @@ export default function CreateProjectForm() {
     try {
       // Validación preventiva de límites (antes de validar el formulario)
       const validation = await validateCanPublishProject();
-      console.log('Validation result:', validation);
       if (!validation.canPublish) {
-        console.log('Opening limit modal - preventive validation');
         setShowLimitModal(true);
         return;
       }
@@ -229,11 +224,7 @@ export default function CreateProjectForm() {
       router.push('/project/search');
     } catch (err) {
       // Manejo de error 403 (límite alcanzado)
-      console.log('Error caught:', err);
-      console.log('Error statusCode:', err.statusCode);
-      console.log('Error isLimitExceeded:', err.isLimitExceeded);
       if (err.statusCode === 403 || err.isLimitExceeded) {
-        console.log('Opening limit modal - error handler');
         setShowLimitModal(true);
       } else {
         setToast({ visible: true, type: 'error', message: err.message || 'Error al publicar el proyecto' });
@@ -261,7 +252,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Descripción e Imagen - lado a lado */}
-      <div className="md:col-span-1 flex flex-col justify-start min-h-[90px] gap-1.5 -mt-6">
+      <div className="md:col-span-1 flex flex-col justify-start min-h-[90px] gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Descripción del proyecto
         </label>
@@ -281,7 +272,7 @@ export default function CreateProjectForm() {
       </div>
 
       {/* Imagen representativa */}
-      <div className="md:col-span-1 flex flex-col justify-start gap-1.5 -mt-6">
+      <div className="md:col-span-1 flex flex-col justify-start gap-1.5">
         <label className="block text-sm font-semibold text-conexia-green-dark mb-0.5">
           Imagen representativa del proyecto (Opcional)
         </label>

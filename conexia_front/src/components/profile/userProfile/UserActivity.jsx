@@ -43,6 +43,11 @@ export default function UserActivity({ userId, isOwner }) {
     if (!loading && hasMore) setPage(prev => prev + 1);
   };
 
+  // Callback para manejar cuando se elimina una publicación
+  const handlePublicationDeleted = (deletedPublicationId) => {
+    setPublications(prev => prev.filter(pub => pub.id !== deletedPublicationId));
+  };
+
   // No mostrar nada mientras carga o si hay error
   if (loading && publications.length === 0) return null;
   if (error) return null;
@@ -50,7 +55,7 @@ export default function UserActivity({ userId, isOwner }) {
   // No mostrar la sección si no hay publicaciones
   if (publications.length === 0) return null;
 
-  return <ActivityFeed publications={publications} isOwner={isOwner} userId={userId} />;
+  return <ActivityFeed publications={publications} isOwner={isOwner} userId={userId} onPublicationDeleted={handlePublicationDeleted} />;
 }
 
 UserActivity.propTypes = {

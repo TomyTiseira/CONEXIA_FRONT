@@ -359,10 +359,10 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
               <span>{isUserRestricted ? 'Usuario No Disponible' : 'Conectar'}</span>
             </Button>
           ) : (
-            <div className="relative flex items-center h-10" ref={desktopDropdownRef}>
+            <div className="relative" ref={desktopDropdownRef}>
               <Button
                 variant="informative"
-                className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
+                className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-full border border-[#e0f0f0] px-4 text-sm min-w-[190px] max-w-[190px] h-10"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
                 <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
@@ -370,7 +370,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
                 <ChevronUp className={`w-4 h-4 ml-2 text-conexia-green transition-transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
               </Button>
               {dropdownOpen && (
-                <div className="absolute right-0 z-20 mt-3 w-full bg-transparent border-0 shadow-none">
+                <div className="absolute right-0 z-50 top-full mt-2 w-full bg-transparent border-0 shadow-none">
                   <button 
                     className="w-full h-10 flex items-center justify-center px-4 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-colors whitespace-nowrap"
                     onClick={() => {
@@ -480,11 +480,11 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
           </Button>
         </div>
         {/* Desktop: extremo derecho, apilados verticalmente (Pendiente arriba, Enviar abajo) */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
-          <div className="relative flex items-center h-10">
+        <div className="hidden sm:flex flex-col items-end gap-2">
+          <div className="relative" ref={desktopDropdownRef}>
             <Button
               variant="informative"
-              className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
+              className="flex items-center justify-center bg-[#e0f0f0] text-conexia-green font-semibold rounded-full border border-[#e0f0f0] px-4 text-sm min-w-[190px] max-w-[190px] h-10"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
                 <FaRegClock className="w-4 h-4 mr-2 text-conexia-green" />
@@ -492,7 +492,7 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
                 <ChevronUp className={`w-4 h-4 ml-2 text-conexia-green transition-transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
             </Button>
             {dropdownOpen && (
-              <div ref={desktopDropdownRef} className="absolute right-0 z-50 top-full mt-2 w-full bg-transparent border-0 shadow-none">
+              <div className="absolute right-0 z-50 top-full mt-2 w-full bg-transparent border-0 shadow-none">
                 <button
                   className="w-full h-10 flex items-center justify-center px-4 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-colors whitespace-nowrap"
                   onClick={() => {
@@ -582,18 +582,16 @@ export default function ProfileConnectionButtons({ profile, id, isOwner, receive
             <span className="truncate">Enviar mensaje</span>
           </Button>
         </div>
-        {/* Desktop: Enviar mensaje agrupado con Aceptar/Rechazar en columna derecha */}
-        <div className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 mr-6 flex-col items-end gap-2">
-          <div className="flex flex-col gap-2 items-end">
-            <Button
-              variant="primary"
-              className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
-              onClick={openChat}
-            >
-              <Send className="w-4 h-4 mr-2" />
-              Enviar mensaje
-            </Button>
-          </div>
+        {/* Desktop: Enviar mensaje centrado verticalmente en el espacio de dos botones */}
+        <div className="hidden sm:flex h-[52px] items-center justify-end">
+          <Button
+            variant="primary"
+            className="flex items-center justify-center px-4 text-sm min-w-[190px] max-w-[190px] h-10 rounded-full"
+            onClick={openChat}
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar mensaje
+          </Button>
         </div>
       </>
     );

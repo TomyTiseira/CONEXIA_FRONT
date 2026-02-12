@@ -216,7 +216,7 @@ export default function LimitReachedModal({
         {/* Footer Info */}
         <div className="mt-6 pt-4 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            💡 <span className="font-semibold">Consejo:</span> Puedes eliminar {config.plural} antiguos para liberar espacio, o actualizar tu plan para más capacidad.
+            <span className="font-semibold">Consejo:</span> Puedes eliminar {config.plural} antiguos para liberar espacio, o actualizar tu plan para más capacidad.
           </p>
         </div>
       </div>

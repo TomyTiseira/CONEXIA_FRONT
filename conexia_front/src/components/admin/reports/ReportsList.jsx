@@ -13,6 +13,7 @@ import Pagination from '@/components/common/Pagination';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
+import { Sparkles } from 'lucide-react';
 
 const FILTERS = [
   { label: 'Proyectos', value: 'projects' },
@@ -139,50 +140,73 @@ export default function ReportsList() {
   }, [filter]);
 
   return (
-      <div className="max-w-6xl mx-auto pt-8 pb-4">
-        <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative mb-6 mx-4 md:mx-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold text-conexia-green text-center sm:text-left">Reportes</h1>
-            {/* Botón acceso a moderación IA */}
-            {(roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
-              <Button
-                variant="primary"
-                className="px-5 py-2 text-sm font-semibold"
-                onClick={() => router.push('/admin/moderation')}
-              >
-                Panel de moderación IA
-              </Button>
-            )}
-          </div>
+    <main className="bg-[#eaf5f2] min-h-screen p-8 space-y-6 max-w-7xl mx-auto pb-24">
+    <div className="bg-white px-6 py-4 rounded-xl shadow-sm relative">
+      <h1 className="text-2xl font-bold text-conexia-green text-center">
+      Gestión de reportes
+      </h1>
+
+      {/* Botón acceso a moderación IA */}
+      {(roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
+      <>
+        <div className="hidden sm:flex absolute right-6 top-1/2 -translate-y-1/2">
+        <Button
+          variant="add"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-6 py-2 rounded-lg font-semibold text-sm hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-md hover:shadow-lg transform hover:scale-[1.01] border border-[#48a6a7]/30"
+          onClick={() => router.push('/admin/moderation')}
+        >
+          <Sparkles className="w-4 h-4" />
+          Panel de moderación IA
+        </Button>
         </div>
-  <div className="bg-white p-4 rounded-xl shadow-sm border mb-8 mx-4 md:mx-0" style={{ overflow: 'visible', zIndex: 10, position: 'relative' }}>
-        <div className="flex flex-col gap-4">
-          {/* Filtro tipo de reporte */}
-          <div className="flex flex-col gap-2 relative" style={{ isolation: 'isolate' }}>
-            <label className="text-sm text-conexia-green font-medium">Tipo de reporte:</label>
-            <select value={filter} onChange={e => setFilter(e.target.value)}
-              className="h-10 border border-conexia-green rounded px-3 text-sm text-conexia-green focus:outline-none focus:ring-2 focus:ring-conexia-green bg-white w-full appearance-auto">
-              {FILTERS.map(f => (
-                <option key={f.value} value={f.value} disabled={f.disabled}>{f.label}</option>
-              ))}
-            </select>
-          </div>
-          {/* Filtro ordenar por */}
-          <div className="flex flex-col gap-2 relative" style={{ isolation: 'isolate' }}>
-            <label className="text-sm text-conexia-green font-medium">Ordenar por:</label>
-            <select value={order} onChange={e => setOrder(e.target.value)}
-              className="h-10 border border-conexia-green rounded px-3 text-sm text-conexia-green focus:outline-none focus:ring-2 focus:ring-conexia-green bg-white w-full appearance-auto">
-              {ORDER_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
+        <div className="sm:hidden mt-4 flex justify-center">
+        <Button
+          variant="add"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-6 py-2 rounded-lg font-semibold text-sm hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-md hover:shadow-lg transform hover:scale-[1.01] border border-[#48a6a7]/30 w-full sm:w-auto"
+          onClick={() => router.push('/admin/moderation')}
+        >
+          <Sparkles className="w-4 h-4" />
+          Panel de moderación IA
+        </Button>
         </div>
+      </>
+      )}
+    </div>
+
+    <div className="bg-white px-6 py-4 rounded-xl shadow-sm border">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Filtro tipo de reporte */}
+      <div className="flex flex-col gap-2">
+        <label className="text-sm text-gray-700 font-medium">Tipo de reporte</label>
+        <select
+        value={filter}
+        onChange={e => setFilter(e.target.value)}
+        className="h-10 border border-gray-300 rounded-lg px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-conexia-green bg-white w-full"
+        >
+        {FILTERS.map(f => (
+          <option key={f.value} value={f.value} disabled={f.disabled}>{f.label}</option>
+        ))}
+        </select>
       </div>
-      {/* Tabla con márgenes y fondo celeste en mobile, paginado reutilizable */}
-      <div className="relative">
-        <div className="bg-white rounded-xl shadow-sm border p-0 overflow-x-auto mx-4 md:mx-0" style={{ zIndex: 1, position: 'relative' }}>
-          <table className="w-full table-auto text-sm mb-0 min-w-[800px]">
+
+      {/* Filtro ordenar por */}
+      <div className="flex flex-col gap-2">
+        <label className="text-sm text-gray-700 font-medium">Ordenar por</label>
+        <select
+        value={order}
+        onChange={e => setOrder(e.target.value)}
+        className="h-10 border border-gray-300 rounded-lg px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-conexia-green bg-white w-full"
+        >
+        {ORDER_OPTIONS.map(o => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+        </select>
+      </div>
+      </div>
+    </div>
+
+    <div className="bg-white rounded-xl shadow-sm border overflow-x-auto">
+      <table className="w-full table-auto text-sm mb-0 min-w-[800px]">
             <colgroup>
               <col className="w-[30%]" />
               <col className="w-[15%]" />
@@ -371,7 +395,6 @@ export default function ReportsList() {
                   </tr>
                 ) : (
                   reviews.map(review => {
-                    console.log('Review object:', review);
                     return (
                     <tr key={`review-${review.id || review.userReviewId}`} className="border-b hover:bg-gray-50 h-auto align-top">
                       <td className="p-4 align-top max-w-[300px]">
@@ -462,9 +485,6 @@ export default function ReportsList() {
             </div>
           )}
         </div>
-        {/* Espacio celeste y márgenes en mobile */}
-        <div className="block md:hidden w-full absolute left-0 right-0" style={{ background: '#eaf6f4', height: 56, bottom: -56, zIndex: 0 }}></div>
-      </div>
-    </div>
+          </main>
   );
 }

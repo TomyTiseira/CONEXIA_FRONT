@@ -14,9 +14,9 @@ export const MODERATION_CLASSIFICATIONS = {
 };
 
 export const ACTION_LABELS = {
-  [MODERATION_ACTIONS.BAN_USER]: 'Usuario Baneado',
-  [MODERATION_ACTIONS.RELEASE_USER]: 'Usuario Liberado',
-  [MODERATION_ACTIONS.KEEP_MONITORING]: 'En Monitoreo',
+  [MODERATION_ACTIONS.BAN_USER]: 'Usuario baneado',
+  [MODERATION_ACTIONS.RELEASE_USER]: 'Usuario liberado',
+  [MODERATION_ACTIONS.KEEP_MONITORING]: 'En monitoreo',
 };
 
 export const ACTION_COLORS = {

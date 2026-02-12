@@ -110,11 +110,16 @@ export default function ContractServiceModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full min-w-[300px] max-h-[90vh] flex flex-col">
+      <div className="fixed inset-0 z-[100]" onClick={handleClose}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-0" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-10">
+          <div
+            className="relative z-10 bg-white rounded-lg shadow-xl max-w-md w-full min-w-[300px] max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* Header fijo */}
           <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Contratar Servicio</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Contratar servicio</h3>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
@@ -269,12 +274,13 @@ export default function ContractServiceModal({
                     Procesando...
                   </div>
                 ) : (
-                  'Proceder al Pago'
+                  'Proceder al pago'
                 )}
               </Button>
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {/* Toast */}

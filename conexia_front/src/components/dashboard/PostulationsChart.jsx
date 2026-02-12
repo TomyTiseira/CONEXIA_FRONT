@@ -4,12 +4,18 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { ChartContainer } from './ChartContainer';
 
 /**
- * Gráfico circular de postulaciones (aceptadas vs totales)
+ * Gráfico circular de postulaciones (aceptadas vs totales válidas)
+ * Excluye postulaciones canceladas por usuario y por moderación
  */
-export const PostulationsChart = ({ totalPostulations, acceptedPostulations, successRate }) => {
+export const PostulationsChart = ({ totalPostulations, acceptedPostulations, successRate, byStatus }) => {
+  // Calcular total de postulaciones válidas (excluyendo canceladas)
+  const cancelledByUser = byStatus?.cancelada || 0;
+  const cancelledByMod = byStatus?.cancelada_moderacion || 0;
+  const validPostulations = totalPostulations - cancelledByUser - cancelledByMod;
+  
   const data = [
     { name: 'Aceptadas', value: acceptedPostulations, color: '#35ba5b' },
-    { name: 'Pendientes/Rechazadas', value: totalPostulations - acceptedPostulations, color: '#9fa7a7' },
+    { name: 'Pendientes/Rechazadas', value: validPostulations - acceptedPostulations, color: '#9fa7a7' },
   ];
 
   const CustomTooltip = ({ active, payload }) => {
@@ -73,11 +79,20 @@ export const PostulationsChart = ({ totalPostulations, acceptedPostulations, suc
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-[#9fa7a7]" />
             <div className="text-sm">
-              <span className="font-semibold text-gray-800">{totalPostulations}</span>
-              <span className="text-gray-600"> Total Enviadas</span>
+              <span className="font-semibold text-gray-800">{validPostulations}</span>
+              <span className="text-gray-600"> Total enviadas</span>
             </div>
           </div>
         </div>
+        
+        {/* Nota informativa si hay canceladas */}
+        {(cancelledByUser > 0 || cancelledByMod > 0) && (
+          <div className="mt-3 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-xs text-gray-600 text-center">
+              {cancelledByUser + cancelledByMod} postulación{cancelledByUser + cancelledByMod !== 1 ? 'es' : ''} cancelada{cancelledByUser + cancelledByMod !== 1 ? 's' : ''} no contabilizada{cancelledByUser + cancelledByMod !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
       </div>
     </ChartContainer>
   );

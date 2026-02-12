@@ -45,7 +45,7 @@ const getMediaUrl = (mediaUrl) => {
 
 
 
-function PublicationCard({ publication, isGridItem = false, onShowToast, searchParams, sentConnectionRequests = new Set(), onConnectionRequestSent }) {
+function PublicationCard({ publication, isGridItem = false, onShowToast, searchParams, sentConnectionRequests = new Set(), onConnectionRequestSent, onPublicationDeleted }) {
   const { sendRequest, loading: connectLoading, success: connectSuccess, error: connectError } = useSendConnectionRequest();
   const { user } = useAuth();
   const { roleName } = useUserStore();
@@ -599,6 +599,11 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
       setShowDeleteModal(false);
       onShowToast && onShowToast({ type: 'success', message: 'Publicación eliminada', isVisible: true });
       setDeleted(true);
+      
+      // Notificar al componente padre que la publicación fue eliminada
+      if (onPublicationDeleted) {
+        onPublicationDeleted(publicationId);
+      }
     } catch (err) {
       // Error silencioso - no mostramos alertas
       console.error('Error al eliminar publicación:', err);
@@ -2404,7 +2409,8 @@ PublicationCard.propTypes = {
   isGridItem: PropTypes.bool,
   onShowToast: PropTypes.func,
   sentConnectionRequests: PropTypes.instanceOf(Set),
-  onConnectionRequestSent: PropTypes.func
+  onConnectionRequestSent: PropTypes.func,
+  onPublicationDeleted: PropTypes.func
 };
 
 // Componente auxiliar para truncar descripción y mostrar 'ver más'

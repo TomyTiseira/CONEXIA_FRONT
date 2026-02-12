@@ -23,7 +23,7 @@ export const ServicesCompletedChart = ({ totalServicesHired, totalRevenue }) => 
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-800">Servicios completados</h3>
-          <p className="text-sm text-gray-500">Estado COMPLETED</p>
+          <p className="text-sm text-gray-500">Resumen de ingresos</p>
         </div>
       </div>
 
@@ -37,7 +37,7 @@ export const ServicesCompletedChart = ({ totalServicesHired, totalRevenue }) => 
         >
           {totalServicesHired}
         </motion.div>
-        <p className="text-sm text-gray-500">servicios finalizados</p>
+        <p className="text-sm text-gray-500">Servicios finalizados</p>
       </div>
 
       {/* Métricas detalladas */}

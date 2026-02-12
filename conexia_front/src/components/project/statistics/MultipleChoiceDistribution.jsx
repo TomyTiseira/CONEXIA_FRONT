@@ -22,8 +22,8 @@ export const MultipleChoiceDistribution = ({ questions = [] }) => {
       {questions
         .filter(question => question && typeof question === 'object')
         .map((question, qIndex) => {
-        // Manejar caso donde options puede ser undefined o vacío
-        const options = question.options || [];
+        // Manejar caso donde answers puede ser undefined o vacío (el backend envía "answers" no "options")
+        const options = question.answers || question.options || [];
         const totalResponses = options.reduce((sum, opt) => sum + (opt.count || 0), 0);
 
         return (

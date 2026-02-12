@@ -218,7 +218,7 @@ export default function MyServicesPage() {
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
           {/* Banner Mejorar Plan */}
-          <div className="mb-6">
+          <div className="mb-6 empty:hidden">
             <UpgradePlanButton context="services" />
           </div>
 
@@ -266,7 +266,7 @@ export default function MyServicesPage() {
                 </div>
               </button>
               <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
-                Mis Servicios
+                Mis servicios
               </h1>
               <div className="w-10"></div>
             </div>

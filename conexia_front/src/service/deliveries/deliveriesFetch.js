@@ -1,5 +1,28 @@
 import { config } from '@/config';
 
+function buildRcpError(res, json, fallbackMessage) {
+  const message = json?.message || fallbackMessage;
+  const error = new Error(message);
+  error.status = json?.statusCode || res.status;
+  error.statusCode = json?.statusCode || res.status;
+  error.rcp = {
+    statusCode: json?.statusCode || res.status,
+    message: json?.message,
+    error: json?.error,
+    timestamp: json?.timestamp,
+    path: json?.path
+  };
+  return error;
+}
+
+async function readJsonSafe(res) {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Crear una entrega para un servicio contratado
  * @param {number} hiringId - ID de la contratación
@@ -14,27 +37,26 @@ export async function createDelivery(hiringId, formData) {
     body: formData, // FormData ya incluye el Content-Type correcto
   });
 
-  const json = await res.json();
+  const json = await readJsonSafe(res);
 
   if (!res.ok) {
-    console.error('❌ [API] Error al crear entrega:', {
-      status: res.status,
-      message: json?.message || 'Sin mensaje',
-      details: json
-    });
+    if (![401, 403, 404].includes(res.status)) {
+      console.error('❌ [API] Error al crear entrega:', {
+        status: res.status,
+        message: json?.message || 'Sin mensaje',
+        details: json
+      });
+    }
     
-    const error = new Error(json?.message || 'Error al crear la entrega');
-    error.status = res.status;
-    error.statusCode = res.status;
-    throw error;
+    throw buildRcpError(res, json, 'Error al crear la entrega');
   }
 
   if (!json.success) {
     console.error('❌ [API] Error en respuesta:', json.message || 'Sin mensaje');
     
-    const error = new Error(json.message || 'Error en la respuesta del servidor');
-    error.status = json.statusCode || 400;
-    error.statusCode = json.statusCode || 400;
+    const error = new Error(json?.message || 'Error en la respuesta del servidor');
+    error.status = json?.statusCode || 400;
+    error.statusCode = json?.statusCode || 400;
     throw error;
   }
 
@@ -52,19 +74,24 @@ export async function fetchDeliveries(hiringId) {
     credentials: 'include',
   });
 
-  const json = await res.json();
+  const json = await readJsonSafe(res);
 
   if (!res.ok) {
-    console.error('❌ [API] Error al obtener entregas:', {
-      status: res.status,
-      message: json?.message || 'Sin mensaje'
-    });
+    if (![401, 403, 404].includes(res.status)) {
+      console.error('❌ [API] Error al obtener entregas:', {
+        status: res.status,
+        message: json?.message || 'Sin mensaje'
+      });
+    }
     
-    throw new Error(json?.message || 'Error al obtener las entregas');
+    throw buildRcpError(res, json, 'Error al obtener las entregas');
   }
 
-  if (!json.success) {
-    throw new Error(json.message || 'Error en la respuesta del servidor');
+  if (!json?.success) {
+    const error = new Error(json?.message || 'Error en la respuesta del servidor');
+    error.status = json?.statusCode || 400;
+    error.statusCode = json?.statusCode || 400;
+    throw error;
   }
 
   return json.data;
@@ -86,24 +113,24 @@ export async function reviewDelivery(deliveryId, data) {
     body: JSON.stringify(data),
   });
 
-  const json = await res.json();
+  const json = await readJsonSafe(res);
 
   if (!res.ok) {
-    console.error('❌ [API] Error al revisar entrega:', {
-      status: res.status,
-      message: json?.message || 'Sin mensaje'
-    });
+    if (![401, 403, 404].includes(res.status)) {
+      console.error('❌ [API] Error al revisar entrega:', {
+        status: res.status,
+        message: json?.message || 'Sin mensaje'
+      });
+    }
     
-    const error = new Error(json?.message || 'Error al revisar la entrega');
-    error.statusCode = res.status;
-    throw error;
+    throw buildRcpError(res, json, 'Error al revisar la entrega');
   }
 
   if (!json.success) {
     console.error('❌ [API] Error en respuesta:', json.message || 'Sin mensaje');
     
-    const error = new Error(json.message || 'Error en la respuesta del servidor');
-    error.statusCode = json.statusCode || 400;
+    const error = new Error(json?.message || 'Error en la respuesta del servidor');
+    error.statusCode = json?.statusCode || 400;
     throw error;
   }
 
@@ -121,19 +148,23 @@ export async function fetchHiringWithDeliveries(hiringId) {
     credentials: 'include',
   });
 
-  const json = await res.json();
+  const json = await readJsonSafe(res);
 
   if (!res.ok) {
-    console.error('❌ [API] Error al obtener contratación:', {
-      status: res.status,
-      message: json?.message || 'Sin mensaje'
-    });
+    if (![401, 403, 404].includes(res.status)) {
+      console.error('❌ [API] Error al obtener contratación:', {
+        status: res.status,
+        message: json?.message || 'Sin mensaje'
+      });
+    }
     
-    throw new Error(json?.message || 'Error al obtener la contratación');
+    throw buildRcpError(res, json, 'Error al obtener la contratación');
   }
 
-  if (!json.success) {
-    throw new Error(json.message || 'Error en la respuesta del servidor');
+  if (!json?.success) {
+    const error = new Error(json?.message || 'Error en la respuesta del servidor');
+    error.statusCode = json?.statusCode || 400;
+    throw error;
   }
 
   return json.data;
@@ -150,19 +181,23 @@ export async function fetchDeliverablesWithValidation(hiringId) {
     credentials: 'include',
   });
 
-  const json = await res.json();
+  const json = await readJsonSafe(res);
 
   if (!res.ok) {
-    console.error('❌ [API] Error al obtener entregables:', {
-      status: res.status,
-      message: json?.message || 'Sin mensaje'
-    });
+    if (![401, 403, 404].includes(res.status)) {
+      console.error('❌ [API] Error al obtener entregables:', {
+        status: res.status,
+        message: json?.message || 'Sin mensaje'
+      });
+    }
     
-    throw new Error(json?.message || 'Error al obtener los entregables');
+    throw buildRcpError(res, json, 'Error al obtener los entregables');
   }
 
-  if (!json.success) {
-    throw new Error(json.message || 'Error en la respuesta del servidor');
+  if (!json?.success) {
+    const error = new Error(json?.message || 'Error en la respuesta del servidor');
+    error.statusCode = json?.statusCode || 400;
+    throw error;
   }
 
   return json.data;

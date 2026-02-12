@@ -30,7 +30,7 @@ export default function SearchSection({
               className="flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-semibold transition border border-conexia-green/20 bg-conexia-green/10 text-conexia-green/80 hover:bg-conexia-green/20"
               onClick={onToggleShowAll}
             >
-              {showAll && <span className="text-lg">✔</span>} {toggleLabel}
+              {showAll && <span className="text-lg"></span>} {toggleLabel}
             </button>
           )}
           {headerActions}
