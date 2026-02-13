@@ -73,7 +73,7 @@ export default function ClaimDetailPage({ params }) {
       setProcessingReview(true);
       const updatedClaim = await markAsInReview(claim.id);
       setClaim(updatedClaim);
-      setToast({ isVisible: true, type: 'success', message: 'Reclamo marcado como "En Revisión"' });
+      setToast({ isVisible: true, type: 'success', message: 'Reclamo marcado como "En revisión"' });
     } catch (err) {
       console.error('Error marking as in review:', err);
       setToast({ isVisible: true, type: 'error', message: err.message || 'Error al actualizar el estado' });
@@ -343,7 +343,7 @@ export default function ClaimDetailPage({ params }) {
                 ) : (
                   <Clock size={18} />
                 )}
-                Marcar como &quot;En Revisión&quot;
+                Marcar como &quot;En revisión&quot;
               </button>
             )}
             

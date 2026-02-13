@@ -316,7 +316,7 @@ export default function MyClaimsPage() {
               >
                 <option value="">Todos los estados</option>
                 <option value="open">Abierto</option>
-                <option value="in_review">En Revisión</option>
+                <option value="in_review">En revisión</option>
                 <option value="pending_clarification">Requiere aclaración</option>
                 <option value="requires_staff_response">Requiere respuesta</option>
                 <option value="resolved">Resuelto</option>
@@ -330,8 +330,8 @@ export default function MyClaimsPage() {
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green"
               >
                 <option value="all">Todos los roles</option>
-                <option value="claimant">Como Reclamante</option>
-                <option value="respondent">Como Reclamado</option>
+                <option value="claimant">Como reclamante</option>
+                <option value="respondent">Como reclamado</option>
               </select>
             </div>
           </div>
@@ -396,7 +396,7 @@ export default function MyClaimsPage() {
                             Tipo
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Mi Rol
+                            Mi rol
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Contra

@@ -255,7 +255,7 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
         {/* Campos para Inversor */}
         {isInvestor && (
           <div className="border-t pt-4 space-y-4">
-            <h4 className="font-semibold text-gray-900 mb-3">Detalles de Inversión</h4>
+            <h4 className="font-semibold text-gray-900 mb-3">Detalles de inversión</h4>
             
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -303,7 +303,7 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
         {/* Campos para Socio */}
         {isPartner && (
           <div className="border-t pt-4">
-            <h4 className="font-semibold text-gray-900 mb-3">Tu Propuesta como Socio</h4>
+            <h4 className="font-semibold text-gray-900 mb-3">Tu propuesta como Socio</h4>
             
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -347,7 +347,7 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
           disabled={loading}
           className="flex-1"
         >
-          {loading ? 'Enviando...' : 'Enviar Postulación'}
+          {loading ? 'Enviando...' : 'Enviar postulación'}
         </Button>
       </div>
     </form>

@@ -117,15 +117,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
     // Extraer IDs correctamente - el backend devuelve profile.id
     const claimantUserId = claimData?.claimant?.profile?.id || claimData?.claimant?.id || claimData?.claimant?.userId;
     const otherUserId = claimData?.otherUser?.profile?.id || claimData?.otherUser?.id || claimData?.otherUser?.userId;
-
-    // Debug: Ver qué IDs tenemos
-    console.log('[ClaimResolutionModal] User IDs:', {
-      claimantUserId,
-      otherUserId,
-      claimantData: claimData?.claimant,
-      otherUserData: claimData?.otherUser
-    });
-
+    
     return {
       claimId: claimObj?.id,
       claimType,
@@ -290,14 +282,6 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
       // Agregar solo compromisos confirmados si existen
       const confirmedCompliances = compliances.filter(c => c.isConfirmed);
       
-      // Debug: Ver qué compromisos se están enviando
-      console.log('[DEBUG] Enviando resolución con compromisos:', {
-        totalCompliances: compliances.length,
-        confirmedCompliances: confirmedCompliances.length,
-        allCompliances: compliances,
-        confirmedOnly: confirmedCompliances
-      });
-      
       // VALIDACIÓN EXTRA: Verificar que no se excedan 5 compromisos
       if (confirmedCompliances.length > 5) {
         setError(`Error: Se detectaron ${confirmedCompliances.length} compromisos confirmados. El máximo es 5. Por favor, recarga la página.`);
@@ -311,8 +295,6 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
           index === self.findIndex((c) => c.id === compliance.id)
         );
         
-        console.log('[DEBUG] Compromisos únicos después de filtrar:', uniqueCompliances);
-        
         resolutionData.compliances = uniqueCompliances.map((c, index) => ({
           responsibleUserId: Number(c.responsibleUserId),
           complianceType: c.complianceType,
@@ -321,7 +303,6 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
           order: index,
         }));
         
-        console.log('[DEBUG] Compromisos a enviar al backend:', resolutionData.compliances);
       }
 
       if (resolutionType === CLAIM_RESOLUTION_TYPES.PARTIAL_AGREEMENT && partialAgreementDetails.trim()) {
@@ -450,7 +431,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
 
             {/* Descripción del Reclamo */}
             <div className="bg-white border rounded-lg p-4">
-              <h3 className="font-semibold text-lg text-gray-900 mb-2">Descripción del Reclamo</h3>
+              <h3 className="font-semibold text-lg text-gray-900 mb-2">Descripción del reclamo</h3>
               <p className="text-sm text-gray-700 whitespace-pre-wrap">
                 {normalized.description || 'No hay descripción disponible'}
               </p>
@@ -578,7 +559,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
               {/* Campo de resolución/explicación - AHORA DENTRO DEL MISMO COMPONENTE */}
               <div className="border-t pt-6 mt-6">
                 <label htmlFor="resolution" className="block text-sm font-semibold text-conexia-green-dark mb-2">
-                  Explicación de la Resolución <span className="text-red-500">*</span>
+                  Explicación de la resolución <span className="text-red-500">*</span>
                 </label>
                 <InputField
                   multiline
@@ -604,7 +585,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
             {/* Compromisos a asignar */}
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="mb-4">
-                <h3 className="text-xl font-semibold text-conexia-green-dark">Compromisos a Asignar</h3>
+                <h3 className="text-xl font-semibold text-conexia-green-dark">Compromisos a asignar</h3>
                 <p className="text-sm text-gray-600 mt-1">Define las acciones que cada parte debe cumplir para resolver el reclamo</p>
               </div>
 
@@ -670,20 +651,11 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
                 const editingCompliance = compliances.find(c => c.id === editingComplianceId);
                 if (!editingCompliance) return null;
 
-                // Debug: Ver qué IDs tenemos disponibles
-                console.log('Datos de usuarios para compromisos:', {
-                  claimantId: normalized.claimantId,
-                  claimantName: normalized.claimantName,
-                  otherUserId: normalized.otherUserId,
-                  otherUserName: normalized.claimedName,
-                  detail: detail
-                });
-
                 return (
                   <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 mb-3">
                     <div className="mb-4">
                       <h4 className="text-base font-semibold text-conexia-green-dark">
-                        {editingCompliance.isConfirmed ? 'Editar Compromiso' : 'Nuevo Compromiso'}
+                        {editingCompliance.isConfirmed ? 'Editar compromiso' : 'Nuevo compromiso'}
                       </h4>
                     </div>
 
@@ -714,7 +686,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
 
                         <div>
                           <label className="block text-sm font-semibold text-conexia-green-dark mb-2">
-                            Tipo de Compromiso <span className="text-red-500">*</span>
+                            Tipo de compromiso <span className="text-red-500">*</span>
                           </label>
                           <SelectField
                             name="complianceType"
@@ -804,7 +776,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
                       disabled={isSubmitting || compliances.length >= 5}
                     >
                       <Plus size={18} />
-                      Agregar Compromiso {compliances.length > 0 && `(${compliances.length}/5)`}
+                      Agregar compromiso {compliances.length > 0 && `(${compliances.length}/5)`}
                     </Button>
                     {compliances.length >= 5 && (
                       <p className="text-xs text-center text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
@@ -842,7 +814,7 @@ export const ClaimResolutionModal = ({ isOpen, onClose, claim, onSuccess, showTo
               ) : (
                 <>
                   <CheckCircle size={18} />
-                  Resolver Reclamo
+                  Resolver reclamo
                 </>
               )}
             </Button>

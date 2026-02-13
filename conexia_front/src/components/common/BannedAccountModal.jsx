@@ -32,10 +32,6 @@ export default function BannedAccountModal() {
   }, [isBanned]);
 
   const handleLogout = async (e) => {
-    console.log('🔴 [BannedAccountModal] ========================================');
-    console.log('🔴 [BannedAccountModal] INICIANDO LOGOUT FORZADO');
-    console.log('🔴 [BannedAccountModal] ========================================');
-    
     // Prevenir cualquier comportamiento default
     if (e) {
       e.preventDefault();
@@ -51,35 +47,28 @@ export default function BannedAccountModal() {
     sessionStorage.setItem('logout-in-progress', 'true');
     
     // 1. Llamar al backend para DESTRUIR las cookies HttpOnly
-    console.log('🚪 [BannedAccountModal] Llamando a backend para cerrar sesión...');
     try {
       await logoutUser();
-      console.log('✅ [BannedAccountModal] Sesión cerrada en el backend');
     } catch (error) {
-      console.error('❌ [BannedAccountModal] Error al cerrar sesión en backend:', error);
       // Continuar de todas formas con la limpieza local
     }
     
     // 2. Limpiar TODO localStorage y sessionStorage
-    console.log('🧹 [BannedAccountModal] Limpiando storage local...');
     try {
       localStorage.clear();
       sessionStorage.clear();
       // Restaurar flag después de clear
       sessionStorage.setItem('logout-in-progress', 'true');
     } catch (e) {
-      console.error('Error limpiando storage:', e);
     }
 
     // 3. Logout del contexto (limpiar state de React)
     try {
       logout();
     } catch (e) {
-      console.error('Error en logout del contexto:', e);
     }
 
     // 4. Redirigir INMEDIATAMENTE al home
-    console.log('🚀 [BannedAccountModal] Redirigiendo a home...');
     window.location.replace('/');
   };
 

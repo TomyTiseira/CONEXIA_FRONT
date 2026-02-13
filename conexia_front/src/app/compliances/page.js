@@ -124,7 +124,7 @@ export default function CompliancesPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">En Revisión</p>
+                  <p className="text-sm text-gray-600 mb-1">En revisión</p>
                   <p className="text-3xl font-bold text-blue-600">{stats.submitted || 0}</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-full">

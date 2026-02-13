@@ -28,18 +28,10 @@ function SuccessContent() {
         const status = searchParams.get('status');
         const paymentId = searchParams.get('payment_id');
 
-        console.log('📋 Parámetros de retorno de MercadoPago:', {
-          preapprovalId,
-          subscriptionId,
-          status,
-          paymentId,
-        });
-
         // 2️⃣ Confirmar suscripción con preapproval_id
         // MercadoPago solo envía preapproval_id en la URL de retorno para suscripciones
         if (preapprovalId) {
-          console.log('✅ preapproval_id detectado, confirmando suscripción...');
-          
+        
           // Usar subscriptionId de la URL si está, sino del localStorage
           let subId = subscriptionId;
           if (!subId) {
@@ -47,23 +39,19 @@ function SuccessContent() {
             if (stored) {
               const data = JSON.parse(stored);
               subId = data.subscriptionId;
-              console.log('📦 subscriptionId obtenido de localStorage:', subId);
             }
           }
           
           if (subId) {
             await confirmSubscription(subId, preapprovalId);
           } else {
-            console.error('❌ No se pudo obtener subscriptionId');
             setConfirmationStatus('error');
             setConfirmationError('No se pudo identificar la suscripción. Por favor contacta a soporte.');
           }
         } else if (status === 'rejected' || status === 'cancelled') {
-          console.warn('⚠️ Pago rechazado o cancelado, status:', status);
           setConfirmationStatus('error');
           setConfirmationError('El pago fue rechazado o cancelado');
         } else {
-          console.warn('⚠️ No se recibió preapproval_id en la URL');
           setConfirmationStatus('error');
           setConfirmationError('No se recibieron los datos necesarios de MercadoPago');
         }
@@ -105,11 +93,8 @@ function SuccessContent() {
    */
   const confirmSubscription = async (subscriptionId, preapprovalId) => {
     try {
-      console.log(`🔄 Confirmando suscripción ${subscriptionId} con preapproval ${preapprovalId}`);
-
       const result = await confirmSubscriptionService(subscriptionId, preapprovalId);
 
-      console.log('✅ Suscripción activada correctamente:', result);
       setConfirmationStatus('success');
       
       // Opcionalmente puedes actualizar el estado con más información

@@ -64,11 +64,8 @@ export async function fetchWithRefresh(url, options = {}, retries = 1) {
       try {
         const errorData = await res.clone().json();
         
-        console.log('🔍 Respuesta 403 recibida:', errorData); // Debug
-        
         // Usuario baneado - Cerrar sesión y redirigir a login
         if (errorData.reason === 'ACCOUNT_BANNED') {
-          console.warn('🚫 Cuenta baneada detectada (403), cerrando sesión...');
           sessionTerminated = true; // Marcar sesión como terminada
           setLoggingOut(true);
           
@@ -80,7 +77,7 @@ export async function fetchWithRefresh(url, options = {}, retries = 1) {
           // Mostrar modal de acceso denegado
           if (typeof window !== 'undefined' && window.showAccessDenied) {
             window.showAccessDenied({
-              title: 'Cuenta Baneada',
+              title: 'Cuenta baneada',
               message: 'Tu cuenta ha sido baneada permanentemente y no puede acceder a la plataforma.',
               reason: banReason
             });
@@ -96,19 +93,14 @@ export async function fetchWithRefresh(url, options = {}, retries = 1) {
         
         // Usuario suspendido - Mostrar banner pero permitir navegación
         if (errorData.reason === 'ACCOUNT_SUSPENDED') {
-          console.warn('⏸️ Cuenta suspendida detectada');
           // Emitir evento para mostrar banner de suspensión
           if (typeof window !== 'undefined' && window.showSuspensionBanner) {
             window.showSuspensionBanner(errorData.message, errorData.suspensionExpiresAt);
           }
           return res;
         }
-        
-        // Si es 403 pero sin reason específico, tratar como acceso denegado genérico
-        console.warn('⚠️ 403 sin metadata específica:', errorData);
       } catch (parseError) {
         // Si no se puede parsear JSON, devolver respuesta original
-        console.error('Error parseando respuesta 403:', parseError);
       }
       
       return res;
@@ -124,7 +116,6 @@ export async function fetchWithRefresh(url, options = {}, retries = 1) {
       const user = userStr ? JSON.parse(userStr) : null;
       
       if (user?.accountStatus === 'suspended' || user?.isSuspended) {
-        console.warn('⏸️ [fetchWithRefresh] Usuario suspendido detectado, NO mostrar modal de "deshabilitada"');
         // NO incrementar contador, el WebSocket debió manejar esto
         consecutive401Count = 0;
         // Retornar 401 original sin modal adicional
@@ -134,8 +125,6 @@ export async function fetchWithRefresh(url, options = {}, retries = 1) {
       // 🚨 PROTECCIÓN: Si recibimos múltiples 401 consecutivos, probablemente es baneo
       if (consecutive401Count >= MAX_401_RETRIES && !accessDeniedShown) {
         accessDeniedShown = true; // Marcar para evitar múltiples activaciones
-        
-        console.info(`🚫 Sesión cerrada: Cuenta deshabilitada (${consecutive401Count} errores de autorización)`);
         
         sessionTerminated = true; // Marcar sesión como terminada
         setLoggingOut(true);

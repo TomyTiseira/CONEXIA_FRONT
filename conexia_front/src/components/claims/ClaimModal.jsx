@@ -270,7 +270,7 @@ export const ClaimModal = ({ isOpen, onClose, hiringId, isClient, token, onSucce
                   Creando reclamo...
                 </>
               ) : (
-                'Crear Reclamo'
+                'Crear reclamo'
               )}
             </button>
           </div>
