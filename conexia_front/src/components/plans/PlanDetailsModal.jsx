@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FiX, FiCheck, FiStar } from 'react-icons/fi';
+import { FiX, FiCheck } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import { isBenefitActive, formatBenefitValue } from '@/utils/planFormatters';
 
@@ -29,14 +29,16 @@ export default function PlanDetailsModal({
   const inactiveBenefits = plan.benefits?.filter(b => !isBenefitActive(b.value)) || [];
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-[9999]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/60 transition-opacity" />
+      <div className="fixed inset-0 flex items-center justify-center p-4 overflow-auto">
+        <div
+          className="relative z-10 bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Detalles del plan ${plan.name}`}
+        >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
           <div className="flex items-center gap-3">
@@ -44,7 +46,7 @@ export default function PlanDetailsModal({
               {plan.name}
             </h2>
             {isCurrentPlan && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-conexia-green to-[#1a7a66] text-white text-xs font-bold rounded-full">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-conexia-green text-white text-xs font-bold rounded-full">
                 <FiCheck className="w-3 h-3" />
                 Tu plan actual
               </span>
@@ -60,7 +62,7 @@ export default function PlanDetailsModal({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           {/* Descripción */}
           {plan.description && (
             <div>
@@ -159,11 +161,11 @@ export default function PlanDetailsModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 rounded-b-2xl">
+        <div className="border-t border-gray-200 px-6 py-4 flex justify-end gap-2 rounded-b-2xl bg-gray-50">
           <Button
-            variant="outline"
+            variant="cancel"
             onClick={onClose}
-            className="flex-1"
+            className="py-2 px-4 text-sm"
           >
             Cerrar
           </Button>
@@ -174,11 +176,13 @@ export default function PlanDetailsModal({
                 onContractClick?.(plan.id);
                 onClose();
               }}
-              className="flex-1 !bg-gradient-to-r !from-conexia-green !to-[#1a7a66] hover:!from-[#1a7a66] hover:!to-conexia-green !text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              variant="primary"
+              className="py-2 px-4 text-sm"
             >
               Contratar plan
             </Button>
           )}
+        </div>
         </div>
       </div>
     </div>

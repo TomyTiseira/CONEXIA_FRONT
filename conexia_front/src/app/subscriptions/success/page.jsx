@@ -219,7 +219,7 @@ function SuccessContent() {
               {/* Información de cobros automáticos */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
                 <p className="text-sm text-blue-900">
-                  <strong>💳 Cobros automáticos activados:</strong> Tu tarjeta será cargada automáticamente 
+                  <strong>Cobros automáticos activados:</strong> Tu tarjeta será cargada automáticamente 
                   en cada renovación. Puedes cancelar la suscripción en cualquier momento desde tu panel de usuario.
                 </p>
               </div>
@@ -312,7 +312,6 @@ function SuccessContent() {
                 className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors font-medium shadow-lg shadow-conexia-green/20"
               >
                 Ver mi perfil
-                <FiArrowRight className="w-5 h-5" />
               </button>
               
               <div className="flex gap-3">

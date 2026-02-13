@@ -64,41 +64,58 @@ export default function ConfirmModal({
 
   const styles = getVariantStyles();
 
+  const handleClose = () => {
+    if (isLoading) return;
+    onClose?.();
+  };
+
   const modalContent = (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-      <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Icono y título */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className={`p-2 rounded-full ${styles.iconBg}`}>
-            <FiAlertCircle className={`w-6 h-6 ${styles.iconColor}`} />
+    <div className="fixed inset-0 z-[9999]">
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <div
+          className="relative z-10 bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+        >
+          {/* Header fijo */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`p-2 rounded-full ${styles.iconBg} flex-shrink-0`}>
+                <FiAlertCircle className={`w-6 h-6 ${styles.iconColor}`} />
+              </div>
+              <h3 className={`text-xl font-bold ${styles.titleColor} truncate`}>{title}</h3>
+            </div>
           </div>
-          <h3 className={`text-xl font-bold ${styles.titleColor}`}>{title}</h3>
-        </div>
-        
-        {/* Mensaje */}
-        <p className="text-gray-600 mb-6">{message}</p>
-        
-        {/* Botones */}
-        <div className="flex justify-end gap-2 mt-4">
-          <Button
-            variant={styles.buttonVariant}
-            className="py-2 px-4 text-sm"
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Procesando...' : confirmButtonText}
-          </Button>
-          <Button
-            variant="cancel"
-            className="py-2 px-4 text-sm"
-            onClick={onClose}
-            disabled={isLoading}
-          >
-            {cancelButtonText}
-          </Button>
+
+          {/* Contenido con scroll */}
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <p className="text-gray-600">{message}</p>
+          </div>
+
+          {/* Footer fijo */}
+          <div className="border-t border-gray-200 px-6 py-4 rounded-b-lg flex-shrink-0 bg-gray-50">
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="cancel"
+                className="py-2 px-4 text-sm"
+                onClick={handleClose}
+                disabled={isLoading}
+              >
+                {cancelButtonText}
+              </Button>
+              <Button
+                variant={styles.buttonVariant}
+                className="py-2 px-4 text-sm"
+                onClick={onConfirm}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Procesando...' : confirmButtonText}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
