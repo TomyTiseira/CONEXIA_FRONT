@@ -186,7 +186,7 @@ export default function UserProfile() {
 
   // Build avatar like ClientCommunity / Navbar
   const avatar = storeProfile?.profilePicture
-    ? `${config.IMAGE_URL}/${storeProfile.profilePicture}`
+    ? buildMediaUrl(storeProfile.profilePicture)
     : "/images/default-avatar.png";
 
   // Manejar actualización inmediata del perfil
