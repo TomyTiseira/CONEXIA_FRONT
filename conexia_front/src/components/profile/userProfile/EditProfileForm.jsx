@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import InputField from "@/components/form/InputField";
 import Button from "@/components/ui/Button";
 import TextArea from "@/components/form/InputField";
-import { config } from "@/config";
+import { buildMediaUrl } from "@/utils/mediaUrl";
 import RubroSkillsSelector from "@/components/skills/RubroSkillsSelector";
 import Image from "next/image";
 import {
@@ -1097,7 +1097,7 @@ export default function EditProfileForm({
                   <div className="space-y-3 w-full">
                     <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md">
                       <Image
-                        src={`${config.IMAGE_URL}/${user.profilePicture}`}
+                        src={buildMediaUrl(user.profilePicture)}
                         alt="Foto de perfil actual"
                         fill
                         className="object-cover"
@@ -1225,7 +1225,7 @@ export default function EditProfileForm({
                   <div className="space-y-3 w-full">
                     <div className="relative w-full h-32 mx-auto rounded-lg overflow-hidden border-4 border-white shadow-md">
                       <Image
-                        src={`${config.IMAGE_URL}/${user.coverPicture}`}
+                        src={buildMediaUrl(user.coverPicture)}
                         alt="Foto de portada actual"
                         fill
                         className="object-cover"
