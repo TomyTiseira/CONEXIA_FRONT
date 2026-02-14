@@ -88,20 +88,28 @@ export async function contractPlan(planId, billingCycle, cardTokenId) {
 
 /**
  * Cancelar la suscripción actual del usuario
+ * @param {string} reason - Motivo opcional de cancelación
  * @returns {Promise<Object>} - Respuesta con confirmación de cancelación
- * Respuesta exitosa incluye: { success, message, subscription: { id, status, planId, planName, endDate, mercadoPagoSubscriptionId } }
+ * Respuesta exitosa incluye: { success, message, subscription: { id, status, planId, planName, endDate, cancellationDate, cancellationReason, mercadoPagoSubscriptionId } }
  * Errores posibles: 404 (no hay suscripción activa), 400 (ya está cancelada), 500 (error en MercadoPago)
  */
-export async function cancelSubscription() {
+export async function cancelSubscription(reason = null) {
   const url = `${config.API_URL}/memberships/me/subscription`;
   
-  const res = await fetchWithRefresh(url, {
+  const options = {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-  });
+  };
+
+  // Si se proporciona un motivo, agregarlo al body
+  if (reason) {
+    options.body = JSON.stringify({ reason });
+  }
+  
+  const res = await fetchWithRefresh(url, options);
 
   if (!res.ok) {
     let errorData;

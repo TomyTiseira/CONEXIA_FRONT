@@ -131,10 +131,10 @@ export default function MyPlanPage() {
       // Refrescar los datos del plan del usuario
       await refetchUserPlan();
       
-      // Mostrar toast de éxito
+      // Mostrar toast de éxito con el mensaje del backend que incluye la fecha
       setToast({
         type: 'success',
-        message: response?.message || 'Suscripción cancelada exitosamente',
+        message: response?.message || 'Suscripción cancelada. Mantendrás los beneficios hasta el final del período actual',
         isVisible: true
       });
     } catch (err) {
