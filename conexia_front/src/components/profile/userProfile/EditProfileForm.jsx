@@ -363,6 +363,17 @@ export default function EditProfileForm({
     }
   };
 
+  // Handler para código de área (igual que en crear perfil)
+  const handleAreaCodeChange = (e) => {
+    const { value } = e.target;
+    const digitsOnly = value.replace(/[^0-9]/g, "");
+    handleChange("areaCode", digitsOnly);
+  };
+
+  const handleAreaCodeBlur = () => {
+    handleBlur("areaCode");
+  };
+
   // Experiencia y redes sociales UX (con confirmación y deshabilitado)
   function handleAddExperience() {
     setForm((prev) => ({
