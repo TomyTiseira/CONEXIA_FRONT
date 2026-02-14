@@ -7,7 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 import InputField from "@/components/form/InputField";
 import Button from "@/components/ui/Button";
 import TextArea from "@/components/form/InputField";
-import PhoneInput from "@/components/form/PhoneInput";
 import { config } from "@/config";
 import RubroSkillsSelector from "@/components/skills/RubroSkillsSelector";
 import Image from "next/image";
@@ -155,17 +154,7 @@ export default function EditProfileForm({
     { name: "profession", label: "Profesión" },
   ];
 
-  // Funciones específicas para el teléfono (igual que en crear perfil)
-  const validateAreaCode = (value) => {
-    if (!value || value.trim() === "") {
-      return ""; // Opcional
-    }
-    if (!/^\+\d{1,4}$/.test(value.trim())) {
-      return "Formato: +XX (ejemplo: +54)";
-    }
-    return "";
-  };
-
+  // Función para validar el teléfono
   const validatePhoneNumber = (value) => {
     if (!value || value.trim() === "") {
       return ""; // Opcional
@@ -186,9 +175,6 @@ export default function EditProfileForm({
 
     // Validación específica por campo
     switch (name) {
-      case "areaCode":
-        return validateAreaCode(value);
-
       case "phoneNumber":
         return validatePhoneNumber(value);
 
@@ -378,31 +364,6 @@ export default function EditProfileForm({
     setForm((prev) => ({ ...prev, [field]: value }));
     if (touched[field]) {
       setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
-    }
-  };
-
-  // Handler para código de área (igual que en crear perfil)
-  const handleAreaCodeChange = (value) => {
-    setForm((prev) => ({ ...prev, areaCode: value }));
-    if (touched.areaCode && value && value.trim() !== "") {
-      setErrors((prev) => ({
-        ...prev,
-        areaCode: validateAreaCode(value),
-      }));
-    } else if (touched.areaCode && (!value || value.trim() === "")) {
-      setErrors((prev) => ({ ...prev, areaCode: "" }));
-    }
-  };
-
-  const handleAreaCodeBlur = () => {
-    setTouched((prev) => ({ ...prev, areaCode: true }));
-    if (form.areaCode && form.areaCode.trim() !== "") {
-      setErrors((prev) => ({
-        ...prev,
-        areaCode: validateAreaCode(form.areaCode),
-      }));
-    } else {
-      setErrors((prev) => ({ ...prev, areaCode: "" }));
     }
   };
 
@@ -721,7 +682,7 @@ export default function EditProfileForm({
     handleChange(name, value);
   }
 
-  // Manejo específico del teléfono con validación (igual que en crear perfil)
+  // Manejo específico del teléfono con validación
   const handlePhoneChange = (value) => {
     // Solo permitir dígitos
     const digitsOnly = value.replace(/\D/g, "");
@@ -809,40 +770,12 @@ export default function EditProfileForm({
     });
 
     // Validación específica del teléfono al enviar - solo si tiene contenido
-    if (form.areaCode && form.areaCode.trim() !== "") {
-      const areaCodeError = validateAreaCode(form.areaCode);
-      if (areaCodeError) {
-        newErrors.areaCode = areaCodeError;
-        hasError = true;
-      }
-    }
-
     if (form.phoneNumber && form.phoneNumber.trim() !== "") {
       const phoneError = validatePhoneNumber(form.phoneNumber);
       if (phoneError) {
         newErrors.phoneNumber = phoneError;
         hasError = true;
       }
-    }
-
-    // Validación cruzada: si hay areaCode debe haber phoneNumber y viceversa
-    if (
-      (form.areaCode &&
-        form.areaCode.trim() !== "" &&
-        (!form.phoneNumber || form.phoneNumber.trim() === "")) ||
-      (form.phoneNumber &&
-        form.phoneNumber.trim() !== "" &&
-        (!form.areaCode || form.areaCode.trim() === ""))
-    ) {
-      if (form.areaCode && !form.phoneNumber) {
-        newErrors.phoneNumber =
-          "Si ingresás código de área, también debes ingresar el número";
-      }
-      if (form.phoneNumber && !form.areaCode) {
-        newErrors.areaCode =
-          "Si ingresás número, también debes ingresar el código de área";
-      }
-      hasError = true;
     }
 
     // Validar fecha de nacimiento solo si tiene valor
@@ -1419,18 +1352,19 @@ export default function EditProfileForm({
                 error={touched.state && errors.state}
               />
             </div>
-            <PhoneInput
-              areaCode={form.areaCode}
-              phoneNumber={form.phoneNumber}
-              onAreaCodeChange={(value) => handleAreaCodeChange(value)}
-              onPhoneNumberChange={(value) => handlePhoneChange(value)}
-              areaCodeError={errors.areaCode}
-              phoneNumberError={errors.phoneNumber}
-              onBlur={() => {
-                handleAreaCodeBlur();
-                handlePhoneBlur();
-              }}
-            />
+            <div>
+              <label className="block text-sm font-medium text-conexia-green mb-1">
+                Teléfono (Opcional)
+              </label>
+              <InputField
+                name="phoneNumber"
+                value={form.phoneNumber}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                onBlur={handlePhoneBlur}
+                error={touched.phoneNumber && errors.phoneNumber}
+                placeholder="Ej: 123456789"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-conexia-green mb-1">
                 Profesión
