@@ -2,48 +2,44 @@
 // Normaliza variaciones: fileUrl, mediaUrl, file_path, fileName
 import { config } from "@/config";
 
-// Construye una URL válida para un medio evitando duplicar /uploads
-// Casos soportados:
-//  - raw ya es URL absoluta (GCS, CDN, etc) -> se retorna sin modificar
-//  - raw comienza con /uploads/...
-//  - raw comienza con uploads/...
-//  - raw comienza con /... (sin uploads)
-//  - raw es solo un nombre/segmento
+// Construye una URL válida para un medio
+// Producción: Backend devuelve URLs completas de GCS → se usan tal cual
+// Desarrollo: Backend devuelve paths relativos → se construyen con IMAGE_URL
 export function buildMediaUrl(raw) {
   if (!raw) return "";
-  let mediaUrl = String(raw);
+  const mediaUrl = String(raw);
 
-  // Si es una URL absoluta (GCS, S3, CDN, etc), retornarla sin modificar
+  // Si es URL absoluta (producción - GCS), retornarla sin modificar
   if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
     return mediaUrl;
   }
 
-  // Si llegamos aquí, es una ruta relativa (desarrollo local)
+  // Desarrollo local: construir con IMAGE_URL
   let base = config?.IMAGE_URL || "";
+  if (!base) return mediaUrl; // Fallback si no hay base configurada
+
   base = base.replace(/\/$/, ""); // Remover slash final
 
-  // Asegurar que la base termina en /uploads (backend local expone archivos ahí)
-  if (!/\/uploads$/.test(base) && base) {
+  // Asegurar que la base termina en /uploads
+  if (!/\/uploads$/.test(base)) {
     base = base + "/uploads";
   }
 
-  // Normalizar mediaUrl para evitar duplicados
-  mediaUrl = mediaUrl.replace(/\/uploads\/uploads/g, "/uploads");
+  // Normalizar path
+  let path = mediaUrl;
+  path = path.replace(/\/uploads\/uploads/g, "/uploads");
 
-  // Quitar prefijo 'uploads/' si viene sin slash inicial
-  if (mediaUrl.startsWith("uploads/")) {
-    mediaUrl = mediaUrl.substring("uploads/".length);
+  if (path.startsWith("uploads/")) {
+    path = path.substring("uploads/".length);
   }
 
-  // Si inicia con /uploads, quitarlo para evitar duplicación
-  if (mediaUrl.startsWith("/uploads")) {
-    mediaUrl = mediaUrl.replace("/uploads", "");
+  if (path.startsWith("/uploads")) {
+    path = path.replace("/uploads", "");
   }
 
-  // Asegurar que mediaUrl empieza con '/'
-  if (!mediaUrl.startsWith("/")) mediaUrl = "/" + mediaUrl;
+  if (!path.startsWith("/")) path = "/" + path;
 
-  return base + mediaUrl;
+  return base + path;
 }
 
 // Extrae la URL efectiva desde un objeto de media con diferentes keys
