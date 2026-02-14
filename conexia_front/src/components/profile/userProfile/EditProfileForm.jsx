@@ -154,6 +154,27 @@ export default function EditProfileForm({
     { name: "profession", label: "Profesión" },
   ];
 
+  // Funciones específicas para el teléfono (igual que en crear perfil)
+  const validateAreaCode = (value) => {
+    if (!value || value.trim() === "") {
+      return ""; // Opcional
+    }
+    if (!/^\+\d{1,4}$/.test(value.trim())) {
+      return "Formato: +XX (ejemplo: +54)";
+    }
+    return "";
+  };
+
+  const validatePhoneNumber = (value) => {
+    if (!value || value.trim() === "") {
+      return ""; // Opcional
+    }
+    if (!/^[0-9]{6,15}$/.test(value.trim())) {
+      return "Debe tener entre 6 y 15 dígitos";
+    }
+    return "";
+  };
+
   // Función para validar campos individuales
   const validateField = (name, value) => {
     if (requiredFields.some((f) => f.name === name)) {
@@ -164,15 +185,11 @@ export default function EditProfileForm({
 
     // Validación específica por campo
     switch (name) {
+      case "areaCode":
+        return validateAreaCode(value);
+
       case "phoneNumber":
-        // Solo validar si el campo tiene contenido real (no solo espacios)
-        if (value && value.trim() && value.trim().length > 0) {
-          const phoneValidation = validateSimplePhone(value);
-          if (!phoneValidation.isValid) {
-            return phoneValidation.message;
-          }
-        }
-        break;
+        return validatePhoneNumber(value);
 
       case "birthDate":
         if (value) {
@@ -366,12 +383,27 @@ export default function EditProfileForm({
   // Handler para código de área (igual que en crear perfil)
   const handleAreaCodeChange = (e) => {
     const { value } = e.target;
-    const digitsOnly = value.replace(/[^0-9]/g, "");
-    handleChange("areaCode", digitsOnly);
+    setForm((prev) => ({ ...prev, areaCode: value }));
+    if (touched.areaCode && value && value.trim() !== "") {
+      setErrors((prev) => ({
+        ...prev,
+        areaCode: validateAreaCode(value),
+      }));
+    } else if (touched.areaCode && (!value || value.trim() === "")) {
+      setErrors((prev) => ({ ...prev, areaCode: "" }));
+    }
   };
 
   const handleAreaCodeBlur = () => {
-    handleBlur("areaCode");
+    setTouched((prev) => ({ ...prev, areaCode: true }));
+    if (form.areaCode && form.areaCode.trim() !== "") {
+      setErrors((prev) => ({
+        ...prev,
+        areaCode: validateAreaCode(form.areaCode),
+      }));
+    } else {
+      setErrors((prev) => ({ ...prev, areaCode: "" }));
+    }
   };
 
   // Experiencia y redes sociales UX (con confirmación y deshabilitado)
@@ -689,17 +721,35 @@ export default function EditProfileForm({
     handleChange(name, value);
   }
 
-  // Manejo específico del teléfono con validación
+  // Manejo específico del teléfono con validación (igual que en crear perfil)
   const handlePhoneChange = (e) => {
     const { value } = e.target;
-    // Permitir solo números, espacios, guiones y paréntesis
-    const cleaned = value.replace(/[^\d\s\-\(\)\+]/g, "");
-    // Si está completamente vacío, enviar string vacío
-    handleChange("phoneNumber", cleaned);
+    // Solo permitir dígitos
+    const digitsOnly = value.replace(/\D/g, "");
+    setForm((prev) => ({ ...prev, phoneNumber: digitsOnly }));
+    if (touched.phoneNumber && digitsOnly && digitsOnly.trim() !== "") {
+      setErrors((prev) => ({
+        ...prev,
+        phoneNumber: validatePhoneNumber(digitsOnly),
+      }));
+    } else if (
+      touched.phoneNumber &&
+      (!digitsOnly || digitsOnly.trim() === "")
+    ) {
+      setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+    }
   };
 
   const handlePhoneBlur = () => {
-    handleBlur("phoneNumber");
+    setTouched((prev) => ({ ...prev, phoneNumber: true }));
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      setErrors((prev) => ({
+        ...prev,
+        phoneNumber: validatePhoneNumber(form.phoneNumber),
+      }));
+    } else {
+      setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+    }
   };
 
   function handleImageChange(e, field) {
@@ -759,20 +809,41 @@ export default function EditProfileForm({
       }
     });
 
-    // Validar campos opcionales que tengan valor
-    if (form.phoneNumber && form.phoneNumber.trim()) {
-      newTouched.phoneNumber = true;
-      const phoneErr = validateField("phoneNumber", form.phoneNumber);
-      newErrors.phoneNumber = phoneErr;
-      if (phoneErr && !firstErrorField) {
-        firstErrorField = "phoneNumber";
-        hasError = true;
-      } else if (phoneErr) {
+    // Validación específica del teléfono al enviar - solo si tiene contenido
+    if (form.areaCode && form.areaCode.trim() !== "") {
+      const areaCodeError = validateAreaCode(form.areaCode);
+      if (areaCodeError) {
+        newErrors.areaCode = areaCodeError;
         hasError = true;
       }
-    } else {
-      // Limpiar error si el campo está vacío
-      newErrors.phoneNumber = "";
+    }
+
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      const phoneError = validatePhoneNumber(form.phoneNumber);
+      if (phoneError) {
+        newErrors.phoneNumber = phoneError;
+        hasError = true;
+      }
+    }
+
+    // Validación cruzada: si hay areaCode debe haber phoneNumber y viceversa
+    if (
+      (form.areaCode &&
+        form.areaCode.trim() !== "" &&
+        (!form.phoneNumber || form.phoneNumber.trim() === "")) ||
+      (form.phoneNumber &&
+        form.phoneNumber.trim() !== "" &&
+        (!form.areaCode || form.areaCode.trim() === ""))
+    ) {
+      if (form.areaCode && !form.phoneNumber) {
+        newErrors.phoneNumber =
+          "Si ingresás código de área, también debes ingresar el número";
+      }
+      if (form.phoneNumber && !form.areaCode) {
+        newErrors.areaCode =
+          "Si ingresás número, también debes ingresar el código de área";
+      }
+      hasError = true;
     }
 
     // Validar fecha de nacimiento solo si tiene valor
@@ -1364,7 +1435,7 @@ export default function EditProfileForm({
                     onChange={handleAreaCodeChange}
                     onBlur={handleAreaCodeBlur}
                     error={touched.areaCode && errors.areaCode}
-                    placeholder="Ej: 11"
+                    placeholder="+54"
                   />
                 </div>
                 <div className="w-2/3">
