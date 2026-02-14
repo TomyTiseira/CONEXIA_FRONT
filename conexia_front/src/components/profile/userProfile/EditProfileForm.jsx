@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import InputField from "@/components/form/InputField";
 import Button from "@/components/ui/Button";
 import TextArea from "@/components/form/InputField";
+import PhoneInput from "@/components/form/PhoneInput";
 import { config } from "@/config";
 import RubroSkillsSelector from "@/components/skills/RubroSkillsSelector";
 import Image from "next/image";
@@ -381,8 +382,7 @@ export default function EditProfileForm({
   };
 
   // Handler para código de área (igual que en crear perfil)
-  const handleAreaCodeChange = (e) => {
-    const { value } = e.target;
+  const handleAreaCodeChange = (value) => {
     setForm((prev) => ({ ...prev, areaCode: value }));
     if (touched.areaCode && value && value.trim() !== "") {
       setErrors((prev) => ({
@@ -722,8 +722,7 @@ export default function EditProfileForm({
   }
 
   // Manejo específico del teléfono con validación (igual que en crear perfil)
-  const handlePhoneChange = (e) => {
-    const { value } = e.target;
+  const handlePhoneChange = (value) => {
     // Solo permitir dígitos
     const digitsOnly = value.replace(/\D/g, "");
     setForm((prev) => ({ ...prev, phoneNumber: digitsOnly }));
@@ -1420,39 +1419,18 @@ export default function EditProfileForm({
                 error={touched.state && errors.state}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-conexia-green mb-1">
-                Teléfono (Opcional)
-              </label>
-              <div className="flex gap-2">
-                <div className="w-1/3">
-                  <label className="block text-sm font-medium text-conexia-green mb-1">
-                    Código de área
-                  </label>
-                  <InputField
-                    name="areaCode"
-                    value={form.areaCode}
-                    onChange={handleAreaCodeChange}
-                    onBlur={handleAreaCodeBlur}
-                    error={touched.areaCode && errors.areaCode}
-                    placeholder="+54"
-                  />
-                </div>
-                <div className="w-2/3">
-                  <label className="block text-sm font-medium text-conexia-green mb-1">
-                    Teléfono
-                  </label>
-                  <InputField
-                    name="phoneNumber"
-                    value={form.phoneNumber}
-                    onChange={handlePhoneChange}
-                    onBlur={handlePhoneBlur}
-                    error={touched.phoneNumber && errors.phoneNumber}
-                    placeholder="Ej: 12345678"
-                  />
-                </div>
-              </div>
-            </div>
+            <PhoneInput
+              areaCode={form.areaCode}
+              phoneNumber={form.phoneNumber}
+              onAreaCodeChange={(value) => handleAreaCodeChange(value)}
+              onPhoneNumberChange={(value) => handlePhoneChange(value)}
+              areaCodeError={errors.areaCode}
+              phoneNumberError={errors.phoneNumber}
+              onBlur={() => {
+                handleAreaCodeBlur();
+                handlePhoneBlur();
+              }}
+            />
             <div>
               <label className="block text-sm font-medium text-conexia-green mb-1">
                 Profesión
