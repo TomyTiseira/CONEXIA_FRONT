@@ -6,17 +6,30 @@ import { config } from "@/config";
 // Producción: Backend devuelve URLs completas de GCS → se usan tal cual
 // Desarrollo: Backend devuelve paths relativos → se construyen con IMAGE_URL
 export function buildMediaUrl(raw) {
+  console.log("🔍 buildMediaUrl - raw input:", raw);
+  console.log("🔍 buildMediaUrl - IMAGE_URL:", config?.IMAGE_URL);
+
   if (!raw) return "";
   const mediaUrl = String(raw);
 
   // Si es URL absoluta (producción - GCS), retornarla sin modificar
   if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
+    console.log(
+      "✅ buildMediaUrl - URL absoluta detectada, retornando:",
+      mediaUrl,
+    );
     return mediaUrl;
   }
 
   // Desarrollo local: construir con IMAGE_URL
   let base = config?.IMAGE_URL || "";
-  if (!base) return mediaUrl; // Fallback si no hay base configurada
+  if (!base) {
+    console.log(
+      "⚠️ buildMediaUrl - No hay IMAGE_URL configurada, retornando raw:",
+      mediaUrl,
+    );
+    return mediaUrl; // Fallback si no hay base configurada
+  }
 
   base = base.replace(/\/$/, ""); // Remover slash final
 
@@ -39,7 +52,9 @@ export function buildMediaUrl(raw) {
 
   if (!path.startsWith("/")) path = "/" + path;
 
-  return base + path;
+  const result = base + path;
+  console.log("🔨 buildMediaUrl - Construido (dev):", result);
+  return result;
 }
 
 // Extrae la URL efectiva desde un objeto de media con diferentes keys

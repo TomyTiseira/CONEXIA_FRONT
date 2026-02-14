@@ -62,20 +62,38 @@ const safeContains = (parent, child) =>
   !!parent && isDomNode(child) && parent.contains(child);
 
 const getMediaUrl = (mediaUrl) => {
+  console.log("🔍 PublicationCard.getMediaUrl - mediaUrl input:", mediaUrl);
+  console.log("🔍 PublicationCard.getMediaUrl - IMAGE_URL:", config.IMAGE_URL);
+
   if (!mediaUrl) return null;
 
   // Si es URL absoluta (producción - GCS), retornarla sin modificar
-  if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://"))
+  if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
+    console.log(
+      "✅ PublicationCard.getMediaUrl - URL absoluta, retornando:",
+      mediaUrl,
+    );
     return mediaUrl;
+  }
 
   // Desarrollo local: construir con IMAGE_URL
   const baseUrl = config.IMAGE_URL || "";
-  if (!baseUrl) return mediaUrl; // Fallback
+  if (!baseUrl) {
+    console.log(
+      "⚠️ PublicationCard.getMediaUrl - No hay IMAGE_URL, retornando raw:",
+      mediaUrl,
+    );
+    return mediaUrl; // Fallback
+  }
 
+  let result;
   if (mediaUrl.startsWith("/uploads"))
-    return `${baseUrl}${mediaUrl.replace("/uploads", "")}`;
-  if (mediaUrl.startsWith("/")) return `${baseUrl}${mediaUrl}`;
-  return `${baseUrl}/${mediaUrl}`;
+    result = `${baseUrl}${mediaUrl.replace("/uploads", "")}`;
+  else if (mediaUrl.startsWith("/")) result = `${baseUrl}${mediaUrl}`;
+  else result = `${baseUrl}/${mediaUrl}`;
+
+  console.log("🔨 PublicationCard.getMediaUrl - Construido (dev):", result);
+  return result;
 };
 
 // Esta función se ha eliminado y reemplazado por código directo
