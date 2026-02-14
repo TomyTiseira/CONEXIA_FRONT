@@ -63,14 +63,13 @@ const safeContains = (parent, child) =>
 
 const getMediaUrl = (mediaUrl) => {
   if (!mediaUrl) return null;
+
+  // Si es URL absoluta (GCS, CDN, etc), retornarla sin modificar
   if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://"))
     return mediaUrl;
 
-  // Detectar si es media de publicación (filename contiene 'publication-')
-  const isPublicationMedia = mediaUrl.includes("publication-");
-  const baseUrl = isPublicationMedia
-    ? config.PUBLICATIONS_URL
-    : config.IMAGE_URL;
+  // Es una ruta relativa (desarrollo local) - usar IMAGE_URL
+  const baseUrl = config.IMAGE_URL || "";
 
   if (mediaUrl.startsWith("/uploads"))
     return `${baseUrl}${mediaUrl.replace("/uploads", "")}`;

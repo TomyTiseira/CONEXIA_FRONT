@@ -4,46 +4,30 @@ import { config } from "@/config";
 
 // Construye una URL válida para un medio evitando duplicar /uploads
 // Casos soportados:
-//  - raw ya es URL absoluta -> se retorna igual
+//  - raw ya es URL absoluta (GCS, CDN, etc) -> se retorna sin modificar
 //  - raw comienza con /uploads/...
 //  - raw comienza con uploads/...
 //  - raw comienza con /... (sin uploads)
 //  - raw es solo un nombre/segmento
-// Acepta un tipo opcional: 'publication' usa PUBLICATIONS_URL, por defecto usa IMAGE_URL
-export function buildMediaUrl(raw, type = "default") {
+export function buildMediaUrl(raw) {
   if (!raw) return "";
   let mediaUrl = String(raw);
 
-  // Si es una URL absoluta del backend, extraer solo el path
+  // Si es una URL absoluta (GCS, S3, CDN, etc), retornarla sin modificar
   if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
-    try {
-      const url = new URL(mediaUrl);
-      mediaUrl = url.pathname; // Extraer solo /uploads/deliveries/...
-    } catch (e) {
-      // Si falla el parsing, continuar con la lógica normal
-    }
+    return mediaUrl;
   }
 
-  // Automaticamente detectar tipo si contiene 'publication-'
-  if (type === "default" && mediaUrl.includes("publication-")) {
-    type = "publication";
-  }
+  // Si llegamos aquí, es una ruta relativa (desarrollo local)
+  let base = config?.IMAGE_URL || "";
+  base = base.replace(/\/$/, ""); // Remover slash final
 
-  let base =
-    type === "publication"
-      ? config?.PUBLICATIONS_URL || ""
-      : config?.IMAGE_URL || "";
-  // Normalizar base removiendo slash final
-  base = base.replace(/\/$/, "");
-
-  // Asegurar que la base termina en /uploads (este backend expone archivos ahí)
-  // EXCEPTO para publications que ya apuntan directo al bucket GCS
-  if (type !== "publication" && !/\/uploads$/.test(base)) {
+  // Asegurar que la base termina en /uploads (backend local expone archivos ahí)
+  if (!/\/uploads$/.test(base) && base) {
     base = base + "/uploads";
   }
 
   // Normalizar mediaUrl para evitar duplicados
-  // Reemplazar ocurrencias dobles /uploads/uploads -> /uploads
   mediaUrl = mediaUrl.replace(/\/uploads\/uploads/g, "/uploads");
 
   // Quitar prefijo 'uploads/' si viene sin slash inicial
@@ -51,14 +35,9 @@ export function buildMediaUrl(raw, type = "default") {
     mediaUrl = mediaUrl.substring("uploads/".length);
   }
 
-  // Si inicia con /uploads ya tenemos el prefijo: quitamos solo la primera aparición para concatenar
+  // Si inicia con /uploads, quitarlo para evitar duplicación
   if (mediaUrl.startsWith("/uploads")) {
-    mediaUrl = mediaUrl.replace("/uploads", ""); // queda /resto o vacío
-  }
-
-  // Si llega como ruta absoluta que no contiene uploads (empieza con /) la anexamos detrás de /uploads
-  if (mediaUrl.startsWith("/") && !mediaUrl.startsWith("/")) {
-    // (caso imposible por la condición, se deja por claridad)
+    mediaUrl = mediaUrl.replace("/uploads", "");
   }
 
   // Asegurar que mediaUrl empieza con '/'
