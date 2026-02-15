@@ -5,6 +5,7 @@ import { useMessaging } from "@/hooks/messaging/useMessaging";
 import { useChatMessages } from "@/hooks/messaging/useChatMessages";
 import { useUserStore } from "@/store/userStore";
 import { config } from "@/config";
+import { buildMediaUrl } from "@/utils/mediaUrl";
 import {
   ImageIcon,
   FileText,

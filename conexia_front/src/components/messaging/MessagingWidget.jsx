@@ -8,6 +8,7 @@ import { useUserStore } from "@/store/userStore";
 import { ROLES } from "@/constants/roles";
 import { useUserFriends } from "@/hooks/connections/useUserFriends";
 import { config } from "@/config";
+import { buildMediaUrl } from "@/utils/mediaUrl";
 import { useMessaging } from "@/hooks/messaging/useMessaging";
 import { getMessagingSocket } from "@/lib/socket/messagingSocket";
 import { useChatMessages } from "@/hooks/messaging/useChatMessages";
