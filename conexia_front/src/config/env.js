@@ -9,7 +9,11 @@ const ENV = {
   },
   production: {
     API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api",
-    IMAGE_URL: process.env.NEXT_PUBLIC_IMAGE_URL || "", // En producción, backend devuelve URLs completas
+    // Limpiar posibles comillas literales de Vercel
+    IMAGE_URL: (process.env.NEXT_PUBLIC_IMAGE_URL || "").replace(
+      /^["']+|["']+$/g,
+      "",
+    ), // En producción, backend devuelve URLs completas
     DOCUMENT_URL:
       process.env.NEXT_PUBLIC_DOCUMENT_URL || "http://localhost:8080",
     MERCADOPAGO_PUBLIC_KEY: process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY,

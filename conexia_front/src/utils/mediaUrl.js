@@ -7,7 +7,7 @@ import { config } from "@/config";
 // Desarrollo: Backend devuelve paths relativos → se construyen con IMAGE_URL
 export function buildMediaUrl(raw) {
   if (!raw) return "";
-  const mediaUrl = String(raw);
+  const mediaUrl = String(raw).trim();
 
   // Si es URL absoluta (producción - GCS), retornarla sin modificar
   if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
@@ -15,8 +15,12 @@ export function buildMediaUrl(raw) {
   }
 
   // Desarrollo local: construir con IMAGE_URL
-  let base = config?.IMAGE_URL || "";
-  if (!base) return mediaUrl; // Fallback si no hay base configurada
+  let base = (config?.IMAGE_URL || "").trim();
+
+  // Limpiar posibles comillas literales de variables de entorno mal configuradas
+  base = base.replace(/^["']+|["']+$/g, "");
+
+  if (!base || base === "") return mediaUrl; // Fallback si no hay base configurada
 
   base = base.replace(/\/$/, ""); // Remover slash final
 
