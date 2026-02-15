@@ -6,7 +6,7 @@ import { fetchUserServices } from '@/service/services/servicesFetch';
 import { fetchMyServiceRequests } from '@/service/service-hirings/serviceHiringsFetch';
 import { useUserStore } from '@/store/userStore';
 import { useAccountStatus } from '@/hooks/useAccountStatus';
-import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, ChevronUp, ChevronDown, ChevronsUpDown, ArrowDown, ArrowUp, FileText } from 'lucide-react';
+import { Briefcase, Users, Calendar, TrendingUp, ChevronUp, ChevronDown, ChevronsUpDown, ArrowDown, ArrowUp, FileText } from 'lucide-react';
 import { FaRegEye, FaFileInvoiceDollar, FaEllipsisH, FaExchangeAlt } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import { getUnitLabel } from '@/utils/timeUnit';
@@ -164,11 +164,12 @@ export default function MyServicesPage() {
           aValue = new Date(a.updatedAt);
           bValue = new Date(b.updatedAt);
           break;
-        case 'status':
+        case 'status': {
           aValue = a.status || '';
           bValue = b.status || '';
           const comparison = aValue.localeCompare(bValue);
           return sortConfig.direction === 'desc' ? -comparison : comparison;
+        }
         default:
           return 0;
       }
