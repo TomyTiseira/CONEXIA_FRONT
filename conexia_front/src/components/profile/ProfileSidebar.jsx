@@ -1,43 +1,61 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import Image from 'next/image';
-import { FaLinkedin, FaCertificate, FaUniversity, FaBriefcase, FaBirthdayCake, FaMapMarkerAlt } from 'react-icons/fa';
-import { ShieldCheck } from 'lucide-react';
-import { config } from '@/config';
+import React from "react";
+import PropTypes from "prop-types";
+import Image from "next/image";
+import {
+  FaLinkedin,
+  FaCertificate,
+  FaUniversity,
+  FaBriefcase,
+  FaBirthdayCake,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
+import { ShieldCheck } from "lucide-react";
+import { buildMediaUrl } from "@/utils/mediaUrl";
 
-
-export default function ProfileSidebar({ profile, userId}) {
+export default function ProfileSidebar({ profile, userId }) {
   if (!profile) return null;
-  const avatar = profile.profilePicture ? `${config.IMAGE_URL}/${profile.profilePicture}` : '/images/default-avatar.png';
+  const avatar = profile.profilePicture
+    ? buildMediaUrl(profile.profilePicture)
+    : "/images/default-avatar.png";
   // Portada personalizada - usar coverPicture del perfil si existe
-  const coverImage = profile.coverPicture 
-    ? `${config.IMAGE_URL}/${profile.coverPicture}` 
-    : '/bg-smoke.png';
+  const coverImage = profile.coverPicture
+    ? buildMediaUrl(profile.coverPicture)
+    : "/bg-smoke.png";
   // Solo primer nombre y primer apellido
-  const firstName = (profile.name || '').trim().split(' ')[0];
-  const firstLastName = (profile.lastName || '').trim().split(' ')[0] || '';
+  const firstName = (profile.name || "").trim().split(" ")[0];
+  const firstLastName = (profile.lastName || "").trim().split(" ")[0] || "";
   const displayName = `${firstName} ${firstLastName}`.trim();
-  const location = [profile.state, profile.country].filter(Boolean).join(', ');
+  const location = [profile.state, profile.country].filter(Boolean).join(", ");
   // Educación y experiencia actuales - solo mostrar la más reciente
-  const currentEducations = (profile.education || []).filter(e => e.isCurrent);
-  const currentExperiences = (profile.experience || []).filter(e => e.isCurrent);
-  
+  const currentEducations = (profile.education || []).filter(
+    (e) => e.isCurrent,
+  );
+  const currentExperiences = (profile.experience || []).filter(
+    (e) => e.isCurrent,
+  );
+
   // Obtener solo la experiencia más reciente (basada en startDate)
-  const latestExperience = currentExperiences.length > 0 
-    ? currentExperiences.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0))[0]
-    : null;
-    
+  const latestExperience =
+    currentExperiences.length > 0
+      ? currentExperiences.sort(
+          (a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0),
+        )[0]
+      : null;
+
   // Obtener solo la educación más reciente (basada en startDate)
-  const latestEducation = currentEducations.length > 0 
-    ? currentEducations.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0))[0]
-    : null;
+  const latestEducation =
+    currentEducations.length > 0
+      ? currentEducations.sort(
+          (a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0),
+        )[0]
+      : null;
   // Usar siempre el id del usuario para la redirección
   const profileUrl = `/profile/userProfile/${userId}`;
 
   return (
     <aside
       className="bg-white rounded-none md:rounded-2xl shadow-none md:shadow border-0 md:border md:border-[#c6e3e4] overflow-hidden flex flex-col w-full md:max-w-xs md:mx-auto mb-0 md:mb-4"
-      style={{ minWidth: '100%', maxWidth: '100%' }}
+      style={{ minWidth: "100%", maxWidth: "100%" }}
     >
       {/* Avatar y fondo decorativo MOBILE: alineado a la izquierda */}
       <a
@@ -46,10 +64,14 @@ export default function ProfileSidebar({ profile, userId}) {
         style={{ backgroundImage: `url(${coverImage})` }}
         tabIndex={0}
       >
-        <div
-          className="absolute left-6 -bottom-10 w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center"
-        >
-          <Image src={avatar} alt="avatar" width={96} height={96} className="object-cover w-full h-full" />
+        <div className="absolute left-6 -bottom-10 w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center">
+          <Image
+            src={avatar}
+            alt="avatar"
+            width={96}
+            height={96}
+            className="object-cover w-full h-full"
+          />
         </div>
       </a>
       {/* Avatar y fondo decorativo DESKTOP: alineado a la izquierda */}
@@ -61,9 +83,15 @@ export default function ProfileSidebar({ profile, userId}) {
       >
         <div
           className="absolute -bottom-10 w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center"
-          style={{ left: '24px' }}
+          style={{ left: "24px" }}
         >
-          <Image src={avatar} alt="avatar" width={96} height={96} className="object-cover w-full h-full" />
+          <Image
+            src={avatar}
+            alt="avatar"
+            width={96}
+            height={96}
+            className="object-cover w-full h-full"
+          />
         </div>
       </a>
       {/* MOBILE: solo datos básicos, alineados a la izquierda */}
@@ -77,31 +105,35 @@ export default function ProfileSidebar({ profile, userId}) {
           <h2
             className={
               `font-bold text-conexia-green text-left leading-tight ` +
-              (displayName.length > 18 ? 'text-base' : 'text-lg')
+              (displayName.length > 18 ? "text-base" : "text-lg")
             }
-            style={displayName.length > 24 ? { fontSize: '1rem' } : {}}
+            style={displayName.length > 24 ? { fontSize: "1rem" } : {}}
           >
             {displayName}
           </h2>
           {profile.verified && (
-            <div 
-              className="flex-shrink-0" 
-              title="Identidad verificada"
-            >
-              <ShieldCheck className="text-blue-600" size={20} strokeWidth={2} />
+            <div className="flex-shrink-0" title="Identidad verificada">
+              <ShieldCheck
+                className="text-blue-600"
+                size={20}
+                strokeWidth={2}
+              />
             </div>
           )}
         </div>
         {profile.profession && (
           <div
             className="text-[0.95rem] text-conexia-green/80 text-left mb-1"
-            style={{ lineHeight: '1.13', maxWidth: 180 }}
+            style={{ lineHeight: "1.13", maxWidth: 180 }}
           >
             {profile.profession}
           </div>
         )}
         {location && (
-          <div className="flex items-center text-xs text-gray-500 mb-1 mt-1 justify-start"><FaMapMarkerAlt className="mr-1" />{location}</div>
+          <div className="flex items-center text-xs text-gray-500 mb-1 mt-1 justify-start">
+            <FaMapMarkerAlt className="mr-1" />
+            {location}
+          </div>
         )}
       </a>
       {/* DESKTOP: datos completos, alineados a la izquierda */}
@@ -114,31 +146,35 @@ export default function ProfileSidebar({ profile, userId}) {
           <h2
             className={
               `font-bold text-conexia-green text-left leading-tight ` +
-              (displayName.length > 18 ? 'text-base' : 'text-lg')
+              (displayName.length > 18 ? "text-base" : "text-lg")
             }
-            style={displayName.length > 24 ? { fontSize: '1rem' } : {}}
+            style={displayName.length > 24 ? { fontSize: "1rem" } : {}}
           >
             {displayName}
           </h2>
           {profile.verified && (
-            <div 
-              className="flex-shrink-0" 
-              title="Identidad verificada"
-            >
-              <ShieldCheck className="text-blue-600" size={20} strokeWidth={2} />
+            <div className="flex-shrink-0" title="Identidad verificada">
+              <ShieldCheck
+                className="text-blue-600"
+                size={20}
+                strokeWidth={2}
+              />
             </div>
           )}
         </div>
         {profile.profession && (
           <div
             className="text-[0.85rem] text-conexia-green/80 text-left mb-2"
-            style={{ lineHeight: '1.13' }}
+            style={{ lineHeight: "1.13" }}
           >
             {profile.profession}
           </div>
         )}
         {location && (
-          <div className="flex items-center text-xs text-gray-500 mb-2 mt-1 justify-start"><FaMapMarkerAlt className="mr-1" />{location}</div>
+          <div className="flex items-center text-xs text-gray-500 mb-2 mt-1 justify-start">
+            <FaMapMarkerAlt className="mr-1" />
+            {location}
+          </div>
         )}
         {/* Experiencia actual más reciente */}
         {latestExperience && (
@@ -147,8 +183,12 @@ export default function ProfileSidebar({ profile, userId}) {
               <FaBriefcase className="text-conexia-green text-xl" />
             </span>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-semibold text-conexia-green leading-tight break-words">{latestExperience.project || ''}</span>
-              <span className="text-xs text-gray-600 leading-tight break-words">{latestExperience.title}</span>
+              <span className="text-sm font-semibold text-conexia-green leading-tight break-words">
+                {latestExperience.project || ""}
+              </span>
+              <span className="text-xs text-gray-600 leading-tight break-words">
+                {latestExperience.title}
+              </span>
             </div>
           </div>
         )}
@@ -159,8 +199,12 @@ export default function ProfileSidebar({ profile, userId}) {
               <FaUniversity className="text-conexia-green text-xl" />
             </span>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-semibold text-conexia-green leading-tight break-words">{latestEducation.institution}</span>
-              <span className="text-xs text-gray-600 leading-tight break-words">{latestEducation.title}</span>
+              <span className="text-sm font-semibold text-conexia-green leading-tight break-words">
+                {latestEducation.institution}
+              </span>
+              <span className="text-xs text-gray-600 leading-tight break-words">
+                {latestEducation.title}
+              </span>
             </div>
           </div>
         )}

@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import InputField from "@/components/form/InputField";
 import Button from "@/components/ui/Button";
 import TextArea from "@/components/form/InputField";
-import { config } from "@/config";
+import { buildMediaUrl } from "@/utils/mediaUrl";
 import RubroSkillsSelector from "@/components/skills/RubroSkillsSelector";
 import Image from "next/image";
 import {
@@ -154,6 +154,17 @@ export default function EditProfileForm({
     { name: "profession", label: "Profesión" },
   ];
 
+  // Función para validar el teléfono
+  const validatePhoneNumber = (value) => {
+    if (!value || value.trim() === "") {
+      return ""; // Opcional
+    }
+    if (!/^[0-9]{6,15}$/.test(value.trim())) {
+      return "Debe tener entre 6 y 15 dígitos";
+    }
+    return "";
+  };
+
   // Función para validar campos individuales
   const validateField = (name, value) => {
     if (requiredFields.some((f) => f.name === name)) {
@@ -165,14 +176,7 @@ export default function EditProfileForm({
     // Validación específica por campo
     switch (name) {
       case "phoneNumber":
-        // Solo validar si el campo tiene contenido real (no solo espacios)
-        if (value && value.trim() && value.trim().length > 0) {
-          const phoneValidation = validateSimplePhone(value);
-          if (!phoneValidation.isValid) {
-            return phoneValidation.message;
-          }
-        }
-        break;
+        return validatePhoneNumber(value);
 
       case "birthDate":
         if (value) {
@@ -679,16 +683,33 @@ export default function EditProfileForm({
   }
 
   // Manejo específico del teléfono con validación
-  const handlePhoneChange = (e) => {
-    const { value } = e.target;
-    // Permitir solo números, espacios, guiones y paréntesis
-    const cleaned = value.replace(/[^\d\s\-\(\)\+]/g, "");
-    // Si está completamente vacío, enviar string vacío
-    handleChange("phoneNumber", cleaned);
+  const handlePhoneChange = (value) => {
+    // Solo permitir dígitos
+    const digitsOnly = value.replace(/\D/g, "");
+    setForm((prev) => ({ ...prev, phoneNumber: digitsOnly }));
+    if (touched.phoneNumber && digitsOnly && digitsOnly.trim() !== "") {
+      setErrors((prev) => ({
+        ...prev,
+        phoneNumber: validatePhoneNumber(digitsOnly),
+      }));
+    } else if (
+      touched.phoneNumber &&
+      (!digitsOnly || digitsOnly.trim() === "")
+    ) {
+      setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+    }
   };
 
   const handlePhoneBlur = () => {
-    handleBlur("phoneNumber");
+    setTouched((prev) => ({ ...prev, phoneNumber: true }));
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      setErrors((prev) => ({
+        ...prev,
+        phoneNumber: validatePhoneNumber(form.phoneNumber),
+      }));
+    } else {
+      setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+    }
   };
 
   function handleImageChange(e, field) {
@@ -748,20 +769,13 @@ export default function EditProfileForm({
       }
     });
 
-    // Validar campos opcionales que tengan valor
-    if (form.phoneNumber && form.phoneNumber.trim()) {
-      newTouched.phoneNumber = true;
-      const phoneErr = validateField("phoneNumber", form.phoneNumber);
-      newErrors.phoneNumber = phoneErr;
-      if (phoneErr && !firstErrorField) {
-        firstErrorField = "phoneNumber";
-        hasError = true;
-      } else if (phoneErr) {
+    // Validación específica del teléfono al enviar - solo si tiene contenido
+    if (form.phoneNumber && form.phoneNumber.trim() !== "") {
+      const phoneError = validatePhoneNumber(form.phoneNumber);
+      if (phoneError) {
+        newErrors.phoneNumber = phoneError;
         hasError = true;
       }
-    } else {
-      // Limpiar error si el campo está vacío
-      newErrors.phoneNumber = "";
     }
 
     // Validar fecha de nacimiento solo si tiene valor
@@ -1083,7 +1097,7 @@ export default function EditProfileForm({
                   <div className="space-y-3 w-full">
                     <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md">
                       <Image
-                        src={`${config.IMAGE_URL}/${user.profilePicture}`}
+                        src={buildMediaUrl(user.profilePicture)}
                         alt="Foto de perfil actual"
                         fill
                         className="object-cover"
@@ -1211,7 +1225,7 @@ export default function EditProfileForm({
                   <div className="space-y-3 w-full">
                     <div className="relative w-full h-32 mx-auto rounded-lg overflow-hidden border-4 border-white shadow-md">
                       <Image
-                        src={`${config.IMAGE_URL}/${user.coverPicture}`}
+                        src={buildMediaUrl(user.coverPicture)}
                         alt="Foto de portada actual"
                         fill
                         className="object-cover"
@@ -1342,34 +1356,14 @@ export default function EditProfileForm({
               <label className="block text-sm font-medium text-conexia-green mb-1">
                 Teléfono (Opcional)
               </label>
-              <div className="flex gap-2">
-                <div className="w-1/3">
-                  <label className="block text-sm font-medium text-conexia-green mb-1">
-                    Código de área
-                  </label>
-                  <InputField
-                    name="areaCode"
-                    value={form.areaCode}
-                    onChange={handleAreaCodeChange}
-                    onBlur={handleAreaCodeBlur}
-                    error={touched.areaCode && errors.areaCode}
-                    placeholder="Ej: 11"
-                  />
-                </div>
-                <div className="w-2/3">
-                  <label className="block text-sm font-medium text-conexia-green mb-1">
-                    Teléfono
-                  </label>
-                  <InputField
-                    name="phoneNumber"
-                    value={form.phoneNumber}
-                    onChange={handlePhoneChange}
-                    onBlur={handlePhoneBlur}
-                    error={touched.phoneNumber && errors.phoneNumber}
-                    placeholder="Ej: 12345678"
-                  />
-                </div>
-              </div>
+              <InputField
+                name="phoneNumber"
+                value={form.phoneNumber}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                onBlur={handlePhoneBlur}
+                error={touched.phoneNumber && errors.phoneNumber}
+                placeholder="Ej: 123456789"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-conexia-green mb-1">
