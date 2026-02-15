@@ -1,20 +1,27 @@
-'use client';
+"use client";
 
-import { LogOut, Settings, Briefcase, FileText, Users, BarChart3 } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { getProfileById } from '@/service/profiles/profilesFetch';
-import { useUserStore } from '@/store/userStore';
-import { ROLES } from '@/constants/roles';
-import { buildMediaUrl } from '@/utils/mediaUrl';
-import { FaRegLightbulb } from 'react-icons/fa';
-import { PlanBadge } from '@/components/plans';
-import { useUserPlan } from '@/hooks/memberships';
+import {
+  LogOut,
+  Settings,
+  Briefcase,
+  FileText,
+  Users,
+  BarChart3,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { getProfileById } from "@/service/profiles/profilesFetch";
+import { useUserStore } from "@/store/userStore";
+import { ROLES } from "@/constants/roles";
+import { buildMediaUrl } from "@/utils/mediaUrl";
+import { FaRegLightbulb } from "react-icons/fa";
+import { PlanBadge } from "@/components/plans";
+import { useUserPlan } from "@/hooks/memberships";
 
-const defaultAvatar = '/images/default-avatar.png';
+const defaultAvatar = "/images/default-avatar.png";
 
 export default function DropdownUserMenu({ onLogout, onClose }) {
   const { roleName } = useUserStore();
@@ -26,7 +33,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
   const [error, setError] = useState(null);
   const { user } = useAuth();
   const userId = user?.id;
-  
+
   // Obtener información del plan (siempre llamar el hook, no condicionalmente)
   const { data: userPlan, error: planError } = useUserPlan();
 
@@ -47,7 +54,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
         const data = await getProfileById(userId);
         setProfile(data.data.profile);
       } catch (err) {
-        setError(err.message || 'Error al cargar el perfil');
+        setError(err.message || "Error al cargar el perfil");
         setProfile(null);
       } finally {
         setLoading(false);
@@ -57,28 +64,32 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
   }, [userId, roleName]);
 
   // Detectar clics fuera del menú para cerrarlo
-    useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event) => {
-        // Si se hizo clic fuera del menú, cerrar
-        try {
-            if (dropdownRef.current && event.target && dropdownRef.current.contains && !dropdownRef.current.contains(event.target)) {
-                onClose?.();
-            }
-        } catch (error) {
-            console.error("Error en handleClickOutside:", error);
-            // Si hay algún error en el método contains, cerramos el menú
-            onClose?.();
+      // Si se hizo clic fuera del menú, cerrar
+      try {
+        if (
+          dropdownRef.current &&
+          event.target &&
+          dropdownRef.current.contains &&
+          !dropdownRef.current.contains(event.target)
+        ) {
+          onClose?.();
         }
+      } catch (error) {
+        console.error("Error en handleClickOutside:", error);
+        // Si hay algún error en el método contains, cerramos el menú
+        onClose?.();
+      }
     };
 
     // Usar "click" en lugar de "mousedown"
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
 
     return () => {
-        document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
-    }, [onClose]);
-
+  }, [onClose]);
 
   const handleClose = () => onClose?.();
 
@@ -110,7 +121,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
               {profile.name} {profile.lastName}
             </span>
             <span className="text-xs text-conexia-green/80 leading-tight line-clamp-2 break-words">
-              {profile.profession || ''}
+              {profile.profession || ""}
             </span>
           </div>
         </div>
@@ -128,7 +139,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
       {/* Plan del usuario (solo para rol USER y si hay datos del plan) */}
       {roleName === ROLES.USER && userPlan && !planError && (
         <div className="px-4 py-2 border-b">
-          <PlanBadge 
+          <PlanBadge
             useCurrentPlan={true}
             variant="compact"
             className="w-full justify-center"
