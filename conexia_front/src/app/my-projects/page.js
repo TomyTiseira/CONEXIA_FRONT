@@ -8,7 +8,7 @@ import Navbar from '@/components/navbar/Navbar';
 import Pagination from '@/components/common/Pagination';
 import Button from '@/components/ui/Button';
 import { getUserDisplayName } from '@/utils/formatUserName';
-import { ArrowLeft, Briefcase, Calendar, Users, AlertCircle, Eye, TrendingUp, FileText, ArrowDown, ArrowUp } from 'lucide-react';
+import { Briefcase, Calendar, Users, AlertCircle, Eye, TrendingUp, FileText, ArrowDown, ArrowUp } from 'lucide-react';
 import { ROLES } from '@/constants/roles';
 import NavbarCommunity from '@/components/navbar/NavbarCommunity';
 import NavbarAdmin from '@/components/navbar/NavbarAdmin';
