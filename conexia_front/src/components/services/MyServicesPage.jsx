@@ -164,11 +164,12 @@ export default function MyServicesPage() {
           aValue = new Date(a.updatedAt);
           bValue = new Date(b.updatedAt);
           break;
-        case 'status':
+        case 'status': {
           aValue = a.status || '';
           bValue = b.status || '';
           const comparison = aValue.localeCompare(bValue);
           return sortConfig.direction === 'desc' ? -comparison : comparison;
+        }
         default:
           return 0;
       }
