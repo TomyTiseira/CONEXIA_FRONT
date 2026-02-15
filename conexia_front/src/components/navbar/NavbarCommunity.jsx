@@ -20,11 +20,11 @@ import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests
 import DropdownUserMenu from '@/components/navbar/DropdownUserMenu';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
-import { config } from '@/config';
 import GlobalSearchBar from '@/components/common/GlobalSearchBar';
 import { useMessaging } from '@/hooks/messaging/useMessaging';
 import { getMessagingSocket } from '@/lib/socket/messagingSocket';
 import SuspensionBadge from '@/components/common/SuspensionBadge';
+import { buildMediaUrl } from '@/utils/mediaUrl';
 
 // Componente separado para el buscador mobile para evitar problemas de hidratación
 function MobileSearchBar() {
@@ -220,7 +220,7 @@ export default function NavbarCommunity() {
                 <Image
                   src={
                     profile && profile.profilePicture
-                      ? `${config.IMAGE_URL}/${profile.profilePicture}`
+                      ? buildMediaUrl(profile.profilePicture)
                       : defaultAvatar
                   }
                   alt="Foto de perfil"
@@ -271,7 +271,7 @@ export default function NavbarCommunity() {
                     <img
                       src={
                         profile && profile.profilePicture
-                          ? `${config.IMAGE_URL}/${profile.profilePicture}`
+                          ? buildMediaUrl(profile.profilePicture)
                           : defaultAvatar
                       }
                       alt="Foto de perfil"

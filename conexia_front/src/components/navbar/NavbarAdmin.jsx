@@ -20,7 +20,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import DropdownInternalUserMenu from '@/components/navbar/DropdownInternalUserMenu';
-import { config } from '@/config';
+import { buildMediaUrl } from '@/utils/mediaUrl';
 
 export default function NavbarAdmin() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -109,7 +109,7 @@ export default function NavbarAdmin() {
                     (user?.roleName === 'admin' || user?.roleName === 'moderator')
                       ? defaultAvatar
                       : (user && user.profilePicture
-                        ? `${config.IMAGE_URL}/${user.profilePicture}`
+                        ? buildMediaUrl(user.profilePicture)
                         : defaultAvatar)
                   }
                   alt="Foto de perfil"
@@ -146,7 +146,7 @@ export default function NavbarAdmin() {
                     (user?.role === 'admin' || user?.role === 'moderator') 
                       ? defaultAvatar
                       : (user && user.profilePicture
-                        ? `${config.IMAGE_URL}/${user.profilePicture}`
+                        ? buildMediaUrl(user.profilePicture)
                         : defaultAvatar)
                   }
                   alt="Foto de perfil"

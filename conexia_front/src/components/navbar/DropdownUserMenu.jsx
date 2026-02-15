@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getProfileById } from '@/service/profiles/profilesFetch';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
-import { config } from '@/config';
+import { buildMediaUrl } from '@/utils/mediaUrl';
 import { FaRegLightbulb } from 'react-icons/fa';
 import { PlanBadge } from '@/components/plans';
 import { useUserPlan } from '@/hooks/memberships';
@@ -96,7 +96,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
             <Image
               src={
                 profile.profilePicture
-                  ? `${config.IMAGE_URL}/${profile.profilePicture}`
+                  ? buildMediaUrl(profile.profilePicture)
                   : defaultAvatar
               }
               alt="Foto de perfil"
