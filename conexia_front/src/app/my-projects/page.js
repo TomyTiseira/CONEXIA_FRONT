@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { fetchMyProjects } from '@/service/projects/projectsFetch';
@@ -118,23 +118,26 @@ export default function MyProjectsPage() {
     });
   };
 
-  const sortedProjects = projects.sort((a, b) => {
-    if (!sortConfig.key) return 0;
-
-    if (sortConfig.key === 'postulations') {
-      const countA = a.postulationsCount || 0;
-      const countB = b.postulationsCount || 0;
-      return sortConfig.direction === 'desc' 
-        ? countB - countA 
-        : countA - countB;
-    } else if (sortConfig.key === 'status') {
-      const statusA = a.active ? 'Activo' : 'Inactivo';
-      const statusB = b.active ? 'Activo' : 'Inactivo';
-      const comparison = statusA.localeCompare(statusB);
-      return sortConfig.direction === 'desc' ? -comparison : comparison;
-    }
-    return 0;
-  });
+  const sortedProjects = useMemo(() => {
+    if (!sortConfig.key) return projects;
+    
+    // Crear una copia antes de ordenar para no mutar el estado
+    return [...projects].sort((a, b) => {
+      if (sortConfig.key === 'postulations') {
+        const countA = a.postulationsCount || 0;
+        const countB = b.postulationsCount || 0;
+        return sortConfig.direction === 'desc' 
+          ? countB - countA 
+          : countA - countB;
+      } else if (sortConfig.key === 'status') {
+        const statusA = a.active ? 'Activo' : 'Inactivo';
+        const statusB = b.active ? 'Activo' : 'Inactivo';
+        const comparison = statusA.localeCompare(statusB);
+        return sortConfig.direction === 'desc' ? -comparison : comparison;
+      }
+      return 0;
+    });
+  }, [projects, sortConfig]);
 
   const renderNavbar = () => {
     if (user?.role === ROLES.ADMIN) {
