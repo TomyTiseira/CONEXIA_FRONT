@@ -118,7 +118,7 @@ export default function MyProjectsPage() {
     });
   };
 
-  const sortedProjects = projects.sort((a, b) => {
+  const sortedProjects = [...projects].sort((a, b) => {
     if (!sortConfig.key) return 0;
 
     if (sortConfig.key === 'postulations') {
