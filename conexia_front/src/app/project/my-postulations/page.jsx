@@ -9,7 +9,7 @@ import { getMyPostulations, cancelPostulation } from '@/service/postulations/pos
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import Pagination from '@/components/common/Pagination';
 import { ROLES } from '@/constants/roles';
-import { Filter } from 'lucide-react';
+import { Filter, Calendar, ArrowDown, ArrowUp, FileText } from 'lucide-react';
 
 export default function MyPostulationsPage() {
   const { user } = useAuth();
@@ -26,6 +26,7 @@ export default function MyPostulationsPage() {
   const [error, setError] = useState('');
   const [selectedProject, setSelectedProject] = useState(''); // Filtro por proyecto
   const [uniqueProjects, setUniqueProjects] = useState([]); // Lista de proyectos únicos
+  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' }); // Ordenamiento
 
   useEffect(() => {
     if (roleName !== ROLES.USER) {
@@ -103,7 +104,52 @@ export default function MyPostulationsPage() {
       filtered = filtered.filter(p => p.projectId === parseInt(selectedProject));
     }
     
+    // Aplicar ordenamiento
+    filtered = getSortedPostulations(filtered);
+    
     setPostulations(filtered);
+  };
+
+  const handleSort = (key) => {
+    setSortConfig(prev => {
+      // Si es la misma columna, alternar dirección
+      if (prev.key === key) {
+        if (prev.direction === 'desc') {
+          return { key, direction: 'asc' };
+        } else {
+          return { key, direction: 'desc' };
+        }
+      }
+      // Si es una columna diferente, empezar con descendente
+      return { key, direction: 'desc' };
+    });
+  };
+
+  const getSortedPostulations = (postulationsList) => {
+    if (!sortConfig.key || !postulationsList || postulationsList.length === 0) {
+      return postulationsList;
+    }
+    
+    const sorted = [...postulationsList];
+    
+    if (sortConfig.key === 'date') {
+      sorted.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return sortConfig.direction === 'desc' 
+          ? dateB - dateA 
+          : dateA - dateB;
+      });
+    } else if (sortConfig.key === 'status') {
+      sorted.sort((a, b) => {
+        const statusA = a.status?.name || '';
+        const statusB = b.status?.name || '';
+        const comparison = statusA.localeCompare(statusB);
+        return sortConfig.direction === 'desc' ? -comparison : comparison;
+      });
+    }
+    
+    return sorted;
   };
 
   const handleProjectFilterChange = (projectId) => {
@@ -116,7 +162,7 @@ export default function MyPostulationsPage() {
     if (allPostulations.length > 0) {
       applyFilters();
     }
-  }, [selectedProject]);
+  }, [selectedProject, sortConfig]);
 
   const handleCancelPostulation = async () => {
     if (!selectedPostulation) return;
@@ -232,17 +278,18 @@ export default function MyPostulationsPage() {
 
           {/* Filtros */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Filter size={20} className="text-gray-500" />
-                <span className="font-medium text-gray-700">Filtros:</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              {/* Filtros en el lado izquierdo */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter size={20} className="text-gray-500" />
+                  <span className="font-medium text-gray-700">Filtros:</span>
+                </div>
+                
                 <select
                   value={selectedProject}
                   onChange={(e) => handleProjectFilterChange(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green w-full sm:w-auto"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green"
                 >
                   <option value="">Todos los proyectos</option>
                   {uniqueProjects.map((project) => (
@@ -251,6 +298,53 @@ export default function MyPostulationsPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Ordenamiento en el lado derecho */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-sm font-medium text-gray-700">Ordenar:</span>
+                
+                {/* Botón ordenar por fecha */}
+                <button
+                  onClick={() => handleSort('date')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
+                    sortConfig.key === 'date'
+                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                  title={sortConfig.key === 'date' 
+                    ? `Ordenado por fecha ${sortConfig.direction === 'desc' ? 'descendente' : 'ascendente'}` 
+                    : 'Ordenar por fecha'}
+                >
+                  <Calendar size={16} />
+                  <span className="text-sm font-medium">Fecha</span>
+                  {sortConfig.key === 'date' && (
+                    sortConfig.direction === 'desc' 
+                      ? <ArrowDown size={16} className="opacity-90" />
+                      : <ArrowUp size={16} className="opacity-90" />
+                  )}
+                </button>
+
+                {/* Botón ordenar por estado */}
+                <button
+                  onClick={() => handleSort('status')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
+                    sortConfig.key === 'status'
+                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                  title={sortConfig.key === 'status' 
+                    ? `Ordenado por estado ${sortConfig.direction === 'desc' ? 'Z-A' : 'A-Z'}` 
+                    : 'Ordenar por estado'}
+                >
+                  <FileText size={16} />
+                  <span className="text-sm font-medium">Estado</span>
+                  {sortConfig.key === 'status' && (
+                    sortConfig.direction === 'desc' 
+                      ? <ArrowDown size={16} className="opacity-90" />
+                      : <ArrowUp size={16} className="opacity-90" />
+                  )}
+                </button>
               </div>
             </div>
           </div>

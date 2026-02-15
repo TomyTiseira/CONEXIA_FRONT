@@ -6,7 +6,7 @@ import { fetchUserServices } from '@/service/services/servicesFetch';
 import { fetchMyServiceRequests } from '@/service/service-hirings/serviceHiringsFetch';
 import { useUserStore } from '@/store/userStore';
 import { useAccountStatus } from '@/hooks/useAccountStatus';
-import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { ArrowLeft, Briefcase, Users, Calendar, TrendingUp, ChevronUp, ChevronDown, ChevronsUpDown, ArrowDown, ArrowUp, FileText } from 'lucide-react';
 import { FaRegEye, FaFileInvoiceDollar, FaEllipsisH, FaExchangeAlt } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import { getUnitLabel } from '@/utils/timeUnit';
@@ -40,8 +40,8 @@ export default function MyServicesPage() {
     includeInactive: false
   });
   const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: 'asc'
+    key: 'updatedAt',
+    direction: 'desc'
   });
 
   useEffect(() => {
@@ -122,11 +122,18 @@ export default function MyServicesPage() {
   };
 
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+    setSortConfig(prev => {
+      // Si es la misma columna, alternar dirección
+      if (prev.key === key) {
+        if (prev.direction === 'desc') {
+          return { key, direction: 'asc' };
+        } else {
+          return { key, direction: 'desc' };
+        }
+      }
+      // Si es una columna diferente, empezar con descendente
+      return { key, direction: 'desc' };
+    });
   };
 
   const getSortIcon = (columnKey) => {
@@ -157,6 +164,11 @@ export default function MyServicesPage() {
           aValue = new Date(a.updatedAt);
           bValue = new Date(b.updatedAt);
           break;
+        case 'status':
+          aValue = a.status || '';
+          bValue = b.status || '';
+          const comparison = aValue.localeCompare(bValue);
+          return sortConfig.direction === 'desc' ? -comparison : comparison;
         default:
           return 0;
       }
@@ -321,7 +333,7 @@ export default function MyServicesPage() {
 
           {/* Controles y filtros */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2">
                   <input
@@ -334,26 +346,73 @@ export default function MyServicesPage() {
                 </label>
               </div>
               
-              <RequireVerification action="publicar un servicio">
-                {canCreateContent ? (
-                  <button
-                    onClick={() => router.push('/services/create')}
-                    className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
-                  >
-                    <Briefcase size={16} />
-                    Crear nuevo servicio
-                  </button>
-                ) : (
-                  <button
-                    disabled
-                    className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed flex items-center gap-2"
-                    title={suspensionMessage}
-                  >
-                    <Briefcase size={16} />
-                    Crear nuevo servicio
-                  </button>
-                )}
-              </RequireVerification>
+              <div className="flex flex-wrap gap-2 items-center">
+                {/* Ordenamiento */}
+                <span className="text-sm font-medium text-gray-700">Ordenar:</span>
+                
+                {/* Botón ordenar por fecha */}
+                <button
+                  onClick={() => handleSort('updatedAt')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
+                    sortConfig.key === 'updatedAt'
+                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                  title={sortConfig.key === 'updatedAt' 
+                    ? `Ordenado por fecha ${sortConfig.direction === 'desc' ? 'descendente' : 'ascendente'}` 
+                    : 'Ordenar por fecha'}
+                >
+                  <Calendar size={16} />
+                  <span className="text-sm font-medium">Fecha</span>
+                  {sortConfig.key === 'updatedAt' && (
+                    sortConfig.direction === 'desc' 
+                      ? <ArrowDown size={16} className="opacity-90" />
+                      : <ArrowUp size={16} className="opacity-90" />
+                  )}
+                </button>
+
+                {/* Botón ordenar por estado */}
+                <button
+                  onClick={() => handleSort('status')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
+                    sortConfig.key === 'status'
+                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                  title={sortConfig.key === 'status' 
+                    ? `Ordenado por estado ${sortConfig.direction === 'desc' ? 'Z-A' : 'A-Z'}` 
+                    : 'Ordenar por estado'}
+                >
+                  <FileText size={16} />
+                  <span className="text-sm font-medium">Estado</span>
+                  {sortConfig.key === 'status' && (
+                    sortConfig.direction === 'desc' 
+                      ? <ArrowDown size={16} className="opacity-90" />
+                      : <ArrowUp size={16} className="opacity-90" />
+                  )}
+                </button>
+
+                <RequireVerification action="publicar un servicio">
+                  {canCreateContent ? (
+                    <button
+                      onClick={() => router.push('/services/create')}
+                      className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
+                    >
+                      <Briefcase size={16} />
+                      Crear nuevo servicio
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed flex items-center gap-2"
+                      title={suspensionMessage}
+                    >
+                      <Briefcase size={16} />
+                      Crear nuevo servicio
+                    </button>
+                  )}
+                </RequireVerification>
+              </div>
             </div>
           </div>
 
