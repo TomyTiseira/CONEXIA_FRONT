@@ -1,18 +1,25 @@
-'use client';
-import { useEffect, useRef, useState, useMemo } from 'react';
-import EmojiPicker from 'emoji-picker-react';
-import { useMessaging } from '@/hooks/messaging/useMessaging';
-import { useChatMessages } from '@/hooks/messaging/useChatMessages';
-import { useUserStore } from '@/store/userStore';
-import { config } from '@/config';
-import { ImageIcon, FileText, ArrowLeft, Smile, Send, X as XIcon } from 'lucide-react';
-import AttachmentPreviewFullWidth from './AttachmentPreviewFullWidth';
+"use client";
+import { useEffect, useRef, useState, useMemo } from "react";
+import EmojiPicker from "emoji-picker-react";
+import { useMessaging } from "@/hooks/messaging/useMessaging";
+import { useChatMessages } from "@/hooks/messaging/useChatMessages";
+import { useUserStore } from "@/store/userStore";
+import { config } from "@/config";
+import {
+  ImageIcon,
+  FileText,
+  ArrowLeft,
+  Smile,
+  Send,
+  X as XIcon,
+} from "lucide-react";
+import AttachmentPreviewFullWidth from "./AttachmentPreviewFullWidth";
 
 // Función para renderizar texto con links clickeables
 const renderTextWithLinks = (text, isMe) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = text.split(urlRegex);
-  
+
   return parts.map((part, index) => {
     if (urlRegex.test(part)) {
       return (
@@ -22,7 +29,9 @@ const renderTextWithLinks = (text, isMe) => {
           target="_blank"
           rel="noopener noreferrer"
           className={`underline hover:no-underline ${
-            isMe ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'
+            isMe
+              ? "text-blue-200 hover:text-blue-100"
+              : "text-blue-600 hover:text-blue-800"
           }`}
           onClick={(e) => {
             e.stopPropagation();
@@ -42,7 +51,7 @@ export default function ChatView({ user, onBack }) {
     selectedChatId,
     selectConversation,
     loadConversations,
-    refreshUnreadCount
+    refreshUnreadCount,
   } = useMessaging();
   const {
     messages,
@@ -52,20 +61,20 @@ export default function ChatView({ user, onBack }) {
     sendFileMessage,
     emitTyping,
     typingStates,
-    markCurrentAsRead
+    markCurrentAsRead,
   } = useChatMessages();
 
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
-  const [fileErr, setFileErr] = useState('');
+  const [fileErr, setFileErr] = useState("");
   const [pendingFile, setPendingFile] = useState(null); // {file, url, type}
   const [imageModal, setImageModal] = useState(null); // { src, name }
   const scrollerRef = useRef(null);
   const fileInputRef = useRef(null);
   // Caches de blobs (igual que en el chat flotante)
-  const sentBlobByNameRef = useRef({});   // { 'name|size': blobUrl }
-  const imageBlobByMsgRef = useRef({});   // { stableMessageId: blobUrl }
-  const pdfBlobByMsgRef = useRef({});     // { stableMessageId: blobUrl }
+  const sentBlobByNameRef = useRef({}); // { 'name|size': blobUrl }
+  const imageBlobByMsgRef = useRef({}); // { stableMessageId: blobUrl }
+  const pdfBlobByMsgRef = useRef({}); // { stableMessageId: blobUrl }
   const [, force] = useState(0);
   // NUEVO: estado para auto-scroll y badge no leídos
   const [atBottom, setAtBottom] = useState(true);
@@ -87,23 +96,26 @@ export default function ChatView({ user, onBack }) {
   const getAccessToken = () => {
     try {
       return (
-        localStorage.getItem('accessToken') ||
-        localStorage.getItem('token') ||
-        sessionStorage.getItem('accessToken') ||
-        ''
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("accessToken") ||
+        ""
       );
-    } catch { return ''; }
+    } catch {
+      return "";
+    }
   };
-  const nameSizeKey = (name, size) => `${String(name || '')}|${String(size || '')}`;
+  const nameSizeKey = (name, size) =>
+    `${String(name || "")}|${String(size || "")}`;
   const buildCandidateUrls = (u) => {
     if (!u) return [];
     const s = String(u);
-    if (s.startsWith('blob:') || /^https?:\/\//i.test(s)) return [s];
-    if (s.startsWith('data:')) return []; // data: no fetch
+    if (s.startsWith("blob:") || /^https?:\/\//i.test(s)) return [s];
+    if (s.startsWith("data:")) return []; // data: no fetch
     const candidates = [];
-    if (s.startsWith('/uploads')) {
+    if (s.startsWith("/uploads")) {
       candidates.push(joinUrl(config.DOCUMENT_URL, s));
-    } else if (s.startsWith('/')) {
+    } else if (s.startsWith("/")) {
       candidates.push(joinUrl(config.DOCUMENT_URL, s));
       candidates.push(joinUrl(config.DOCUMENT_URL, `/uploads${s}`));
     } else {
@@ -119,104 +131,144 @@ export default function ChatView({ user, onBack }) {
     let lastErr;
     for (const href of candidates) {
       try {
-        const res = await fetch(href, { method: 'GET', headers, credentials: 'include', signal });
+        const res = await fetch(href, {
+          method: "GET",
+          headers,
+          credentials: "include",
+          signal,
+        });
         if (res.ok) return await res.blob();
         lastErr = new Error(`HTTP ${res.status}`);
       } catch (e) {
         lastErr = e;
       }
     }
-    throw lastErr || new Error('No se pudo obtener el archivo');
+    throw lastErr || new Error("No se pudo obtener el archivo");
   };
 
   // REEMPLAZO helpers
-  const joinUrl = (b, p) => `${String(b).replace(/\/+$/,'')}/${String(p).replace(/^\/+/, '')}`;
+  const joinUrl = (b, p) =>
+    `${String(b).replace(/\/+$/, "")}/${String(p).replace(/^\/+/, "")}`;
   const getPP = (img) => {
-    if (!img) return '/images/default-avatar.png';
-    if (/^https?:\/\//i.test(img) || img.startsWith('blob:') || img.startsWith('data:')) return img;
-    if (img.startsWith('/images/')) return img; // ← mantener assets públicos locales
-    if (img.startsWith('/uploads')) return joinUrl(config.DOCUMENT_URL, img);
-    if (img.startsWith('/')) return joinUrl(config.DOCUMENT_URL, img);
+    if (!img) return "/images/default-avatar.png";
+    if (
+      /^https?:\/\//i.test(img) ||
+      img.startsWith("blob:") ||
+      img.startsWith("data:")
+    )
+      return img;
+    if (img.startsWith("/images/")) return img; // ← mantener assets públicos locales
+    if (img.startsWith("/uploads")) return joinUrl(config.DOCUMENT_URL, img);
+    if (img.startsWith("/")) return joinUrl(config.DOCUMENT_URL, img);
     return joinUrl(config.DOCUMENT_URL, `/uploads/${img}`);
   };
   const normFileUrl = (u) => {
-    if (!u) return '';
-    if (/^https?:\/\//i.test(u) || u.startsWith('blob:') || u.startsWith('data:')) return u;
-    if (u.startsWith('/uploads') || u.startsWith('/')) return joinUrl(config.DOCUMENT_URL, u);
+    if (!u) return "";
+    if (
+      /^https?:\/\//i.test(u) ||
+      u.startsWith("blob:") ||
+      u.startsWith("data:")
+    )
+      return u;
+    if (u.startsWith("/uploads") || u.startsWith("/"))
+      return joinUrl(config.DOCUMENT_URL, u);
     return joinUrl(config.DOCUMENT_URL, `/uploads/${u}`);
   };
   // Detecta si un string parece ser únicamente una ruta/URL de archivo y no un texto de mensaje
   const isPurePath = (v) => {
-    if (typeof v !== 'string') return false;
+    if (typeof v !== "string") return false;
     const s = v.trim();
     if (!s) return false;
     // URLs y esquemas comunes
     if (/^(https?:|blob:|data:)/i.test(s)) return true;
     // Rutas absolutas del backend
-    if (s.startsWith('/uploads') || s.startsWith('/')) return true;
+    if (s.startsWith("/uploads") || s.startsWith("/")) return true;
     // Nombre de archivo con extensiones típicas soportadas
     if (/^[\w\-.%/]+\.(png|jpe?g|gif|webp|pdf)(\?.*)?$/i.test(s)) return true;
     return false;
   };
   const formatDateLabel = (iso) => {
-    if (!iso) return '';
+    if (!iso) return "";
     const d = new Date(iso);
     const today = new Date();
-    if (d.toDateString() === today.toDateString()) return 'HOY';
+    if (d.toDateString() === today.toDateString()) return "HOY";
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
-    if (d.toDateString() === yesterday.toDateString()) return 'AYER';
-    const df = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-    return df.replaceAll('.', '').toUpperCase();
+    if (d.toDateString() === yesterday.toDateString()) return "AYER";
+    const df = d.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    return df.replaceAll(".", "").toUpperCase();
   };
-  const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  const formatTime = (iso) =>
+    iso
+      ? new Date(iso).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
 
   // Abre modal de imagen con src dado
   const openImageModal = (src, name) => {
     if (!src) return;
-    setImageModal({ src, name: name || 'Imagen' });
+    setImageModal({ src, name: name || "Imagen" });
   };
 
   // Descarga/abre un PDF de forma robusta (respeta auth y cache local)
   const handlePdfClick = async (m, stableId) => {
     try {
-      const name = m?.fileName || 'documento.pdf';
+      const name = m?.fileName || "documento.pdf";
       // 1) Cache local (por id estable o por nombre+tamaño)
       const localById = pdfBlobByMsgRef.current[stableId];
       const k = nameSizeKey(m?.fileName, m?.fileSize);
       const localByName = sentBlobByNameRef.current[k];
       const tryOpen = (href, isBlobLike = true) => {
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = href;
-        a.target = '_blank';
-        a.rel = 'noopener';
+        a.target = "_blank";
+        a.rel = "noopener";
         a.download = name;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        if (isBlobLike && href.startsWith('blob:')) {
+        if (isBlobLike && href.startsWith("blob:")) {
           // revocar luego de un breve tiempo para permitir la descarga/apertura
-          setTimeout(() => { try { URL.revokeObjectURL(href); } catch {} }, 4000);
+          setTimeout(() => {
+            try {
+              URL.revokeObjectURL(href);
+            } catch {}
+          }, 4000);
         }
       };
-      if (localById) { tryOpen(localById); return; }
-      if (localByName) { tryOpen(localByName); return; }
+      if (localById) {
+        tryOpen(localById);
+        return;
+      }
+      if (localByName) {
+        tryOpen(localByName);
+        return;
+      }
 
       // 2) Si viene una data URL o blob URL directamente
-      const direct = m?.fileUrl || m?.content || '';
-      if (typeof direct === 'string' && (direct.startsWith('data:') || direct.startsWith('blob:'))) {
-        tryOpen(direct, direct.startsWith('blob:'));
+      const direct = m?.fileUrl || m?.content || "";
+      if (
+        typeof direct === "string" &&
+        (direct.startsWith("data:") || direct.startsWith("blob:"))
+      ) {
+        tryOpen(direct, direct.startsWith("blob:"));
         return;
       }
 
       // 3) Descargar con auth y abrir
-      const candidate = direct || m?.fileName || '';
+      const candidate = direct || m?.fileName || "";
       const blob = await fetchBlobAuthTry(candidate);
       const url = URL.createObjectURL(blob);
       tryOpen(url);
     } catch (e) {
-      console.error('PDF open error', e);
-      alert('No se pudo abrir/descargar el PDF.');
+      console.error("PDF open error", e);
+      alert("No se pudo abrir/descargar el PDF.");
     }
   };
 
@@ -234,17 +286,17 @@ export default function ChatView({ user, onBack }) {
         await sendFileMessage({ file, type });
         any = true;
         setPendingFile(null);
-        setFileErr('');
+        setFileErr("");
       }
       // Enviar texto si existe
-      const txt = (text || '').trim();
+      const txt = (text || "").trim();
       if (txt) {
         await sendTextMessage({ content: txt });
         any = true;
-        setText('');
+        setText("");
       }
     } catch (e) {
-      setFileErr(e?.message || 'No se pudo enviar el mensaje');
+      setFileErr(e?.message || "No se pudo enviar el mensaje");
     } finally {
       emitTyping(false);
       if (any) {
@@ -262,7 +314,11 @@ export default function ChatView({ user, onBack }) {
     selectConversation({
       conversationId: user.conversationId || selectedChatId || null,
       otherUserId: user.id,
-      otherUser: { id: user.id, userName: user.name, userProfilePicture: user.avatar }
+      otherUser: {
+        id: user.id,
+        userName: user.name,
+        userProfilePicture: user.avatar,
+      },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, user?.conversationId]);
@@ -275,10 +331,16 @@ export default function ChatView({ user, onBack }) {
       localPageRef.current = 1;
       setNoMoreOlder(false);
       canTriggerTopLoadRef.current = true;
-  await loadMessages({ conversationId: selectedChatId, page: 1, limit: 50 });
+      await loadMessages({
+        conversationId: selectedChatId,
+        page: 1,
+        limit: 50,
+      });
       scrollBottom();
       setTimeout(scrollBottom, 40);
-      try { await markCurrentAsRead(); } finally {
+      try {
+        await markCurrentAsRead();
+      } finally {
         refreshUnreadCount();
         loadConversations({ page: 1, limit: 20, append: false });
       }
@@ -288,13 +350,17 @@ export default function ChatView({ user, onBack }) {
 
   // Al cambiar de conversación o usuario en la página, limpiar el compositor
   useEffect(() => {
-    setText('');
+    setText("");
     setPendingFile(null);
-    setFileErr('');
+    setFileErr("");
     setShowEmojis(false);
-    try { emitTyping(false); } catch {}
+    try {
+      emitTyping(false);
+    } catch {}
     if (fileInputRef.current) {
-      try { fileInputRef.current.value = ''; } catch {}
+      try {
+        fileInputRef.current.value = "";
+      } catch {}
     }
   }, [selectedChatId, user?.id]);
 
@@ -336,7 +402,9 @@ export default function ChatView({ user, onBack }) {
   }, [messages?.length]);
 
   // Si el otro escribe y estamos abajo, mantener anclado al fondo
-  useEffect(() => { if (otherTyping && atBottom) scrollBottom(); }, [otherTyping, atBottom]);
+  useEffect(() => {
+    if (otherTyping && atBottom) scrollBottom();
+  }, [otherTyping, atBottom]);
 
   const scrollBottom = () => {
     const el = scrollerRef.current;
@@ -348,14 +416,19 @@ export default function ChatView({ user, onBack }) {
     return el.scrollHeight - el.scrollTop - el.clientHeight <= px;
   };
 
-  const msgs = useMemo(() => (messages || []).map(m => {
-    const content = m.content ?? m.message ?? m.body ?? m.text ?? '';
-    return {
-      ...m,
-      content: typeof content === 'string' ? content : String(content || ''),
-      createdAt: m.createdAt || m.created_at || m.timestamp
-    };
-  }), [messages]);
+  const msgs = useMemo(
+    () =>
+      (messages || []).map((m) => {
+        const content = m.content ?? m.message ?? m.body ?? m.text ?? "";
+        return {
+          ...m,
+          content:
+            typeof content === "string" ? content : String(content || ""),
+          createdAt: m.createdAt || m.created_at || m.timestamp,
+        };
+      }),
+    [messages],
+  );
 
   // Cargar y reconcilia blobs locales cuando llegan mensajes definitivos (emisor)
   useEffect(() => {
@@ -367,12 +440,18 @@ export default function ChatView({ user, onBack }) {
       const local = sentBlobByNameRef.current[k];
       if (!local) return;
       const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
-      const t = String(m?.type || '').toLowerCase();
-      const isImg = t === 'image' || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileName || '') || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileUrl || '');
-      const isPdf = t === 'pdf' || /\.pdf(\?|$)/i.test(m.fileName || '') || /\.pdf(\?|$)/i.test(m.fileUrl || '');
+      const t = String(m?.type || "").toLowerCase();
+      const isImg =
+        t === "image" ||
+        /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileName || "") ||
+        /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileUrl || "");
+      const isPdf =
+        t === "pdf" ||
+        /\.pdf(\?|$)/i.test(m.fileName || "") ||
+        /\.pdf(\?|$)/i.test(m.fileUrl || "");
       if (isImg && !imageBlobByMsgRef.current[stableId]) {
         imageBlobByMsgRef.current[stableId] = local;
-        force(v => v + 1);
+        force((v) => v + 1);
       } else if (isPdf && !pdfBlobByMsgRef.current[stableId]) {
         pdfBlobByMsgRef.current[stableId] = local;
       }
@@ -386,17 +465,25 @@ export default function ChatView({ user, onBack }) {
     (async () => {
       for (let idx = 0; idx < messages.length; idx++) {
         const m = messages[idx];
-        const t = String(m?.type || '').toLowerCase();
-        const isImg = t === 'image' || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileName || '') || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileUrl || '');
+        const t = String(m?.type || "").toLowerCase();
+        const isImg =
+          t === "image" ||
+          /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileName || "") ||
+          /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileUrl || "");
         if (!isImg) continue;
         const src = m.fileUrl || m.fileName;
-        if (!src || String(src).startsWith('data:') || String(src).startsWith('blob:')) continue;
+        if (
+          !src ||
+          String(src).startsWith("data:") ||
+          String(src).startsWith("blob:")
+        )
+          continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (imageBlobByMsgRef.current[stableId]) continue;
         try {
           const blob = await fetchBlobAuthTry(src, ctrl.signal);
           imageBlobByMsgRef.current[stableId] = URL.createObjectURL(blob);
-          force(v => v + 1);
+          force((v) => v + 1);
         } catch {}
       }
     })();
@@ -410,11 +497,19 @@ export default function ChatView({ user, onBack }) {
     (async () => {
       for (let idx = 0; idx < messages.length; idx++) {
         const m = messages[idx];
-        const t = String(m?.type || '').toLowerCase();
-        const isPdf = t === 'pdf' || /\.pdf(\?|$)/i.test(m.fileName || '') || /\.pdf(\?|$)/i.test(m.fileUrl || '');
+        const t = String(m?.type || "").toLowerCase();
+        const isPdf =
+          t === "pdf" ||
+          /\.pdf(\?|$)/i.test(m.fileName || "") ||
+          /\.pdf(\?|$)/i.test(m.fileUrl || "");
         if (!isPdf) continue;
         const src = m.fileUrl || m.fileName;
-        if (!src || String(src).startsWith('data:') || String(src).startsWith('blob:')) continue;
+        if (
+          !src ||
+          String(src).startsWith("data:") ||
+          String(src).startsWith("blob:")
+        )
+          continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (pdfBlobByMsgRef.current[stableId]) continue;
         try {
@@ -429,9 +524,11 @@ export default function ChatView({ user, onBack }) {
   // Cerrar modal con ESC
   useEffect(() => {
     if (!imageModal) return;
-    const h = (e) => { if (e.key === 'Escape') setImageModal(null); };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
+    const h = (e) => {
+      if (e.key === "Escape") setImageModal(null);
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [imageModal]);
 
   // UI
@@ -444,7 +541,9 @@ export default function ChatView({ user, onBack }) {
             onClick={onBack}
             className="p-2 -ml-2 rounded hover:bg-[#e0f0f0] text-conexia-green md:hidden"
             title="Volver"
-          ><ArrowLeft size={18} /></button>
+          >
+            <ArrowLeft size={18} />
+          </button>
         )}
         <img
           src={getPP(user?.avatar)}
@@ -454,8 +553,12 @@ export default function ChatView({ user, onBack }) {
           className="w-10 h-10 rounded-full object-cover border"
         />
         <div className="min-w-0">
-          <div className="font-semibold text-conexia-green truncate text-sm md:text-base">{user?.name}</div>
-          {otherTyping && <div className="text-[11px] text-conexia-green/70">Escribiendo</div>}
+          <div className="font-semibold text-conexia-green truncate text-sm md:text-base">
+            {user?.name}
+          </div>
+          {otherTyping && (
+            <div className="text-[11px] text-conexia-green/70">Escribiendo</div>
+          )}
         </div>
       </div>
 
@@ -479,12 +582,21 @@ export default function ChatView({ user, onBack }) {
 
           // Cargar página anterior cuando se acerca al tope (como chat flotante)
           const hasNext = messagesPagination
-            ? (messagesPagination?.hasNextPage ?? (messagesPagination?.currentPage < (messagesPagination?.totalPages || 1)))
+            ? (messagesPagination?.hasNextPage ??
+              messagesPagination?.currentPage <
+                (messagesPagination?.totalPages || 1))
             : true; // fallback: permitir cargar si no conocemos paginación
-          if (el.scrollTop <= 40 && canTriggerTopLoadRef.current && !isLoadingMoreRef.current && hasNext && selectedChatId) {
+          if (
+            el.scrollTop <= 40 &&
+            canTriggerTopLoadRef.current &&
+            !isLoadingMoreRef.current &&
+            hasNext &&
+            selectedChatId
+          ) {
             const prevHeight = el.scrollHeight;
             const prevTop = el.scrollTop;
-            const currentPage = messagesPagination?.currentPage || localPageRef.current || 1;
+            const currentPage =
+              messagesPagination?.currentPage || localPageRef.current || 1;
             const nextPage = currentPage + 1;
             (async () => {
               try {
@@ -493,18 +605,28 @@ export default function ChatView({ user, onBack }) {
                 setIsLoadingMore(true);
                 canTriggerTopLoadRef.current = false; // desarmar hasta que el usuario vuelva a alejarse del tope
                 const pageSize = messagesPagination?.itemsPerPage || 50;
-                const data = await loadMessages({ conversationId: selectedChatId, page: nextPage, limit: pageSize, append: true, prepend: true });
+                const data = await loadMessages({
+                  conversationId: selectedChatId,
+                  page: nextPage,
+                  limit: pageSize,
+                  append: true,
+                  prepend: true,
+                });
                 // Mantener anclaje al contenido previo
                 requestAnimationFrame(() => {
                   const newHeight = el.scrollHeight;
-                  el.scrollTop = (newHeight - prevHeight) + prevTop;
+                  el.scrollTop = newHeight - prevHeight + prevTop;
                 });
                 localPageRef.current = nextPage;
                 // Actualizar bandera de fin de historial basándonos en la respuesta
-                const pageLen = Array.isArray(data?.messages) ? data.messages.length : 0;
-                const more = (data?.pagination && typeof data.pagination.hasNextPage === 'boolean')
-                  ? !!data.pagination.hasNextPage
-                  : (pageLen >= pageSize);
+                const pageLen = Array.isArray(data?.messages)
+                  ? data.messages.length
+                  : 0;
+                const more =
+                  data?.pagination &&
+                  typeof data.pagination.hasNextPage === "boolean"
+                    ? !!data.pagination.hasNextPage
+                    : pageLen >= pageSize;
                 if (!more) setNoMoreOlder(true);
               } catch {
                 // noop
@@ -535,59 +657,90 @@ export default function ChatView({ user, onBack }) {
         )}
         {(() => {
           const items = [];
-          let lastDate = '';
-          msgs.forEach((m,i) => {
+          let lastDate = "";
+          msgs.forEach((m, i) => {
             const isMe = String(m.senderId) === String(me?.id);
             // Derivar tipo si backend mandó texto con ruta
-            let t = (m.type || '').toLowerCase();
+            let t = (m.type || "").toLowerCase();
             const contentPathLike =
               isPurePath(m.content) ||
-              (!!m.fileUrl && typeof m.content === 'string' && m.content.trim() === String(m.fileUrl).trim()) ||
-              (!!m.fileName && typeof m.content === 'string' && m.content.trim() === String(m.fileName).trim());
-            if (!t || t === 'text') {
-              if (contentPathLike && /\.(png|jpe?g|gif|webp)$/i.test(m.content || '')) t = 'image';
-              else if (contentPathLike && /\.pdf$/i.test(m.content || '')) t = 'pdf';
+              (!!m.fileUrl &&
+                typeof m.content === "string" &&
+                m.content.trim() === String(m.fileUrl).trim()) ||
+              (!!m.fileName &&
+                typeof m.content === "string" &&
+                m.content.trim() === String(m.fileName).trim());
+            if (!t || t === "text") {
+              if (
+                contentPathLike &&
+                /\.(png|jpe?g|gif|webp)$/i.test(m.content || "")
+              )
+                t = "image";
+              else if (contentPathLike && /\.pdf$/i.test(m.content || ""))
+                t = "pdf";
             }
-            const isImg = t === 'image'
-              || /\.(png|jpe?g|gif|webp)$/i.test(m.fileName || '')
-              || /\.(png|jpe?g|gif|webp)$/i.test(m.fileUrl || '');
-            const isPdf = t === 'pdf'
-              || /\.pdf$/i.test(m.fileName || '')
-              || /\.pdf$/i.test(m.fileUrl || '')
-              || (/\.pdf$/i.test(m.content || '') && contentPathLike);
+            const isImg =
+              t === "image" ||
+              /\.(png|jpe?g|gif|webp)$/i.test(m.fileName || "") ||
+              /\.(png|jpe?g|gif|webp)$/i.test(m.fileUrl || "");
+            const isPdf =
+              t === "pdf" ||
+              /\.pdf$/i.test(m.fileName || "") ||
+              /\.pdf$/i.test(m.fileUrl || "") ||
+              (/\.pdf$/i.test(m.content || "") && contentPathLike);
 
             const dateLabel = formatDateLabel(m.createdAt);
             if (dateLabel && dateLabel !== lastDate) {
               lastDate = dateLabel;
               items.push(
-                <div key={`d-${dateLabel}-${i}`} className="flex justify-center">
+                <div
+                  key={`d-${dateLabel}-${i}`}
+                  className="flex justify-center"
+                >
                   <span className="inline-block bg-gray-300 text-gray-700 text-[11px] font-medium rounded px-3 py-1 shadow-sm">
-                    {dateLabel === 'HOY' ? 'Hoy' : dateLabel === 'AYER' ? 'Ayer' : dateLabel}
+                    {dateLabel === "HOY"
+                      ? "Hoy"
+                      : dateLabel === "AYER"
+                        ? "Ayer"
+                        : dateLabel}
                   </span>
-                </div>
+                </div>,
               );
             }
             const timeChip = (
-              <div className={`mt-1 text-[10px] text-gray-400 ${isMe ? 'text-right' : 'text-left'}`}>
+              <div
+                className={`mt-1 text-[10px] text-gray-400 ${isMe ? "text-right" : "text-left"}`}
+              >
                 {formatTime(m.createdAt)}
               </div>
             );
 
             // PDF (usar descarga robusta como flotante)
             if (isPdf) {
-              const fileName = m.fileName || (m.fileUrl || m.content || '').split('/').pop();
+              const fileName =
+                m.fileName || (m.fileUrl || m.content || "").split("/").pop();
               const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${i}`;
               items.push(
-                <div key={`m-${i}`} className={`flex ${isMe?'justify-end':'justify-start'}`}>
+                <div
+                  key={`m-${i}`}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                >
                   <div className="max-w-[78%]">
                     <div className="group relative flex items-center gap-3 bg-white border border-conexia-green/30 rounded-lg px-3 py-2 shadow-sm overflow-hidden">
                       <div className="w-12 h-12 rounded overflow-hidden flex items-center justify-center bg-gray-100">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/images/image-pdf.png" alt="PDF" className="w-9 h-9 object-contain" />
+                        <img
+                          src="/images/image-pdf.png"
+                          alt="PDF"
+                          className="w-9 h-9 object-contain"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="truncate-strong text-[13px] font-medium text-gray-700" title={fileName || 'Documento'}>
-                          {fileName || 'Documento'}
+                        <div
+                          className="truncate-strong text-[13px] font-medium text-gray-700"
+                          title={fileName || "Documento"}
+                        >
+                          {fileName || "Documento"}
                         </div>
                         {m.fileSize && (
                           <div className="text-[11px] text-gray-500">
@@ -601,13 +754,26 @@ export default function ChatView({ user, onBack }) {
                         className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity text-[12px] text-conexia-green font-medium"
                         title="Descargar PDF"
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4 4-4M5 21h14" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M12 3v12m0 0l-4-4m4 4 4-4M5 21h14"
+                            stroke="#1e6e5c"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                         Descargar
                       </button>
                     </div>
                     {timeChip}
                   </div>
-                </div>
+                </div>,
               );
               return;
             }
@@ -615,13 +781,19 @@ export default function ChatView({ user, onBack }) {
             // Imagen (preferir blob cache/local si existe)
             if (isImg) {
               const primary = normFileUrl(m.fileUrl || m.content || m.fileName);
-              const altFromName = m.fileName ? `${config.IMAGE_URL.replace(/\/+$/,'')}/${String(m.fileName).replace(/^\/+/, '')}` : '';
+              const altFromName = m.fileName ? buildMediaUrl(m.fileName) : "";
               const candidates = [primary, altFromName].filter(Boolean);
               const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${i}`;
               const localKey = nameSizeKey(m.fileName, m.fileSize);
-              const displaySrc = imageBlobByMsgRef.current[stableId] || sentBlobByNameRef.current[localKey] || candidates[0];
+              const displaySrc =
+                imageBlobByMsgRef.current[stableId] ||
+                sentBlobByNameRef.current[localKey] ||
+                candidates[0];
               items.push(
-                <div key={`m-${i}`} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  key={`m-${i}`}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                >
                   <div className="max-w-[78%]">
                     <div
                       className="rounded-lg overflow-hidden border border-conexia-green/30 bg-white p-1 cursor-zoom-in"
@@ -631,68 +803,89 @@ export default function ChatView({ user, onBack }) {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={displaySrc}
-                        alt={m.fileName || 'Imagen'}
+                        alt={m.fileName || "Imagen"}
                         data-try="0"
                         className="object-cover rounded max-h-72 w-full"
                         onError={(ev) => {
                           const el = ev.currentTarget;
                           // Si falló el blob local, pasar a candidatos HTTP
-                          const idxTry = Number(el.getAttribute('data-try') || '0');
+                          const idxTry = Number(
+                            el.getAttribute("data-try") || "0",
+                          );
                           const next = idxTry + 1;
                           if (next === 1 && candidates[0] !== displaySrc) {
-                            el.setAttribute('data-try', '1');
+                            el.setAttribute("data-try", "1");
                             el.src = candidates[0];
                           } else if (next < candidates.length) {
-                            el.setAttribute('data-try', String(next));
+                            el.setAttribute("data-try", String(next));
                             el.src = candidates[next];
                           } else {
-                            el.src = '/images/image-not-found.png';
+                            el.src = "/images/image-not-found.png";
                           }
                         }}
                       />
                     </div>
-                    {(m.content && !contentPathLike) && (
-                      <div className={`mt-2 px-3 py-2 rounded-lg text-sm long-break ${isMe ? 'bg-[#3a8586] text-white' : 'bg-[#e1f0f0] text-gray-800'}`}>
+                    {m.content && !contentPathLike && (
+                      <div
+                        className={`mt-2 px-3 py-2 rounded-lg text-sm long-break ${isMe ? "bg-[#3a8586] text-white" : "bg-[#e1f0f0] text-gray-800"}`}
+                      >
                         {renderTextWithLinks(m.content, isMe)}
                       </div>
                     )}
                     {timeChip}
                   </div>
-                </div>
+                </div>,
               );
               return;
             }
 
             // Texto (omitir si es path/URL o replica del fileUrl/fileName)
-            const textVal = (m.content || '').trim();
+            const textVal = (m.content || "").trim();
             if (!textVal || contentPathLike) return;
             items.push(
-              <div key={`m-${i}`} className={`flex ${isMe?'justify-end':'justify-start'}`}>
+              <div
+                key={`m-${i}`}
+                className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+              >
                 <div className="max-w-[78%]">
-                  <div className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap long-break ${isMe?'bg-[#3a8586] text-white':'bg-[#e1f0f0] text-gray-800'}`}>
+                  <div
+                    className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap long-break ${isMe ? "bg-[#3a8586] text-white" : "bg-[#e1f0f0] text-gray-800"}`}
+                  >
                     {renderTextWithLinks(textVal, isMe)}
                   </div>
                   {timeChip}
                 </div>
-              </div>
+              </div>,
             );
           });
 
           // Indicador: otro usuario escribiendo (estilo chat flotante)
           if (otherTyping) {
             items.push(
-              <div key="typing-other" className="flex items-end gap-2 self-start">
-                <img src={getPP(user?.avatar)} alt="avatar" width={22} height={22} className="w-[22px] h-[22px] rounded-full object-cover" />
+              <div
+                key="typing-other"
+                className="flex items-end gap-2 self-start"
+              >
+                <img
+                  src={getPP(user?.avatar)}
+                  alt="avatar"
+                  width={22}
+                  height={22}
+                  className="w-[22px] h-[22px] rounded-full object-cover"
+                />
                 <div className="max-w-[72%] items-start flex flex-col">
                   <div className="px-3 py-2 rounded-lg text-sm bg-[#d6ececff] text-gray-900">
-                    <div className="typing-dots text-gray-700" aria-label="Escribiendo">
+                    <div
+                      className="typing-dots text-gray-700"
+                      aria-label="Escribiendo"
+                    >
                       <span className="dot" />
                       <span className="dot" />
                       <span className="dot" />
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>,
             );
           }
 
@@ -705,13 +898,26 @@ export default function ChatView({ user, onBack }) {
       {showJump && (
         <button
           type="button"
-          onClick={() => { scrollBottom(); setUnreadBelow(0); setShowJump(false); setAtBottom(true); }}
+          onClick={() => {
+            scrollBottom();
+            setUnreadBelow(0);
+            setShowJump(false);
+            setAtBottom(true);
+          }}
           className="absolute right-3 md:right-4"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 84px)' }}
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 84px)" }}
           title="Ir al último"
         >
           <div className="flex items-center gap-2 bg-white border border-[#c6e3e4] text-conexia-green shadow px-3 py-1.5 rounded-full">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 9l6 6 6-6"
+                stroke="#1e6e5c"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             {unreadBelow > 0 && (
               <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-conexia-green text-white text-[11px]">
                 {unreadBelow}
@@ -728,8 +934,13 @@ export default function ChatView({ user, onBack }) {
             attachment={pendingFile}
             error={fileErr}
             onCancel={() => {
-              if (pendingFile?.url?.startsWith('blob:')) { try { URL.revokeObjectURL(pendingFile.url); } catch {} }
-              setPendingFile(null); setFileErr('');
+              if (pendingFile?.url?.startsWith("blob:")) {
+                try {
+                  URL.revokeObjectURL(pendingFile.url);
+                } catch {}
+              }
+              setPendingFile(null);
+              setFileErr("");
             }}
           />
         </div>
@@ -743,14 +954,32 @@ export default function ChatView({ user, onBack }) {
             type="file"
             className="hidden"
             accept="image/png,image/jpeg,application/pdf"
-            onChange={e => {
+            onChange={(e) => {
               const file = e.target.files?.[0];
               if (!file) return;
-              setFileErr('');
-              if (/image\/(png|jpe?g)/.test(file.type) && file.size > 5 * 1024 * 1024) { setFileErr('La imagen supera el máximo de 5MB'); return; }
-              if (file.type === 'application/pdf' && file.size > 10 * 1024 * 1024) { setFileErr('El PDF supera el máximo de 10MB'); return; }
+              setFileErr("");
+              if (
+                /image\/(png|jpe?g)/.test(file.type) &&
+                file.size > 5 * 1024 * 1024
+              ) {
+                setFileErr("La imagen supera el máximo de 5MB");
+                return;
+              }
+              if (
+                file.type === "application/pdf" &&
+                file.size > 10 * 1024 * 1024
+              ) {
+                setFileErr("El PDF supera el máximo de 10MB");
+                return;
+              }
               const isImg = /image\/(png|jpe?g)/.test(file.type);
-              setPendingFile({ file, url: URL.createObjectURL(file), type: isImg ? 'image' : 'pdf', name: file.name, size: file.size });
+              setPendingFile({
+                file,
+                url: URL.createObjectURL(file),
+                type: isImg ? "image" : "pdf",
+                name: file.name,
+                size: file.size,
+              });
             }}
           />
           {!text.trim() && (
@@ -758,27 +987,65 @@ export default function ChatView({ user, onBack }) {
               {/* Imagen: tooltip con extensión y máximo como flotante */}
               <button
                 type="button"
-                onClick={() => { fileInputRef.current?.setAttribute('accept','image/png,image/jpeg'); fileInputRef.current?.click(); }}
+                onClick={() => {
+                  fileInputRef.current?.setAttribute(
+                    "accept",
+                    "image/png,image/jpeg",
+                  );
+                  fileInputRef.current?.click();
+                }}
                 className="p-2 rounded-md hover:bg-white text-conexia-green"
                 title="Imagen JPG/PNG · hasta 5MB"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="#1e6e5c" strokeWidth="2"/>
-                  <circle cx="9" cy="11" r="2.2" fill="#1e6e5c"/>
-                  <path d="M5 18l5.5-6 3.5 4 3-3 2.5 3" stroke="#1e6e5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect
+                    x="3"
+                    y="5"
+                    width="18"
+                    height="14"
+                    rx="2"
+                    stroke="#1e6e5c"
+                    strokeWidth="2"
+                  />
+                  <circle cx="9" cy="11" r="2.2" fill="#1e6e5c" />
+                  <path
+                    d="M5 18l5.5-6 3.5 4 3-3 2.5 3"
+                    stroke="#1e6e5c"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
               {/* PDF: tooltip con máximo como flotante */}
               <button
                 type="button"
-                onClick={() => { fileInputRef.current?.setAttribute('accept','application/pdf'); fileInputRef.current?.click(); }}
+                onClick={() => {
+                  fileInputRef.current?.setAttribute(
+                    "accept",
+                    "application/pdf",
+                  );
+                  fileInputRef.current?.click();
+                }}
                 className="p-2 rounded-md hover:bg-white text-conexia-green"
                 title="PDF · hasta 10MB"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" stroke="#1e6e5c" strokeWidth="2"/>
-                  <path d="M14 2v4h4" stroke="#1e6e5c" strokeWidth="2"/>
-                  <text x="7" y="16" fontSize="7" fill="#1e6e5c" fontFamily="sans-serif">PDF</text>
+                  <path
+                    d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
+                    stroke="#1e6e5c"
+                    strokeWidth="2"
+                  />
+                  <path d="M14 2v4h4" stroke="#1e6e5c" strokeWidth="2" />
+                  <text
+                    x="7"
+                    y="16"
+                    fontSize="7"
+                    fill="#1e6e5c"
+                    fontFamily="sans-serif"
+                  >
+                    PDF
+                  </text>
                 </svg>
               </button>
             </div>
@@ -789,9 +1056,12 @@ export default function ChatView({ user, onBack }) {
               className="w-full border rounded-lg px-3 pr-10 py-2 text-sm bg-white focus:outline-conexia-green h-[40px] leading-normal"
               placeholder="Escribe un mensaje..."
               value={text}
-              onChange={e => { setText(e.target.value); emitTyping(!!e.target.value.trim()); }}
+              onChange={(e) => {
+                setText(e.target.value);
+                emitTyping(!!e.target.value.trim());
+              }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   if (text.trim() || pendingFile) sendNow();
                 }
@@ -802,7 +1072,7 @@ export default function ChatView({ user, onBack }) {
               type="button"
               className="absolute right-2 top-1/2 -translate-y-1/2 text-conexia-green/70 hover:text-conexia-green"
               title="Emoji"
-              onClick={() => setShowEmojis(v => !v)}
+              onClick={() => setShowEmojis((v) => !v)}
             >
               <Smile size={20} />
             </button>
@@ -810,8 +1080,8 @@ export default function ChatView({ user, onBack }) {
               <div className="absolute z-50 bottom-full mb-2 right-0">
                 <EmojiPicker
                   onEmojiClick={(e) => {
-                    const em = e?.emoji || '';
-                    setText(prev => prev + em);
+                    const em = e?.emoji || "";
+                    setText((prev) => prev + em);
                     setShowEmojis(false);
                     emitTyping(true);
                   }}
@@ -864,21 +1134,63 @@ export default function ChatView({ user, onBack }) {
       )}
 
       <style jsx>{`
-        .long-break { word-break: break-word; overflow-wrap: anywhere; }
-        .truncate-strong { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .scrollbar-chat::-webkit-scrollbar { width: 8px; }
-        .scrollbar-chat::-webkit-scrollbar-track { background: #f3f9f8; }
-        .scrollbar-chat::-webkit-scrollbar-thumb { background: #cfd9d9; border-radius: 6px; }
-        .scrollbar-chat { scrollbar-width: thin; scrollbar-color: #cfd9d9 #f3f9f8; }
+        .long-break {
+          word-break: break-word;
+          overflow-wrap: anywhere;
+        }
+        .truncate-strong {
+          display: block;
+          max-width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .scrollbar-chat::-webkit-scrollbar {
+          width: 8px;
+        }
+        .scrollbar-chat::-webkit-scrollbar-track {
+          background: #f3f9f8;
+        }
+        .scrollbar-chat::-webkit-scrollbar-thumb {
+          background: #cfd9d9;
+          border-radius: 6px;
+        }
+        .scrollbar-chat {
+          scrollbar-width: thin;
+          scrollbar-color: #cfd9d9 #f3f9f8;
+        }
 
         /* Tres puntos como en el chat flotante */
-        .typing-dots { display: inline-flex; align-items: center; gap: 3px; }
-        .typing-dots .dot { width: 4px; height: 4px; border-radius: 9999px; background: currentColor; opacity: 0.6; animation: typingBlink 1.2s infinite both; }
-        .typing-dots .dot:nth-child(2) { animation-delay: .2s; }
-        .typing-dots .dot:nth-child(3) { animation-delay: .4s; }
+        .typing-dots {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+        }
+        .typing-dots .dot {
+          width: 4px;
+          height: 4px;
+          border-radius: 9999px;
+          background: currentColor;
+          opacity: 0.6;
+          animation: typingBlink 1.2s infinite both;
+        }
+        .typing-dots .dot:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+        .typing-dots .dot:nth-child(3) {
+          animation-delay: 0.4s;
+        }
         @keyframes typingBlink {
-          0%, 80%, 100% { opacity: 0.3; transform: translateY(0px); }
-          40% { opacity: 0.9; transform: translateY(-1px); }
+          0%,
+          80%,
+          100% {
+            opacity: 0.3;
+            transform: translateY(0px);
+          }
+          40% {
+            opacity: 0.9;
+            transform: translateY(-1px);
+          }
         }
       `}</style>
     </div>
