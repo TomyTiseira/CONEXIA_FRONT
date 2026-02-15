@@ -71,16 +71,14 @@ export default function ChatFloatingPanel({
   const joinUrl = (base, path) =>
     `${String(base).replace(/\/+$/, "")}/${String(path).replace(/^\/+/, "")}`;
   const getProfilePictureUrl = (img) => {
+    const defaultAvatar = "/images/default-avatar.png";
     if (!img) return defaultAvatar;
     if (typeof img !== "string") return defaultAvatar;
+    if (img === defaultAvatar) return defaultAvatar;
     if (img.startsWith("blob:")) return img; // preview blobs
     if (img.startsWith("/images/")) return img; // public asset
     if (img.startsWith("http://") || img.startsWith("https://")) return img;
-    // Server-served uploads
-    if (img.startsWith("/uploads")) return joinUrl(config.DOCUMENT_URL, img);
-    if (img.startsWith("/")) return joinUrl(config.DOCUMENT_URL, img);
-    // Bare filename → prefix with /uploads using IMAGE_URL base
-    return joinUrl(config.IMAGE_URL, img);
+    return buildMediaUrl(img);
   };
   const getDisplayName = (userName, fallbackId) => {
     if (!userName || !userName.trim())
