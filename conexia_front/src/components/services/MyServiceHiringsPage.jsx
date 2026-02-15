@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { ChevronDown, ArrowLeft, FileText, Filter, Package, Clock, X, Calendar, ArrowUp, ArrowDown } from 'lucide-react';
+import { FileText, Filter, Package, Clock, Calendar, ArrowUp, ArrowDown } from 'lucide-react';
 // Nuevos iconos más semánticos desde react-icons
 import { 
   FaRegEye,      /* Ver detalle */
