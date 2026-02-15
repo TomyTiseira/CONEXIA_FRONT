@@ -2132,7 +2132,7 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
                                   ) : (
                                     // Usuario regular: mostrar "Reportar"
                                     <button
-                                      className="flex items-center w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-orange-500"
+                                      className="flex items-center w-full px-4 py-2 text-left text-sm font-semibold text-conexia-green hover:bg-[#eef6f6]"
                                       onClick={() => {
                                         // Cerramos el menú
                                         setCommentMenuOpen({});
@@ -2156,7 +2156,7 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
                                         setShowReportCommentModal(true);
                                       }}
                                     >
-                                      <Flag size={16} className="mr-2" />
+                                      <AlertCircle size={16} strokeWidth={2} className="mr-2 text-conexia-green" />
                                       Reportar
                                     </button>
                                   )}
@@ -2262,7 +2262,7 @@ function PublicationCard({ publication, isGridItem = false, onShowToast, searchP
 
       {/* Modal para mostrar las reacciones */}
       {showReactionsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
           <div className="bg-white rounded-2xl shadow-lg w-full max-w-md mx-4 animate-fadeIn">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold text-conexia-green">Reacciones</h3>

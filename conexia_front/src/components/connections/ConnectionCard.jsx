@@ -77,7 +77,7 @@ export function ConnectionCard({ user, onConnect, onViewProfile, mini = false })
 
   // Card normal para página de recomendaciones
   return (
-    <div className="rounded-xl shadow bg-white overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
+    <div className="rounded-xl shadow bg-white overflow-hidden flex flex-col hover:shadow-lg transition-shadow h-full">
       {/* Imagen de portada */}
       <div className="h-20 w-full relative bg-gray-200">
         <Image 
@@ -90,7 +90,7 @@ export function ConnectionCard({ user, onConnect, onViewProfile, mini = false })
       </div>
       
       {/* Contenido de la tarjeta */}
-      <div className="flex flex-col items-center p-4">
+      <div className="flex flex-col items-center p-4 flex-1 min-h-0">
         {/* Avatar sobrepuesto */}
         <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white -mt-8 mb-2">
           <Image 
@@ -104,17 +104,18 @@ export function ConnectionCard({ user, onConnect, onViewProfile, mini = false })
         
         {/* Información del usuario */}
         <h3 
-          className="font-semibold text-lg text-center cursor-pointer hover:text-conexia-green transition-colors"
+          className="font-semibold text-lg text-center cursor-pointer hover:text-conexia-green transition-colors line-clamp-1"
           onClick={onViewProfile}
         >
           {displayName}
         </h3>
-        <p className="text-sm text-gray-500 mb-3 text-center line-clamp-2">{profession}</p>
+        <p className="text-sm text-gray-500 text-center line-clamp-2 min-h-[40px]">{profession}</p>
+        <div className="flex-1" />
         
         {/* Botón de conectar */}
         <button 
           onClick={onConnect}
-          className="bg-conexia-green text-white px-4 py-1 rounded-full font-semibold hover:bg-conexia-green/90 transition-colors"
+          className="bg-conexia-green text-white px-4 py-1 rounded-full font-semibold hover:bg-conexia-green/90 transition-colors mt-auto"
         >
           Conectar
         </button>
