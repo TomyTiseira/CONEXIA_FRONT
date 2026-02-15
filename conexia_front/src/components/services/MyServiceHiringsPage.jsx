@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
 import { ChevronDown, ArrowLeft, FileText, Filter, Package, Clock, X, Calendar, ArrowUp, ArrowDown } from 'lucide-react';
@@ -107,8 +107,8 @@ export default function MyServiceHiringsPage() {
     });
   };
 
-  // Función para ordenar los hirings
-  const getSortedHirings = () => {
+  // Memoized sorted hirings to avoid re-computation on every render
+  const sortedHirings = useMemo(() => {
     if (!hirings || hirings.length === 0) return [];
     
     const sorted = [...hirings];
@@ -130,7 +130,7 @@ export default function MyServiceHiringsPage() {
       }
       return 0;
     });
-  };
+  }, [hirings, sortConfig]);
 
   const handleViewQuotation = (hiring) => {
     setSelectedHiring(hiring);
@@ -490,7 +490,7 @@ export default function MyServiceHiringsPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {getSortedHirings().map((hiring) => (
+                      {sortedHirings.map((hiring) => (
                         <tr key={hiring.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
@@ -671,7 +671,7 @@ export default function MyServiceHiringsPage() {
 
                 {/* Cards para mobile */}
                 <div className="md:hidden space-y-4 p-4">
-                  {getSortedHirings().map((hiring) => (
+                  {sortedHirings.map((hiring) => (
                     <div key={hiring.id} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex justify-between items-start gap-3 mb-3">
                         <div className="flex-1 min-w-0">
