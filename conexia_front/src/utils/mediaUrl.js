@@ -7,7 +7,12 @@ import { config } from "@/config";
 // Desarrollo: Backend devuelve paths relativos → se construyen con IMAGE_URL
 export function buildMediaUrl(raw) {
   if (!raw) return "";
-  const mediaUrl = String(raw).trim();
+  let mediaUrl = String(raw).trim();
+
+  // Limpiar barras iniciales erróneas antes de URLs absolutas (ej: "/https://...")
+  if (mediaUrl.match(/^\/+https?:\/\//)) {
+    mediaUrl = mediaUrl.replace(/^\/+/, "");
+  }
 
   // Si es URL absoluta (producción - GCS), retornarla sin modificar
   if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
