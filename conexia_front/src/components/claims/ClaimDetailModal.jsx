@@ -3,44 +3,71 @@
  * Modal para ver el detalle completo de un reclamo
  */
 
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
-import { X, Calendar, User, AlertCircle, Loader2, ExternalLink, FileText, MessageSquare, Scale, ClipboardList, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
-import { ClaimTypeBadge } from './ClaimTypeBadge';
-import { ClaimRoleBadge } from './ClaimRoleBadge';
-import { ClaimStatusBadge } from './ClaimStatusBadge';
-import { ComplianceStatusBadge } from './ComplianceStatusBadge';
-import { ClaimEvidenceViewer } from './ClaimEvidenceViewer';
-import { ComplianceCard } from './ComplianceCard';
-import { UploadComplianceEvidenceModal } from './UploadComplianceEvidenceModal';
-import { PeerReviewComplianceModal } from './PeerReviewComplianceModal';
-import { ReviewComplianceModal } from './ReviewComplianceModal';
-import { formatClaimDateTime, getClaimTypeLabel, COMPLIANCE_TYPE_LABELS } from '@/constants/claims';
-import { config } from '@/config';
-import { getClaimDetail, submitComplianceEvidence } from '@/service/claims';
-import { useAuth } from '@/context/AuthContext';
-import { useRole } from '@/hooks/useRole';
-import { ROLES } from '@/constants/roles';
-import Toast from '@/components/ui/Toast';
+import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import {
+  X,
+  Calendar,
+  User,
+  AlertCircle,
+  Loader2,
+  ExternalLink,
+  FileText,
+  MessageSquare,
+  Scale,
+  ClipboardList,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+} from "lucide-react";
+import { ClaimTypeBadge } from "./ClaimTypeBadge";
+import { ClaimRoleBadge } from "./ClaimRoleBadge";
+import { ClaimStatusBadge } from "./ClaimStatusBadge";
+import { ComplianceStatusBadge } from "./ComplianceStatusBadge";
+import { ClaimEvidenceViewer } from "./ClaimEvidenceViewer";
+import { ComplianceCard } from "./ComplianceCard";
+import { UploadComplianceEvidenceModal } from "./UploadComplianceEvidenceModal";
+import { PeerReviewComplianceModal } from "./PeerReviewComplianceModal";
+import { ReviewComplianceModal } from "./ReviewComplianceModal";
+import {
+  formatClaimDateTime,
+  getClaimTypeLabel,
+  COMPLIANCE_TYPE_LABELS,
+} from "@/constants/claims";
+import { config } from "@/config";
+import { getClaimDetail, submitComplianceEvidence } from "@/service/claims";
+import { useAuth } from "@/context/AuthContext";
+import { useRole } from "@/hooks/useRole";
+import { ROLES } from "@/constants/roles";
+import Toast from "@/components/ui/Toast";
 
-export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) => {
+export const ClaimDetailModal = ({
+  claim: initialClaim,
+  onClose,
+  showToast,
+}) => {
   const { user } = useAuth();
   const { role: userRole } = useRole(user?.roleId);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState("info");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [moderatorReviewModalOpen, setModeratorReviewModalOpen] = useState(false);
+  const [moderatorReviewModalOpen, setModeratorReviewModalOpen] =
+    useState(false);
   const [selectedCompliance, setSelectedCompliance] = useState(null);
   const [isSubmittingEvidence, setIsSubmittingEvidence] = useState(false);
   const [expandedCompliances, setExpandedCompliances] = useState({});
-  const [internalToast, setInternalToast] = useState({ isVisible: false, type: '', message: '' });
+  const [internalToast, setInternalToast] = useState({
+    isVisible: false,
+    type: "",
+    message: "",
+  });
 
-  const DEFAULT_AVATAR_SRC = '/images/default-avatar.png';
+  const DEFAULT_AVATAR_SRC = "/images/default-avatar.png";
 
   // Helper para mostrar toast interno
   const showInternalToast = (type, message) => {
@@ -48,7 +75,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
   };
 
   const handleCloseInternalToast = () => {
-    setInternalToast({ isVisible: false, type: '', message: '' });
+    setInternalToast({ isVisible: false, type: "", message: "" });
   };
 
   // Manejar apertura del modal de subida de evidencia
@@ -76,89 +103,107 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
 
       await submitComplianceEvidence(evidenceData.complianceId, {
         userResponse: evidenceData.userResponse,
-        files: evidenceData.files
+        files: evidenceData.files,
       });
-      
+
       setUploadModalOpen(false);
       setSelectedCompliance(null);
-      
-      showInternalToast('success', 'Evidencia enviada correctamente. Tu evidencia será revisada pronto.');
-      
+
+      showInternalToast(
+        "success",
+        "Evidencia enviada correctamente. Tu evidencia será revisada pronto.",
+      );
+
       // Recargar los datos del claim
       const claimId = data.claim.id;
       const result = await getClaimDetail(claimId);
-      
+
       if (result.yourProfile && result.otherUserProfile) {
         const userRole = result.claim?.userRole;
         const transformedData = {
           ...result,
-          claimant: userRole === 'claimant' ? result.yourProfile : result.otherUserProfile,
-          otherUser: userRole === 'claimant' ? result.otherUserProfile : result.yourProfile,
+          claimant:
+            userRole === "claimant"
+              ? result.yourProfile
+              : result.otherUserProfile,
+          otherUser:
+            userRole === "claimant"
+              ? result.otherUserProfile
+              : result.yourProfile,
         };
         setData(transformedData);
       } else {
         setData(result);
       }
     } catch (err) {
-      console.error('Error submitting compliance evidence:', err);
-      showInternalToast('error', err.message || 'Error al enviar la evidencia. Por favor, intenta nuevamente.');
+      console.error("Error submitting compliance evidence:", err);
+      showInternalToast(
+        "error",
+        err.message ||
+          "Error al enviar la evidencia. Por favor, intenta nuevamente.",
+      );
     } finally {
       setIsSubmittingEvidence(false);
     }
   };
 
   const getFirstName = (fullName) => {
-    if (!fullName) return '';
+    if (!fullName) return "";
     const trimmed = String(fullName).trim();
-    if (!trimmed) return '';
-    return trimmed.split(/\s+/)[0] || '';
+    if (!trimmed) return "";
+    return trimmed.split(/\s+/)[0] || "";
   };
 
   const getDisplayName = (profile) => {
-    if (!profile) return '';
+    if (!profile) return "";
     const firstName = getFirstName(profile.name);
-    const lastName = profile.lastName ? String(profile.lastName).trim() : '';
-    return `${firstName} ${lastName}`.trim() || profile.name || '';
+    const lastName = profile.lastName ? String(profile.lastName).trim() : "";
+    return `${firstName} ${lastName}`.trim() || profile.name || "";
   };
 
   const titleCase = (value) => {
-    if (!value) return '';
+    if (!value) return "";
     return String(value)
       .toLowerCase()
       .split(/\s+/)
       .filter(Boolean)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .join(" ");
   };
 
   const getModeratorNameFromEmail = (email) => {
-    if (!email) return 'Sin asignar';
-    const [prefixRaw] = String(email).toLowerCase().split('@');
-    if (!prefixRaw) return 'Sin asignar';
+    if (!email) return "Sin asignar";
+    const [prefixRaw] = String(email).toLowerCase().split("@");
+    if (!prefixRaw) return "Sin asignar";
 
     const parts = prefixRaw
-      .split('.')
+      .split(".")
       .map((p) => p.trim())
       .filter(Boolean);
 
-    const roleSuffixes = new Set(['moderador', 'administrador', 'admin']);
+    const roleSuffixes = new Set(["moderador", "administrador", "admin"]);
     const cleanedParts = parts.filter((p) => !roleSuffixes.has(p));
-    if (cleanedParts.length === 0) return 'Sin asignar';
+    if (cleanedParts.length === 0) return "Sin asignar";
 
     const firstName = cleanedParts[0];
-    const lastName = cleanedParts.slice(1).join(' ');
-    return titleCase(`${firstName} ${lastName}`.trim()) || 'Sin asignar';
+    const lastName = cleanedParts.slice(1).join(" ");
+    return titleCase(`${firstName} ${lastName}`.trim()) || "Sin asignar";
   };
 
   const getClaimTypeLabelWithOtherReason = (claimObj) => {
-    if (!claimObj) return '';
-    const base = claimObj.claimTypeLabel || getClaimTypeLabel(claimObj.claimType);
-    const isOtherType = claimObj.claimType === 'client_other' || claimObj.claimType === 'provider_other';
-    const otherReason = claimObj.otherReason ? String(claimObj.otherReason).trim() : '';
+    if (!claimObj) return "";
+    const base =
+      claimObj.claimTypeLabel || getClaimTypeLabel(claimObj.claimType);
+    const isOtherType =
+      claimObj.claimType === "client_other" ||
+      claimObj.claimType === "provider_other";
+    const otherReason = claimObj.otherReason
+      ? String(claimObj.otherReason).trim()
+      : "";
 
     if (isOtherType && otherReason) {
-      if (String(base).includes('(especificar)')) {
-        return String(base).replace('(especificar)', `(${otherReason})`);
+      if (String(base).includes("(especificar)")) {
+        return String(base).replace("(especificar)", `(${otherReason})`);
       }
       return `Otro (${otherReason})`;
     }
@@ -178,7 +223,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
       claimObj.clarificationEvidenceUrls ||
         claimObj.clarificationEvidence ||
         claimObj.additionalEvidenceUrls ||
-        claimObj.newEvidenceUrls
+        claimObj.newEvidenceUrls,
     );
   };
 
@@ -191,7 +236,11 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
 
       // Verificar si ya tenemos toda la estructura de datos completa (viene desde admin panel)
       // Si initialClaim tiene las propiedades 'claim', 'claimant', 'otherUser' con estructura completa de profile
-      if (initialClaim.claim && initialClaim.claimant?.profile && initialClaim.otherUser?.profile) {
+      if (
+        initialClaim.claim &&
+        initialClaim.claimant?.profile &&
+        initialClaim.otherUser?.profile
+      ) {
         setData(initialClaim);
         setLoading(false);
         return;
@@ -199,7 +248,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
 
       // En todos los demás casos (desde "Mis Reclamos" o datos incompletos), hacer fetch del detalle completo
       const claimId = initialClaim.claim?.id || initialClaim.id;
-      
+
       if (!claimId) {
         setLoading(false);
         return;
@@ -209,28 +258,34 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
         setLoading(true);
         setError(null);
         const result = await getClaimDetail(claimId);
-        
+
         // El backend ahora devuelve yourProfile y otherUserProfile
         // Necesitamos transformarlo al formato esperado (claimant y otherUser)
         if (result.yourProfile && result.otherUserProfile) {
           const userRole = result.claim?.userRole;
-          
+
           // Si userRole es "claimant", yourProfile es el reclamante
           // Si userRole es "respondent", yourProfile es el reclamado
           const transformedData = {
             ...result,
-            claimant: userRole === 'claimant' ? result.yourProfile : result.otherUserProfile,
-            otherUser: userRole === 'claimant' ? result.otherUserProfile : result.yourProfile,
+            claimant:
+              userRole === "claimant"
+                ? result.yourProfile
+                : result.otherUserProfile,
+            otherUser:
+              userRole === "claimant"
+                ? result.otherUserProfile
+                : result.yourProfile,
           };
-          
+
           setData(transformedData);
         } else {
           // Formato antiguo (desde admin panel)
           setData(result);
         }
       } catch (err) {
-        console.error('Error fetching claim detail:', err);
-        setError(err.message || 'Error al cargar el detalle');
+        console.error("Error fetching claim detail:", err);
+        setError(err.message || "Error al cargar el detalle");
         // Si hay error, usar datos iniciales
         setData({ claim: initialClaim });
       } finally {
@@ -252,43 +307,44 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
   // Determinar qué tabs mostrar basado en el contenido disponible
   const tabs = useMemo(() => {
     const availableTabs = [
-      { id: 'info', label: 'Información', icon: FileText, show: true }
+      { id: "info", label: "Información", icon: FileText, show: true },
     ];
 
     // Tab de Seguimiento (si hay observaciones o respuestas)
-    const hasCommunication = 
-      data?.claim?.observations || 
-      data?.claim?.clarificationResponse || 
+    const hasCommunication =
+      data?.claim?.observations ||
+      data?.claim?.clarificationResponse ||
       data?.claim?.respondentObservations;
-    
+
     if (hasCommunication) {
-      availableTabs.push({ 
-        id: 'tracking', 
-        label: 'Seguimiento', 
-        icon: MessageSquare, 
-        show: true 
+      availableTabs.push({
+        id: "tracking",
+        label: "Seguimiento",
+        icon: MessageSquare,
+        show: true,
       });
     }
 
     // Tab de Resolución (si está resuelto)
     if (data?.claim?.resolution) {
-      availableTabs.push({ 
-        id: 'resolution', 
-        label: 'Resolución', 
-        icon: Scale, 
-        show: true 
+      availableTabs.push({
+        id: "resolution",
+        label: "Resolución",
+        icon: Scale,
+        show: true,
       });
     }
 
     // Tab de Compromisos (si existen)
     if (data?.compliances && data.compliances.length > 0) {
-      availableTabs.push({ 
-        id: 'compliances', 
-        label: 'Compromisos', 
-        icon: ClipboardList, 
+      availableTabs.push({
+        id: "compliances",
+        label: "Compromisos",
+        icon: ClipboardList,
         show: true,
         count: data.compliances.length,
-        pendingCount: data.compliances.filter(c => c.status === 'pending').length
+        pendingCount: data.compliances.filter((c) => c.status === "pending")
+          .length,
       });
     }
 
@@ -300,13 +356,13 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
     if (!data?.claim) return null;
 
     switch (activeTab) {
-      case 'info':
+      case "info":
         return renderInfoTab();
-      case 'tracking':
+      case "tracking":
         return renderTrackingTab();
-      case 'resolution':
+      case "resolution":
         return renderResolutionTab();
-      case 'compliances':
+      case "compliances":
         return renderCompliancesTab();
       default:
         return renderInfoTab();
@@ -325,63 +381,79 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           </h3>
         </div>
         <div className="p-6 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
-            <p className="text-xs font-medium text-gray-600 mb-1.5">ID del Reclamo</p>
-            <p className="text-sm font-mono font-medium text-gray-900">{data.claim.id}</p>
-          </div>
-          <div className="sm:col-span-2">
-            <p className="text-xs font-medium text-gray-600 mb-1.5">Moderador asignado</p>
-            {data.assignedModerator?.email ? (
-              <div className="flex items-center gap-2 mt-1">
-                <img
-                  src={DEFAULT_AVATAR_SRC}
-                  alt="Moderador"
-                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                />
-                <p className="text-sm font-medium text-gray-900">
-                  {getModeratorNameFromEmail(data.assignedModerator.email)}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 italic mt-1">Sin asignar</p>
-            )}
-          </div>
-          {data.hiring?.service && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <p className="text-xs font-medium text-gray-600 mb-1.5">Servicio</p>
-              <Link
-                href={`/services/${data.hiring.service.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-medium text-conexia-green hover:text-[#48a6a7] hover:underline flex items-center gap-1 transition-colors"
-              >
-                {data.hiring.service.title}
-              </Link>
+              <p className="text-xs font-medium text-gray-600 mb-1.5">
+                ID del Reclamo
+              </p>
+              <p className="text-sm font-mono font-medium text-gray-900">
+                {data.claim.id}
+              </p>
             </div>
-          )}
-          <div>
-            <p className="text-xs font-medium text-gray-600 mb-1.5">Tipo de Reclamo</p>
-            <ClaimTypeBadge
-              claimType={data.claim.claimType}
-              labelOverride={getClaimTypeLabelWithOtherReason(data.claim)}
-            />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-600 mb-1.5">Estado</p>
-            <ClaimStatusBadge status={data.claim.status} />
-          </div>
-          {data.claim.userRole && (
+            <div className="sm:col-span-2">
+              <p className="text-xs font-medium text-gray-600 mb-1.5">
+                Moderador asignado
+              </p>
+              {data.assignedModerator?.email ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <img
+                    src={DEFAULT_AVATAR_SRC}
+                    alt="Moderador"
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                  />
+                  <p className="text-sm font-medium text-gray-900">
+                    {getModeratorNameFromEmail(data.assignedModerator.email)}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 italic mt-1">Sin asignar</p>
+              )}
+            </div>
+            {data.hiring?.service && (
+              <div className="sm:col-span-2">
+                <p className="text-xs font-medium text-gray-600 mb-1.5">
+                  Servicio
+                </p>
+                <Link
+                  href={`/services/${data.hiring.service.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-conexia-green hover:text-[#48a6a7] hover:underline flex items-center gap-1 transition-colors"
+                >
+                  {data.hiring.service.title}
+                </Link>
+              </div>
+            )}
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">Tu Rol</p>
-              <ClaimRoleBadge role={data.claim.userRole} />
+              <p className="text-xs font-medium text-gray-600 mb-1.5">
+                Tipo de Reclamo
+              </p>
+              <ClaimTypeBadge
+                claimType={data.claim.claimType}
+                labelOverride={getClaimTypeLabelWithOtherReason(data.claim)}
+              />
             </div>
-          )}
-          <div>
-            <p className="text-xs font-medium text-gray-600 mb-1.5">Fecha de Creación</p>
-            <p className="text-sm font-medium text-gray-900">{formatClaimDateTime(data.claim.createdAt)}</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600 mb-1.5">Estado</p>
+              <ClaimStatusBadge status={data.claim.status} />
+            </div>
+            {data.claim.userRole && (
+              <div>
+                <p className="text-xs font-medium text-gray-600 mb-1.5">
+                  Tu Rol
+                </p>
+                <ClaimRoleBadge role={data.claim.userRole} />
+              </div>
+            )}
+            <div>
+              <p className="text-xs font-medium text-gray-600 mb-1.5">
+                Fecha de Creación
+              </p>
+              <p className="text-sm font-medium text-gray-900">
+                {formatClaimDateTime(data.claim.createdAt)}
+              </p>
+            </div>
           </div>
-        </div>
         </div>
       </div>
 
@@ -394,66 +466,70 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           </h3>
         </div>
         <div className="p-6 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs font-medium text-gray-600 mb-2">Reclamante</p>
-            <Link
-              href={`/profile/userProfile/${data.claimant?.profile?.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition-colors group"
-            >
-              <img
-                src={
-                  data.claimant?.profile?.profilePicture
-                    ? (data.claimant.profile.profilePicture.startsWith('http') 
-                        ? data.claimant.profile.profilePicture 
-                        : `${config.IMAGE_URL}/${data.claimant.profile.profilePicture}`)
-                    : DEFAULT_AVATAR_SRC
-                }
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_AVATAR_SRC;
-                }}
-                alt={getDisplayName(data.claimant?.profile) || 'Usuario'}
-                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-              />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 group-hover:text-[#48a6a7]">
-                  {getDisplayName(data.claimant?.profile)}
-                </p>
-              </div>
-            </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-medium text-gray-600 mb-2">
+                Reclamante
+              </p>
+              <Link
+                href={`/profile/userProfile/${data.claimant?.profile?.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition-colors group"
+              >
+                <img
+                  src={
+                    data.claimant?.profile?.profilePicture
+                      ? data.claimant.profile.profilePicture.startsWith("http")
+                        ? data.claimant.profile.profilePicture
+                        : `${config.IMAGE_URL}/${data.claimant.profile.profilePicture}`
+                      : DEFAULT_AVATAR_SRC
+                  }
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_AVATAR_SRC;
+                  }}
+                  alt={getDisplayName(data.claimant?.profile) || "Usuario"}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900 group-hover:text-[#48a6a7]">
+                    {getDisplayName(data.claimant?.profile)}
+                  </p>
+                </div>
+              </Link>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-600 mb-2">
+                Reclamado
+              </p>
+              <Link
+                href={`/profile/userProfile/${data.otherUser?.profile?.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition-colors group"
+              >
+                <img
+                  src={
+                    data.otherUser?.profile?.profilePicture
+                      ? data.otherUser.profile.profilePicture.startsWith("http")
+                        ? data.otherUser.profile.profilePicture
+                        : `${config.IMAGE_URL}/${data.otherUser.profile.profilePicture}`
+                      : DEFAULT_AVATAR_SRC
+                  }
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_AVATAR_SRC;
+                  }}
+                  alt={getDisplayName(data.otherUser?.profile) || "Usuario"}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900 group-hover:text-[#48a6a7]">
+                    {getDisplayName(data.otherUser?.profile)}
+                  </p>
+                </div>
+              </Link>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-medium text-gray-600 mb-2">Reclamado</p>
-            <Link
-              href={`/profile/userProfile/${data.otherUser?.profile?.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition-colors group"
-            >
-              <img
-                src={
-                  data.otherUser?.profile?.profilePicture
-                    ? (data.otherUser.profile.profilePicture.startsWith('http') 
-                        ? data.otherUser.profile.profilePicture 
-                        : `${config.IMAGE_URL}/${data.otherUser.profile.profilePicture}`)
-                    : DEFAULT_AVATAR_SRC
-                }
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_AVATAR_SRC;
-                }}
-                alt={getDisplayName(data.otherUser?.profile) || 'Usuario'}
-                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-              />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 group-hover:text-[#48a6a7]">
-                  {getDisplayName(data.otherUser?.profile)}
-                </p>
-              </div>
-            </Link>
-          </div>
-        </div>
         </div>
       </div>
 
@@ -466,15 +542,17 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           </h3>
         </div>
         <div className="p-6">
-        <p className="text-sm text-gray-700 whitespace-pre-wrap">
-          {data.claim.description || 'No hay descripción disponible'}
-        </p>
-        {data.claim.evidenceUrls && data.claim.evidenceUrls.length > 0 && (
-          <div className="mt-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">Evidencias Adjuntas:</p>
-            <ClaimEvidenceViewer evidenceUrls={data.claim.evidenceUrls} />
-          </div>
-        )}
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">
+            {data.claim.description || "No hay descripción disponible"}
+          </p>
+          {data.claim.evidenceUrls && data.claim.evidenceUrls.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Evidencias Adjuntas:
+              </p>
+              <ClaimEvidenceViewer evidenceUrls={data.claim.evidenceUrls} />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -493,7 +571,9 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
             </h3>
           </div>
           <div className="p-6 space-y-3">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{data.claim.observations}</p>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+              {data.claim.observations}
+            </p>
             {data.claim.observationsAt && (
               <p className="text-xs text-gray-600 font-medium">
                 Enviado el: {formatClaimDateTime(data.claim.observationsAt)}
@@ -513,17 +593,24 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
             </h3>
           </div>
           <div className="p-6 space-y-3">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{data.claim.clarificationResponse}</p>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+              {data.claim.clarificationResponse}
+            </p>
             {data.claim.clarificationResponseAt && (
               <p className="text-xs text-gray-600 font-medium">
-                Enviado el: {formatClaimDateTime(data.claim.clarificationResponseAt)}
+                Enviado el:{" "}
+                {formatClaimDateTime(data.claim.clarificationResponseAt)}
               </p>
             )}
 
             {getClarificationEvidence(data.claim).length > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Evidencias de Subsanación:</p>
-                <ClaimEvidenceViewer evidenceUrls={getClarificationEvidence(data.claim)} />
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Evidencias de Subsanación:
+                </p>
+                <ClaimEvidenceViewer
+                  evidenceUrls={getClarificationEvidence(data.claim)}
+                />
               </div>
             )}
           </div>
@@ -540,63 +627,89 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
             </h3>
           </div>
           <div className="p-6 space-y-3">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{data.claim.respondentObservations}</p>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+              {data.claim.respondentObservations}
+            </p>
             {data.claim.respondentObservationsAt && (
               <p className="text-xs text-gray-600 font-medium">
-                Enviado el: {formatClaimDateTime(data.claim.respondentObservationsAt)}
+                Enviado el:{" "}
+                {formatClaimDateTime(data.claim.respondentObservationsAt)}
               </p>
             )}
-            {data.claim.respondentEvidenceUrls && data.claim.respondentEvidenceUrls.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Archivos Adjuntos:</p>
-                <ClaimEvidenceViewer evidenceUrls={data.claim.respondentEvidenceUrls} />
-              </div>
-            )}
+            {data.claim.respondentEvidenceUrls &&
+              data.claim.respondentEvidenceUrls.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Archivos Adjuntos:
+                  </p>
+                  <ClaimEvidenceViewer
+                    evidenceUrls={data.claim.respondentEvidenceUrls}
+                  />
+                </div>
+              )}
           </div>
         </div>
       )}
 
-      {(!data.claim.observations && !data.claim.clarificationResponse && !data.claim.respondentObservations) && (
-        <div className="text-center py-12">
-          <MessageSquare size={48} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500">No hay comunicaciones aún</p>
-        </div>
-      )}
+      {!data.claim.observations &&
+        !data.claim.clarificationResponse &&
+        !data.claim.respondentObservations && (
+          <div className="text-center py-12">
+            <MessageSquare size={48} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-gray-500">No hay comunicaciones aún</p>
+          </div>
+        )}
     </div>
   );
 
   // Tab de Resolución
   const renderResolutionTab = () => {
-    const isClientFavor = data.claim.resolutionType === 'client_favor';
-    const isProviderFavor = data.claim.resolutionType === 'provider_favor';
-    const isPartialAgreement = data.claim.resolutionType === 'partial_agreement';
-    const isRejected = data.claim.status === 'rejected';
+    const isClientFavor = data.claim.resolutionType === "client_favor";
+    const isProviderFavor = data.claim.resolutionType === "provider_favor";
+    const isPartialAgreement =
+      data.claim.resolutionType === "partial_agreement";
+    const isRejected = data.claim.status === "rejected";
 
     return (
       <div className="space-y-6">
         {data.claim.resolution && (
-          <div className={`border-2 rounded-xl shadow-sm ${
-            isRejected
-              ? 'bg-red-50 border-red-200'
-              : isClientFavor
-              ? 'bg-green-50 border-green-200' 
-              : isProviderFavor
-              ? 'bg-red-50 border-red-200'
-              : 'bg-yellow-50 border-yellow-200'
-          }`}>
-            {/* Header */}
-            <div className={`px-6 py-4 border-b rounded-t-xl ${
+          <div
+            className={`border-2 rounded-xl shadow-sm ${
               isRejected
-                ? 'bg-red-100 border-red-200'
+                ? "bg-red-50 border-red-200"
                 : isClientFavor
-                ? 'bg-green-100 border-green-200' 
-                : isProviderFavor
-                ? 'bg-red-100 border-red-200'
-                : 'bg-yellow-100 border-yellow-200'
-            }`}>
+                  ? "bg-green-50 border-green-200"
+                  : isProviderFavor
+                    ? "bg-red-50 border-red-200"
+                    : "bg-yellow-50 border-yellow-200"
+            }`}
+          >
+            {/* Header */}
+            <div
+              className={`px-6 py-4 border-b rounded-t-xl ${
+                isRejected
+                  ? "bg-red-100 border-red-200"
+                  : isClientFavor
+                    ? "bg-green-100 border-green-200"
+                    : isProviderFavor
+                      ? "bg-red-100 border-red-200"
+                      : "bg-yellow-100 border-yellow-200"
+              }`}
+            >
               <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
-                <Scale size={20} className={isRejected ? 'text-red-600' : isClientFavor ? 'text-green-600' : isProviderFavor ? 'text-red-600' : 'text-yellow-600'} />
-                {isRejected ? 'Reclamo Rechazado' : 'Resolución del Reclamo'}
+                <Scale
+                  size={20}
+                  className={
+                    isRejected
+                      ? "text-red-600"
+                      : isClientFavor
+                        ? "text-green-600"
+                        : isProviderFavor
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                  }
+                />
+                {isRejected ? "Reclamo Rechazado" : "Resolución del Reclamo"}
               </h3>
             </div>
 
@@ -605,28 +718,36 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
               {/* Estado y Tipo de Resolución */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-1.5">Estado</p>
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm ${
-                    isRejected
-                      ? 'bg-red-100 text-red-700 border border-red-300'
-                      : 'bg-green-100 text-green-700 border border-green-300'
-                  }`}>
-                    {isRejected ? '✕ Rechazado' : '✓ Resuelto'}
+                  <p className="text-xs font-medium text-gray-600 mb-1.5">
+                    Estado
+                  </p>
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm ${
+                      isRejected
+                        ? "bg-red-100 text-red-700 border border-red-300"
+                        : "bg-green-100 text-green-700 border border-green-300"
+                    }`}
+                  >
+                    {isRejected ? "✕ Rechazado" : "✓ Resuelto"}
                   </div>
                 </div>
                 {data.claim.resolutionType && (
                   <div>
-                    <p className="text-xs font-medium text-gray-600 mb-1.5">Tipo de Resolución</p>
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm ${
-                      isClientFavor
-                        ? 'bg-green-100 text-green-700 border border-green-300'
-                        : isProviderFavor
-                        ? 'bg-red-100 text-red-700 border border-red-300'
-                        : 'bg-yellow-100 text-yellow-700 border border-yellow-300'
-                    }`}>
-                      {isClientFavor && '✓ A favor del cliente'}
-                      {isProviderFavor && '✓ A favor del proveedor'}
-                      {isPartialAgreement && '✓ Acuerdo parcial'}
+                    <p className="text-xs font-medium text-gray-600 mb-1.5">
+                      Tipo de Resolución
+                    </p>
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm ${
+                        isClientFavor
+                          ? "bg-green-100 text-green-700 border border-green-300"
+                          : isProviderFavor
+                            ? "bg-red-100 text-red-700 border border-red-300"
+                            : "bg-yellow-100 text-yellow-700 border border-yellow-300"
+                      }`}
+                    >
+                      {isClientFavor && "✓ A favor del cliente"}
+                      {isProviderFavor && "✓ A favor del proveedor"}
+                      {isPartialAgreement && "✓ Acuerdo parcial"}
                     </div>
                   </div>
                 )}
@@ -635,7 +756,9 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
               {/* Resuelto por */}
               {data.claim.resolvedByEmail && (
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-2">Resuelto por</p>
+                  <p className="text-xs font-medium text-gray-600 mb-2">
+                    Resuelto por
+                  </p>
                   <div className="flex items-center gap-3">
                     <img
                       src={DEFAULT_AVATAR_SRC}
@@ -652,16 +775,24 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
               {/* Fecha de resolución */}
               {data.claim.resolvedAt && (
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-1.5">Fecha de Resolución</p>
-                  <p className="text-sm font-medium text-gray-900">{formatClaimDateTime(data.claim.resolvedAt)}</p>
+                  <p className="text-xs font-medium text-gray-600 mb-1.5">
+                    Fecha de Resolución
+                  </p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {formatClaimDateTime(data.claim.resolvedAt)}
+                  </p>
                 </div>
               )}
 
               {/* Explicación */}
               <div>
-                <p className="text-xs font-medium text-gray-600 mb-2">Explicación de la Resolución</p>
+                <p className="text-xs font-medium text-gray-600 mb-2">
+                  Explicación de la Resolución
+                </p>
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{data.claim.resolution}</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {data.claim.resolution}
+                  </p>
                 </div>
               </div>
             </div>
@@ -674,9 +805,9 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
   // Tab de Compromisos
   const renderCompliancesTab = () => {
     const toggleCompliance = (index) => {
-      setExpandedCompliances(prev => ({
+      setExpandedCompliances((prev) => ({
         ...prev,
-        [index]: !prev[index]
+        [index]: !prev[index],
       }));
     };
 
@@ -694,9 +825,18 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
                 <span className="text-xs bg-purple-200 px-3 py-1 rounded-full text-purple-800 font-semibold">
                   Total: {data.compliances.length}
                 </span>
-                {data.compliances.filter((c) => c.status === 'pending').length > 0 && (
+                {data.compliances.filter((c) => c.status === "pending").length >
+                  0 && (
                   <span className="text-xs bg-yellow-100 px-3 py-1 rounded-full text-yellow-700 font-semibold border border-yellow-300">
-                    {data.compliances.filter((c) => c.status === 'pending').length} pendiente{data.compliances.filter((c) => c.status === 'pending').length !== 1 ? 's' : ''}
+                    {
+                      data.compliances.filter((c) => c.status === "pending")
+                        .length
+                    }{" "}
+                    pendiente
+                    {data.compliances.filter((c) => c.status === "pending")
+                      .length !== 1
+                      ? "s"
+                      : ""}
                   </span>
                 )}
               </div>
@@ -707,37 +847,57 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
               {data.compliances.map((compliance, index) => {
                 const isExpanded = expandedCompliances[index];
                 return (
-                  <div key={compliance?.id || `compliance-${index}`} className="bg-white border-2 border-purple-200 rounded-xl overflow-hidden">
+                  <div
+                    key={compliance?.id || `compliance-${index}`}
+                    className="bg-white border-2 border-purple-200 rounded-xl overflow-hidden"
+                  >
                     {/* Header del acordeón - Clickeable */}
                     <button
                       onClick={() => toggleCompliance(index)}
                       className="w-full px-4 py-3 bg-purple-50 hover:bg-purple-100 transition-colors relative"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <div className={`transform transition-transform flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`}>
-                          <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <div
+                          className={`transform transition-transform flex-shrink-0 ${isExpanded ? "rotate-90" : ""}`}
+                        >
+                          <svg
+                            className="w-4 h-4 text-purple-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
                           </svg>
                         </div>
                         <span className="font-bold text-sm text-gray-900 flex-1 text-left">
-                          {COMPLIANCE_TYPE_LABELS[compliance.complianceType] || compliance.complianceType}
+                          {COMPLIANCE_TYPE_LABELS[compliance.complianceType] ||
+                            compliance.complianceType}
                         </span>
-                        {String(compliance.responsibleUserId) === String(user?.id) && (
+                        {String(compliance.responsibleUserId) ===
+                          String(user?.id) && (
                           <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">
                             Tu compromiso
                           </span>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center justify-between ml-6">
                         <ComplianceStatusBadge status={compliance.status} />
                         {compliance.deadline && (
                           <span className="text-xs text-gray-600 font-medium flex items-center gap-1">
                             <Clock size={12} />
-                            {new Date(compliance.deadline).toLocaleDateString('es-AR', {
-                              day: '2-digit',
-                              month: 'short'
-                            })}
+                            {new Date(compliance.deadline).toLocaleDateString(
+                              "es-AR",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                              },
+                            )}
                           </span>
                         )}
                       </div>
@@ -750,13 +910,22 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
                           compliance={compliance}
                           currentUserId={user?.id}
                           canUpload={true}
-                          onUploadEvidence={() => handleUploadEvidence(compliance)}
-                          onReviewCompliance={() => handleReviewCompliance(compliance)}
-                          onModeratorReviewCompliance={() => handleModeratorReviewCompliance(compliance)}
+                          onUploadEvidence={() =>
+                            handleUploadEvidence(compliance)
+                          }
+                          onReviewCompliance={() =>
+                            handleReviewCompliance(compliance)
+                          }
+                          onModeratorReviewCompliance={() =>
+                            handleModeratorReviewCompliance(compliance)
+                          }
                           claimant={data.claimant}
                           otherUser={data.otherUser}
                           showCompactHeader={true}
-                          isModerator={userRole === ROLES.MODERATOR || userRole === ROLES.ADMIN}
+                          isModerator={
+                            userRole === ROLES.MODERATOR ||
+                            userRole === ROLES.ADMIN
+                          }
                         />
                       </div>
                     )}
@@ -768,8 +937,13 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
         ) : (
           <div className="bg-purple-50 border-2 border-dashed border-purple-200 rounded-xl py-12">
             <div className="text-center">
-              <ClipboardList size={48} className="mx-auto text-purple-300 mb-3" />
-              <p className="text-purple-600 font-medium">No hay compromisos asignados</p>
+              <ClipboardList
+                size={48}
+                className="mx-auto text-purple-300 mb-3"
+              />
+              <p className="text-purple-600 font-medium">
+                No hay compromisos asignados
+              </p>
             </div>
           </div>
         )}
@@ -784,9 +958,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-conexia-green to-emerald-600 flex-shrink-0">
-          <h2 className="text-xl font-bold text-white">
-            Detalle del Reclamo
-          </h2>
+          <h2 className="text-xl font-bold text-white">Detalle del Reclamo</h2>
           <button
             onClick={onClose}
             className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
@@ -799,7 +971,10 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
         <div className="flex-1 overflow-hidden flex flex-col">
           {loading && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 size={48} className="animate-spin text-conexia-green mb-4" />
+              <Loader2
+                size={48}
+                className="animate-spin text-conexia-green mb-4"
+              />
               <p className="text-gray-600">Cargando detalles del reclamo...</p>
             </div>
           )}
@@ -807,9 +982,14 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           {error && (
             <div className="px-6 py-6">
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+                <AlertCircle
+                  size={20}
+                  className="text-red-500 flex-shrink-0 mt-0.5"
+                />
                 <div>
-                  <p className="text-sm font-medium text-red-900">Error al cargar</p>
+                  <p className="text-sm font-medium text-red-900">
+                    Error al cargar
+                  </p>
                   <p className="text-sm text-red-700">{error}</p>
                 </div>
               </div>
@@ -830,18 +1010,20 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                           isActive
-                            ? 'border-conexia-green text-conexia-green'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ? "border-conexia-green text-conexia-green"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                         }`}
                       >
                         <Icon size={16} />
                         <span>{tab.label}</span>
                         {tab.count && (
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
-                            isActive 
-                              ? 'bg-conexia-green/10 text-conexia-green' 
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
+                          <span
+                            className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                              isActive
+                                ? "bg-conexia-green/10 text-conexia-green"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
                             {tab.count}
                           </span>
                         )}
@@ -858,9 +1040,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
 
               {/* Tab Content */}
               <div className="flex-1 overflow-y-auto px-6 pt-4 pb-6">
-                <div className="pb-4">
-                  {renderTabContent()}
-                </div>
+                <div className="pb-4">{renderTabContent()}</div>
               </div>
             </>
           )}
@@ -919,27 +1099,33 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           onSuccess={async (message) => {
             setReviewModalOpen(false);
             setSelectedCompliance(null);
-            
-            showInternalToast('success', message);
-            
+
+            showInternalToast("success", message);
+
             // Recargar los datos del claim
             try {
               const claimId = data.claim.id;
               const result = await getClaimDetail(claimId);
-              
+
               if (result.yourProfile && result.otherUserProfile) {
                 const userRole = result.claim?.userRole;
                 const transformedData = {
                   ...result,
-                  claimant: userRole === 'claimant' ? result.yourProfile : result.otherUserProfile,
-                  otherUser: userRole === 'claimant' ? result.otherUserProfile : result.yourProfile,
+                  claimant:
+                    userRole === "claimant"
+                      ? result.yourProfile
+                      : result.otherUserProfile,
+                  otherUser:
+                    userRole === "claimant"
+                      ? result.otherUserProfile
+                      : result.yourProfile,
                 };
                 setData(transformedData);
               } else {
                 setData(result);
               }
             } catch (err) {
-              console.error('Error reloading claim:', err);
+              console.error("Error reloading claim:", err);
             }
           }}
           claimant={data?.claimant}
@@ -960,27 +1146,33 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           onSuccess={async (message) => {
             setModeratorReviewModalOpen(false);
             setSelectedCompliance(null);
-            
-            showInternalToast('success', message);
-            
+
+            showInternalToast("success", message);
+
             // Recargar los datos del claim
             try {
               const claimId = data.claim.id;
               const result = await getClaimDetail(claimId);
-              
+
               if (result.yourProfile && result.otherUserProfile) {
                 const userRole = result.claim?.userRole;
                 const transformedData = {
                   ...result,
-                  claimant: userRole === 'claimant' ? result.yourProfile : result.otherUserProfile,
-                  otherUser: userRole === 'claimant' ? result.otherUserProfile : result.yourProfile,
+                  claimant:
+                    userRole === "claimant"
+                      ? result.yourProfile
+                      : result.otherUserProfile,
+                  otherUser:
+                    userRole === "claimant"
+                      ? result.otherUserProfile
+                      : result.yourProfile,
                 };
                 setData(transformedData);
               } else {
                 setData(result);
               }
             } catch (err) {
-              console.error('Error reloading claim:', err);
+              console.error("Error reloading claim:", err);
             }
           }}
           claimant={data?.claimant}
