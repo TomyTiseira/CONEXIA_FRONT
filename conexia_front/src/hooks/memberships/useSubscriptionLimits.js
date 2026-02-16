@@ -33,20 +33,9 @@ export function useSubscriptionLimits() {
   const { user } = useAuth();
   const { data: userPlan, isLoading: planLoading } = useUserPlan();
   
-  const [projectsLimit, setProjectsLimit] = useState({
-    current: 0,
-    limit: 0,
-    canPublish: false,
-    message: null,
-  });
-
-  const [servicesLimit, setServicesLimit] = useState({
-    current: 0,
-    limit: 0,
-    canPublish: false,
-    message: null,
-  });
-
+  // No establecer valores por defecto - esperar a tener datos reales
+  const [projectsLimit, setProjectsLimit] = useState(null);
+  const [servicesLimit, setServicesLimit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -162,10 +151,26 @@ export function useSubscriptionLimits() {
     fetchLimits();
   }, [fetchLimits]);
 
+  // Valores seguros para retornar - nunca mostrar 0/0 si no hay datos
+  const safeProjectsLimit = projectsLimit || {
+    current: 0,
+    limit: 0,
+    canPublish: true, // Por defecto permitir hasta tener datos reales
+    message: null,
+  };
+
+  const safeServicesLimit = servicesLimit || {
+    current: 0,
+    limit: 0,
+    canPublish: true, // Por defecto permitir hasta tener datos reales
+    message: null,
+  };
+
   return {
-    projectsLimit,
-    servicesLimit,
+    projectsLimit: safeProjectsLimit,
+    servicesLimit: safeServicesLimit,
     isLoading: isLoading || planLoading,
+    hasData: projectsLimit !== null && servicesLimit !== null, // Nuevo flag
     error,
     refetch,
     validateCanPublishProject,

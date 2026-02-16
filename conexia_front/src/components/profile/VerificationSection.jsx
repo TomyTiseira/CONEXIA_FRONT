@@ -36,7 +36,7 @@ export default function VerificationSection() {
           <div className="flex items-center gap-2 mb-1">
             <Shield className="w-6 h-6 text-conexia-green" />
             <h3 className="text-base md:text-lg font-bold text-conexia-green">
-              Verificación de Identidad
+              Verificación de identidad
             </h3>
           </div>
           
@@ -48,7 +48,7 @@ export default function VerificationSection() {
               <div className="flex items-start gap-3 p-4 bg-[#f0f9f4] border border-[#c6e8d4] rounded-lg">
                 <CheckCircle className="text-[#367d7d] flex-shrink-0 mt-0.5" size={20} />
                 <div className="flex-1">
-                  <p className="font-semibold text-[#367d7d] mb-1 text-sm">Identidad Verificada</p>
+                  <p className="font-semibold text-[#367d7d] mb-1 text-sm">Identidad verificada</p>
                   {latestVerification?.createdAt && (
                     <div className="flex items-center text-xs text-[#4a9b7f] gap-1.5">
                       <Calendar size={14} />
@@ -105,7 +105,7 @@ export default function VerificationSection() {
                   className="w-full sm:w-auto flex items-center gap-2"
                 >
                   <Shield size={18} />
-                  <span>Verificar mi Identidad</span>
+                  <span>Verificar mi identidad</span>
                 </Button>
               </div>
             </>
