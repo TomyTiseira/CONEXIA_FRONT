@@ -292,7 +292,8 @@ export async function deleteService(serviceId, reason) {
 
   return json;
 }
-xport async function fetchServiceDetail(serviceId) {
+
+export async function fetchServiceDetail(serviceId) {
   const res = await fetch(`${config.API_URL}/services/${serviceId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
