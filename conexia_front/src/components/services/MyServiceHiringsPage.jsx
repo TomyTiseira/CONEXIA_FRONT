@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useServiceHirings } from '@/hooks/service-hirings/useServiceHirings';
-import { ChevronDown, ArrowLeft, FileText, Filter, Package, Clock, X } from 'lucide-react';
+import { FileText, Filter, Package, Clock, Calendar, ArrowUp, ArrowDown } from 'lucide-react';
 // Nuevos iconos más semánticos desde react-icons
 import { 
   FaRegEye,      /* Ver detalle */
@@ -68,6 +68,7 @@ export default function MyServiceHiringsPage() {
     status: '',
     page: 1
   });
+  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' }); // key: 'date' | 'status' | null, direction: 'asc' | 'desc'
   const [showQuotationModal, setShowQuotationModal] = useState(false);
   const [showActionsModal, setShowActionsModal] = useState(false);
   const [showRequestDetailModal, setShowRequestDetailModal] = useState(false);
@@ -90,6 +91,46 @@ export default function MyServiceHiringsPage() {
   const handlePageChange = (page) => {
     setFilters(prev => ({ ...prev, page }));
   };
+
+  const handleSort = (key) => {
+    setSortConfig(prev => {
+      // Si es la misma columna, alternar dirección
+      if (prev.key === key) {
+        if (prev.direction === 'desc') {
+          return { key, direction: 'asc' };
+        } else {
+          return { key, direction: 'desc' };
+        }
+      }
+      // Si es una columna diferente, empezar con descendente
+      return { key, direction: 'desc' };
+    });
+  };
+
+  // Función para ordenar los hirings
+  const sortedHirings = useMemo(() => {
+    if (!hirings || hirings.length === 0) return [];
+    
+    const sorted = [...hirings];
+    
+    if (!sortConfig.key) return sorted;
+    
+    return sorted.sort((a, b) => {
+      if (sortConfig.key === 'date') {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return sortConfig.direction === 'desc' 
+          ? dateB - dateA 
+          : dateA - dateB;
+      } else if (sortConfig.key === 'status') {
+        const statusA = a.status?.name || '';
+        const statusB = b.status?.name || '';
+        const comparison = statusA.localeCompare(statusB);
+        return sortConfig.direction === 'desc' ? -comparison : comparison;
+      }
+      return 0;
+    });
+  }, [hirings, sortConfig]);
 
   const handleViewQuotation = (hiring) => {
     setSelectedHiring(hiring);
@@ -148,7 +189,7 @@ export default function MyServiceHiringsPage() {
   const handleClaimSuccess = (createdClaim) => {
     setToast({
       type: 'success',
-      message: 'Reclamo creado exitosamente. Redirigiendo a Mis Reclamos...',
+      message: 'Reclamo creado exitosamente. Redirigiendo a Mis reclamos...',
       isVisible: true
     });
     setIsClaimModalOpen(false);
@@ -316,13 +357,14 @@ export default function MyServiceHiringsPage() {
 
           {/* Filtros */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Filter size={20} className="text-gray-500" />
-                <span className="font-medium text-gray-700">Filtros:</span>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              {/* Filtros en el lado izquierdo */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter size={20} className="text-gray-500" />
+                  <span className="font-medium text-gray-700">Filtros:</span>
+                </div>
+                
                 <select
                   value={filters.status}
                   onChange={(e) => handleStatusChange(e.target.value)}
@@ -334,6 +376,53 @@ export default function MyServiceHiringsPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Ordenamiento en el lado derecho */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-sm font-medium text-gray-700">Ordenar:</span>
+                
+                {/* Botón ordenar por fecha */}
+                <button
+                  onClick={() => handleSort('date')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
+                    sortConfig.key === 'date'
+                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                  title={sortConfig.key === 'date' 
+                    ? `Ordenado por fecha ${sortConfig.direction === 'desc' ? 'descendente' : 'ascendente'}` 
+                    : 'Ordenar por fecha'}
+                >
+                  <Calendar size={16} />
+                  <span className="text-sm font-medium">Fecha</span>
+                  {sortConfig.key === 'date' && (
+                    sortConfig.direction === 'desc' 
+                      ? <ArrowDown size={16} className="opacity-90" />
+                      : <ArrowUp size={16} className="opacity-90" />
+                  )}
+                </button>
+
+                {/* Botón ordenar por estado */}
+                <button
+                  onClick={() => handleSort('status')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
+                    sortConfig.key === 'status'
+                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                  title={sortConfig.key === 'status' 
+                    ? `Ordenado por estado ${sortConfig.direction === 'desc' ? 'Z-A' : 'A-Z'}` 
+                    : 'Ordenar por estado'}
+                >
+                  <FileText size={16} />
+                  <span className="text-sm font-medium">Estado</span>
+                  {sortConfig.key === 'status' && (
+                    sortConfig.direction === 'desc' 
+                      ? <ArrowDown size={16} className="opacity-90" />
+                      : <ArrowUp size={16} className="opacity-90" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -401,7 +490,7 @@ export default function MyServiceHiringsPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {hirings.map((hiring) => (
+                      {sortedHirings.map((hiring) => (
                         <tr key={hiring.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
@@ -506,8 +595,8 @@ export default function MyServiceHiringsPage() {
                                   <button
                                     onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                                     className="flex items-center justify-center w-9 h-9 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
-                                    title="Ver en Mis Reclamos"
-                                    aria-label="Ver en Mis Reclamos"
+                                    title="Ver en mis reclamos"
+                                    aria-label="Ver en mis reclamos"
                                     data-action="ver-mis-reclamos"
                                   >
                                     <AlertCircle size={18} className="group-hover:scale-110 transition-transform" />
@@ -582,7 +671,7 @@ export default function MyServiceHiringsPage() {
 
                 {/* Cards para mobile */}
                 <div className="md:hidden space-y-4 p-4">
-                  {hirings.map((hiring) => (
+                  {sortedHirings.map((hiring) => (
                     <div key={hiring.id} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex justify-between items-start gap-3 mb-3">
                         <div className="flex-1 min-w-0">
@@ -686,8 +775,8 @@ export default function MyServiceHiringsPage() {
                               <button
                                 onClick={() => router.push(`/claims/my-claims?claimId=${hiring.claimId}`)}
                                 className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-white hover:bg-orange-600 rounded-md transition-all duration-200 group"
-                                title="Ver en Mis Reclamos"
-                                aria-label="Ver en Mis Reclamos"
+                                title="Ver en mis reclamos"
+                                aria-label="Ver en mis reclamos"
                                 data-action="ver-mis-reclamos"
                               >
                                 <AlertCircle size={16} className="group-hover:scale-110 transition-transform" />

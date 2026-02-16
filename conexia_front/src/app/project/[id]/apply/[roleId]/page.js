@@ -219,7 +219,6 @@ export default function ProjectApplicationPage() {
     // Para evaluación técnica, solo validamos que se entienda que se creará después
     if (applicationTypes.includes('EVALUATION')) {
       // La evaluación técnica se envía después, no requiere validación aquí
-      console.log('Se creará una evaluación técnica pendiente');
     }
 
     setFieldErrors(errors);
@@ -251,11 +250,6 @@ export default function ProjectApplicationPage() {
                             applicationTypes.includes('INVESTOR') ||
                             role.title?.toLowerCase().includes('inversor');
       
-      console.log('Debug - role:', role);
-      console.log('Debug - isPartnerRole:', isPartnerRole);
-      console.log('Debug - isInvestorRole:', isInvestorRole);
-      console.log('Debug - applicationData:', applicationData);
-      
       // Preparar datos de la postulación
       const postulationData = {
         projectId: parseInt(projectId),
@@ -280,7 +274,6 @@ export default function ProjectApplicationPage() {
       // Agregar datos de socio si aplica
       if (isPartnerRole) {
         postulationData.partnerDescription = applicationData.partnerDescription?.trim() || '';
-        console.log('Debug - Agregado partnerDescription:', postulationData.partnerDescription);
       }
 
       // Agregar datos de inversor si aplica
@@ -289,12 +282,8 @@ export default function ProjectApplicationPage() {
         postulationData.investorAmount = parseInt(applicationData.investorAmount) || 0;
       }
 
-      console.log('Datos de postulación a enviar:', postulationData);
-
       const result = await applyToProjectRole(postulationData);
       
-      console.log('Resultado de la postulación:', result);
-
       if (result.success) {
         // Si hay evaluación técnica, redirigir directamente a la página de evaluación
         const hasEvaluation = applicationTypes.includes('EVALUATION') || 
@@ -304,12 +293,7 @@ export default function ProjectApplicationPage() {
         // Extraer el ID de la postulación (puede venir como postulationId, id, o dentro de data)
         const postulationId = result.postulationId || result.id || result.data?.postulationId || result.data?.id;
         
-        console.log('hasEvaluation:', hasEvaluation);
-        console.log('postulationId:', postulationId);
-        console.log('role.evaluation:', role.evaluation);
-        
         if (hasEvaluation && postulationId && role.evaluation) {
-          console.log('Redirigiendo a evaluación:', `/project/${projectId}/evaluation/${postulationId}`);
           router.push(`/project/${projectId}/evaluation/${postulationId}?from=apply`);
           return; // Importante: salir aquí para evitar el timeout
         } else {
@@ -648,7 +632,7 @@ export default function ProjectApplicationPage() {
                      role?.applicationType === 'EVALUATION' || 
                      role?.applicationType === 'MIXED')
                     ? 'Continuar con prueba técnica'
-                    : 'Enviar Postulación'
+                    : 'Enviar postulación'
                 }
               </Button>
             </div>
@@ -666,7 +650,7 @@ export default function ProjectApplicationPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Importante: Postulación Única</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Importante: Postulación única</h3>
             </div>
             
             <div className="mb-6 space-y-3">

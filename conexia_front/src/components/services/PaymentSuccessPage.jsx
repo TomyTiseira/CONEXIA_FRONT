@@ -27,12 +27,7 @@ export default function PaymentSuccessPage() {
     // Procesar información del pago cuando lleguen los parámetros
     if (paymentId && status) {
       updatePaymentStatus();
-    } else {
-      console.warn('⚠️  [PAYMENT SUCCESS] Faltan parámetros de pago:', {
-        hasPaymentId: !!paymentId,
-        hasStatus: !!status
-      });
-    }
+    } 
   }, [paymentId, status, hiringId]);
 
   useEffect(() => {

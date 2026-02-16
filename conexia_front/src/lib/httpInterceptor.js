@@ -45,8 +45,6 @@ export async function interceptHttpResponse(response) {
       const data = await clonedResponse.json();
       
       if (data.reason === 'SESSION_INVALIDATED') {
-        console.warn('⚠️ Sesión invalidada detectada - cerrando sesión');
-        
         // Desconectar WebSocket
         authSocketService.disconnect();
         
@@ -61,7 +59,7 @@ export async function interceptHttpResponse(response) {
         }
       }
     } catch (error) {
-      console.warn('Error al procesar respuesta 401:', error);
+      // Error processing 401 response
     }
     
     return response;
@@ -86,7 +84,6 @@ export async function interceptHttpResponse(response) {
 
       if (currentUser && (data.banned || data.reason === 'ACCOUNT_BANNED')) {
         // Usuario BANEADO - mostrar modal bloqueante y forzar logout
-        console.error('🔴 Usuario baneado detectado (HTTP Fallback)');
         
         userStore.setUser({
           ...currentUser,
@@ -105,7 +102,6 @@ export async function interceptHttpResponse(response) {
         
       } else if (currentUser && (data.suspended || data.reason === 'ACCOUNT_SUSPENDED')) {
         // Usuario SUSPENDIDO - actualizar store y mostrar modal informativo
-        console.warn('⏸️ Usuario suspendido detectado (HTTP Fallback)');
         
         userStore.setUser({
           ...currentUser,
@@ -133,7 +129,6 @@ export async function interceptHttpResponse(response) {
     }
   } catch (error) {
     // Error al parsear JSON, ignorar
-    console.warn('Error al procesar respuesta 403:', error);
   }
 
   return response;
@@ -168,6 +163,5 @@ export function showPendingToasts() {
       sessionStorage.removeItem('pendingToast');
     }
   } catch (error) {
-    console.warn('Error al recuperar toasts pendientes:', error);
   }
 }

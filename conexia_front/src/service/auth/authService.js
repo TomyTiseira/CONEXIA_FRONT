@@ -60,7 +60,6 @@ export const logoutUser = async () => {
     return res.json();
   } catch (error) {
     // Si falla la conexión o hay error de red, no bloquear el logout
-    console.warn('Error al cerrar sesión en el servidor:', error.message);
     return { success: true, message: 'Sesión cerrada localmente' };
   }
 };

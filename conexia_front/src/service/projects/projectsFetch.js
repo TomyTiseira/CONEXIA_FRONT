@@ -249,8 +249,6 @@ export async function fetchMyProjects({ ownerId, active, page = 1, limit = 16 })
   const projects = data?.data?.projects;
   const pagination = data?.data?.pagination || { currentPage: page, itemsPerPage: limit, totalItems: Array.isArray(projects) ? projects.length : 0, totalPages: 1 };
 
-  console.log('📊 Datos recibidos del backend (fetchMyProjects):', JSON.stringify(projects, null, 2));
-
   if (!Array.isArray(projects)) return { projects: [], pagination };
 
   const mappedProjects = projects.map(p => ({
@@ -283,13 +281,6 @@ export async function fetchMyProjects({ ownerId, active, page = 1, limit = 16 })
     rolesCount: p.rolesCount || 0,
     postulationsCount: p.postulationsCount || 0,
   }));
-
-  console.log('🔄 Proyectos después del mapeo:', mappedProjects.map(p => ({
-    id: p.id,
-    title: p.title,
-    rolesCount: p.rolesCount,
-    postulationsCount: p.postulationsCount
-  })));
 
   return {
     projects: mappedProjects,

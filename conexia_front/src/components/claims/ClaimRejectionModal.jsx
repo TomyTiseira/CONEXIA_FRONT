@@ -218,7 +218,7 @@ export const ClaimRejectionModal = ({ isOpen, onClose, claim, onSuccess, showToa
                 </div>
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Tipo de Reclamo</p>
+                    <p className="text-sm text-gray-600 mb-1">Tipo de reclamo</p>
                     <ClaimTypeBadge
                       claimType={normalized.claimType}
                       labelOverride={normalized.claimTypeLabel}
@@ -244,7 +244,7 @@ export const ClaimRejectionModal = ({ isOpen, onClose, claim, onSuccess, showToa
 
               {/* Descripción del Reclamo */}
               <div className="bg-white border rounded-lg p-4">
-                <h3 className="font-semibold text-lg text-gray-900 mb-2">Descripción del Reclamo</h3>
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">Descripción del reclamo</h3>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">
                   {normalized.description || 'No hay descripción disponible'}
                 </p>
@@ -262,7 +262,7 @@ export const ClaimRejectionModal = ({ isOpen, onClose, claim, onSuccess, showToa
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-800 font-medium">¿Qué sucede al rechazar el reclamo?</p>
                 <ul className="text-sm text-red-700 mt-2 space-y-1 list-disc list-inside">
-                  <li>El reclamo se marcará como &quot;Rechazado&quot;</li>
+                  <li>El reclamo se marcará como &quot;rechazado&quot;</li>
                   <li>La contratación volverá a su estado anterior</li>
                   <li>Ambas partes recibirán un email con el motivo del rechazo</li>
                 </ul>

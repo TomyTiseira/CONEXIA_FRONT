@@ -119,7 +119,7 @@ export default function ContractServiceModal({
           >
           {/* Header fijo */}
           <div className="px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Contratar Servicio</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Contratar servicio</h3>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
@@ -274,7 +274,7 @@ export default function ContractServiceModal({
                     Procesando...
                   </div>
                 ) : (
-                  'Proceder al Pago'
+                  'Proceder al pago'
                 )}
               </Button>
             </div>

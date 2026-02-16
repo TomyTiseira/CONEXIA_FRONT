@@ -321,13 +321,13 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
         <div className="px-6 py-4 bg-blue-100 border-b border-blue-200 rounded-t-xl">
           <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
             <FileText size={20} className="text-blue-600" />
-            Información General
+            Información general
           </h3>
         </div>
         <div className="p-6 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <p className="text-xs font-medium text-gray-600 mb-1.5">ID del Reclamo</p>
+            <p className="text-xs font-medium text-gray-600 mb-1.5">ID del reclamo</p>
             <p className="text-sm font-mono font-medium text-gray-900">{data.claim.id}</p>
           </div>
           <div className="sm:col-span-2">
@@ -361,7 +361,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
             </div>
           )}
           <div>
-            <p className="text-xs font-medium text-gray-600 mb-1.5">Tipo de Reclamo</p>
+            <p className="text-xs font-medium text-gray-600 mb-1.5">Tipo de reclamo</p>
             <ClaimTypeBadge
               claimType={data.claim.claimType}
               labelOverride={getClaimTypeLabelWithOtherReason(data.claim)}
@@ -373,12 +373,12 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           </div>
           {data.claim.userRole && (
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">Tu Rol</p>
+              <p className="text-xs font-medium text-gray-600 mb-1.5">Tu rol</p>
               <ClaimRoleBadge role={data.claim.userRole} />
             </div>
           )}
           <div>
-            <p className="text-xs font-medium text-gray-600 mb-1.5">Fecha de Creación</p>
+            <p className="text-xs font-medium text-gray-600 mb-1.5">Fecha de creación</p>
             <p className="text-sm font-medium text-gray-900">{formatClaimDateTime(data.claim.createdAt)}</p>
           </div>
         </div>
@@ -390,7 +390,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
         <div className="px-6 py-4 bg-blue-100 border-b border-blue-200 rounded-t-xl">
           <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
             <User size={20} className="text-blue-600" />
-            Usuarios Involucrados
+            Usuarios involucrados
           </h3>
         </div>
         <div className="p-6 space-y-3">
@@ -458,7 +458,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
         <div className="px-6 py-4 bg-blue-100 border-b border-blue-200 rounded-t-xl">
           <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
             <FileText size={20} className="text-blue-600" />
-            Descripción del Reclamo
+            Descripción del reclamo
           </h3>
         </div>
         <div className="p-6">
@@ -467,7 +467,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
         </p>
         {data.claim.evidenceUrls && data.claim.evidenceUrls.length > 0 && (
           <div className="mt-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">Evidencias Adjuntas:</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">Evidencias adjuntas:</p>
             <ClaimEvidenceViewer evidenceUrls={data.claim.evidenceUrls} />
           </div>
         )}
@@ -485,7 +485,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           <div className="px-6 py-4 bg-orange-100 border-b border-orange-200 rounded-t-xl">
             <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
               <MessageSquare size={20} className="text-orange-600" />
-              Observaciones del Moderador
+              Observaciones del moderador
             </h3>
           </div>
           <div className="p-6 space-y-3">
@@ -505,7 +505,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           <div className="px-6 py-4 bg-orange-100 border-b border-orange-200 rounded-t-xl">
             <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
               <MessageSquare size={20} className="text-orange-600" />
-              Respuesta del Reclamante
+              Respuesta del reclamante
             </h3>
           </div>
           <div className="p-6 space-y-3">
@@ -518,7 +518,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
 
             {getClarificationEvidence(data.claim).length > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Evidencias de Subsanación:</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">Evidencias de subsanación:</p>
                 <ClaimEvidenceViewer evidenceUrls={getClarificationEvidence(data.claim)} />
               </div>
             )}
@@ -532,7 +532,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
           <div className="px-6 py-4 bg-orange-100 border-b border-orange-200 rounded-t-xl">
             <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
               <MessageSquare size={20} className="text-orange-600" />
-              Observaciones del Reclamado
+              Observaciones del reclamado
             </h3>
           </div>
           <div className="p-6 space-y-3">
@@ -544,7 +544,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
             )}
             {data.claim.respondentEvidenceUrls && data.claim.respondentEvidenceUrls.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Archivos Adjuntos:</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">Archivos adjuntos:</p>
                 <ClaimEvidenceViewer evidenceUrls={data.claim.respondentEvidenceUrls} />
               </div>
             )}
@@ -592,7 +592,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
             }`}>
               <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
                 <Scale size={20} className={isRejected ? 'text-red-600' : isClientFavor ? 'text-green-600' : isProviderFavor ? 'text-red-600' : 'text-yellow-600'} />
-                {isRejected ? 'Reclamo Rechazado' : 'Resolución del Reclamo'}
+                {isRejected ? 'Reclamo rechazado' : 'Resolución del reclamo'}
               </h3>
             </div>
 
@@ -648,14 +648,14 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
               {/* Fecha de resolución */}
               {data.claim.resolvedAt && (
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-1.5">Fecha de Resolución</p>
+                  <p className="text-xs font-medium text-gray-600 mb-1.5">Fecha de resolución</p>
                   <p className="text-sm font-medium text-gray-900">{formatClaimDateTime(data.claim.resolvedAt)}</p>
                 </div>
               )}
 
               {/* Explicación */}
               <div>
-                <p className="text-xs font-medium text-gray-600 mb-2">Explicación de la Resolución</p>
+                <p className="text-xs font-medium text-gray-600 mb-2">Explicación de la resolución</p>
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{data.claim.resolution}</p>
                 </div>
@@ -684,7 +684,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
             <div className="px-6 py-4 bg-purple-100 border-b border-purple-200 rounded-t-xl flex items-center justify-between">
               <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
                 <ClipboardList size={20} className="text-purple-600" />
-                Compromisos Asignados
+                Compromisos asignados
               </h3>
               <div className="flex items-center gap-2">
                 <span className="text-xs bg-purple-200 px-3 py-1 rounded-full text-purple-800 font-semibold">
@@ -781,7 +781,7 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-conexia-green to-emerald-600 flex-shrink-0">
           <h2 className="text-xl font-bold text-white">
-            Detalle del Reclamo
+            Detalle del reclamo
           </h2>
           <button
             onClick={onClose}

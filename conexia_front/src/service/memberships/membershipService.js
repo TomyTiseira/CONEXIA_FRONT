@@ -62,11 +62,14 @@ export async function getSubscriptionStatus(subscriptionId) {
 }
 
 /**
- * Cancela una suscripción activa
+ * Cancela una suscripción específica por ID (para uso administrativo)
+ * NOTA: Este endpoint es diferente al de cancelación de suscripción del usuario actual.
+ * Para cancelar la suscripción del usuario logueado, usar cancelSubscription de plansService.js
  * @param {string|number} subscriptionId - ID de la suscripción
  * @returns {Promise<Object>} Confirmación de cancelación
+ * @deprecated - Endpoint no implementado actualmente en el backend
  */
-export async function cancelSubscription(subscriptionId) {
+export async function cancelSubscriptionById(subscriptionId) {
   const url = `${config.API_URL}/memberships/subscriptions/${subscriptionId}/cancel`;
   
   const res = await fetchWithRefresh(url, {

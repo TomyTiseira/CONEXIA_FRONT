@@ -86,11 +86,11 @@ export default function VerificationModal({ isOpen, onClose, onComplete }) {
       case STEPS.INSTRUCTIONS:
         return 'Instrucciones';
       case STEPS.DOCUMENT_TYPE:
-        return 'Tipo de Documento';
+        return 'Tipo de documento';
       case STEPS.DOCUMENT_UPLOAD:
-        return 'Documento de Identidad';
+        return 'Documento de identidad';
       case STEPS.FACE_CAPTURE:
-        return 'Foto de Rostro';
+        return 'Foto de rostro';
       case STEPS.CONFIRMATION:
         return 'Confirmación';
       default:
@@ -111,7 +111,7 @@ export default function VerificationModal({ isOpen, onClose, onComplete }) {
                 <div className="flex items-start space-x-3">
                   <CheckCircle className="text-blue-600 flex-shrink-0 mt-1" size={20} />
                   <div>
-                    <p className="font-medium text-blue-800">Una foto clara de tu DNI o Pasaporte</p>
+                    <p className="font-medium text-blue-800">Una foto clara de tu DNI o pasaporte</p>
                     <p className="text-sm text-blue-700">El documento debe mostrar tu número de identificación</p>
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function VerificationModal({ isOpen, onClose, onComplete }) {
               
               <div>
                 <h3 className="text-2xl font-bold text-green-800 mb-2">
-                  ¡Identidad Verificada Exitosamente!
+                  ¡Identidad verificada exitosamente!
                 </h3>
                 <p className="text-gray-600">
                   Tu identidad ha sido verificada correctamente.
@@ -346,7 +346,7 @@ export default function VerificationModal({ isOpen, onClose, onComplete }) {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
-                Al hacer clic en "Verificar Identidad", aceptas que procesemos tus imágenes
+                Al hacer clic en "Verificar identidad", aceptas que procesemos tus imágenes
                 para verificar tu identidad de forma segura.
               </p>
             </div>
@@ -366,7 +366,7 @@ export default function VerificationModal({ isOpen, onClose, onComplete }) {
           <div className="flex items-center space-x-3">
             <Shield className="text-blue-600" size={28} />
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Verificación de Identidad</h2>
+              <h2 className="text-xl font-bold text-gray-900">Verificación de identidad</h2>
               <p className="text-sm text-gray-600">{getStepTitle()}</p>
             </div>
           </div>
@@ -432,7 +432,7 @@ export default function VerificationModal({ isOpen, onClose, onComplete }) {
                 ) : (
                   <>
                     <Shield size={20} />
-                    <span>Verificar Identidad</span>
+                    <span>Verificar identidad</span>
                   </>
                 )}
               </button>

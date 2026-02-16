@@ -76,7 +76,6 @@ export function useNexoChat() {
       try {
         await waitForConnection();
       } catch (err) {
-        console.warn('No se pudo conectar al socket en el tiempo esperado:', err);
         setInitError('No se pudo establecer la conexión con el servidor de chat');
         return;
       }
