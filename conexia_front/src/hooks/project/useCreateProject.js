@@ -8,12 +8,20 @@ export function useCreateProject() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Helper para convertir File a base64
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const publishProject = async (form) => {
     setLoading(true);
     setError(null);
     try {
-      const formData = new FormData();
-
       // Procesar roles para limpiar datos innecesarios
       const processedRoles = (form.roles || []).map((role, index) => {
         // Crear estructura base del rol según la API
@@ -200,50 +208,54 @@ export function useCreateProject() {
         projectData.requiresInvestor = form.needsInvestors;
       }
 
-      // Enviar cada campo del proyecto por separado en el FormData
-      formData.append("title", projectData.title);
-      formData.append("description", projectData.description);
-      formData.append("categoryId", projectData.categoryId.toString());
-      formData.append("roles", JSON.stringify(projectData.roles));
-
+      // Enviar cada campo del proyecto por separado en el objeto
       // Campos opcionales
       if (projectData.startDate) {
-        formData.append("startDate", projectData.startDate);
+        // Ya está en projectData
       }
       if (projectData.endDate) {
-        formData.append("endDate", projectData.endDate);
+        // Ya está en projectData
       }
       if (projectData.location) {
-        formData.append("location", projectData.location.toString());
+        // Ya está en projectData
       }
       if (projectData.requiresPartner !== undefined) {
-        formData.append(
-          "requiresPartner",
-          projectData.requiresPartner.toString(),
-        );
+        // Ya está en projectData
       }
       if (projectData.requiresInvestor !== undefined) {
-        formData.append(
-          "requiresInvestor",
-          projectData.requiresInvestor.toString(),
-        );
+        // Ya está en projectData
       }
 
-      // Agregar imagen del proyecto si existe
+      // Procesar imagen del proyecto si existe
       if (form.image) {
-        formData.append("image", form.image);
+        const base64Image = await fileToBase64(form.image);
+        projectData.imageFile = {
+          fileData: base64Image,
+          originalName: form.image.name,
+          mimeType: form.image.type,
+        };
       }
 
-      // Agregar archivos de evaluación si existen en algún rol
+      // Procesar archivos de evaluación si existen en algún rol
       if (form.roles && form.roles.length > 0) {
-        form.roles.forEach((role, index) => {
+        for (let i = 0; i < form.roles.length; i++) {
+          const role = form.roles[i];
           if (role.evaluation && role.evaluation.file) {
-            formData.append("evaluationFiles", role.evaluation.file);
+            const base64File = await fileToBase64(role.evaluation.file);
+            // Agregar el archivo al rol correspondiente en projectData
+            if (!projectData.roles[i].evaluation) {
+              projectData.roles[i].evaluation = {};
+            }
+            projectData.roles[i].evaluation.evaluationFile = {
+              fileData: base64File,
+              originalName: role.evaluation.file.name,
+              mimeType: role.evaluation.file.type,
+            };
           }
-        });
+        }
       }
 
-      await createProject(formData);
+      await createProject(projectData);
     } catch (err) {
       // Crear un objeto de error con información adicional
       const errorObj = {
