@@ -29,6 +29,9 @@ export default function DropdownUserMenu({ onLogout, onClose, userPlanData }) {
   const { user } = useAuth();
   const userId = user?.id;
 
+  // Determinar si es un usuario regular (no admin ni moderador)
+  const isRegularUser = roleName === ROLES.USER;
+
   // Detectar clics fuera del menú para cerrarlo
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -135,7 +138,7 @@ export default function DropdownUserMenu({ onLogout, onClose, userPlanData }) {
       {renderPlanBadge()}
 
       {/* Servicios (solo para usuarios con rol USER) */}
-      {roleName === ROLES.USER && (
+      {isRegularUser && (
         <>
           <div className="pt-0.5 mt-0.5">
             <div className="px-4 py-0.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -193,7 +196,7 @@ export default function DropdownUserMenu({ onLogout, onClose, userPlanData }) {
       {/* Acciones */}
       <div className="border-t pt-0.5 mt-0.5">
         {/* Dashboard solo para usuarios USER */}
-        {roleName === ROLES.USER && (
+        {isRegularUser && (
           <Link
             href="/dashboard"
             onClick={handleClose}
