@@ -278,9 +278,10 @@ export default function PostulationEvaluationModal({
                           "archivo.pdf"}
                       </span>
                       <button
-                        onClick={() => {
-                          const fullUrl = `${config.DOCUMENT_URL}${postulation.evaluationSubmissionUrl}`;
-                          window.open(fullUrl, "_blank");
+                        onClick={async () => {
+                          const { openFileInNewTab } =
+                            await import("@/utils/fileUtils");
+                          openFileInNewTab(postulation.evaluationSubmissionUrl);
                         }}
                         className="text-conexia-green hover:text-conexia-green/80 text-sm font-medium hover:underline"
                         disabled={isApproving}

@@ -1,20 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { X, Upload, FileText, CheckCircle, Download, Clock, AlertCircle } from 'lucide-react';
-import Button from '@/components/ui/Button';
+import { useState, useRef } from "react";
+import {
+  X,
+  Upload,
+  FileText,
+  CheckCircle,
+  Download,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
+import Button from "@/components/ui/Button";
 
 /**
  * Modal para mostrar y enviar evaluación técnica después de postularse
  */
-export default function TechnicalEvaluationModal({ 
-  isOpen, 
-  onClose, 
+export default function TechnicalEvaluationModal({
+  isOpen,
+  onClose,
   evaluation,
   roleTitle,
   onSubmit,
   onSkip,
-  loading 
+  loading,
 }) {
   const [evaluationFile, setEvaluationFile] = useState(null);
   const [error, setError] = useState(null);
@@ -27,7 +35,7 @@ export default function TechnicalEvaluationModal({
 
     // Validar tamaño (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      setError('El archivo no puede superar los 10MB');
+      setError("El archivo no puede superar los 10MB");
       return;
     }
 
@@ -37,7 +45,7 @@ export default function TechnicalEvaluationModal({
 
   const handleSubmit = () => {
     if (!evaluationFile) {
-      setError('Debes seleccionar un archivo con tu solución');
+      setError("Debes seleccionar un archivo con tu solución");
       return;
     }
 
@@ -49,11 +57,11 @@ export default function TechnicalEvaluationModal({
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
+    const sizes = ["Bytes", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   return (
@@ -67,8 +75,15 @@ export default function TechnicalEvaluationModal({
                 <FileText className="text-purple-600" size={20} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-800">Evaluación Técnica</h2>
-                <p className="text-sm text-gray-600">Rol: <span className="font-semibold text-conexia-green">{roleTitle}</span></p>
+                <h2 className="text-xl font-bold text-gray-800">
+                  Evaluación Técnica
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Rol:{" "}
+                  <span className="font-semibold text-conexia-green">
+                    {roleTitle}
+                  </span>
+                </p>
               </div>
             </div>
           </div>
@@ -86,11 +101,20 @@ export default function TechnicalEvaluationModal({
           {/* Mensaje de éxito de postulación */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
-              <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
+              <CheckCircle
+                className="text-green-600 flex-shrink-0 mt-0.5"
+                size={20}
+              />
               <div>
-                <h3 className="font-semibold text-green-900 mb-1">¡Postulación enviada con éxito!</h3>
+                <h3 className="font-semibold text-green-900 mb-1">
+                  ¡Postulación enviada con éxito!
+                </h3>
                 <p className="text-sm text-green-800">
-                  Ahora puedes completar la evaluación técnica. Tienes <span className="font-semibold">{evaluation.days} día{evaluation.days !== 1 ? 's' : ''}</span> para enviarla.
+                  Ahora puedes completar la evaluación técnica. Tienes{" "}
+                  <span className="font-semibold">
+                    {evaluation.days} día{evaluation.days !== 1 ? "s" : ""}
+                  </span>{" "}
+                  para enviarla.
                 </p>
               </div>
             </div>
@@ -116,8 +140,18 @@ export default function TechnicalEvaluationModal({
                   className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
                 >
                   🔗 Abrir enlace de la evaluación
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
                   </svg>
                 </a>
               </div>
@@ -126,15 +160,18 @@ export default function TechnicalEvaluationModal({
             {/* Archivo si existe */}
             {evaluation.fileUrl && (
               <div className="mb-3">
-                <a
-                  href={evaluation.fileUrl}
-                  download={evaluation.fileName || 'evaluacion'}
+                <button
+                  onClick={async () => {
+                    const { openFileInNewTab } =
+                      await import("@/utils/fileUtils");
+                    openFileInNewTab(evaluation.fileUrl);
+                  }}
                   className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
                 >
                   <Download size={16} />
-                  Descargar archivo de la evaluación
+                  Ver archivo de la evaluación
                   {evaluation.fileName && ` (${evaluation.fileName})`}
-                </a>
+                </button>
               </div>
             )}
 
@@ -142,7 +179,9 @@ export default function TechnicalEvaluationModal({
             <div className="flex items-center gap-2 text-sm text-blue-700 mt-4 pt-3 border-t border-blue-200">
               <Clock size={16} />
               <span className="font-medium">Tiempo límite:</span>
-              <span className="font-semibold">{evaluation.days} día{evaluation.days !== 1 ? 's' : ''}</span>
+              <span className="font-semibold">
+                {evaluation.days} día{evaluation.days !== 1 ? "s" : ""}
+              </span>
             </div>
           </div>
 
@@ -151,16 +190,24 @@ export default function TechnicalEvaluationModal({
             <label className="block text-sm font-semibold text-gray-700 mb-3">
               Adjunta tu solución
             </label>
-            <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-              error ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-            }`}>
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                error
+                  ? "border-red-500 bg-red-50"
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
+            >
               {evaluationFile ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FileText className="text-blue-500" size={28} />
                     <div className="text-left">
-                      <p className="text-sm font-semibold text-gray-800">{evaluationFile.name}</p>
-                      <p className="text-xs text-gray-500">{formatFileSize(evaluationFile.size)}</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {evaluationFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(evaluationFile.size)}
+                      </p>
                     </div>
                   </div>
                   <button
@@ -184,7 +231,9 @@ export default function TechnicalEvaluationModal({
                   >
                     Seleccionar archivo
                   </button>
-                  <p className="text-xs text-gray-500 mt-2">Cualquier formato hasta 10MB</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Cualquier formato hasta 10MB
+                  </p>
                 </div>
               )}
               <input
@@ -205,12 +254,18 @@ export default function TechnicalEvaluationModal({
           {/* Nota informativa */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={18} />
+              <AlertCircle
+                className="text-yellow-600 flex-shrink-0 mt-0.5"
+                size={18}
+              />
               <div className="text-sm text-yellow-800">
                 <p className="font-medium mb-1">Importante:</p>
                 <ul className="list-disc list-inside space-y-1 ml-1">
                   <li>Puedes enviar la evaluación ahora o más tarde</li>
-                  <li>Si decides enviarla más tarde, podrás acceder desde tu perfil</li>
+                  <li>
+                    Si decides enviarla más tarde, podrás acceder desde tu
+                    perfil
+                  </li>
                   <li>Asegúrate de enviarla dentro del plazo establecido</li>
                 </ul>
               </div>
@@ -229,7 +284,7 @@ export default function TechnicalEvaluationModal({
           >
             Enviar más tarde
           </Button>
-          
+
           <Button
             type="button"
             onClick={handleSubmit}
@@ -237,7 +292,7 @@ export default function TechnicalEvaluationModal({
             disabled={loading || !evaluationFile}
             className="flex-1"
           >
-            {loading ? 'Enviando...' : 'Enviar evaluación ahora'}
+            {loading ? "Enviando..." : "Enviar evaluación ahora"}
           </Button>
         </div>
       </div>
