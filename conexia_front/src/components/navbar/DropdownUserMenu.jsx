@@ -34,8 +34,11 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
   const { user } = useAuth();
   const userId = user?.id;
 
-  // Obtener información del plan (siempre llamar el hook, no condicionalmente)
+  // Solo obtener plan para usuarios USER (admin/moderador no tienen plan)
+  // Llamar hook solo si es USER - los hooks deben llamarse siempre, pero podemos
+  // ignorar el resultado si no es USER
   const { data: userPlan, error: planError } = useUserPlan();
+  const isRegularUser = roleName === ROLES.USER;
 
   useEffect(() => {
     // Si es admin o moderador, no buscar perfil
@@ -137,7 +140,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
       </div>
 
       {/* Plan del usuario (solo para rol USER y si hay datos del plan) */}
-      {roleName === ROLES.USER && userPlan && !planError && (
+      {isRegularUser && userPlan && !planError && (
         <div className="px-4 py-2 border-b">
           <PlanBadge
             useCurrentPlan={true}
@@ -148,7 +151,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
       )}
 
       {/* Servicios (solo para usuarios con rol USER) */}
-      {roleName === ROLES.USER && (
+      {isRegularUser && (
         <>
           <div className="pt-0.5 mt-0.5">
             <div className="px-4 py-0.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -206,7 +209,7 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
       {/* Acciones */}
       <div className="border-t pt-0.5 mt-0.5">
         {/* Dashboard solo para usuarios USER */}
-        {roleName === ROLES.USER && (
+        {isRegularUser && (
           <Link
             href="/dashboard"
             onClick={handleClose}

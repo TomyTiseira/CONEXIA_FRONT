@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { ROLES_NAME } from '@/constants/roles';
-import { useRole } from '@/hooks/useRole';
+import { useUserStore } from '@/store/userStore';
 
 const defaultAvatar = '/images/default-avatar.png';
 
@@ -15,7 +15,10 @@ export default function DropdownInternalUserMenu({ onLogout, onClose }) {
   const dropdownRef = useRef(null);
   const router = useRouter();
   const { user } = useAuth();
-  const { role } = useRole(user?.roleId);
+  const { roleName } = useUserStore();
+  
+  // Usar el rol directamente del store (ya está disponible, no necesita fetch)
+  const displayRole = ROLES_NAME[roleName] || ROLES_NAME[user?.role] || 'Usuario';
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -50,7 +53,7 @@ export default function DropdownInternalUserMenu({ onLogout, onClose }) {
               {user?.email}
             </span>
             <span className="text-xs text-conexia-green/80 leading-tight truncate">
-              {ROLES_NAME[role] || 'Cargando rol...'}
+              {displayRole}
             </span>
           </div>
         </div>
