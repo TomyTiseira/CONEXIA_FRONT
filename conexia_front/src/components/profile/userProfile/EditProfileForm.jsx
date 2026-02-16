@@ -1956,7 +1956,7 @@ export default function EditProfileForm({
           {/* Redes Sociales */}
           <div>
             <h4 className="font-semibold text-conexia-green">
-              Redes Sociales (Opcional)
+              Redes sociales (Opcional)
             </h4>
             {form.socialLinks.length === 0 && (
               <button

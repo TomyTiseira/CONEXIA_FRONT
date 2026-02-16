@@ -49,7 +49,7 @@ export default function UserConnections({ userId, profile, isOwner }) {
             <div className="flex items-center gap-2 mb-1">
               <HiUserGroup className="w-6 h-6 text-conexia-green" />
               <h3 className="text-base md:text-lg font-bold text-conexia-green">
-                {isOwner ? 'Mis Conexiones' : 'Conexiones'}
+                {isOwner ? 'Mis conexiones' : 'Conexiones'}
               </h3>
             </div>
             <div className="text-gray-500 text-xs md:text-sm">

@@ -25,6 +25,7 @@ import { useMessaging } from "@/hooks/messaging/useMessaging";
 import { getMessagingSocket } from "@/lib/socket/messagingSocket";
 import SuspensionBadge from "@/components/common/SuspensionBadge";
 import { buildMediaUrl } from "@/utils/mediaUrl";
+import { useUserPlan } from "@/hooks/memberships";
 
 // Componente separado para el buscador mobile para evitar problemas de hidratación
 function MobileSearchBar() {
@@ -61,6 +62,9 @@ export default function NavbarCommunity() {
   const defaultAvatar = "/images/default-avatar.png";
   const { unreadCount, refreshUnreadCount, chats, loadConversations } =
     useMessaging();
+  
+  // Cargar plan del usuario una sola vez a nivel del navbar (caché de 5 min)
+  const { data: userPlanData } = useUserPlan();
   // Total de mensajes sin leer (suma por conversación)
   const totalUnread = useMemo(() => {
     try {
@@ -261,6 +265,7 @@ export default function NavbarCommunity() {
                 <DropdownUserMenu
                   onLogout={handleLogout}
                   onClose={() => setMenuOpen(false)}
+                  userPlanData={userPlanData}
                 />
               )}
             </div>
@@ -330,6 +335,7 @@ export default function NavbarCommunity() {
                   <DropdownUserMenu
                     onLogout={handleLogout}
                     onClose={() => setMenuOpen(false)}
+                    userPlanData={userPlanData}
                   />
                 )}
               </div>

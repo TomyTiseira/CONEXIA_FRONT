@@ -11,60 +11,26 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getProfileById } from "@/service/profiles/profilesFetch";
 import { useUserStore } from "@/store/userStore";
 import { ROLES } from "@/constants/roles";
 import { buildMediaUrl } from "@/utils/mediaUrl";
 import { FaRegLightbulb } from "react-icons/fa";
-import { PlanBadge } from "@/components/plans";
-import { useUserPlan } from "@/hooks/memberships";
+import { FiStar } from "react-icons/fi";
 
 const defaultAvatar = "/images/default-avatar.png";
 
-export default function DropdownUserMenu({ onLogout, onClose }) {
-  const { roleName } = useUserStore();
+export default function DropdownUserMenu({ onLogout, onClose, userPlanData }) {
+  const { roleName, profile: storeProfile } = useUserStore();
   const dropdownRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { user } = useAuth();
   const userId = user?.id;
 
-  // Solo obtener plan para usuarios USER (admin/moderador no tienen plan)
-  // Llamar hook solo si es USER - los hooks deben llamarse siempre, pero podemos
-  // ignorar el resultado si no es USER
-  const { data: userPlan, error: planError } = useUserPlan();
+  // Determinar si es un usuario regular (no admin ni moderador)
   const isRegularUser = roleName === ROLES.USER;
-
-  useEffect(() => {
-    // Si es admin o moderador, no buscar perfil
-    if (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) {
-      setLoading(false);
-      setProfile(null);
-      return;
-    }
-    const fetchProfile = async () => {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        const data = await getProfileById(userId);
-        setProfile(data.data.profile);
-      } catch (err) {
-        setError(err.message || "Error al cargar el perfil");
-        setProfile(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, [userId, roleName]);
 
   // Detectar clics fuera del menú para cerrarlo
   useEffect(() => {
@@ -96,59 +62,80 @@ export default function DropdownUserMenu({ onLogout, onClose }) {
 
   const handleClose = () => onClose?.();
 
-  if (loading || error || !profile) return null;
+  // Usar el perfil del store directamente (ya está cargado en el navbar)
+  const profile = storeProfile || {};
+  const hasProfile = storeProfile && Object.keys(storeProfile).length > 0;
+
+  // Renderizar badge de plan simple sin componente pesado
+  const renderPlanBadge = () => {
+    if (roleName !== ROLES.USER || !userPlanData?.plan) return null;
+    
+    const planName = userPlanData.plan.name || 'Free';
+    const isFree = userPlanData.isFreePlan;
+    
+    return (
+      <div className="px-4 py-2 border-b">
+        <button
+          onClick={() => {
+            handleClose();
+            router.push('/subscriptions');
+          }}
+          className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-md bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 hover:from-amber-100 hover:to-amber-200 transition-all"
+        >
+          <FiStar className="text-amber-500" size={14} />
+          <span className="text-xs font-semibold text-amber-700">
+            {planName}
+          </span>
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div
       ref={dropdownRef}
       className="absolute right-0 top-12 w-64 bg-white border rounded shadow-md z-50 py-2 text-conexia-green"
     >
-      {/* Perfil */}
-      <div className="flex flex-col gap-2 px-4 pb-2 border-b">
-        <div className="flex gap-3 items-center">
-          <div className="w-10 h-10 relative rounded-full overflow-hidden shrink-0">
-            <Image
-              src={
-                profile.profilePicture
-                  ? buildMediaUrl(profile.profilePicture)
-                  : defaultAvatar
-              }
-              alt="Foto de perfil"
-              fill
-              sizes="40px"
-              className="object-cover"
-            />
+      {/* Perfil - Solo para usuarios USER con perfil */}
+      {roleName === ROLES.USER && hasProfile && (
+        <div className="flex flex-col gap-2 px-4 pb-2 border-b">
+          <div className="flex gap-3 items-center">
+            <div className="w-10 h-10 relative rounded-full overflow-hidden shrink-0">
+              <Image
+                src={
+                  profile.profilePicture
+                    ? buildMediaUrl(profile.profilePicture)
+                    : defaultAvatar
+                }
+                alt="Foto de perfil"
+                fill
+                sizes="40px"
+                className="object-cover"
+              />
+            </div>
+            <div className="flex flex-col justify-center min-w-0">
+              <span className="font-semibold text-sm truncate">
+                {profile.name} {profile.lastName}
+              </span>
+              <span className="text-xs text-conexia-green/80 leading-tight line-clamp-2 break-words">
+                {profile.profession || ""}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col justify-center min-w-0">
-            <span className="font-semibold text-sm truncate">
-              {profile.name} {profile.lastName}
-            </span>
-            <span className="text-xs text-conexia-green/80 leading-tight line-clamp-2 break-words">
-              {profile.profession || ""}
-            </span>
+          <div className="flex justify-center items-center">
+            <Link
+              href={`/profile/userProfile/${userId}`}
+              onClick={handleClose}
+              className="bg-conexia-green text-white text-xs px-3 py-1 rounded-md hover:bg-conexia-green/90 transition-colors"
+            >
+              Ver perfil
+            </Link>
           </div>
-        </div>
-        <div className="flex justify-center items-center">
-          <Link
-            href={`/profile/userProfile/${userId}`}
-            onClick={handleClose}
-            className="bg-conexia-green text-white text-xs px-3 py-1 rounded-md hover:bg-conexia-green/90 transition-colors"
-          >
-            Ver perfil
-          </Link>
-        </div>
-      </div>
-
-      {/* Plan del usuario (solo para rol USER y si hay datos del plan) */}
-      {isRegularUser && userPlan && !planError && (
-        <div className="px-4 py-2 border-b">
-          <PlanBadge
-            useCurrentPlan={true}
-            variant="compact"
-            className="w-full justify-center"
-          />
         </div>
       )}
+
+      {/* Plan del usuario (solo para rol USER y si hay datos del plan) */}
+      {renderPlanBadge()}
 
       {/* Servicios (solo para usuarios con rol USER) */}
       {isRegularUser && (
