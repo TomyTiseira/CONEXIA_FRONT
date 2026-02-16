@@ -29,7 +29,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
   // Siempre puede ver detalle
   actions.push({
     id: 'view_detail',
-    label: 'Ver Detalle',
+    label: 'Ver detalle',
     description: 'Ver información completa del reclamo',
     icon: Eye,
     color: 'text-blue-600',
@@ -51,7 +51,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
   if (canMarkInReview) {
     actions.push({
       id: 'mark_in_review',
-      label: 'Marcar en Revisión',
+      label: 'Marcar en revisión',
       description: 'Tomar el reclamo y ponerlo en revisión',
       icon: Clock,
       color: 'text-indigo-800',
@@ -64,7 +64,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
   if (availableActions.includes('resolve_claim')) {
     actions.push({
       id: 'resolve_claim',
-      label: 'Resolver Reclamo',
+      label: 'Resolver reclamo',
       description: 'Aprobar y emitir resolución a favor de una parte',
       icon: CheckCircle,
       color: 'text-emerald-800',
@@ -75,7 +75,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
 
     actions.push({
       id: 'reject_claim',
-      label: 'Rechazar Reclamo',
+      label: 'Rechazar reclamo',
       description: 'Rechazar el reclamo por infundado',
       icon: X,
       color: 'text-red-800',
@@ -102,7 +102,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
   if (availableActions.includes('submit_observations')) {
     actions.push({
       id: 'submit_observations',
-      label: 'Enviar Observaciones',
+      label: 'Enviar observaciones',
       description: 'Responder al reclamo con tus observaciones',
       icon: MessageSquare,
       color: 'text-green-800',
@@ -116,7 +116,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
   if (availableActions.includes('upload_compliance')) {
     actions.push({
       id: 'upload_compliance',
-      label: 'Subir Cumplimiento',
+      label: 'Subir cumplimiento',
       description: 'Demostrar que se cumplió con lo solicitado',
       icon: Upload,
       color: 'text-purple-800',
@@ -148,7 +148,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
     if (!actions.find(a => a.id === 'peer_review')) {
       actions.push({
         id: 'peer_review',
-        label: 'Revisar Compromiso',
+        label: 'Revisar compromiso',
         description: 'Pre-aprobar o pre-rechazar evidencia presentada',
         icon: ThumbsUp,
         color: 'text-purple-800',
@@ -163,7 +163,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
   if (availableActions.includes('review_compliance') || hasReviewCompliance) {
     actions.push({
       id: 'review_compliance',
-      label: 'Revisar Compromiso (Moderador)',
+      label: 'Revisar compromiso (Moderador)',
       description: 'Aprobar o rechazar evidencia de compromiso como moderador',
       icon: FileCheck,
       color: 'text-indigo-800',
@@ -178,7 +178,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
   if (claimStatus === CLAIM_STATUS.PENDING_CLARIFICATION && userRole === 'claimant') {
     actions.push({
       id: 'subsanar_claim',
-      label: 'Subsanar Reclamo',
+      label: 'Subsanar reclamo',
       description: 'Responder a lo solicitado y adjuntar evidencias',
       icon: Upload,
       color: 'text-orange-800',
@@ -196,7 +196,7 @@ export const ClaimActionsModal = ({ claim, onClose, onAction }) => {
       >
         {/* Header fijo */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-          <h3 className="text-lg font-semibold text-gray-900">Acciones Disponibles</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Acciones disponibles</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 rounded-full p-2 transition-colors"

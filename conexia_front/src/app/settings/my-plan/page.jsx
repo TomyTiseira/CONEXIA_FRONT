@@ -5,12 +5,14 @@ import { useSearchParams } from 'next/navigation';
 import { usePlans } from '@/hooks/plans/usePlans';
 import { useUserPlan } from '@/hooks/memberships';
 import { useSubscriptionContract } from '@/hooks/plans/useSubscriptionContract';
+import { useCancelSubscription } from '@/hooks/plans/useCancelSubscription';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import PlanCard from '@/components/plans/PlanCard';
 import PlanDetailsModal from '@/components/plans/PlanDetailsModal';
 import PricingToggle from '@/components/plans/PricingToggle';
 import ContractConfirmationModal from '@/components/plans/ContractConfirmationModal';
+import CancelSubscriptionModal from '@/components/plans/CancelSubscriptionModal';
 import { PlanInfoCard } from '@/components/plans';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROLES } from '@/constants/roles';
@@ -23,15 +25,18 @@ export default function MyPlanPage() {
   useSessionTimeout();
   const searchParams = useSearchParams();
   const { plans, loading, error, refetch } = usePlans();
-  const { data: currentUserPlanData } = useUserPlan();
+  const { data: currentUserPlanData, refetch: refetchUserPlan } = useUserPlan();
   const { handleContractPlan, loading: contracting, error: contractError } = useSubscriptionContract();
+  const { handleCancelSubscription, loading: canceling, error: cancelError } = useCancelSubscription();
   const { user } = useAuth();
   const { roleName, profile } = useUserStore();
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [planToContract, setPlanToContract] = useState(null);
+  const [subscriptionToCancel, setSubscriptionToCancel] = useState(null);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -113,6 +118,63 @@ export default function MyPlanPage() {
       setIsDetailsModalOpen(true);
     }
   };
+
+  // Handler para confirmar la cancelación
+  const handleConfirmCancelSubscription = async (reason) => {
+    try {
+      const response = await handleCancelSubscription(reason);
+      
+      // Cerrar el modal
+      setIsCancelModalOpen(false);
+      setSubscriptionToCancel(null);
+      
+      // Refrescar los datos del plan del usuario
+      await refetchUserPlan();
+      
+      // Mostrar toast de éxito con el mensaje del backend que incluye la fecha
+      setToast({
+        type: 'success',
+        message: response?.message || 'Suscripción cancelada. Mantendrás los beneficios hasta el final del período actual',
+        isVisible: true
+      });
+    } catch (err) {
+      console.error('Error al cancelar suscripción:', err);
+      
+      // Cerrar el modal también en caso de error
+      setIsCancelModalOpen(false);
+      setSubscriptionToCancel(null);
+      
+      // Refrescar los datos para asegurar que la UI esté actualizada
+      await refetchUserPlan();
+      
+      // Determinar el tipo de toast según el error
+      const isAlreadyCancelled = err?.statusCode === 400 || 
+                                  err?.message?.toLowerCase().includes('ya está cancelada') ||
+                                  err?.message?.toLowerCase().includes('ya esta cancelada');
+      
+      // Mostrar toast de error o advertencia
+      setToast({
+        type: isAlreadyCancelled ? 'warning' : 'error',
+        message: err?.message || 'Error al cancelar la suscripción',
+        isVisible: true
+      });
+    }
+  };
+
+  // Event listener para abrir el modal de cancelación desde PlanInfoCard
+  useEffect(() => {
+    const handleOpenCancelModal = (event) => {
+      const { subscription, planName } = event.detail;
+      setSubscriptionToCancel({ subscription, planName });
+      setIsCancelModalOpen(true);
+    };
+
+    window.addEventListener('openCancelSubscriptionModal', handleOpenCancelModal);
+    
+    return () => {
+      window.removeEventListener('openCancelSubscriptionModal', handleOpenCancelModal);
+    };
+  }, []);
 
   const handleCloseDetailsModal = () => {
     setIsDetailsModalOpen(false);
@@ -264,6 +326,19 @@ export default function MyPlanPage() {
         billingCycle={billingCycle}
         onConfirm={handleConfirmContract}
         loading={contracting}
+      />
+
+      {/* Modal de cancelación de suscripción */}
+      <CancelSubscriptionModal
+        isOpen={isCancelModalOpen}
+        onClose={() => {
+          setIsCancelModalOpen(false);
+          setSubscriptionToCancel(null);
+        }}
+        onConfirm={handleConfirmCancelSubscription}
+        subscription={subscriptionToCancel?.subscription}
+        planName={subscriptionToCancel?.planName}
+        isLoading={canceling}
       />
 
       {/* Toast de notificaciones */}

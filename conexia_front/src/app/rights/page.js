@@ -25,7 +25,7 @@ export default function RightsPolicy() {
           <div className="flex items-center gap-4 mb-4">
             <Scale size={48} className="text-yellow-300" />
             <h1 className="text-4xl md:text-5xl font-bold drop-shadow-lg">
-              Política de Derechos
+              Política de derechos
             </h1>
           </div>
           <p className="text-lg text-white/90 drop-shadow">
@@ -46,7 +46,7 @@ export default function RightsPolicy() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                 <Copyright size={24} className="text-conexia-green" />
-                Protección de Derechos Intelectuales
+                Protección de derechos intelectuales
               </h2>
               <p className="text-gray-700 leading-relaxed">
                 En <strong>CONEXIA</strong>, respetamos los derechos de propiedad intelectual de todos. 
@@ -64,7 +64,7 @@ export default function RightsPolicy() {
             </h2>
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-blue-50 to-transparent border-l-4 border-blue-500 p-4 rounded-r-lg">
-                <h3 className="font-bold text-gray-800 mb-2">Marca y Logotipo</h3>
+                <h3 className="font-bold text-gray-800 mb-2">Marca y logotipo</h3>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   El nombre <strong>CONEXIA</strong>, el logotipo y todos los elementos de diseño de la 
                   plataforma son propiedad exclusiva y están protegidos por leyes de propiedad intelectual. 
@@ -73,7 +73,7 @@ export default function RightsPolicy() {
               </div>
 
               <div className="bg-gradient-to-r from-green-50 to-transparent border-l-4 border-green-500 p-4 rounded-r-lg">
-                <h3 className="font-bold text-gray-800 mb-2">Código y Tecnología</h3>
+                <h3 className="font-bold text-gray-800 mb-2">Código y tecnología</h3>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   Todo el código, diseño, funcionalidad y tecnología de la plataforma son propiedad de CONEXIA. 
                   Queda prohibida la copia, modificación, distribución o ingeniería inversa del sistema.
@@ -81,7 +81,7 @@ export default function RightsPolicy() {
               </div>
 
               <div className="bg-gradient-to-r from-purple-50 to-transparent border-l-4 border-purple-500 p-4 rounded-r-lg">
-                <h3 className="font-bold text-gray-800 mb-2">Contenido de la Plataforma</h3>
+                <h3 className="font-bold text-gray-800 mb-2">Contenido de la plataforma</h3>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   Los textos, imágenes, gráficos y materiales educativos creados por CONEXIA están protegidos 
                   y no pueden ser reproducidos sin permiso.
@@ -94,7 +94,7 @@ export default function RightsPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <Users className="text-conexia-green" size={28} />
-              2. Derechos de los Usuarios
+              2. Derechos de los usuarios
             </h2>
             <div className="bg-gradient-to-br from-conexia-green/10 to-blue-50 rounded-lg p-6 border border-conexia-green/20">
               <p className="text-gray-700 mb-4 leading-relaxed">
@@ -104,7 +104,7 @@ export default function RightsPolicy() {
                 <div className="flex items-start gap-3 bg-white p-3 rounded-lg">
                   <span className="text-2xl">👤</span>
                   <div>
-                    <p className="font-semibold text-gray-800">Propiedad del Contenido</p>
+                    <p className="font-semibold text-gray-800">Propiedad del contenido</p>
                     <p className="text-sm text-gray-600">
                       Mantienes todos los derechos sobre tu perfil, portafolio, publicaciones y trabajos compartidos
                     </p>
@@ -124,7 +124,7 @@ export default function RightsPolicy() {
                 <div className="flex items-start gap-3 bg-white p-3 rounded-lg">
                   <span className="text-2xl">✂️</span>
                   <div>
-                    <p className="font-semibold text-gray-800">Control de tu Contenido</p>
+                    <p className="font-semibold text-gray-800">Control de tu contenido</p>
                     <p className="text-sm text-gray-600">
                       Puedes editar o eliminar tu contenido en cualquier momento desde tu cuenta
                     </p>
@@ -138,13 +138,13 @@ export default function RightsPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <FileCheck className="text-conexia-green" size={28} />
-              3. Uso Permitido del Contenido
+              3. Uso permitido del contenido
             </h2>
             <div className="grid gap-3">
               <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
                 <span className="text-green-500 text-2xl">✓</span>
                 <div>
-                  <p className="font-semibold text-gray-800">Visualización Personal</p>
+                  <p className="font-semibold text-gray-800">Visualización personal</p>
                   <p className="text-sm text-gray-600">Navegar y ver el contenido para tu uso personal</p>
                 </div>
               </div>
@@ -152,7 +152,7 @@ export default function RightsPolicy() {
               <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
                 <span className="text-green-500 text-2xl">✓</span>
                 <div>
-                  <p className="font-semibold text-gray-800">Compartir Enlaces</p>
+                  <p className="font-semibold text-gray-800">Compartir enlaces</p>
                   <p className="text-sm text-gray-600">Compartir enlaces a perfiles o servicios de CONEXIA</p>
                 </div>
               </div>
@@ -160,7 +160,7 @@ export default function RightsPolicy() {
               <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
                 <span className="text-green-500 text-2xl">✓</span>
                 <div>
-                  <p className="font-semibold text-gray-800">Citas con Atribución</p>
+                  <p className="font-semibold text-gray-800">Citas con atribución</p>
                   <p className="text-sm text-gray-600">Citar contenido dando crédito al autor original y a CONEXIA</p>
                 </div>
               </div>
@@ -171,7 +171,7 @@ export default function RightsPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <AlertOctagon className="text-red-500" size={28} />
-              4. Uso Prohibido del Contenido
+              4. Uso prohibido del contenido
             </h2>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-gray-700 mb-3 font-semibold">Está estrictamente prohibido:</p>
@@ -216,7 +216,7 @@ export default function RightsPolicy() {
 
           {/* Denuncias */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">5. Denuncia de Infracción de Derechos</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">5. Denuncia de infracción de derechos</h2>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-5">
               <p className="text-gray-700 mb-3 leading-relaxed">
                 Si crees que tu contenido ha sido usado sin autorización en CONEXIA, puedes presentar 
@@ -250,7 +250,7 @@ export default function RightsPolicy() {
 
           {/* Medidas */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">6. Medidas ante Infracciones</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">6. Medidas ante infracciones</h2>
             <div className="space-y-3">
               <p className="text-gray-700 leading-relaxed">
                 CONEXIA se toma muy en serio las infracciones de derechos de autor. Ante violaciones confirmadas:

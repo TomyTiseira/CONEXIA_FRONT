@@ -147,7 +147,7 @@ export const SubmitComplianceModal = ({
                 
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                    Instrucciones del Moderador:
+                    Instrucciones del moderador:
                   </h3>
                   <p className="text-sm text-gray-600 bg-white p-3 rounded border border-gray-200">
                     {compliance.moderatorInstructions}
@@ -157,7 +157,7 @@ export const SubmitComplianceModal = ({
                 {compliance.rejectionReason && (
                   <div className="bg-red-50 border border-red-200 rounded p-3">
                     <h4 className="text-sm font-semibold text-red-700 mb-1">
-                      Motivo de Rechazo Anterior:
+                      Motivo de rechazo anterior:
                     </h4>
                     <p className="text-sm text-red-600">
                       {compliance.rejectionReason}
@@ -170,7 +170,7 @@ export const SubmitComplianceModal = ({
               {compliance.requiresFiles && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Archivos de Evidencia *
+                    Archivos de evidencia *
                   </label>
                   
                   {/* Drag & Drop Zone */}
@@ -260,7 +260,7 @@ export const SubmitComplianceModal = ({
               {/* Notes */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Notas Explicativas {!compliance.requiresFiles && '*'}
+                  Notas explicativas {!compliance.requiresFiles && '*'}
                 </label>
                 <textarea
                   value={userNotes}
@@ -309,7 +309,7 @@ export const SubmitComplianceModal = ({
                   Enviando...
                 </>
               ) : (
-                'Enviar Evidencia'
+                'Enviar evidencia'
               )}
             </button>
           </div>

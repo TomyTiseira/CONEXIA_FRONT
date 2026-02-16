@@ -9,7 +9,7 @@ import { getMyPostulations, cancelPostulation } from '@/service/postulations/pos
 import { fetchProjectById } from '@/service/projects/projectsFetch';
 import Pagination from '@/components/common/Pagination';
 import { ROLES } from '@/constants/roles';
-import BackButton from '@/components/ui/BackButton';
+import { Filter, Calendar, ArrowDown, ArrowUp, FileText } from 'lucide-react';
 
 export default function MyPostulationsPage() {
   const { user } = useAuth();
@@ -26,6 +26,7 @@ export default function MyPostulationsPage() {
   const [error, setError] = useState('');
   const [selectedProject, setSelectedProject] = useState(''); // Filtro por proyecto
   const [uniqueProjects, setUniqueProjects] = useState([]); // Lista de proyectos únicos
+  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' }); // Ordenamiento
 
   useEffect(() => {
     if (roleName !== ROLES.USER) {
@@ -103,7 +104,52 @@ export default function MyPostulationsPage() {
       filtered = filtered.filter(p => p.projectId === parseInt(selectedProject));
     }
     
+    // Aplicar ordenamiento
+    filtered = getSortedPostulations(filtered);
+    
     setPostulations(filtered);
+  };
+
+  const handleSort = (key) => {
+    setSortConfig(prev => {
+      // Si es la misma columna, alternar dirección
+      if (prev.key === key) {
+        if (prev.direction === 'desc') {
+          return { key, direction: 'asc' };
+        } else {
+          return { key, direction: 'desc' };
+        }
+      }
+      // Si es una columna diferente, empezar con descendente
+      return { key, direction: 'desc' };
+    });
+  };
+
+  const getSortedPostulations = (postulationsList) => {
+    if (!sortConfig.key || !postulationsList || postulationsList.length === 0) {
+      return postulationsList;
+    }
+    
+    const sorted = [...postulationsList];
+    
+    if (sortConfig.key === 'date') {
+      sorted.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return sortConfig.direction === 'desc' 
+          ? dateB - dateA 
+          : dateA - dateB;
+      });
+    } else if (sortConfig.key === 'status') {
+      sorted.sort((a, b) => {
+        const statusA = a.status?.name || '';
+        const statusB = b.status?.name || '';
+        const comparison = statusA.localeCompare(statusB);
+        return sortConfig.direction === 'desc' ? -comparison : comparison;
+      });
+    }
+    
+    return sorted;
   };
 
   const handleProjectFilterChange = (projectId) => {
@@ -116,7 +162,7 @@ export default function MyPostulationsPage() {
     if (allPostulations.length > 0) {
       applyFilters();
     }
-  }, [selectedProject]);
+  }, [selectedProject, sortConfig]);
 
   const handleCancelPostulation = async () => {
     if (!selectedPostulation) return;
@@ -180,20 +226,70 @@ export default function MyPostulationsPage() {
       <Navbar />
       <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green">
-              Mis Postulaciones
-            </h1>
-            
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-              {/* Filtro por proyecto */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Filtrar por proyecto:</label>
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+              <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
+                Mis postulaciones
+              </h1>
+              <div className="w-10"></div>
+            </div>
+          </div>
+
+          {/* Filtros */}
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              {/* Filtros en el lado izquierdo */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter size={20} className="text-gray-500" />
+                  <span className="font-medium text-gray-700">Filtros:</span>
+                </div>
+                
                 <select
                   value={selectedProject}
                   onChange={(e) => handleProjectFilterChange(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green"
                 >
                   <option value="">Todos los proyectos</option>
                   {uniqueProjects.map((project) => (
@@ -203,13 +299,53 @@ export default function MyPostulationsPage() {
                   ))}
                 </select>
               </div>
-              
-              <button
-                onClick={() => router.push('/project/search')}
-                className="bg-conexia-green text-white px-4 py-2 rounded font-medium hover:bg-conexia-green/90 transition text-sm"
-              >
-                Buscar Proyectos
-              </button>
+
+              {/* Ordenamiento en el lado derecho */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-sm font-medium text-gray-700">Ordenar:</span>
+                
+                {/* Botón ordenar por fecha */}
+                <button
+                  onClick={() => handleSort('date')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
+                    sortConfig.key === 'date'
+                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                  title={sortConfig.key === 'date' 
+                    ? `Ordenado por fecha ${sortConfig.direction === 'desc' ? 'descendente' : 'ascendente'}` 
+                    : 'Ordenar por fecha'}
+                >
+                  <Calendar size={16} />
+                  <span className="text-sm font-medium">Fecha</span>
+                  {sortConfig.key === 'date' && (
+                    sortConfig.direction === 'desc' 
+                      ? <ArrowDown size={16} className="opacity-90" />
+                      : <ArrowUp size={16} className="opacity-90" />
+                  )}
+                </button>
+
+                {/* Botón ordenar por estado */}
+                <button
+                  onClick={() => handleSort('status')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
+                    sortConfig.key === 'status'
+                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                  title={sortConfig.key === 'status' 
+                    ? `Ordenado por estado ${sortConfig.direction === 'desc' ? 'Z-A' : 'A-Z'}` 
+                    : 'Ordenar por estado'}
+                >
+                  <FileText size={16} />
+                  <span className="text-sm font-medium">Estado</span>
+                  {sortConfig.key === 'status' && (
+                    sortConfig.direction === 'desc' 
+                      ? <ArrowDown size={16} className="opacity-90" />
+                      : <ArrowUp size={16} className="opacity-90" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -346,26 +482,17 @@ export default function MyPostulationsPage() {
             )}
           </div>
 
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex justify-center mt-6">
-              <Pagination
-                page={currentPage}
-                hasPreviousPage={pagination.hasPreviousPage}
-                hasNextPage={pagination.hasNextPage}
-                totalPages={pagination.totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
-
-          {/* Back Button */}
-          <div className="flex justify-start mt-6">
-            <BackButton
-              text="Volver a Proyectos"
-              onClick={() => router.push('/project')}
+          {/* Pagination (siempre visible) */}
+          <div className="flex justify-center mt-6">
+            <Pagination
+              page={currentPage}
+              hasPreviousPage={pagination?.hasPreviousPage || false}
+              hasNextPage={pagination?.hasNextPage || false}
+              totalPages={pagination?.totalPages || 1}
+              onPageChange={setCurrentPage}
             />
           </div>
+
         </div>
       </div>
 

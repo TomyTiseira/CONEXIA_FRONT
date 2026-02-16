@@ -304,7 +304,7 @@ export default function MyClaimsPage() {
               </div>
             </button>
             <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center mr-8">
-              Mis Reclamos
+              Mis reclamos
             </h1>
             <div className="w-10"></div>
           </div>
@@ -333,6 +333,9 @@ export default function MyClaimsPage() {
                 <option value="requires_staff_response">
                   Requiere respuesta
                 </option>
+                <option value="in_review">En revisión</option>
+                <option value="pending_clarification">Requiere aclaración</option>
+                <option value="requires_staff_response">Requiere respuesta</option>
                 <option value="resolved">Resuelto</option>
                 <option value="rejected">Rechazado</option>
                 <option value="cancelled">Cancelado</option>
@@ -344,8 +347,8 @@ export default function MyClaimsPage() {
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green"
               >
                 <option value="all">Todos los roles</option>
-                <option value="claimant">Como Reclamante</option>
-                <option value="respondent">Como Reclamado</option>
+                <option value="claimant">Como reclamante</option>
+                <option value="respondent">Como reclamado</option>
               </select>
             </div>
           </div>
@@ -425,7 +428,7 @@ export default function MyClaimsPage() {
                             Tipo
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Mi Rol
+                            Mi rol
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Contra

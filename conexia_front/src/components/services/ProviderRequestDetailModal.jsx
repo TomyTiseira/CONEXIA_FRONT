@@ -59,6 +59,27 @@ export default function ProviderRequestDetailModal({
       completed_with_agreement: "Finalizado con acuerdo",
       terminated_by_moderation: "Terminado por moderación",
       finished_by_moderation: "Finalizado por moderación",
+      pending: 'Pendiente',
+      quoted: 'Cotizado',
+      requoting: 'Re-cotizando',
+      accepted: 'Aceptado',
+      payment_pending: 'Pago en proceso',
+      payment_rejected: 'Pago rechazado',
+      approved: 'Aprobada',
+      rejected: 'Rechazado',
+      cancelled: 'Cancelado',
+      negotiating: 'Negociando',
+      in_progress: 'En progreso',
+      delivered: 'Entregado',
+      revision_requested: 'Revisión solicitada',
+      completed: 'Completado',
+      expired: 'Vencida',
+      in_claim: 'En reclamo',
+      cancelled_by_claim: 'Cancelado por reclamo',
+      completed_by_claim: 'Finalizado por reclamo',
+      completed_with_agreement: 'Finalizado con acuerdo',
+      terminated_by_moderation: 'Terminado por moderación',
+      finished_by_moderation: 'Finalizado por moderación'
     };
     return statusMap[statusCode] || statusCode;
   };

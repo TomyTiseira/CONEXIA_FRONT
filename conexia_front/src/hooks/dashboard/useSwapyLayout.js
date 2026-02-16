@@ -17,7 +17,6 @@ export const useSwapyLayout = (storageKey = 'conexia-dashboard-layout', defaultL
   // Callback ref que se ejecuta cuando el elemento está disponible
   const containerRef = useCallback((node) => {
     if (node) {
-      console.log('✅ Container ref asignado:', node);
       setContainer(node);
     }
   }, []);
@@ -32,20 +31,18 @@ export const useSwapyLayout = (storageKey = 'conexia-dashboard-layout', defaultL
         setLayout(JSON.parse(savedLayout));
       }
     } catch (error) {
-      console.error('Error al cargar layout:', error);
+      // Error loading layout
     }
   }, [storageKey]);
 
   // Inicializar Swapy cuando el container esté disponible
   useEffect(() => {
     if (!container) {
-      console.log('⚠️ Container no está disponible aún');
       return;
     }
     
     // Evitar reinicializar si ya existe
     if (swapyInstance.current) {
-      console.log('⚠️ Swapy ya inicializado');
       return;
     }
 
@@ -53,7 +50,6 @@ export const useSwapyLayout = (storageKey = 'conexia-dashboard-layout', defaultL
     const timer = setTimeout(() => {
       try {
         if (!container) {
-          console.log('❌ Container no disponible después del delay');
           return;
         }
 
@@ -61,12 +57,7 @@ export const useSwapyLayout = (storageKey = 'conexia-dashboard-layout', defaultL
         const slots = container.querySelectorAll('[data-swapy-slot]');
         const items = container.querySelectorAll('[data-swapy-item]');
         
-        console.log('🎯 Inicializando Swapy...');
-        console.log('   Slots encontrados:', slots.length);
-        console.log('   Items encontrados:', items.length);
-        
         if (slots.length === 0 || items.length === 0) {
-          console.error('❌ No se encontraron slots o items para Swapy');
           setIsSwapyReady(false);
           return;
         }
@@ -76,31 +67,23 @@ export const useSwapyLayout = (storageKey = 'conexia-dashboard-layout', defaultL
           animation: 'dynamic', // dynamic es más suave y configurable que spring
         });
 
-        console.log('✅ Swapy inicializado correctamente');
-
         // Habilitar por defecto
         swapy.enable(true);
 
         // Escuchar cambios en el layout
         swapy.onSwap((event) => {
-          console.log('🔄 Swap event completo:', event);
-          
           // El evento puede tener diferentes estructuras según la versión de Swapy
           const newLayout = event?.data?.object || event?.object || event;
           
           if (newLayout) {
-            console.log('🔄 Layout cambiado:', newLayout);
             setLayout(newLayout);
             
             // Guardar en localStorage
             try {
               localStorage.setItem(storageKey, JSON.stringify(newLayout));
-              console.log('💾 Layout guardado en localStorage');
             } catch (error) {
-              console.error('Error al guardar layout:', error);
+              // Error saving layout
             }
-          } else {
-            console.warn('⚠️ No se pudo extraer el layout del evento');
           }
         });
 
@@ -108,9 +91,6 @@ export const useSwapyLayout = (storageKey = 'conexia-dashboard-layout', defaultL
         setIsSwapyReady(true);
 
       } catch (error) {
-        console.error('❌ Error al inicializar Swapy:', error);
-        console.error('   Detalles:', error.message);
-        console.error('   Stack:', error.stack);
         setIsSwapyReady(false);
       }
     }, 500);
@@ -119,11 +99,10 @@ export const useSwapyLayout = (storageKey = 'conexia-dashboard-layout', defaultL
     return () => {
       clearTimeout(timer);
       if (swapyInstance.current) {
-        console.log('🧹 Limpiando Swapy');
         try {
           swapyInstance.current.destroy();
         } catch (e) {
-          console.error('Error al destruir Swapy:', e);
+          // Error destroying Swapy
         }
         swapyInstance.current = null;
         setIsSwapyReady(false);
@@ -141,7 +120,7 @@ export const useSwapyLayout = (storageKey = 'conexia-dashboard-layout', defaultL
         swapyInstance.current.update(defaultLayout);
       }
     } catch (error) {
-      console.error('Error al resetear layout:', error);
+      // Error resetting layout
     }
   }, [storageKey, defaultLayout]);
 

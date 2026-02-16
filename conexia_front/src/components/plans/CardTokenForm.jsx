@@ -52,22 +52,12 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
 
     setProcessing(true);
     try {
-      console.log('════════════════════════════════════════════════════════');
-      console.log('🔄 Generando token con validación CVV...');
-      console.log('════════════════════════════════════════════════════════');
-
       // ✅ MÉTODO CORRECTO: mp.fields.createCardToken incluye validación CVV
       const cardToken = await mp.fields.createCardToken({
         cardholderName: formData.cardholderName,
         identificationType: formData.identificationType,
         identificationNumber: formData.identificationNumber,
       });
-
-      console.log('✅ TOKEN GENERADO CON CVV VALIDADO');
-      console.log('🎫 Token ID:', cardToken.id);
-      console.log('💳 Card Last 4:', cardToken.last_four_digits);
-      console.log('🔒 CVV Validado:', cardToken.security_code_length ? 'SÍ' : 'N/A');
-      console.log('════════════════════════════════════════════════════════');
 
       if (!cardToken || !cardToken.id) {
         throw new Error('No se pudo generar el token');
@@ -90,13 +80,7 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
   useEffect(() => {
     async function initSDK() {
       try {
-        console.log('════════════════════════════════════════════════════════');
-        console.log('🔍 DEBUG: Inicialización de MercadoPago SDK con CardForm');
-        console.log('════════════════════════════════════════════════════════');
-        console.log('📌 Public Key:', config.MERCADOPAGO_PUBLIC_KEY?.substring(0, 25) + '...');
-        console.log('📌 Monto:', amount);
-        console.log('════════════════════════════════════════════════════════');
-        
+
         if (!config.MERCADOPAGO_PUBLIC_KEY) {
           throw new Error('MercadoPago Public Key no configurada');
         }
@@ -110,9 +94,6 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
           throw new Error('⚠️ Public Key inválido. Debe comenzar con APP_USR- o TEST-');
         }
         
-        console.log('✅ Public Key validado correctamente');
-        console.log('🌍 Cargando SDK oficial de MercadoPago desde CDN...');
-        
         await loadMercadoPagoSDK();
         
         // ✅ Inicializar MercadoPago con locale Argentina
@@ -121,11 +102,7 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
         });
         setMp(mercadoPago);
         
-        console.log('✅ SDK de MercadoPago inicializado');
-        console.log('⏳ Esperando montaje del formulario...');
-        
       } catch (error) {
-        console.error('❌ ERROR al inicializar MercadoPago:', error);
         setInitError(error.message);
         onError?.(error);
       }
@@ -139,8 +116,6 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
 
     const timer = setTimeout(() => {
       try {
-        console.log('🎨 Inicializando MercadoPago Fields (con validación CVV)...');
-        
         // Crear campos seguros de MercadoPago
         const cardNumberElement = mp.fields.create('cardNumber', {
           placeholder: 'Número de tarjeta'
@@ -154,13 +129,10 @@ export default function CardTokenForm({ plan, billingCycle, onTokenGenerated, on
           placeholder: 'CVV'
         }).mount('form-checkout__securityCode');
 
-        console.log('✅ Fields montados exitosamente');
-        console.log('✅ CVV será validado correctamente');
         setSdkInitialized(true);
         formMountedRef.current = true;
         
       } catch (error) {
-        console.error('❌ ERROR al crear Fields:', error);
         setInitError(error.message);
       }
     }, 100);

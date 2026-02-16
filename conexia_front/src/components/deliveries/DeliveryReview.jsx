@@ -386,7 +386,7 @@ export default function DeliveryReview({
             <div className="mb-6">
               <label className="flex items-center font-semibold text-gray-900 mb-3">
                 <Download size={18} className="mr-2" />
-                {attachments.length === 1 ? 'Archivo Adjunto' : `Archivos Adjuntos (${attachments.length})`}
+                {attachments.length === 1 ? 'Archivo adjunto' : `Archivos adjuntos (${attachments.length})`}
                 {isClient && delivery.needsWatermark && (
                   <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">
                     Pendiente de pago
@@ -529,7 +529,7 @@ export default function DeliveryReview({
                 title={hasActiveClaim ? 'No se puede aprobar mientras hay un reclamo activo' : ''}
               >
                 <CheckCircle size={18} className="mr-2" />
-                Aceptar Entrega
+                Aceptar entrega
               </Button>
               <Button
                 variant="warning"
@@ -539,7 +539,7 @@ export default function DeliveryReview({
                 title={hasActiveClaim ? 'No se puede solicitar revisión mientras hay un reclamo activo' : ''}
               >
                 <RefreshCw size={18} className="mr-2" />
-                Solicitar Revisión
+                Solicitar revisión
               </Button>
             </div>
           )}

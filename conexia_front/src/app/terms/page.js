@@ -25,7 +25,7 @@ export default function TermsOfService() {
           <div className="flex items-center gap-4 mb-4">
             <Shield size={48} className="text-yellow-300" />
             <h1 className="text-4xl md:text-5xl font-bold drop-shadow-lg">
-              Condiciones de Uso
+              Condiciones de uso
             </h1>
           </div>
           <p className="text-lg text-white/90 drop-shadow">
@@ -60,7 +60,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <CheckCircle className="text-conexia-green" size={28} />
-              2. Aceptación de Términos
+              2. Aceptación de términos
             </h2>
             <div className="space-y-3 text-gray-700">
               <p className="leading-relaxed">
@@ -91,7 +91,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <Users className="text-conexia-green" size={28} />
-              3. Uso de la Plataforma
+              3. Uso de la plataforma
             </h2>
             <div className="space-y-4">
               <div className="bg-gray-50 rounded-lg p-4">
@@ -103,7 +103,7 @@ export default function TermsOfService() {
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-800 mb-2">3.2 Conducta Profesional</h3>
+                <h3 className="font-semibold text-gray-800 mb-2">3.2 Conducta profesional</h3>
                 <p className="text-gray-700 text-sm leading-relaxed">
                   Los usuarios deben mantener un comportamiento profesional y respetuoso. Está prohibido 
                   el acoso, discriminación, publicación de contenido ofensivo o cualquier actividad que 
@@ -112,7 +112,7 @@ export default function TermsOfService() {
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-800 mb-2">3.3 Servicios y Transacciones</h3>
+                <h3 className="font-semibold text-gray-800 mb-2">3.3 Servicios y transacciones</h3>
                 <p className="text-gray-700 text-sm leading-relaxed">
                   CONEXIA facilita la conexión entre profesionales y clientes. Los acuerdos de servicio, 
                   precios y condiciones son establecidos directamente entre las partes. La plataforma 
@@ -126,7 +126,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
               <AlertCircle className="text-red-500" size={28} />
-              4. Actividades Prohibidas
+              4. Actividades prohibidas
             </h2>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-gray-700 mb-3">Está estrictamente prohibido:</p>
@@ -157,7 +157,7 @@ export default function TermsOfService() {
 
           {/* Propiedad intelectual */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">5. Propiedad Intelectual</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">5. Propiedad intelectual</h2>
             <p className="text-gray-700 leading-relaxed">
               Todos los contenidos, marcas, logotipos y diseños de CONEXIA son propiedad exclusiva 
               de la plataforma o de sus licenciantes. El contenido creado por los usuarios permanece 
@@ -167,7 +167,7 @@ export default function TermsOfService() {
 
           {/* Limitación de responsabilidad */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">6. Limitación de Responsabilidad</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">6. Limitación de responsabilidad</h2>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-gray-700 leading-relaxed text-sm">
                 CONEXIA proporciona la plataforma &quot;tal cual&quot; y no garantiza resultados específicos. 

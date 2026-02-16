@@ -61,15 +61,9 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
     router.push(`/profile/userProfile/${postulation.userId}`);
   };
 
-  // Debug: Ver qué datos de prueba técnica tenemos
-  console.log('🔍 Postulation completa:', postulation);
-  console.log('🔍 Prueba técnica - Description:', postulation.technicalEvaluationDescription);
-  console.log('🔍 Prueba técnica - Link:', postulation.technicalEvaluationLink);
-  console.log('🔍 Prueba técnica - URL:', postulation.technicalEvaluationUrl);
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-conexia-green">

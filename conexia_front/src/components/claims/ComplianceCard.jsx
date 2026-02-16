@@ -203,6 +203,7 @@ export const ComplianceCard = ({
               <p className="text-xs font-medium text-gray-600 mb-2">
                 ID del Compromiso:
               </p>
+              <p className="text-xs font-medium text-gray-600 mb-2">ID del compromiso:</p>
               <code className="text-sm bg-purple-100 text-purple-900 px-3 py-1.5 rounded-lg font-mono font-semibold border border-purple-300 inline-block">
                 {String(compliance.id)}
               </code>
@@ -293,7 +294,7 @@ export const ComplianceCard = ({
               }
             >
               <p className="text-xs font-medium text-gray-600 mb-2">
-                Instrucciones del Moderador:
+                Instrucciones del moderador:
               </p>
               <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                 {compliance.moderatorInstructions}
@@ -379,7 +380,7 @@ export const ComplianceCard = ({
           <div className="bg-purple-50 border-2 border-purple-300 rounded-xl overflow-hidden">
             <div className="px-4 py-3 bg-purple-200 border-b border-purple-300">
               <h4 className="font-bold text-base text-gray-900">
-                Cumplimiento Enviado
+                Cumplimiento enviado
               </h4>
             </div>
             <div className="p-4 space-y-4">
@@ -400,7 +401,7 @@ export const ComplianceCard = ({
               {/* Evidencias Adjuntas */}
               <div>
                 <p className="text-xs font-bold text-gray-700 mb-2">
-                  Evidencias Adjuntas ({compliance.evidenceUrls.length}):
+                  Evidencias adjuntas ({compliance.evidenceUrls.length}):
                 </p>
                 <ClaimEvidenceViewer evidenceUrls={compliance.evidenceUrls} />
               </div>
@@ -507,7 +508,7 @@ export const ComplianceCard = ({
               <div className="flex items-center gap-2">
                 <CheckCircle size={20} className="text-green-700" />
                 <p className="text-base font-bold text-green-900">
-                  Compromiso Aprobado por Moderador
+                  Compromiso aprobado por moderador
                 </p>
               </div>
             </div>
@@ -621,7 +622,7 @@ export const ComplianceCard = ({
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
             >
               <Scale size={16} />
-              <span>Revisar Compromiso (Moderador)</span>
+              <span>Revisar compromiso (Moderador)</span>
             </button>
           ) : showUploadButton ? (
             <button
@@ -649,7 +650,7 @@ export const ComplianceCard = ({
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
             >
               <CheckCircle size={16} />
-              <span>Revisar Compromiso</span>
+              <span>Revisar compromiso</span>
             </button>
           ) : compliance.status === COMPLIANCE_STATUS.SUBMITTED ? (
             <div className="flex items-center gap-2 text-purple-700 text-sm font-medium bg-purple-50 px-3 py-2 rounded-lg border-2 border-purple-200">
@@ -1071,7 +1072,7 @@ const HistorialRechazos = ({ compliance, isResponsible }) => {
               <div className="flex items-center gap-2">
                 <FileText size={16} className="text-gray-700" />
                 <span className="text-sm font-bold text-gray-900">
-                  Historial de Intentos ({submissions.length})
+                  Historial de intentos ({submissions.length})
                 </span>
               </div>
               {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
