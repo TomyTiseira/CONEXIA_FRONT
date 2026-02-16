@@ -29,7 +29,7 @@ export default function PeopleList({ people = [] }) {
           {person.coverPicture ? (
             <div className="w-full h-16 bg-center bg-cover relative rounded-t-2xl overflow-hidden">
               <Image
-                src={`${config.IMAGE_URL}/${person.coverPicture}`}
+                src={person.coverPicture.startsWith('http') ? person.coverPicture : `${config.IMAGE_URL}/${person.coverPicture}`}
                 alt="Portada"
                 fill
                 style={{ objectFit: 'cover' }}
@@ -45,7 +45,7 @@ export default function PeopleList({ people = [] }) {
           <div className="flex flex-col items-center justify-center w-full" style={{ marginTop: -40 }}>
             <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center" style={{ zIndex: 2 }}>
               <Image
-                src={person.profilePicture ? `${config.IMAGE_URL}/${person.profilePicture}` : '/images/default-avatar.png'}
+                src={person.profilePicture ? (person.profilePicture.startsWith('http') ? person.profilePicture : `${config.IMAGE_URL}/${person.profilePicture}`) : '/images/default-avatar.png'}
                 alt={person.name || 'Usuario'}
                 width={64}
                 height={64}

@@ -15,14 +15,16 @@ export function ConnectionCard({ user, onConnect, onViewProfile, mini = false })
   const defaultAvatar = '/images/default-avatar.png';
   const defaultCover = '/bg-smoke.png';
 
-  // Construir URLs de imágenes
-  const profilePhoto = user.profilePicture
-    ? `${config.IMAGE_URL}/${user.profilePicture}`
-    : defaultAvatar;
+  // Helper para construir URLs de imágenes
+  const getImageUrl = (imagePath, defaultImage) => {
+    if (!imagePath) return defaultImage;
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${config.IMAGE_URL}/${imagePath}`;
+  };
 
-  const coverPhoto = user.coverPicture
-    ? `${config.IMAGE_URL}/${user.coverPicture}`
-    : defaultCover;
+  // Construir URLs de imágenes
+  const profilePhoto = getImageUrl(user.profilePicture, defaultAvatar);
+  const coverPhoto = getImageUrl(user.coverPicture, defaultCover);
 
   const displayName = user.name && user.lastName 
     ? `${user.name} ${user.lastName}` 

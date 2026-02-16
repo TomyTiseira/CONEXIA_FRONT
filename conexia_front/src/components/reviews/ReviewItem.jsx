@@ -120,9 +120,17 @@ export default function ReviewItem({ review, onEdit, onDeleted, onReportSuccess,
   };
 
   // Foto de perfil del reviewer (cuando el backend la devuelva)
-  const reviewerAvatar = review.reviewerUser?.profilePicture 
-    ? `${config.IMAGE_URL}/${review.reviewerUser.profilePicture}`
-    : '/images/default-avatar.png';
+  const getReviewerAvatar = () => {
+    if (!review.reviewerUser?.profilePicture) {
+      return '/images/default-avatar.png';
+    }
+    const imagePath = review.reviewerUser.profilePicture;
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    return `${config.IMAGE_URL}/${imagePath}`;
+  };
+  const reviewerAvatar = getReviewerAvatar();
 
   // Navegar al perfil del reviewer usando reviewerUserId
   const handleProfileClick = () => {

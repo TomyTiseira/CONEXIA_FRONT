@@ -406,7 +406,9 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
               <img
                 src={
                   data.claimant?.profile?.profilePicture
-                    ? `${config.IMAGE_URL}/${data.claimant.profile.profilePicture}`
+                    ? (data.claimant.profile.profilePicture.startsWith('http') 
+                        ? data.claimant.profile.profilePicture 
+                        : `${config.IMAGE_URL}/${data.claimant.profile.profilePicture}`)
                     : DEFAULT_AVATAR_SRC
                 }
                 onError={(e) => {
@@ -433,7 +435,9 @@ export const ClaimDetailModal = ({ claim: initialClaim, onClose, showToast }) =>
               <img
                 src={
                   data.otherUser?.profile?.profilePicture
-                    ? `${config.IMAGE_URL}/${data.otherUser.profile.profilePicture}`
+                    ? (data.otherUser.profile.profilePicture.startsWith('http') 
+                        ? data.otherUser.profile.profilePicture 
+                        : `${config.IMAGE_URL}/${data.otherUser.profile.profilePicture}`)
                     : DEFAULT_AVATAR_SRC
                 }
                 onError={(e) => {

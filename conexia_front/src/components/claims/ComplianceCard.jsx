@@ -67,7 +67,9 @@ export const ComplianceCard = ({
   // Obtener avatar del responsable
   const getResponsibleAvatar = () => {
     if (!responsibleUser?.profile?.profilePicture) return '/images/default-avatar.png';
-    return `${config.IMAGE_URL}/${responsibleUser.profile.profilePicture}`;
+    const imagePath = responsibleUser.profile.profilePicture;
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${config.IMAGE_URL}/${imagePath}`;
   };
 
   // Calcular días restantes hasta el deadline

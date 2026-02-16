@@ -96,8 +96,10 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
   };
 
   const getProfileImageSrc = (profile) => {
-    if (profile?.profilePicture) return `${config.IMAGE_URL}/${profile.profilePicture}`;
-    return DEFAULT_AVATAR_SRC;
+    if (!profile?.profilePicture) return DEFAULT_AVATAR_SRC;
+    const imagePath = profile.profilePicture;
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${config.IMAGE_URL}/${imagePath}`;
   };
 
   const getTableClaimTypeLabelOverride = (claim) => {

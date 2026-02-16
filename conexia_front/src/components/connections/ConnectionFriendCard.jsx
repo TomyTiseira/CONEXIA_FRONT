@@ -17,9 +17,14 @@ export default function ConnectionFriendCard({ friend }) {
   const profileImage = getProfileImageUrl(friend.profilePicture);
 
   // Portada personalizada
-  const coverImage = friend.coverPicture
-    ? `${config.IMAGE_URL}/${friend.coverPicture}`
-    : '/bg-smoke.png';
+  const getCoverImageUrl = (img) => {
+    if (!img) return '/bg-smoke.png';
+    if (img.startsWith('http://') || img.startsWith('https://')) return img;
+    if (img.startsWith('/uploads')) return `${config.IMAGE_URL}${img}`;
+    if (img.startsWith('/')) return `${config.IMAGE_URL}${img}`;
+    return `${config.IMAGE_URL}/${img}`;
+  };
+  const coverImage = getCoverImageUrl(friend.coverPicture);
   const router = useRouter();
 
   // Solo primer nombre y último apellido

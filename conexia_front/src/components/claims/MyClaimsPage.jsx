@@ -447,7 +447,9 @@ export default function MyClaimsPage() {
                                 <img
                                   src={
                                     claim.otherUser?.profilePicture
-                                      ? `${config.IMAGE_URL}/${claim.otherUser.profilePicture}`
+                                      ? (claim.otherUser.profilePicture.startsWith('http') 
+                                          ? claim.otherUser.profilePicture 
+                                          : `${config.IMAGE_URL}/${claim.otherUser.profilePicture}`)
                                       : '/images/default-avatar.png'
                                   }
                                   alt={getShortDisplayName({
@@ -594,7 +596,9 @@ export default function MyClaimsPage() {
                             <img
                               src={
                                 claim.otherUser?.profilePicture
-                                  ? `${config.IMAGE_URL}/${claim.otherUser.profilePicture}`
+                                  ? (claim.otherUser.profilePicture.startsWith('http') 
+                                      ? claim.otherUser.profilePicture 
+                                      : `${config.IMAGE_URL}/${claim.otherUser.profilePicture}`)
                                   : '/images/default-avatar.png'
                               }
                               alt={getShortDisplayName({

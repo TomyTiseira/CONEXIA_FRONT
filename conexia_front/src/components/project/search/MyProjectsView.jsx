@@ -77,9 +77,13 @@ export default function MyProjectsView({ userId }) {
 
   // Avatar del usuario (como en ClientCommunity)
   const { profile } = useUserStore();
-  const avatar = profile?.profilePicture
-    ? `${config.IMAGE_URL}/${profile.profilePicture}`
-    : '/images/default-avatar.png';
+  const getAvatarSrc = () => {
+    if (!profile?.profilePicture) return '/images/default-avatar.png';
+    const imagePath = profile.profilePicture;
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${config.IMAGE_URL}/${imagePath}`;
+  };
+  const avatar = getAvatarSrc();
 
   return (
     <>
