@@ -334,8 +334,12 @@ export default function MyClaimsPage() {
                   Requiere respuesta
                 </option>
                 <option value="in_review">En revisión</option>
-                <option value="pending_clarification">Requiere aclaración</option>
-                <option value="requires_staff_response">Requiere respuesta</option>
+                <option value="pending_clarification">
+                  Requiere aclaración
+                </option>
+                <option value="requires_staff_response">
+                  Requiere respuesta
+                </option>
                 <option value="resolved">Resuelto</option>
                 <option value="rejected">Rechazado</option>
                 <option value="cancelled">Cancelado</option>

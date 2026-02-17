@@ -203,7 +203,9 @@ export const ComplianceCard = ({
               <p className="text-xs font-medium text-gray-600 mb-2">
                 ID del Compromiso:
               </p>
-              <p className="text-xs font-medium text-gray-600 mb-2">ID del compromiso:</p>
+              <p className="text-xs font-medium text-gray-600 mb-2">
+                ID del compromiso:
+              </p>
               <code className="text-sm bg-purple-100 text-purple-900 px-3 py-1.5 rounded-lg font-mono font-semibold border border-purple-300 inline-block">
                 {String(compliance.id)}
               </code>
