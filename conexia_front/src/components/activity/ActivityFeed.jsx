@@ -27,7 +27,7 @@ export default function ActivityFeed({ publications, isOwner, userId, onPublicat
         <div className="flex items-center gap-2 mb-1">
           <MdBarChart className="w-6 h-6 text-conexia-green" />
           <h3 className="text-base md:text-lg font-bold text-conexia-green">
-            {isOwner ? 'Mi Actividad' : 'Actividad'}
+            {isOwner ? 'Mi actividad' : 'Actividad'}
           </h3>
         </div>
         <div className="text-gray-500 text-xs md:text-sm mb-2">Publicaciones recientes de este usuario.</div>

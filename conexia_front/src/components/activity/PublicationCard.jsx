@@ -2773,7 +2773,7 @@ function PublicationCard({
 
       {/* Modal para mostrar las reacciones */}
       {showReactionsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
           <div className="bg-white rounded-2xl shadow-lg w-full max-w-md mx-4 animate-fadeIn">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold text-conexia-green">
