@@ -211,38 +211,39 @@ export default function ChatView({ user, onBack }) {
         })
       : "";
 
-  // Abre modal de imagen con src dado
-  const openImageModal = (src, name) => {
+  // Abre modal de imagen con src dado (prioriza URL original de GCS)
+  const openImageModal = (src, name, originalMsg) => {
     if (!src) return;
-    setImageModal({ src, name: name || "Imagen" });
+    // Si el mensaje tiene fileUrl o content con URL de GCS, usarla
+    let finalSrc = src;
+    if (originalMsg) {
+      const directUrl = originalMsg.fileUrl || originalMsg.content || "";
+      if (typeof directUrl === "string" && /^https?:\/\//i.test(directUrl)) {
+        finalSrc = directUrl;
+      }
+    }
+    setImageModal({ src: finalSrc, name: name || "Imagen" });
   };
 
-  // Descarga/abre un PDF de forma robusta (respeta auth y cache local)
+  // Abre un PDF en nueva pestaña (no descarga)
   const handlePdfClick = async (m, stableId) => {
     try {
-      const name = m?.fileName || "documento.pdf";
+      // Si es una URL de GCS o cualquier URL HTTP, abrirla directamente
+      const directUrl = m?.fileUrl || m?.content || "";
+      if (typeof directUrl === "string" && /^https?:\/\//i.test(directUrl)) {
+        window.open(directUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
       // 1) Cache local (por id estable o por nombre+tamaño)
       const localById = pdfBlobByMsgRef.current[stableId];
       const k = nameSizeKey(m?.fileName, m?.fileSize);
       const localByName = sentBlobByNameRef.current[k];
-      const tryOpen = (href, isBlobLike = true) => {
-        const a = document.createElement("a");
-        a.href = href;
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        if (isBlobLike && href.startsWith("blob:")) {
-          // revocar luego de un breve tiempo para permitir la descarga/apertura
-          setTimeout(() => {
-            try {
-              URL.revokeObjectURL(href);
-            } catch {}
-          }, 4000);
-        }
+
+      const tryOpen = (href) => {
+        window.open(href, "_blank", "noopener,noreferrer");
       };
+
       if (localById) {
         tryOpen(localById);
         return;
@@ -253,23 +254,28 @@ export default function ChatView({ user, onBack }) {
       }
 
       // 2) Si viene una data URL o blob URL directamente
-      const direct = m?.fileUrl || m?.content || "";
       if (
-        typeof direct === "string" &&
-        (direct.startsWith("data:") || direct.startsWith("blob:"))
+        typeof directUrl === "string" &&
+        (directUrl.startsWith("data:") || directUrl.startsWith("blob:"))
       ) {
-        tryOpen(direct, direct.startsWith("blob:"));
+        tryOpen(directUrl);
         return;
       }
 
       // 3) Descargar con auth y abrir
-      const candidate = direct || m?.fileName || "";
+      const candidate = directUrl || m?.fileName || "";
       const blob = await fetchBlobAuthTry(candidate);
       const url = URL.createObjectURL(blob);
       tryOpen(url);
+      // Revocar después de un tiempo para limpiar memoria
+      setTimeout(() => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {}
+      }, 30000);
     } catch (e) {
       console.error("PDF open error", e);
-      alert("No se pudo abrir/descargar el PDF.");
+      alert("No se pudo abrir el PDF.");
     }
   };
 
@@ -753,7 +759,7 @@ export default function ChatView({ user, onBack }) {
                         type="button"
                         onClick={() => handlePdfClick(m, stableId)}
                         className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity text-[12px] text-conexia-green font-medium"
-                        title="Descargar PDF"
+                        title="Ver PDF"
                       >
                         <svg
                           width="16"
@@ -762,14 +768,21 @@ export default function ChatView({ user, onBack }) {
                           fill="none"
                         >
                           <path
-                            d="M12 3v12m0 0l-4-4m4 4 4-4M5 21h14"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            stroke="#1e6e5c"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                             stroke="#1e6e5c"
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                         </svg>
-                        Descargar
+                        Ver PDF
                       </button>
                     </div>
                     {timeChip}
@@ -798,7 +811,7 @@ export default function ChatView({ user, onBack }) {
                   <div className="max-w-[78%]">
                     <div
                       className="rounded-lg overflow-hidden border border-conexia-green/30 bg-white p-1 cursor-zoom-in"
-                      onClick={() => openImageModal(displaySrc, m.fileName)}
+                      onClick={() => openImageModal(displaySrc, m.fileName, m)}
                       title="Ver imagen"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
