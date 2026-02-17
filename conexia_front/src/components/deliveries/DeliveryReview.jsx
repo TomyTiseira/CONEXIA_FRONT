@@ -9,6 +9,7 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
+  Eye,
 } from "lucide-react";
 import StatusBadge from "@/components/common/StatusBadge";
 import Button from "@/components/ui/Button";
@@ -193,7 +194,14 @@ export default function DeliveryReview({
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
-  const handleDownload = async (attachment) => {
+  const isPDF = (attachment) => {
+    const fileName = attachment?.fileName || attachment?.filePath || "";
+    return (
+      /\.pdf$/i.test(fileName) || attachment?.mimeType === "application/pdf"
+    );
+  };
+
+  const handleViewOrDownload = async (attachment) => {
     setDownloading(true);
     try {
       const url = getAttachmentUrl(attachment);
@@ -201,13 +209,21 @@ export default function DeliveryReview({
         throw new Error("URL de archivo no disponible");
       }
 
-      // Si es URL de GCS (producción), descargar directamente sin fetch
+      const isPdf = isPDF(attachment);
       const isGCSUrl =
         url.startsWith("https://storage.googleapis.com") ||
         url.includes(".storage.googleapis.com");
 
-      if (isGCSUrl) {
-        // Descarga directa de GCS - abrir en nueva pestaña o forzar descarga
+      if (isPdf) {
+        // Para PDFs, abrir en nueva pestaña para visualizar
+        window.open(url, "_blank", "noopener,noreferrer");
+        setLocalToast({
+          type: "success",
+          message: "Abriendo PDF...",
+          isVisible: true,
+        });
+      } else if (isGCSUrl) {
+        // Descarga directa de GCS para otros archivos
         const link = document.createElement("a");
         link.href = url;
         link.download = getAttachmentFileName(attachment);
@@ -216,6 +232,11 @@ export default function DeliveryReview({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setLocalToast({
+          type: "success",
+          message: "Archivo descargado correctamente",
+          isVisible: true,
+        });
       } else {
         // Desarrollo local - hacer fetch (puede requerir autenticación)
         const response = await fetch(url);
@@ -233,18 +254,17 @@ export default function DeliveryReview({
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
+        setLocalToast({
+          type: "success",
+          message: "Archivo descargado correctamente",
+          isVisible: true,
+        });
       }
-
-      setLocalToast({
-        type: "success",
-        message: "Archivo descargado correctamente",
-        isVisible: true,
-      });
     } catch (error) {
       console.error("Error downloading file:", error);
       setLocalToast({
         type: "error",
-        message: "Error al descargar el archivo. Intenta nuevamente.",
+        message: "Error al procesar el archivo. Intenta nuevamente.",
         isVisible: true,
       });
     } finally {
@@ -530,7 +550,7 @@ export default function DeliveryReview({
                         </div>
                       ) : (
                         <button
-                          onClick={() => handleDownload(attachment)}
+                          onClick={() => handleViewOrDownload(attachment)}
                           disabled={downloading}
                           className="w-full flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 transition-colors group disabled:opacity-50"
                         >
@@ -547,14 +567,19 @@ export default function DeliveryReview({
                             </p>
                             <p className="text-sm text-blue-600">
                               {downloading
-                                ? "Descargando..."
+                                ? "Procesando..."
                                 : attachment.fileSize
-                                  ? `${formatFileSize(attachment.fileSize)} • Click para descargar`
-                                  : "Click para descargar"}
+                                  ? `${formatFileSize(attachment.fileSize)} • Click para ${isPDF(attachment) ? "ver" : "descargar"}`
+                                  : `Click para ${isPDF(attachment) ? "ver" : "descargar"}`}
                             </p>
                           </div>
                           {downloading ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 flex-shrink-0"></div>
+                          ) : isPDF(attachment) ? (
+                            <Eye
+                              size={20}
+                              className="text-blue-500 flex-shrink-0"
+                            />
                           ) : (
                             <Download
                               size={20}
