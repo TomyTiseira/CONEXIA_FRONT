@@ -1442,37 +1442,39 @@ export default function ChatFloatingPanel({
         }
       `}</style>
       {/* Image preview modal - rendered outside chat container using portal */}
-      {imageModal && typeof window !== "undefined" && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setImageModal(null)}
-        >
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button
-              aria-label="Cerrar"
-              className="absolute -top-3 -right-3 bg-white rounded-full shadow p-1 text-gray-700 hover:text-gray-900"
-              onClick={() => setImageModal(null)}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M18 6L6 18M6 6l12 12"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageModal.url}
-              alt={imageModal.name || "Imagen"}
-              className="max-h-[82vh] max-w-[82vw] object-contain rounded-lg"
-            />
-          </div>
-        </div>,
-        document.body
-      )}
+      {imageModal &&
+        typeof window !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setImageModal(null)}
+          >
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                aria-label="Cerrar"
+                className="absolute -top-3 -right-3 bg-white rounded-full shadow p-1 text-gray-700 hover:text-gray-900"
+                onClick={() => setImageModal(null)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6l12 12"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageModal.url}
+                alt={imageModal.name || "Imagen"}
+                className="max-h-[82vh] max-w-[82vw] object-contain rounded-lg"
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
