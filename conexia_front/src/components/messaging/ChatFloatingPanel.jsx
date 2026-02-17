@@ -1449,10 +1449,13 @@ export default function ChatFloatingPanel({
             className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
             onClick={() => setImageModal(null)}
           >
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="relative bg-white rounded-lg shadow-2xl p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 aria-label="Cerrar"
-                className="absolute -top-3 -right-3 bg-white rounded-full shadow p-1 text-gray-700 hover:text-gray-900"
+                className="absolute -top-3 -right-3 bg-white rounded-full shadow-lg p-1.5 text-gray-700 hover:text-gray-900 z-10"
                 onClick={() => setImageModal(null)}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -1469,7 +1472,7 @@ export default function ChatFloatingPanel({
               <img
                 src={imageModal.url}
                 alt={imageModal.name || "Imagen"}
-                className="max-h-[82vh] max-w-[82vw] object-contain rounded-lg"
+                className="max-h-[80vh] max-w-[80vw] object-contain rounded"
               />
             </div>
           </div>,
