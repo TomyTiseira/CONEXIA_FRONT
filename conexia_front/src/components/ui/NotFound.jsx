@@ -51,7 +51,7 @@ export const NotFound = ({
               className="flex-1 bg-conexia-green text-white px-4 py-2 rounded-lg font-semibold hover:bg-conexia-green/90 transition-colors flex items-center justify-center gap-2"
             >
               <Home size={16} />
-              Ir al Inicio
+              Ir al inicio
             </button>
           )}
         </div>
