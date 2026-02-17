@@ -201,6 +201,19 @@ export default function DeliveryReview({
     );
   };
 
+  const isImage = (attachment) => {
+    const fileName = attachment?.fileName || attachment?.filePath || "";
+    const mimeType = attachment?.mimeType || "";
+    return (
+      /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName) ||
+      mimeType.startsWith("image/")
+    );
+  };
+
+  const isViewable = (attachment) => {
+    return isPDF(attachment) || isImage(attachment);
+  };
+
   const handleViewOrDownload = async (attachment) => {
     setDownloading(true);
     try {
@@ -209,17 +222,17 @@ export default function DeliveryReview({
         throw new Error("URL de archivo no disponible");
       }
 
-      const isPdf = isPDF(attachment);
+      const viewable = isViewable(attachment);
       const isGCSUrl =
         url.startsWith("https://storage.googleapis.com") ||
         url.includes(".storage.googleapis.com");
 
-      if (isPdf) {
-        // Para PDFs, abrir en nueva pestaña para visualizar
+      if (viewable) {
+        // Para archivos visualizables (PDFs e imágenes), abrir en nueva pestaña
         window.open(url, "_blank", "noopener,noreferrer");
         setLocalToast({
           type: "success",
-          message: "Abriendo PDF...",
+          message: isPDF(attachment) ? "Abriendo PDF..." : "Abriendo imagen...",
           isVisible: true,
         });
       } else if (isGCSUrl) {
@@ -569,13 +582,13 @@ export default function DeliveryReview({
                               {downloading
                                 ? "Procesando..."
                                 : attachment.fileSize
-                                  ? `${formatFileSize(attachment.fileSize)} • Click para ${isPDF(attachment) ? "ver" : "descargar"}`
-                                  : `Click para ${isPDF(attachment) ? "ver" : "descargar"}`}
+                                  ? `${formatFileSize(attachment.fileSize)} • Click para ${isViewable(attachment) ? "ver" : "descargar"}`
+                                  : `Click para ${isViewable(attachment) ? "ver" : "descargar"}`}
                             </p>
                           </div>
                           {downloading ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 flex-shrink-0"></div>
-                          ) : isPDF(attachment) ? (
+                          ) : isViewable(attachment) ? (
                             <Eye
                               size={20}
                               className="text-blue-500 flex-shrink-0"
