@@ -78,7 +78,7 @@ export default function DropdownUserMenu({ onLogout, onClose, userPlanData }) {
         <button
           onClick={() => {
             handleClose();
-            router.push('/subscriptions');
+            router.push('/settings/my-plan');
           }}
           className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-md bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 hover:from-amber-100 hover:to-amber-200 transition-all"
         >
