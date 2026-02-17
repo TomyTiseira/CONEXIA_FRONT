@@ -225,54 +225,48 @@ export default function ChatView({ user, onBack }) {
     setImageModal({ src: finalSrc, name: name || "Imagen" });
   };
 
-  // Abre un PDF en nueva pestaña (no descarga)
-  const handlePdfClick = async (m, stableId) => {
+  // Abre un PDF en nueva pestaña (NUNCA descarga, solo redirige)
+  const handlePdfClick = (m, stableId) => {
     try {
-      // Si es una URL de GCS o cualquier URL HTTP, abrirla directamente
+      // Prioridad 1: URL directa de GCS o HTTP
       const directUrl = m?.fileUrl || m?.content || "";
       if (typeof directUrl === "string" && /^https?:\/\//i.test(directUrl)) {
         window.open(directUrl, "_blank", "noopener,noreferrer");
         return;
       }
 
-      // 1) Cache local (por id estable o por nombre+tamaño)
+      // Prioridad 2: Cache local blob
       const localById = pdfBlobByMsgRef.current[stableId];
+      if (localById) {
+        window.open(localById, "_blank", "noopener,noreferrer");
+        return;
+      }
+
       const k = nameSizeKey(m?.fileName, m?.fileSize);
       const localByName = sentBlobByNameRef.current[k];
-
-      const tryOpen = (href) => {
-        window.open(href, "_blank", "noopener,noreferrer");
-      };
-
-      if (localById) {
-        tryOpen(localById);
-        return;
-      }
       if (localByName) {
-        tryOpen(localByName);
+        window.open(localByName, "_blank", "noopener,noreferrer");
         return;
       }
 
-      // 2) Si viene una data URL o blob URL directamente
+      // Prioridad 3: Data URL o blob URL
       if (
         typeof directUrl === "string" &&
         (directUrl.startsWith("data:") || directUrl.startsWith("blob:"))
       ) {
-        tryOpen(directUrl);
+        window.open(directUrl, "_blank", "noopener,noreferrer");
         return;
       }
 
-      // 3) Descargar con auth y abrir
-      const candidate = directUrl || m?.fileName || "";
-      const blob = await fetchBlobAuthTry(candidate);
-      const url = URL.createObjectURL(blob);
-      tryOpen(url);
-      // Revocar después de un tiempo para limpiar memoria
-      setTimeout(() => {
-        try {
-          URL.revokeObjectURL(url);
-        } catch {}
-      }, 30000);
+      // Prioridad 4: Construir URL local (desarrollo)
+      const fileName = directUrl || m?.fileName || "";
+      if (fileName) {
+        const localUrl = normFileUrl(fileName);
+        window.open(localUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      throw new Error("No se encontró URL del PDF");
     } catch (e) {
       console.error("PDF open error", e);
       alert("No se pudo abrir el PDF.");
