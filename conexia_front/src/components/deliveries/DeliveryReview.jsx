@@ -184,21 +184,38 @@ export default function DeliveryReview({
         throw new Error('URL de archivo no disponible');
       }
 
-      const response = await fetch(url);
+      // Si es URL de GCS (producción), descargar directamente sin fetch
+      const isGCSUrl = url.startsWith('https://storage.googleapis.com') || 
+                       url.includes('.storage.googleapis.com');
       
-      if (!response.ok) {
-        throw new Error('Error al descargar el archivo');
-      }
+      if (isGCSUrl) {
+        // Descarga directa de GCS - abrir en nueva pestaña o forzar descarga
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = getAttachmentFileName(attachment);
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // Desarrollo local - hacer fetch (puede requerir autenticación)
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error('Error al descargar el archivo');
+        }
 
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = getAttachmentFileName(attachment);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = getAttachmentFileName(attachment);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      }
 
       setLocalToast({
         type: 'success',
