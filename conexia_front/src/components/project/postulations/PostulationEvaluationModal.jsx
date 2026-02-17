@@ -1,34 +1,42 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { approvePostulation, rejectPostulation } from '@/service/postulations/postulationService';
-import { config } from '@/config';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  approvePostulation,
+  rejectPostulation,
+} from "@/service/postulations/postulationService";
+import { config } from "@/config";
 
-export default function PostulationEvaluationModal({ postulation, onClose, onApproved, onResult }) {
+export default function PostulationEvaluationModal({
+  postulation,
+  onClose,
+  onApproved,
+  onResult,
+}) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const router = useRouter();
 
   const handleApprove = async () => {
     try {
       setIsApproving(true);
-      setError('');
+      setError("");
       await approvePostulation(postulation.id);
-      const message = 'Postulación aprobada correctamente';
+      const message = "Postulación aprobada correctamente";
       setSuccess(message);
       if (onResult) {
-        onResult({ status: 'approved', message });
+        onResult({ status: "approved", message });
       } else if (onApproved) {
         onApproved();
       }
     } catch (err) {
-      console.error('Error approving postulation:', err);
-      const errMsg = err.message || 'Error al aprobar la postulación';
+      console.error("Error approving postulation:", err);
+      const errMsg = err.message || "Error al aprobar la postulación";
       setError(errMsg);
-      if (onResult) onResult({ status: 'error', message: errMsg });
+      if (onResult) onResult({ status: "error", message: errMsg });
     } finally {
       setIsApproving(false);
     }
@@ -37,21 +45,21 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
   const handleReject = async () => {
     try {
       setIsRejecting(true);
-      setError('');
-      
+      setError("");
+
       await rejectPostulation(postulation.id);
-      
-      setSuccess('Postulación rechazada correctamente');
-      const message = 'Postulación rechazada correctamente';
+
+      setSuccess("Postulación rechazada correctamente");
+      const message = "Postulación rechazada correctamente";
       setSuccess(message);
       if (onResult) {
-        onResult({ status: 'rejected', message });
+        onResult({ status: "rejected", message });
       } else if (onApproved) {
         onApproved();
       }
     } catch (error) {
-      console.error('Error rejecting postulation:', error);
-      setError(error.message || 'Error al rechazar la postulación');
+      console.error("Error rejecting postulation:", error);
+      setError(error.message || "Error al rechazar la postulación");
     } finally {
       setIsRejecting(false);
     }
@@ -63,7 +71,7 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-conexia-green">
@@ -84,8 +92,16 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-yellow-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3">
@@ -93,7 +109,8 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
                   Confirmación requerida
                 </h3>
                 <p className="mt-1 text-sm text-yellow-700">
-                  Una vez aprobada, la postulación no se puede revertir. El usuario será notificado automáticamente.
+                  Una vez aprobada, la postulación no se puede revertir. El
+                  usuario será notificado automáticamente.
                 </p>
               </div>
             </div>
@@ -104,27 +121,29 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
             <h3 className="font-semibold text-gray-800 mb-3">
               Información del postulante
             </h3>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Nombre:</span>
                 <span className="font-medium">
-                  {postulation.applicantName || 'Usuario'}
+                  {postulation.applicantName || "Usuario"}
                 </span>
               </div>
-              
+
               <div className="flex justify-between">
                 <span className="text-gray-600">Estado:</span>
                 <span className="font-medium text-blue-600">
-                  {postulation.status?.name || 'Sin estado'}
+                  {postulation.status?.name || "Sin estado"}
                 </span>
               </div>
-              
+
               {postulation.createdAt && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Fecha de postulación:</span>
                   <span className="font-medium">
-                    {new Date(postulation.createdAt).toLocaleDateString('es-ES')}
+                    {new Date(postulation.createdAt).toLocaleDateString(
+                      "es-ES",
+                    )}
                   </span>
                 </div>
               )}
@@ -148,8 +167,9 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
               </h3>
               <button
                 onClick={() => {
-                  const fullUrl = `${config.DOCUMENT_URL}${postulation.cvUrl}`;
-                  window.open(fullUrl, '_blank');
+                  import("@/utils/fileUtils").then(({ openFileInNewTab }) => {
+                    openFileInNewTab(postulation.cvUrl);
+                  });
                 }}
                 className="text-conexia-green hover:text-conexia-green/80 text-sm font-medium hover:underline"
                 disabled={isApproving}
@@ -167,28 +187,37 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
               </h3>
               <div className="space-y-3">
                 {postulation.answers.map((answer, index) => {
-                  const responseText = answer.selectedOptionText || answer.answerText || 'Sin respuesta';
-                  const hasCorrectAnswer = answer.isCorrect !== undefined && answer.isCorrect !== null;
-                  
+                  const responseText =
+                    answer.selectedOptionText ||
+                    answer.answerText ||
+                    "Sin respuesta";
+                  const hasCorrectAnswer =
+                    answer.isCorrect !== undefined && answer.isCorrect !== null;
+
                   return (
-                    <div key={index} className={`rounded p-3 ${
-                      hasCorrectAnswer 
-                        ? answer.isCorrect 
-                          ? 'bg-green-50 border border-green-200' 
-                          : 'bg-red-50 border border-red-200'
-                        : 'bg-gray-50'
-                    }`}>
+                    <div
+                      key={index}
+                      className={`rounded p-3 ${
+                        hasCorrectAnswer
+                          ? answer.isCorrect
+                            ? "bg-green-50 border border-green-200"
+                            : "bg-red-50 border border-red-200"
+                          : "bg-gray-50"
+                      }`}
+                    >
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium text-gray-700 mb-1 flex-1">
                           {answer.questionText || `Pregunta ${index + 1}`}
                         </p>
                         {hasCorrectAnswer && (
-                          <span className={`text-xs font-semibold px-2 py-1 rounded whitespace-nowrap ${
-                            answer.isCorrect 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {answer.isCorrect ? '✓ Correcta' : '✗ Incorrecta'}
+                          <span
+                            className={`text-xs font-semibold px-2 py-1 rounded whitespace-nowrap ${
+                              answer.isCorrect
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {answer.isCorrect ? "✓ Correcta" : "✗ Incorrecta"}
                           </span>
                         )}
                       </div>
@@ -203,7 +232,9 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
           )}
 
           {/* Prueba Técnica */}
-          {(postulation.evaluationDescription || postulation.evaluationLink || postulation.evaluationSubmissionUrl) && (
+          {(postulation.evaluationDescription ||
+            postulation.evaluationLink ||
+            postulation.evaluationSubmissionUrl) && (
             <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="font-semibold text-gray-800 mb-3">
                 Prueba Técnica
@@ -211,17 +242,21 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
               <div className="space-y-3">
                 {postulation.evaluationDescription && (
                   <div className="bg-gray-50 rounded p-3">
-                    <span className="text-sm font-medium text-gray-700 block mb-1">Descripción de la solución:</span>
+                    <span className="text-sm font-medium text-gray-700 block mb-1">
+                      Descripción de la solución:
+                    </span>
                     <p className="text-sm text-gray-600 whitespace-pre-wrap">
                       {postulation.evaluationDescription}
                     </p>
                   </div>
                 )}
-                
+
                 {postulation.evaluationLink && (
                   <div className="bg-gray-50 rounded p-3">
-                    <span className="text-sm font-medium text-gray-700 block mb-1">Enlace a la solución:</span>
-                    <a 
+                    <span className="text-sm font-medium text-gray-700 block mb-1">
+                      Enlace a la solución:
+                    </span>
+                    <a
                       href={postulation.evaluationLink}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -231,18 +266,22 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
                     </a>
                   </div>
                 )}
-                
+
                 {postulation.evaluationSubmissionUrl && (
                   <div className="bg-gray-50 rounded p-3">
-                    <span className="text-sm font-medium text-gray-700 block mb-1">Archivo adjunto:</span>
+                    <span className="text-sm font-medium text-gray-700 block mb-1">
+                      Archivo adjunto:
+                    </span>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600">
-                        {postulation.evaluationSubmissionFilename || 'archivo.pdf'}
+                        {postulation.evaluationSubmissionFilename ||
+                          "archivo.pdf"}
                       </span>
                       <button
-                        onClick={() => {
-                          const fullUrl = `${config.DOCUMENT_URL}${postulation.evaluationSubmissionUrl}`;
-                          window.open(fullUrl, '_blank');
+                        onClick={async () => {
+                          const { openFileInNewTab } =
+                            await import("@/utils/fileUtils");
+                          openFileInNewTab(postulation.evaluationSubmissionUrl);
                         }}
                         className="text-conexia-green hover:text-conexia-green/80 text-sm font-medium hover:underline"
                         disabled={isApproving}
@@ -264,12 +303,20 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
           )}
 
           {success && (
-            <div className={`${success.includes('rechazada') 
-              ? 'bg-red-50 border border-red-200' 
-              : 'bg-green-50 border border-green-200'} rounded-lg p-3`}>
-              <p className={`${success.includes('rechazada') 
-                ? 'text-red-700' 
-                : 'text-green-700'} text-sm font-medium`}>
+            <div
+              className={`${
+                success.includes("rechazada")
+                  ? "bg-red-50 border border-red-200"
+                  : "bg-green-50 border border-green-200"
+              } rounded-lg p-3`}
+            >
+              <p
+                className={`${
+                  success.includes("rechazada")
+                    ? "text-red-700"
+                    : "text-green-700"
+                } text-sm font-medium`}
+              >
                 {success}
               </p>
             </div>
@@ -285,21 +332,21 @@ export default function PostulationEvaluationModal({ postulation, onClose, onApp
           >
             Cancelar
           </button>
-          
+
           <button
             onClick={handleReject}
             disabled={isApproving || isRejecting || success}
             className="flex-1 bg-red-600 text-white px-4 py-2 rounded font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isRejecting ? 'Rechazando...' : 'Rechazar'}
+            {isRejecting ? "Rechazando..." : "Rechazar"}
           </button>
-          
+
           <button
             onClick={handleApprove}
             disabled={isApproving || isRejecting || success}
             className="flex-1 bg-conexia-green text-white px-4 py-2 rounded font-medium hover:bg-conexia-green/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isApproving ? 'Aprobando...' : 'Aprobar'}
+            {isApproving ? "Aprobando..." : "Aprobar"}
           </button>
         </div>
       </div>

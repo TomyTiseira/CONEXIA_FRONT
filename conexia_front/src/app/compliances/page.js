@@ -99,7 +99,7 @@ export default function CompliancesPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Mis Cumplimientos
+            Mis cumplimientos
           </h1>
           <p className="text-gray-600">
             Gestiona los cumplimientos derivados de resoluciones de reclamos
@@ -173,7 +173,7 @@ export default function CompliancesPage() {
               <FileText size={32} className="text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Sistema de Cumplimientos en Desarrollo
+              Sistema de cumplimientos en desarrollo
             </h3>
             <p className="text-gray-600 mb-4">
               El módulo de cumplimientos estará disponible próximamente.<br />

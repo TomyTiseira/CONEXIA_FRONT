@@ -1,66 +1,67 @@
 // Utilidad central para construir URLs de medios (imágenes / videos)
 // Normaliza variaciones: fileUrl, mediaUrl, file_path, fileName
-import { config } from '@/config';
+import { config } from "@/config";
 
-// Construye una URL válida para un medio evitando duplicar /uploads
-// Casos soportados:
-//  - raw ya es URL absoluta -> se retorna igual
-//  - raw comienza con /uploads/...
-//  - raw comienza con uploads/...
-//  - raw comienza con /... (sin uploads)
-//  - raw es solo un nombre/segmento
+// Construye una URL válida para un medio
+// Producción: Backend devuelve URLs completas de GCS → se usan tal cual
+// Desarrollo: Backend devuelve paths relativos → se construyen con IMAGE_URL
 export function buildMediaUrl(raw) {
-  if (!raw) return '';
-  let mediaUrl = String(raw);
-  
-  // Si es una URL absoluta del backend, extraer solo el path
-  if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
-    try {
-      const url = new URL(mediaUrl);
-      mediaUrl = url.pathname; // Extraer solo /uploads/deliveries/...
-    } catch (e) {
-      // Si falla el parsing, continuar con la lógica normal
-    }
+  if (!raw) return "";
+  let mediaUrl = String(raw).trim();
+
+  // Limpiar barras iniciales erróneas antes de URLs absolutas (ej: "/https://...")
+  if (mediaUrl.match(/^\/+https?:\/\//)) {
+    mediaUrl = mediaUrl.replace(/^\/+/, "");
   }
 
-  let base = config?.IMAGE_URL || '';
-  // Normalizar base removiendo slash final
-  base = base.replace(/\/$/, '');
+  // Si es URL absoluta (producción - GCS), retornarla sin modificar
+  if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
+    return mediaUrl;
+  }
 
-  // Asegurar que la base termina en /uploads (este backend expone archivos ahí)
+  // Desarrollo local: construir con IMAGE_URL
+  let base = (config?.IMAGE_URL || "").trim();
+
+  // Limpiar posibles comillas literales de variables de entorno mal configuradas
+  base = base.replace(/^["']+|["']+$/g, "");
+
+  if (!base || base === "") return mediaUrl; // Fallback si no hay base configurada
+
+  base = base.replace(/\/$/, ""); // Remover slash final
+
+  // Asegurar que la base termina en /uploads
   if (!/\/uploads$/.test(base)) {
-    base = base + '/uploads';
+    base = base + "/uploads";
   }
 
-  // Normalizar mediaUrl para evitar duplicados
-  // Reemplazar ocurrencias dobles /uploads/uploads -> /uploads
-  mediaUrl = mediaUrl.replace(/\/uploads\/uploads/g, '/uploads');
+  // Normalizar path
+  let path = mediaUrl;
+  path = path.replace(/\/uploads\/uploads/g, "/uploads");
 
-  // Quitar prefijo 'uploads/' si viene sin slash inicial
-  if (mediaUrl.startsWith('uploads/')) {
-    mediaUrl = mediaUrl.substring('uploads/'.length);
+  if (path.startsWith("uploads/")) {
+    path = path.substring("uploads/".length);
   }
 
-  // Si inicia con /uploads ya tenemos el prefijo: quitamos solo la primera aparición para concatenar
-  if (mediaUrl.startsWith('/uploads')) {
-    mediaUrl = mediaUrl.replace('/uploads', ''); // queda /resto o vacío
+  if (path.startsWith("/uploads")) {
+    path = path.replace("/uploads", "");
   }
 
-  // Si llega como ruta absoluta que no contiene uploads (empieza con /) la anexamos detrás de /uploads
-  if (mediaUrl.startsWith('/') && !mediaUrl.startsWith('/')) {
-    // (caso imposible por la condición, se deja por claridad)
-  }
+  if (!path.startsWith("/")) path = "/" + path;
 
-  // Asegurar que mediaUrl empieza con '/'
-  if (!mediaUrl.startsWith('/')) mediaUrl = '/' + mediaUrl;
-
-  return base + mediaUrl;
+  return base + path;
 }
 
 // Extrae la URL efectiva desde un objeto de media con diferentes keys
 export function extractMediaPath(mediaObj) {
-  if (!mediaObj || typeof mediaObj !== 'object') return '';
-  return mediaObj.fileUrl || mediaObj.mediaUrl || mediaObj.file_path || mediaObj.file || mediaObj.fileName || '';
+  if (!mediaObj || typeof mediaObj !== "object") return "";
+  return (
+    mediaObj.fileUrl ||
+    mediaObj.mediaUrl ||
+    mediaObj.file_path ||
+    mediaObj.file ||
+    mediaObj.fileName ||
+    ""
+  );
 }
 
 // Helper completo: pasa objeto media y construye URL final

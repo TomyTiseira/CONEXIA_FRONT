@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { useUserStore } from '@/store/userStore';
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useUserStore } from "@/store/userStore";
 import {
   MessageCircle,
   AlertTriangle,
@@ -18,9 +18,9 @@ import {
   Users,
   CreditCard,
   BarChart3,
-} from 'lucide-react';
-import DropdownInternalUserMenu from '@/components/navbar/DropdownInternalUserMenu';
-import { config } from '@/config';
+} from "lucide-react";
+import DropdownInternalUserMenu from "@/components/navbar/DropdownInternalUserMenu";
+import { buildMediaUrl } from "@/utils/mediaUrl";
 
 export default function NavbarAdmin() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,27 +34,26 @@ export default function NavbarAdmin() {
       // Llamar logout sin await para que sea síncrono y bloquear inmediatamente
       logout();
       // Redirigir inmediatamente sin esperar a que termine el logout
-      window.location.href = '/';
+      window.location.href = "/";
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error("Error al cerrar sesión:", error);
       // En caso de error, también redirigir
-      window.location.href = '/';
+      window.location.href = "/";
     }
   };
 
   const navItems = [
-  { label: 'Inicio', href: '/', icon: Home },
-  { label: 'Servicios', href: '/services', icon: Briefcase },
-  { label: 'Proyectos', href: '/project/search', icon: Layers },
-  { label: 'Reportes', href: '/reports', icon: AlertTriangle },
-  { label: 'Reclamos', href: '/admin/claims', icon: AlertCircle },
-  { label: 'Usuarios', href: '/admin/internal-users', icon: Users },
-  { label: 'Planes', href: '/admin/plans', icon: CreditCard },
-  { label: 'Métricas', href: '/dashboard', icon: BarChart3 },
-
+    { label: "Inicio", href: "/", icon: Home },
+    { label: "Servicios", href: "/services", icon: Briefcase },
+    { label: "Proyectos", href: "/project/search", icon: Layers },
+    { label: "Reportes", href: "/reports", icon: AlertTriangle },
+    { label: "Reclamos", href: "/admin/claims", icon: AlertCircle },
+    { label: "Usuarios", href: "/admin/internal-users", icon: Users },
+    { label: "Planes", href: "/admin/plans", icon: CreditCard },
+    { label: "Métricas", href: "/dashboard", icon: BarChart3 },
   ];
 
-  const defaultAvatar = '/images/default-avatar.png';
+  const defaultAvatar = "/images/default-avatar.png";
 
   return (
     <header className="bg-white shadow sticky top-0 z-50">
@@ -78,12 +77,14 @@ export default function NavbarAdmin() {
                   <Icon
                     size={18}
                     className={`mb-1 transition-colors ${
-                      isActive ? 'text-conexia-green' : 'text-conexia-green/70'
+                      isActive ? "text-conexia-green" : "text-conexia-green/70"
                     } group-hover:text-conexia-green`}
                   />
                   <span
                     className={`transition-colors ${
-                      isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
+                      isActive
+                        ? "text-conexia-green font-semibold"
+                        : "text-conexia-green/70"
                     } group-hover:text-conexia-green`}
                   >
                     {label}
@@ -99,18 +100,27 @@ export default function NavbarAdmin() {
 
         {/* Actions */}
         <div className="flex items-center gap-4 text-conexia-green">
-          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
-          <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <MessageCircle
+            size={20}
+            className="cursor-pointer hover:text-conexia-green/80"
+          />
+          <Bell
+            size={20}
+            className="cursor-pointer hover:text-conexia-green/80"
+          />
           <div className="relative">
-            <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center gap-1"
+            >
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
                 <Image
                   src={
-                    (user?.roleName === 'admin' || user?.roleName === 'moderator')
+                    user?.roleName === "admin" || user?.roleName === "moderator"
                       ? defaultAvatar
-                      : (user && user.profilePicture
-                        ? `${config.IMAGE_URL}/${user.profilePicture}`
-                        : defaultAvatar)
+                      : user && user.profilePicture
+                        ? buildMediaUrl(user.profilePicture)
+                        : defaultAvatar
                   }
                   alt="Foto de perfil"
                   fill
@@ -136,18 +146,27 @@ export default function NavbarAdmin() {
           <Image src="/logo.png" alt="Conexia" width={30} height={30} />
         </Link>
         <div className="flex items-center gap-4 text-conexia-green">
-          <MessageCircle size={20} className="cursor-pointer hover:text-conexia-green/80" />
-          <Bell size={20} className="cursor-pointer hover:text-conexia-green/80" />
+          <MessageCircle
+            size={20}
+            className="cursor-pointer hover:text-conexia-green/80"
+          />
+          <Bell
+            size={20}
+            className="cursor-pointer hover:text-conexia-green/80"
+          />
           <div className="relative">
-            <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-1">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center gap-1"
+            >
               <div className="w-8 h-8 rounded-full overflow-hidden relative">
                 <Image
                   src={
-                    (user?.role === 'admin' || user?.role === 'moderator') 
+                    user?.role === "admin" || user?.role === "moderator"
                       ? defaultAvatar
-                      : (user && user.profilePicture
-                        ? `${config.IMAGE_URL}/${user.profilePicture}`
-                        : defaultAvatar)
+                      : user && user.profilePicture
+                        ? buildMediaUrl(user.profilePicture)
+                        : defaultAvatar
                   }
                   alt="Foto de perfil"
                   fill
@@ -176,7 +195,9 @@ export default function NavbarAdmin() {
               key={label}
               href={href}
               className={`flex flex-col items-center text-[11px] ${
-                isActive ? 'text-conexia-green font-semibold' : 'text-conexia-green/70'
+                isActive
+                  ? "text-conexia-green font-semibold"
+                  : "text-conexia-green/70"
               }`}
             >
               <Icon size={18} />

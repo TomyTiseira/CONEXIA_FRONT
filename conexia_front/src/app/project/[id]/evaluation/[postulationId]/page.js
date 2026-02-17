@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { fetchProjectById } from '@/service/projects/projectsFetch';
-import { submitTechnicalEvaluation, getMyPostulations } from '@/service/postulations/postulationService';
-import Navbar from '@/components/navbar/Navbar';
-import Button from '@/components/ui/Button';
-import InputField from '@/components/form/InputField';
-import Toast from '@/components/ui/Toast';
-import { FileText, Link as LinkIcon, Upload, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { fetchProjectById } from "@/service/projects/projectsFetch";
+import {
+  submitTechnicalEvaluation,
+  getMyPostulations,
+} from "@/service/postulations/postulationService";
+import Navbar from "@/components/navbar/Navbar";
+import Button from "@/components/ui/Button";
+import InputField from "@/components/form/InputField";
+import Toast from "@/components/ui/Toast";
+import { FileText, Link as LinkIcon, Upload, AlertCircle } from "lucide-react";
 
 export default function TechnicalEvaluationPage() {
   const router = useRouter();
@@ -23,9 +26,9 @@ export default function TechnicalEvaluationPage() {
   const [toast, setToast] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [evaluationData, setEvaluationData] = useState({
-    evaluationDescription: '',
-    evaluationLink: '',
-    evaluation: null
+    evaluationDescription: "",
+    evaluationLink: "",
+    evaluation: null,
   });
 
   const projectId = params.id;
@@ -33,7 +36,7 @@ export default function TechnicalEvaluationPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
@@ -50,13 +53,13 @@ export default function TechnicalEvaluationPage() {
 
         while (!foundPostulation && page <= maxPages) {
           const response = await getMyPostulations(page);
-          
+
           if (!response.success || !response.data.postulations.length) {
             break;
           }
 
           foundPostulation = response.data.postulations.find(
-            p => String(p.id) === String(postulationId)
+            (p) => String(p.id) === String(postulationId),
           );
 
           if (!response.data.pagination.hasNextPage) {
@@ -67,20 +70,23 @@ export default function TechnicalEvaluationPage() {
         }
 
         if (!foundPostulation) {
-          setToast({ type: 'error', message: 'Postulación no encontrada' });
+          setToast({ type: "error", message: "Postulación no encontrada" });
           return;
         }
 
         // Verificar que la postulación es del proyecto correcto
         if (String(foundPostulation.projectId) !== String(projectId)) {
-          setToast({ type: 'error', message: 'La postulación no corresponde a este proyecto' });
+          setToast({
+            type: "error",
+            message: "La postulación no corresponde a este proyecto",
+          });
           return;
         }
 
         setPostulation(foundPostulation);
       } catch (error) {
-        console.error('Error loading data:', error);
-        setToast({ type: 'error', message: 'Error al cargar los datos' });
+        console.error("Error loading data:", error);
+        setToast({ type: "error", message: "Error al cargar los datos" });
       } finally {
         setLoading(false);
       }
@@ -93,30 +99,47 @@ export default function TechnicalEvaluationPage() {
     const file = e.target.files?.[0];
     if (file) {
       // Validar tipo de archivo
-      const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+      const validTypes = [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+      ];
       if (!validTypes.includes(file.type)) {
-        setToast({ type: 'error', message: 'Solo se permiten archivos PDF, PNG o JPG' });
+        setToast({
+          type: "error",
+          message: "Solo se permiten archivos PDF, PNG o JPG",
+        });
         return;
       }
 
       // Validar tamaño (10MB max)
       const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
-        setToast({ type: 'error', message: 'El archivo no puede superar los 10MB' });
+        setToast({
+          type: "error",
+          message: "El archivo no puede superar los 10MB",
+        });
         return;
       }
 
-      setEvaluationData(prev => ({ ...prev, evaluation: file }));
+      setEvaluationData((prev) => ({ ...prev, evaluation: file }));
     }
   };
 
   const validateEvaluation = () => {
-    const { evaluationDescription, evaluationLink, evaluation } = evaluationData;
+    const { evaluationDescription, evaluationLink, evaluation } =
+      evaluationData;
     const errors = {};
 
     // Al menos uno de los campos debe estar presente
-    if (!evaluationDescription?.trim() && !evaluationLink?.trim() && !evaluation) {
-      errors.general = 'Debes proporcionar al menos una descripción, enlace o archivo';
+    if (
+      !evaluationDescription?.trim() &&
+      !evaluationLink?.trim() &&
+      !evaluation
+    ) {
+      errors.general =
+        "Debes proporcionar al menos una descripción, enlace o archivo";
       setFieldErrors(errors);
       return false;
     }
@@ -126,7 +149,7 @@ export default function TechnicalEvaluationPage() {
       try {
         new URL(evaluationLink);
       } catch {
-        errors.evaluationLink = 'El enlace proporcionado no es válido';
+        errors.evaluationLink = "El enlace proporcionado no es válido";
       }
     }
 
@@ -136,19 +159,20 @@ export default function TechnicalEvaluationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateEvaluation()) return;
 
     setSubmitting(true);
     try {
       const data = {
         projectId: parseInt(projectId),
-        roleId: postulation.roleId
+        roleId: postulation.roleId,
       };
 
       // Agregar campos opcionales si están presentes
       if (evaluationData.evaluationDescription?.trim()) {
-        data.evaluationDescription = evaluationData.evaluationDescription.trim();
+        data.evaluationDescription =
+          evaluationData.evaluationDescription.trim();
       }
 
       if (evaluationData.evaluationLink?.trim()) {
@@ -162,16 +186,22 @@ export default function TechnicalEvaluationPage() {
       const result = await submitTechnicalEvaluation(postulationId, data);
 
       if (result.success) {
-        setToast({ type: 'success', message: 'Evaluación técnica enviada correctamente' });
+        setToast({
+          type: "success",
+          message: "Evaluación técnica enviada correctamente",
+        });
         setTimeout(() => {
           router.push(`/project/${projectId}`);
         }, 2000);
       } else {
-        throw new Error(result.message || 'Error al enviar la evaluación');
+        throw new Error(result.message || "Error al enviar la evaluación");
       }
     } catch (error) {
-      console.error('Error submitting evaluation:', error);
-      setToast({ type: 'error', message: error.message || 'Error al enviar la evaluación técnica' });
+      console.error("Error submitting evaluation:", error);
+      setToast({
+        type: "error",
+        message: error.message || "Error al enviar la evaluación técnica",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -193,13 +223,15 @@ export default function TechnicalEvaluationPage() {
       <div className="min-h-screen bg-[#f3f9f8]">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="text-red-600">Proyecto o postulación no encontrados</div>
+          <div className="text-red-600">
+            Proyecto o postulación no encontrados
+          </div>
         </div>
       </div>
     );
   }
 
-  const role = project.roles?.find(r => r.id === postulation.roleId);
+  const role = project.roles?.find((r) => r.id === postulation.roleId);
 
   return (
     <div className="min-h-screen bg-[#f3f9f8]">
@@ -228,34 +260,48 @@ export default function TechnicalEvaluationPage() {
                 <AlertCircle className="w-5 h-5" />
                 Instrucciones de la evaluación
               </h3>
-              <p className="text-blue-800 mb-3">{role.evaluation.description}</p>
-              
+              <p className="text-blue-800 mb-3">
+                {role.evaluation.description}
+              </p>
+
               {role.evaluation.link && (
                 <div className="mb-2">
-                  <span className="text-blue-700 font-medium text-sm">Enlace de referencia:</span>
-                  <a 
-                    href={role.evaluation.link} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <span className="text-blue-700 font-medium text-sm">
+                    Enlace de referencia:
+                  </span>
+                  <a
+                    href={role.evaluation.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-blue-600 hover:underline ml-2 text-sm"
                   >
                     {role.evaluation.link}
                   </a>
                 </div>
               )}
-              
+
               {role.evaluation.fileUrl && (
                 <div className="mb-2">
-                  <span className="text-blue-700 font-medium text-sm">Archivo:</span>
-                  <span className="text-blue-600 ml-2 text-sm">
-                    {role.evaluation.fileName || 'Ver archivo adjunto'}
+                  <span className="text-blue-700 font-medium text-sm">
+                    Archivo:
                   </span>
+                  <button
+                    onClick={async () => {
+                      const { openFileInNewTab } =
+                        await import("@/utils/fileUtils");
+                      openFileInNewTab(role.evaluation.fileUrl);
+                    }}
+                    className="text-blue-600 hover:underline ml-2 text-sm font-medium"
+                  >
+                    {role.evaluation.fileName || "Ver archivo adjunto"}
+                  </button>
                 </div>
               )}
-              
+
               {role.evaluation.days && (
                 <p className="text-blue-700 text-sm font-medium mt-3">
-                  Tiempo límite: {role.evaluation.days} días desde tu postulación
+                  Tiempo límite: {role.evaluation.days} días desde tu
+                  postulación
                 </p>
               )}
             </div>
@@ -275,15 +321,15 @@ export default function TechnicalEvaluationPage() {
                 placeholder="Describe cómo resolviste la evaluación, los pasos que seguiste, tecnologías utilizadas, etc."
                 value={evaluationData.evaluationDescription}
                 onChange={(e) => {
-                  setEvaluationData(prev => ({ 
-                    ...prev, 
-                    evaluationDescription: e.target.value 
+                  setEvaluationData((prev) => ({
+                    ...prev,
+                    evaluationDescription: e.target.value,
                   }));
                   if (fieldErrors.general) {
-                    setFieldErrors(prev => ({...prev, general: undefined}));
+                    setFieldErrors((prev) => ({ ...prev, general: undefined }));
                   }
                 }}
-                className={fieldErrors.general ? 'border-red-500' : ''}
+                className={fieldErrors.general ? "border-red-500" : ""}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Proporciona detalles sobre tu implementación y enfoque
@@ -301,18 +347,24 @@ export default function TechnicalEvaluationPage() {
                 placeholder="https://github.com/tu-usuario/proyecto"
                 value={evaluationData.evaluationLink}
                 onChange={(e) => {
-                  setEvaluationData(prev => ({ 
-                    ...prev, 
-                    evaluationLink: e.target.value 
+                  setEvaluationData((prev) => ({
+                    ...prev,
+                    evaluationLink: e.target.value,
                   }));
                   if (fieldErrors.evaluationLink || fieldErrors.general) {
-                    setFieldErrors(prev => ({...prev, evaluationLink: undefined, general: undefined}));
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      evaluationLink: undefined,
+                      general: undefined,
+                    }));
                   }
                 }}
-                className={fieldErrors.evaluationLink ? 'border-red-500' : ''}
+                className={fieldErrors.evaluationLink ? "border-red-500" : ""}
               />
               {fieldErrors.evaluationLink && (
-                <p className="text-sm text-red-600 mt-1">{fieldErrors.evaluationLink}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {fieldErrors.evaluationLink}
+                </p>
               )}
               <p className="text-xs text-gray-500 mt-1">
                 Puede ser un repositorio de GitHub, CodePen, enlace a demo, etc.
@@ -331,7 +383,7 @@ export default function TechnicalEvaluationPage() {
                 onChange={(e) => {
                   handleFileChange(e);
                   if (fieldErrors.general) {
-                    setFieldErrors(prev => ({...prev, general: undefined}));
+                    setFieldErrors((prev) => ({ ...prev, general: undefined }));
                   }
                 }}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
@@ -352,15 +404,18 @@ export default function TechnicalEvaluationPage() {
             {/* Mostrar error general si no se completó ningún campo */}
             {fieldErrors.general && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-700 text-sm font-medium">{fieldErrors.general}</p>
+                <p className="text-red-700 text-sm font-medium">
+                  {fieldErrors.general}
+                </p>
               </div>
             )}
 
             {/* Nota importante */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-yellow-800 text-sm">
-                <strong>Importante:</strong> Debes proporcionar al menos uno de los tres campos anteriores 
-                (descripción, enlace o archivo) para enviar tu evaluación.
+                <strong>Importante:</strong> Debes proporcionar al menos uno de
+                los tres campos anteriores (descripción, enlace o archivo) para
+                enviar tu evaluación.
               </p>
             </div>
 
@@ -372,7 +427,7 @@ export default function TechnicalEvaluationPage() {
                 onClick={() => {
                   // Si viene de apply, volver al detalle del proyecto
                   // Si viene de mis postulaciones, volver atrás
-                  const fromApply = searchParams.get('from') === 'apply';
+                  const fromApply = searchParams.get("from") === "apply";
                   if (fromApply) {
                     router.push(`/project/${projectId}`);
                   } else {
@@ -388,7 +443,7 @@ export default function TechnicalEvaluationPage() {
                 disabled={submitting}
                 className="bg-conexia-green hover:bg-conexia-green/90"
               >
-                {submitting ? 'Enviando...' : 'Enviar evaluación técnica ahora'}
+                {submitting ? "Enviando..." : "Enviar evaluación técnica ahora"}
               </Button>
             </div>
           </form>

@@ -1,47 +1,60 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Pagination from '@/components/common/Pagination';
-import { fetchMyProjects } from '@/service/projects/projectsFetch';
-import NavbarCommunity from '@/components/navbar/NavbarCommunity';
-import NavbarAdmin from '@/components/navbar/NavbarAdmin';
-import NavbarModerator from '@/components/navbar/NavbarModerator';
-import { PlanComparisonBanner } from '@/components/plans';
-import ProjectList from './ProjectList';
-import Toast from '@/components/ui/Toast';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Pagination from "@/components/common/Pagination";
+import { fetchMyProjects } from "@/service/projects/projectsFetch";
+import NavbarCommunity from "@/components/navbar/NavbarCommunity";
+import NavbarAdmin from "@/components/navbar/NavbarAdmin";
+import NavbarModerator from "@/components/navbar/NavbarModerator";
+import { PlanComparisonBanner } from "@/components/plans";
+import ProjectList from "./ProjectList";
+import Toast from "@/components/ui/Toast";
 
-import { useAuth } from '@/context/AuthContext';
-import { ROLES } from '@/constants/roles';
-import BackButton from '@/components/ui/BackButton';
-import MessagingWidget from '@/components/messaging/MessagingWidget';
-import { useUserStore } from '@/store/userStore';
-import { config } from '@/config';
+import { useAuth } from "@/context/AuthContext";
+import { ROLES } from "@/constants/roles";
+import BackButton from "@/components/ui/BackButton";
+import MessagingWidget from "@/components/messaging/MessagingWidget";
+import { useUserStore } from "@/store/userStore";
+import { config } from "@/config";
 
 export default function MyProjectsView({ userId }) {
   const { user: authUser } = useAuth();
   const router = useRouter();
   const [showInactive, setShowInactive] = useState(false);
   const [projects, setProjects] = useState([]);
-  const [pagination, setPagination] = useState({ currentPage: 1, itemsPerPage: 12, totalItems: 0, totalPages: 1 });
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 12,
+    totalItems: 0,
+    totalPages: 1,
+  });
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const pageSize = 12;
-  const [toast, setToast] = useState({ isVisible: false, type: 'success', message: '' });
+  const [toast, setToast] = useState({
+    isVisible: false,
+    type: "success",
+    message: "",
+  });
 
   // Determinar si el usuario autenticado es el dueño de los proyectos que se están viendo
   const isOwner = authUser && userId && String(authUser.id) === String(userId);
 
   // Leer sessionStorage para toast de eliminación de proyecto
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const deletion = sessionStorage.getItem('projectDeletionToast');
+    if (typeof window !== "undefined") {
+      const deletion = sessionStorage.getItem("projectDeletionToast");
       if (deletion) {
         try {
           const data = JSON.parse(deletion);
-          setToast({ isVisible: true, type: data.type || 'success', message: data.message || 'Proyecto eliminado correctamente.' });
+          setToast({
+            isVisible: true,
+            type: data.type || "success",
+            message: data.message || "Proyecto eliminado correctamente.",
+          });
         } catch {
           // ignore parse error
         } finally {
-          sessionStorage.removeItem('projectDeletionToast');
+          sessionStorage.removeItem("projectDeletionToast");
         }
       }
     }
@@ -51,7 +64,12 @@ export default function MyProjectsView({ userId }) {
     if (!userId && !authUser) return;
     async function load() {
       setLoading(true);
-      const res = await fetchMyProjects({ ownerId: userId, active: !showInactive, page, limit: pageSize });
+      const res = await fetchMyProjects({
+        ownerId: userId,
+        active: !showInactive,
+        page,
+        limit: pageSize,
+      });
       setProjects(res.projects);
       setPagination(res.pagination);
       setLoading(false);
@@ -77,9 +95,13 @@ export default function MyProjectsView({ userId }) {
 
   // Avatar del usuario (como en ClientCommunity)
   const { profile } = useUserStore();
-  const avatar = profile?.profilePicture
-    ? `${config.IMAGE_URL}/${profile.profilePicture}`
-    : '/images/default-avatar.png';
+  const getAvatarSrc = () => {
+    if (!profile?.profilePicture) return "/images/default-avatar.png";
+    const imagePath = profile.profilePicture;
+    if (imagePath.startsWith("http")) return imagePath;
+    return `${config.IMAGE_URL}/${imagePath}`;
+  };
+  const avatar = getAvatarSrc();
 
   return (
     <>
@@ -98,16 +120,15 @@ export default function MyProjectsView({ userId }) {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-extrabold text-conexia-green-dark tracking-tight">
-                  {isOwner ? 'Mis proyectos' : 'Proyectos del usuario'}
+                  {isOwner ? "Mis proyectos" : "Proyectos del usuario"}
                 </h1>
                 <p className="text-conexia-green-dark mt-2 text-base md:text-lg">
-                  {isOwner 
-                    ? 'Gestiona y visualiza todos tus proyectos colaborativos' 
-                    : 'Explora los proyectos colaborativos de este usuario'
-                  }
+                  {isOwner
+                    ? "Gestiona y visualiza todos tus proyectos colaborativos"
+                    : "Explora los proyectos colaborativos de este usuario"}
                 </p>
               </div>
-              
+
               {/* Filtros (solo para el propietario) */}
               {isOwner && (
                 <div className="flex items-center justify-center md:justify-end w-full md:w-auto mt-4 md:mt-0">
@@ -115,7 +136,7 @@ export default function MyProjectsView({ userId }) {
                     <input
                       type="checkbox"
                       checked={showInactive}
-                      onChange={e => setShowInactive(e.target.checked)}
+                      onChange={(e) => setShowInactive(e.target.checked)}
                       className="rounded border-gray-300 text-conexia-green focus:ring-conexia-green"
                       disabled={loading}
                     />
@@ -131,29 +152,32 @@ export default function MyProjectsView({ userId }) {
           <div className="mb-6">
             {!loading && projects.length > 0 && (
               <p className="text-gray-600 text-sm">
-                Mostrando {projects.length} de {pagination.totalItems} proyecto{pagination.totalItems !== 1 ? 's' : ''}
+                Mostrando {projects.length} de {pagination.totalItems} proyecto
+                {pagination.totalItems !== 1 ? "s" : ""}
               </p>
             )}
           </div>
 
           {/* Lista de proyectos */}
           {loading ? (
-            <div className="text-conexia-green text-center py-8">Cargando proyectos...</div>
+            <div className="text-conexia-green text-center py-8">
+              Cargando proyectos...
+            </div>
           ) : (
             <>
-              <ProjectList 
-                projects={projects} 
-                showFinished={true} 
-                showInactive={showInactive} 
-                origin={isOwner ? 'my-projects' : 'user-projects'}
+              <ProjectList
+                projects={projects}
+                showFinished={true}
+                showInactive={showInactive}
+                origin={isOwner ? "my-projects" : "user-projects"}
               />
-              
+
               {/* Botón Atrás y Paginado */}
               <div className="mt-6">
                 {/* En móvil: botón atrás a la izquierda y paginado centrado en la misma línea */}
                 <div className="flex items-center md:hidden">
                   <BackButton
-                    text={isOwner ? 'Volver a mi perfil' : 'Atrás'}
+                    text={isOwner ? "Volver a mi perfil" : "Atrás"}
                     onClick={() => {
                       if (isOwner) {
                         router.push(`/profile/userProfile/${userId}`);
@@ -174,11 +198,11 @@ export default function MyProjectsView({ userId }) {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* En desktop: botón atrás a la izquierda, paginado centrado */}
                 <div className="hidden md:flex md:items-center">
                   <BackButton
-                    text={isOwner ? 'Volver a mi perfil' : 'Atrás'}
+                    text={isOwner ? "Volver a mi perfil" : "Atrás"}
                     onClick={() => {
                       if (isOwner) {
                         router.push(`/profile/userProfile/${userId}`);

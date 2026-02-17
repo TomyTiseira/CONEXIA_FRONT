@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getUserPlan } from '@/service/user/userFetch';
+import { useUserStore } from '@/store/userStore';
+import { ROLES } from '@/constants/roles';
 
 /**
  * Hook para obtener el plan activo del usuario autenticado
  * Incluye cache de 5 minutos para evitar llamadas repetitivas
+ * Solo funciona para usuarios con rol USER (admin/moderador no tienen planes)
  * 
  * @returns {Object} - Estado del plan del usuario
  * @property {Object|null} data - Información completa del plan y suscripción
@@ -43,6 +46,7 @@ import { getUserPlan } from '@/service/user/userFetch';
  * @property {Date|null} memberSince - Referencia rápida a la fecha de alta
  */
 export function useUserPlan() {
+  const { roleName } = useUserStore();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,8 +54,18 @@ export function useUserPlan() {
   const [hasFetched, setHasFetched] = useState(false);
 
   const CACHE_TIME = 5 * 60 * 1000; // 5 minutos
+  
+  // Admin y Moderador no tienen planes, solo usuarios normales
+  const isRegularUser = roleName === ROLES.USER;
 
   const fetchUserPlan = useCallback(async (forceRefresh = false) => {
+    // Si no es usuario regular, no hacer nada
+    if (!isRegularUser) {
+      setIsLoading(false);
+      setHasFetched(true);
+      return;
+    }
+    
     // Si no ha pasado el tiempo de cache y no es force refresh, no hacer fetch
     const now = Date.now();
     if (!forceRefresh && hasFetched && (now - lastFetch < CACHE_TIME)) {
@@ -86,7 +100,7 @@ export function useUserPlan() {
     } finally {
       setIsLoading(false);
     }
-  }, [hasFetched, lastFetch, error, CACHE_TIME]);
+  }, [isRegularUser, hasFetched, lastFetch, error, CACHE_TIME]);
 
   useEffect(() => {
     // Solo ejecutar una vez al montar o cuando hasFetched cambia

@@ -1,22 +1,39 @@
-'use client';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { config } from '@/config';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCarouselNavigation } from '@/hooks/project/useCarouselNavigation';
-import { isProjectFinished } from '@/utils/postulationValidation';
+"use client";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { config } from "@/config";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useCarouselNavigation } from "@/hooks/project/useCarouselNavigation";
+import { isProjectFinished } from "@/utils/postulationValidation";
 
 export default function RecommendationsCarousel({ projects, onProjectClick }) {
   // Mapear endDate: si no viene, poner null
-  const normalizedProjects = (projects || []).map(p => ({ ...p, endDate: p.endDate ?? null }));
+  const normalizedProjects = (projects || []).map((p) => ({
+    ...p,
+    endDate: p.endDate ?? null,
+  }));
   // Log de depuración para ver todos los proyectos y sus fechas de fin
   if (normalizedProjects.length > 0) {
     // eslint-disable-next-line no-console
   }
   const router = useRouter();
 
+  // Helper para URLs de imagen del proyecto
+  const getProjectImageUrl = (img) => {
+    if (!img) return "/default_project.jpeg";
+    if (img.startsWith("http")) return img;
+    return `${config.IMAGE_URL}/projects/images/${img}`;
+  };
+
+  // Helper para URLs de imagen del dueño
+  const getOwnerImageUrl = (img) => {
+    if (!img) return "/logo.png";
+    if (img.startsWith("http")) return img;
+    return `${config.IMAGE_URL}/${img}`;
+  };
+
   // Filtrar proyectos finalizados y log para depuración
-  const filteredProjects = normalizedProjects.filter(project => {
+  const filteredProjects = normalizedProjects.filter((project) => {
     const finished = isProjectFinished(project);
     if (finished) {
       // eslint-disable-next-line no-console
@@ -34,23 +51,26 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
     goToPreviousMobile,
     getCurrentItems,
     getCurrentItemMobile,
-    goToPage
+    goToPage,
   } = useCarouselNavigation(filteredProjects.length, 3, 1);
   // Función para mostrar primer nombre y primer apellido
   const getShortName = (fullName) => {
-    if (!fullName) return 'Usuario';
-    const names = fullName.trim().split(' ').filter(name => name.length > 0);
-    
-    if (names.length === 0) return 'Usuario';
+    if (!fullName) return "Usuario";
+    const names = fullName
+      .trim()
+      .split(" ")
+      .filter((name) => name.length > 0);
+
+    if (names.length === 0) return "Usuario";
     if (names.length === 1) return names[0];
     if (names.length === 2) return `${names[0]} ${names[1]}`;
-    
+
     // Para 3 o más nombres, asumimos: Primer_Nombre [Segundo_Nombre] Primer_Apellido [Segundo_Apellido]
     // Tomamos el primer nombre (names[0]) y el primer apellido (names[2] si existe, sino names[1])
     if (names.length >= 3) {
       return `${names[0]} ${names[2]}`;
     }
-    
+
     return `${names[0]} ${names[1]}`;
   };
 
@@ -70,32 +90,24 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
     <div
       key={project.id}
       className={`bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col h-full items-stretch hover:shadow-lg transition ${
-        isMobile ? 'w-full' : 'w-full'
+        isMobile ? "w-full" : "w-full"
       }`}
     >
       {/* Imagen, título y dueño */}
-      <div className="flex flex-col xs:flex-row items-start gap-2 xs:gap-3 mb-3 w-full
-        [@media(max-width:400px)]:flex-col [@media(max-width:400px)]:items-stretch">
+      <div
+        className="flex flex-col xs:flex-row items-start gap-2 xs:gap-3 mb-3 w-full
+        [@media(max-width:400px)]:flex-col [@media(max-width:400px)]:items-stretch"
+      >
         {/* Imagen del proyecto */}
         <div className="relative w-full flex justify-center items-center">
           <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0 mx-auto">
-            {project.image ? (
-              <Image
-                src={`${config.IMAGE_URL}/projects/images/${project.image}`}
-                alt={project.title}
-                fill
-                className="object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm"
-                sizes="144px"
-              />
-            ) : (
-              <Image
-                src="/default_project.jpeg"
-                alt="Imagen por defecto"
-                fill
-                className="object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm"
-                sizes="144px"
-              />
-            )}
+            <Image
+              src={getProjectImageUrl(project.image)}
+              alt={project.title}
+              fill
+              className="object-cover rounded-xl border-4 border-white bg-[#f3f9f8] shadow-sm"
+              sizes="144px"
+            />
           </div>
         </div>
 
@@ -110,28 +122,18 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
       </div>
 
       {/* Dueño del proyecto */}
-      <div 
+      <div
         className="flex items-center gap-2 mb-3 min-w-0 px-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
         onClick={() => router.push(`/profile/userProfile/${project.ownerId}`)}
       >
         <div className="relative w-7 h-7">
-          {project.ownerImage ? (
-            <Image
-              src={`${config.IMAGE_URL}/${project.ownerImage}`}
-              alt={project.owner || 'Usuario'}
-              fill
-              className="object-cover rounded-full border bg-[#f3f9f8]"
-              sizes="28px"
-            />
-          ) : (
-            <Image
-              src="/logo.png"
-              alt="Sin imagen"
-              fill
-              className="object-contain rounded-full border bg-[#f3f9f8]"
-              sizes="28px"
-            />
-          )}
+          <Image
+            src={getOwnerImageUrl(project.ownerImage)}
+            alt={project.owner || "Usuario"}
+            fill
+            className="object-cover rounded-full border bg-[#f3f9f8]"
+            sizes="28px"
+          />
         </div>
         <span className="text-conexia-green font-semibold text-sm whitespace-pre-line break-words truncate hover:underline">
           {getShortName(project.owner)}
@@ -183,7 +185,8 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
           Proyectos recomendados para ti
         </h2>
         <div className="text-sm text-conexia-green/70">
-          {filteredProjects.length} {filteredProjects.length === 1 ? 'proyecto' : 'proyectos'}
+          {filteredProjects.length}{" "}
+          {filteredProjects.length === 1 ? "proyecto" : "proyectos"}
         </div>
       </div>
 
@@ -192,7 +195,7 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
         <div className="relative">
           {/* Contenedor de proyectos */}
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch w-full">
-            {getCurrentItems(filteredProjects).map(project => (
+            {getCurrentItems(filteredProjects).map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>
@@ -216,8 +219,8 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
                     onClick={() => goToPage(index)}
                     className={`w-3 h-3 rounded-full transition-colors ${
                       index === currentPage
-                        ? 'bg-conexia-green'
-                        : 'bg-gray-300 hover:bg-gray-400'
+                        ? "bg-conexia-green"
+                        : "bg-gray-300 hover:bg-gray-400"
                     }`}
                     aria-label={`Ir a la página ${index + 1}`}
                   />
@@ -242,7 +245,10 @@ export default function RecommendationsCarousel({ projects, onProjectClick }) {
           {/* Contenedor de proyecto */}
           <div className="w-full">
             {getCurrentItemMobile(filteredProjects) && (
-              <ProjectCard project={getCurrentItemMobile(filteredProjects)} isMobile={true} />
+              <ProjectCard
+                project={getCurrentItemMobile(filteredProjects)}
+                isMobile={true}
+              />
             )}
           </div>
 
