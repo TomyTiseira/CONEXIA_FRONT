@@ -4,28 +4,28 @@
  * Muestra thumbnails de imágenes que abren modal con carrusel
  */
 
-'use client';
+"use client";
 
-import React, { useMemo, useState } from 'react';
-import { FileText, Image, Film, File, Download, Loader2 } from 'lucide-react';
-import { getFileType, getFileNameFromUrl } from '@/utils/claimValidation';
-import { config } from '@/config/env';
-import ImageZoomModalClaims from './ImageZoomModalClaims';
+import React, { useMemo, useState } from "react";
+import { FileText, Image, Film, File, Download, Loader2 } from "lucide-react";
+import { getFileType, getFileNameFromUrl } from "@/utils/claimValidation";
+import { config } from "@/config/env";
+import ImageZoomModalClaims from "./ImageZoomModalClaims";
 
 /**
  * Convierte una ruta relativa en URL absoluta
  */
 const getAbsoluteUrl = (url) => {
-  if (!url) return '';
-  
+  if (!url) return "";
+
   // Si ya es una URL completa, devolverla tal cual
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+  if (url.startsWith("http://") || url.startsWith("https://")) {
     return url;
   }
-  
+
   // Si es una ruta relativa, construir URL completa
   // Remover el slash inicial si existe para evitar doble slash
-  const path = url.startsWith('/') ? url.substring(1) : url;
+  const path = url.startsWith("/") ? url.substring(1) : url;
   return `${config.DOCUMENT_URL}/${path}`;
 };
 
@@ -34,14 +34,14 @@ const getAbsoluteUrl = (url) => {
  */
 const getFileIcon = (url) => {
   const type = getFileType(url);
-  const iconProps = { size: 20, className: 'mr-2' };
+  const iconProps = { size: 20, className: "mr-2" };
 
   switch (type) {
-    case 'image':
+    case "image":
       return <Image {...iconProps} className="text-blue-500" />;
-    case 'document':
+    case "document":
       return <FileText {...iconProps} className="text-red-500" />;
-    case 'video':
+    case "video":
       return <Film {...iconProps} className="text-purple-500" />;
     default:
       return <File {...iconProps} className="text-gray-500" />;
@@ -71,24 +71,43 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
     setDownloading(index);
     try {
       const absoluteUrl = getAbsoluteUrl(url);
-      const response = await fetch(absoluteUrl);
-      
-      if (!response.ok) {
-        throw new Error('Error al descargar el archivo');
-      }
 
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+      // Si es una URL de GCS, descargar directamente
+      const isGCSUrl =
+        absoluteUrl.startsWith("https://storage.googleapis.com") ||
+        absoluteUrl.includes(".storage.googleapis.com");
+
+      if (isGCSUrl) {
+        // Descarga directa de GCS
+        const link = document.createElement("a");
+        link.href = absoluteUrl;
+        link.download = fileName;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // Desarrollo local - hacer fetch
+        const response = await fetch(absoluteUrl);
+
+        if (!response.ok) {
+          throw new Error("Error al descargar el archivo");
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      }
     } catch (error) {
-      console.error('Error downloading file:', error);
-      alert('Error al descargar el archivo. Por favor, intenta nuevamente.');
+      console.error("Error downloading file:", error);
+      alert("Error al descargar el archivo. Por favor, intenta nuevamente.");
     } finally {
       setDownloading(null);
     }
@@ -102,11 +121,11 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
 
     (evidenceUrls || []).forEach((url) => {
       const type = getFileType(url);
-      if (type === 'image') {
+      if (type === "image") {
         images.push(url);
-      } else if (type === 'document' && url.toLowerCase().endsWith('.pdf')) {
+      } else if (type === "document" && url.toLowerCase().endsWith(".pdf")) {
         pdfs.push(url);
-      } else if (type === 'video') {
+      } else if (type === "video") {
         videos.push(url);
       } else {
         others.push(url);
@@ -165,7 +184,7 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
 
       {/* PDFs con thumbnails */}
       {grouped.pdfs.length > 0 && (
-        <div className={grouped.images.length > 0 ? 'mt-4' : ''}>
+        <div className={grouped.images.length > 0 ? "mt-4" : ""}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {grouped.pdfs.map((url, index) => {
               const absoluteUrl = getAbsoluteUrl(url);
@@ -175,7 +194,7 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
                 <div
                   key={`${url}-${index}`}
                   className="relative group border border-gray-200 rounded-lg overflow-hidden bg-gray-50 cursor-pointer"
-                  onClick={() => window.open(absoluteUrl, '_blank')}
+                  onClick={() => window.open(absoluteUrl, "_blank")}
                 >
                   <div className="w-full h-32 flex flex-col items-center justify-center bg-red-50">
                     <FileText size={48} className="text-red-500 mb-2" />
@@ -213,7 +232,11 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
 
       {/* Videos con thumbnails */}
       {grouped.videos.length > 0 && (
-        <div className={grouped.images.length > 0 || grouped.pdfs.length > 0 ? 'mt-4' : ''}>
+        <div
+          className={
+            grouped.images.length > 0 || grouped.pdfs.length > 0 ? "mt-4" : ""
+          }
+        >
           <p className="text-sm font-medium text-gray-700 mb-2">Videos</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {grouped.videos.map((url, index) => {
@@ -224,7 +247,7 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
                 <div
                   key={`${url}-${index}`}
                   className="relative group border border-gray-200 rounded-lg overflow-hidden bg-gray-50 cursor-pointer"
-                  onClick={() => window.open(absoluteUrl, '_blank')}
+                  onClick={() => window.open(absoluteUrl, "_blank")}
                 >
                   <div className="w-full h-32 flex flex-col items-center justify-center bg-purple-50">
                     <Film size={48} className="text-purple-500 mb-2" />
@@ -262,8 +285,18 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
 
       {/* Otros archivos */}
       {grouped.others.length > 0 && (
-        <div className={grouped.images.length > 0 || grouped.pdfs.length > 0 || grouped.videos.length > 0 ? 'mt-4 space-y-3' : 'space-y-3'}>
-          <p className="text-sm font-medium text-gray-700 mb-2">Otros archivos</p>
+        <div
+          className={
+            grouped.images.length > 0 ||
+            grouped.pdfs.length > 0 ||
+            grouped.videos.length > 0
+              ? "mt-4 space-y-3"
+              : "space-y-3"
+          }
+        >
+          <p className="text-sm font-medium text-gray-700 mb-2">
+            Otros archivos
+          </p>
           {grouped.others.map((url, index) => {
             const fileName = getFileNameFromUrl(url);
             const fileType = getFileType(url);
@@ -275,13 +308,15 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
               >
                 <div className="flex items-center flex-1 min-w-0">
                   {getFileIcon(url)}
-                  <span className="text-sm font-medium text-gray-900 truncate">{fileName}</span>
+                  <span className="text-sm font-medium text-gray-900 truncate">
+                    {fileName}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2 ml-3">
                   <button
                     type="button"
-                    onClick={() => window.open(getAbsoluteUrl(url), '_blank')}
+                    onClick={() => window.open(getAbsoluteUrl(url), "_blank")}
                     className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
                     title="Abrir archivo"
                   >
@@ -290,7 +325,9 @@ export const ClaimEvidenceViewer = ({ evidenceUrls = [] }) => {
 
                   <button
                     type="button"
-                    onClick={() => handleDownload(url, fileName, `file-${index}`)}
+                    onClick={() =>
+                      handleDownload(url, fileName, `file-${index}`)
+                    }
                     disabled={downloading === `file-${index}`}
                     className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Descargar"
