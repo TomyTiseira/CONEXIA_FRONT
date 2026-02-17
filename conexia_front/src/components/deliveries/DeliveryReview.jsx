@@ -1,14 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Calendar, DollarSign, FileText, Download, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import StatusBadge from '@/components/common/StatusBadge';
-import Button from '@/components/ui/Button';
-import { useReviewDelivery } from '@/hooks/deliveries';
-import Toast from '@/components/ui/Toast';
-import { buildMediaUrl } from '@/utils/mediaUrl';
-import RequestRevisionModal from '@/components/deliveries/RequestRevisionModal';
-import ConfirmApproveDeliveryModal from '@/components/deliveries/ConfirmApproveDeliveryModal';
+import { useState, useEffect } from "react";
+import {
+  Calendar,
+  DollarSign,
+  FileText,
+  Download,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import StatusBadge from "@/components/common/StatusBadge";
+import Button from "@/components/ui/Button";
+import { useReviewDelivery } from "@/hooks/deliveries";
+import Toast from "@/components/ui/Toast";
+import { buildMediaUrl } from "@/utils/mediaUrl";
+import RequestRevisionModal from "@/components/deliveries/RequestRevisionModal";
+import ConfirmApproveDeliveryModal from "@/components/deliveries/ConfirmApproveDeliveryModal";
 
 export default function DeliveryReview({
   delivery,
@@ -19,7 +27,7 @@ export default function DeliveryReview({
 }) {
   const { reviewDelivery, loading } = useReviewDelivery();
   const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
-  const [revisionNotes, setRevisionNotes] = useState('');
+  const [revisionNotes, setRevisionNotes] = useState("");
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [previewSrc, setPreviewSrc] = useState(null);
@@ -28,22 +36,28 @@ export default function DeliveryReview({
   // Función para obtener attachments (con retrocompatibilidad)
   const getAttachments = () => {
     // Nuevo formato: array de attachments
-    if (delivery.attachments && Array.isArray(delivery.attachments) && delivery.attachments.length > 0) {
+    if (
+      delivery.attachments &&
+      Array.isArray(delivery.attachments) &&
+      delivery.attachments.length > 0
+    ) {
       return delivery.attachments;
     }
-    
+
     // Formato antiguo: attachmentUrl single
     if (delivery.attachmentUrl || delivery.attachmentPath) {
-      return [{
-        id: 'legacy',
-        fileUrl: delivery.attachmentUrl,
-        filePath: delivery.attachmentPath,
-        fileName: delivery.attachmentPath?.split('/').pop() || 'archivo',
-        fileSize: delivery.attachmentSize,
-        orderIndex: 0
-      }];
+      return [
+        {
+          id: "legacy",
+          fileUrl: delivery.attachmentUrl,
+          filePath: delivery.attachmentPath,
+          fileName: delivery.attachmentPath?.split("/").pop() || "archivo",
+          fileSize: delivery.attachmentSize,
+          orderIndex: 0,
+        },
+      ];
     }
-    
+
     return [];
   };
 
@@ -53,14 +67,16 @@ export default function DeliveryReview({
     return (
       <div className="bg-gray-50 rounded-lg p-8 text-center">
         <AlertCircle size={48} className="mx-auto text-gray-400 mb-3" />
-        <p className="text-gray-600">No hay información de entrega disponible</p>
+        <p className="text-gray-600">
+          No hay información de entrega disponible
+        </p>
       </div>
     );
   }
 
   const handleApprove = async () => {
     try {
-      const response = await reviewDelivery(delivery.id, { action: 'approve' });
+      const response = await reviewDelivery(delivery.id, { action: "approve" });
 
       // Cerrar modal inmediatamente
       setIsApproveModalOpen(false);
@@ -68,11 +84,11 @@ export default function DeliveryReview({
       // Esperar un momento para que el modal se cierre, luego mostrar toast
       setTimeout(() => {
         const successMessage = response?.paymentUrl
-          ? 'Entrega aprobada! Redirigiendo a Mercado Pago...'
-          : 'Entrega aprobada exitosamente';
-        
+          ? "Entrega aprobada! Redirigiendo a Mercado Pago..."
+          : "Entrega aprobada exitosamente";
+
         if (showToast) {
-          showToast('success', successMessage);
+          showToast("success", successMessage);
         }
 
         // Si hay pago, redirigir después del toast
@@ -89,7 +105,7 @@ export default function DeliveryReview({
       setIsApproveModalOpen(false);
       setTimeout(() => {
         if (showToast) {
-          showToast('error', error.message || 'Error al aprobar la entrega');
+          showToast("error", error.message || "Error al aprobar la entrega");
         }
       }, 300);
     }
@@ -100,36 +116,37 @@ export default function DeliveryReview({
 
     if (!trimmedNotes) {
       setLocalToast({
-        type: 'error',
-        message: 'Debes proporcionar notas para solicitar la revisión',
-        isVisible: true
+        type: "error",
+        message: "Debes proporcionar notas para solicitar la revisión",
+        isVisible: true,
       });
       return;
     }
 
     if (trimmedNotes.length < 20) {
       setLocalToast({
-        type: 'error',
-        message: 'Las notas deben tener al menos 20 caracteres para solicitar la revisión',
-        isVisible: true
+        type: "error",
+        message:
+          "Las notas deben tener al menos 20 caracteres para solicitar la revisión",
+        isVisible: true,
       });
       return;
     }
 
     try {
       await reviewDelivery(delivery.id, {
-        action: 'request_revision',
-        notes: trimmedNotes
+        action: "request_revision",
+        notes: trimmedNotes,
       });
 
       // Cerrar modal inmediatamente
       setIsRevisionModalOpen(false);
-      setRevisionNotes('');
+      setRevisionNotes("");
 
       // Esperar a que modal se cierre, luego mostrar toast en padre
       setTimeout(() => {
         if (showToast) {
-          showToast('success', 'Solicitud de revisión enviada');
+          showToast("success", "Solicitud de revisión enviada");
         }
         if (onReviewSuccess) {
           onReviewSuccess();
@@ -137,10 +154,10 @@ export default function DeliveryReview({
       }, 300);
     } catch (error) {
       setIsRevisionModalOpen(false);
-      setRevisionNotes('');
+      setRevisionNotes("");
       setTimeout(() => {
         if (showToast) {
-          showToast('error', error.message || 'Error al solicitar revisión');
+          showToast("error", error.message || "Error al solicitar revisión");
         }
       }, 300);
     }
@@ -163,17 +180,17 @@ export default function DeliveryReview({
       return attachment.fileName;
     }
     if (attachment?.filePath) {
-      return attachment.filePath.split('/').pop() || 'archivo';
+      return attachment.filePath.split("/").pop() || "archivo";
     }
-    return 'archivo';
+    return "archivo";
   };
 
   const formatFileSize = (bytes) => {
-    if (!bytes || bytes === 0) return '0 Bytes';
+    if (!bytes || bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   const handleDownload = async (attachment) => {
@@ -181,34 +198,35 @@ export default function DeliveryReview({
     try {
       const url = getAttachmentUrl(attachment);
       if (!url) {
-        throw new Error('URL de archivo no disponible');
+        throw new Error("URL de archivo no disponible");
       }
 
       // Si es URL de GCS (producción), descargar directamente sin fetch
-      const isGCSUrl = url.startsWith('https://storage.googleapis.com') || 
-                       url.includes('.storage.googleapis.com');
-      
+      const isGCSUrl =
+        url.startsWith("https://storage.googleapis.com") ||
+        url.includes(".storage.googleapis.com");
+
       if (isGCSUrl) {
         // Descarga directa de GCS - abrir en nueva pestaña o forzar descarga
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
         link.download = getAttachmentFileName(attachment);
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       } else {
         // Desarrollo local - hacer fetch (puede requerir autenticación)
         const response = await fetch(url);
-        
+
         if (!response.ok) {
-          throw new Error('Error al descargar el archivo');
+          throw new Error("Error al descargar el archivo");
         }
 
         const blob = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = downloadUrl;
         link.download = getAttachmentFileName(attachment);
         document.body.appendChild(link);
@@ -218,16 +236,16 @@ export default function DeliveryReview({
       }
 
       setLocalToast({
-        type: 'success',
-        message: 'Archivo descargado correctamente',
-        isVisible: true
+        type: "success",
+        message: "Archivo descargado correctamente",
+        isVisible: true,
       });
     } catch (error) {
-      console.error('Error downloading file:', error);
+      console.error("Error downloading file:", error);
       setLocalToast({
-        type: 'error',
-        message: 'Error al descargar el archivo. Intenta nuevamente.',
-        isVisible: true
+        type: "error",
+        message: "Error al descargar el archivo. Intenta nuevamente.",
+        isVisible: true,
       });
     } finally {
       setDownloading(false);
@@ -236,8 +254,11 @@ export default function DeliveryReview({
 
   // Generar una vista previa watermark en canvas para ocultar la URL real en el DOM cuando corresponde
   useEffect(() => {
-    const isImage = (path) => /(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/i.test(path || '');
-    const needWatermark = Boolean(isClient && delivery?.needsWatermark && isImage(delivery?.attachmentPath));
+    const isImage = (path) =>
+      /(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/i.test(path || "");
+    const needWatermark = Boolean(
+      isClient && delivery?.needsWatermark && isImage(delivery?.attachmentPath),
+    );
 
     // Si no hace falta o no hay URL, resetear
     if (!needWatermark) {
@@ -258,7 +279,10 @@ export default function DeliveryReview({
         if (!url) return;
 
         // Descargar como blob (el request puede seguir viéndose en Network, pero el src en el DOM será blob:)
-        const res = await fetch(url, { signal: controller.signal, credentials: 'include' });
+        const res = await fetch(url, {
+          signal: controller.signal,
+          credentials: "include",
+        });
         const blob = await res.blob();
         const imgUrl = URL.createObjectURL(blob);
 
@@ -278,55 +302,57 @@ export default function DeliveryReview({
         w = Math.max(1, Math.round(w * ratio));
         h = Math.max(1, Math.round(h * ratio));
 
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = w;
         canvas.height = h;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
 
         // Dibujo base
         ctx.drawImage(img, 0, 0, w, h);
 
-  // Velo sutil (ligeramente más claro para no tapar tanto la imagen)
-  ctx.fillStyle = 'rgba(0,0,0,0.10)';
+        // Velo sutil (ligeramente más claro para no tapar tanto la imagen)
+        ctx.fillStyle = "rgba(0,0,0,0.10)";
         ctx.fillRect(0, 0, w, h);
 
         // Patrón diagonal de "CONEXIA" repetido
         ctx.save();
         ctx.translate(w / 2, h / 2);
         ctx.rotate(-Math.PI / 6); // -30°
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         const patternFontSize = Math.max(14, Math.round(w * 0.03));
         ctx.font = `700 ${patternFontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-        ctx.fillStyle = 'rgba(255,255,255,0.18)';
-        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.strokeStyle = "rgba(0,0,0,0.25)";
         ctx.lineWidth = Math.max(1, Math.round(patternFontSize * 0.06));
         const stepX = Math.round(patternFontSize * 8);
         const stepY = Math.round(patternFontSize * 6);
         for (let y = -h; y <= h; y += stepY) {
           for (let x = -w; x <= w; x += stepX) {
-            ctx.strokeText('CONEXIA', x, y);
-            ctx.fillText('CONEXIA', x, y);
+            ctx.strokeText("CONEXIA", x, y);
+            ctx.fillText("CONEXIA", x, y);
           }
         }
         ctx.restore();
 
-  // Texto central: NO PAGADO (centrado, un poco más chico y gris translúcido)
+        // Texto central: NO PAGADO (centrado, un poco más chico y gris translúcido)
         ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-  ctx.fillStyle = 'rgba(0,0,0,0.35)'; // gris translúcido, un poco más oscuro que el patrón
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; // sutil borde claro para legibilidad
-  const centerFontSize = Math.max(22, Math.round(w * 0.06));
-  ctx.font = `900 ${centerFontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-  ctx.lineWidth = Math.max(1, Math.round(centerFontSize * 0.06));
-  const cx = Math.round(w / 2);
-  const cy = Math.round(h / 2);
-  ctx.strokeText('NO PAGADO', cx, cy);
-  ctx.fillText('NO PAGADO', cx, cy);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "rgba(0,0,0,0.35)"; // gris translúcido, un poco más oscuro que el patrón
+        ctx.strokeStyle = "rgba(255,255,255,0.2)"; // sutil borde claro para legibilidad
+        const centerFontSize = Math.max(22, Math.round(w * 0.06));
+        ctx.font = `900 ${centerFontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.lineWidth = Math.max(1, Math.round(centerFontSize * 0.06));
+        const cx = Math.round(w / 2);
+        const cy = Math.round(h / 2);
+        ctx.strokeText("NO PAGADO", cx, cy);
+        ctx.fillText("NO PAGADO", cx, cy);
         ctx.restore();
 
-        const outBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.9));
+        const outBlob = await new Promise((resolve) =>
+          canvas.toBlob(resolve, "image/png", 0.9),
+        );
         objectUrl = URL.createObjectURL(outBlob);
         if (!revoked) setPreviewSrc(objectUrl);
 
@@ -348,7 +374,12 @@ export default function DeliveryReview({
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient, delivery?.needsWatermark, delivery?.attachmentPath, delivery?.attachmentUrl]);
+  }, [
+    isClient,
+    delivery?.needsWatermark,
+    delivery?.attachmentPath,
+    delivery?.attachmentUrl,
+  ]);
 
   return (
     <>
@@ -358,19 +389,21 @@ export default function DeliveryReview({
           <div>
             <div className="flex items-center gap-3">
               <StatusBadge status={delivery.status} type="delivery" />
-              {delivery.deliveryType === 'deliverable' && delivery.deliverable && (
-                <span className="text-sm text-gray-600">
-                  Entregable N° {delivery.deliverable.orderIndex}
-                </span>
-              )}
+              {delivery.deliveryType === "deliverable" &&
+                delivery.deliverable && (
+                  <span className="text-sm text-gray-600">
+                    Entregable N° {delivery.deliverable.orderIndex}
+                  </span>
+                )}
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              Entregado el {new Date(delivery.deliveredAt).toLocaleString('es-ES', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+              Entregado el{" "}
+              {new Date(delivery.deliveredAt).toLocaleString("es-ES", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
               })}
             </p>
           </div>
@@ -403,7 +436,9 @@ export default function DeliveryReview({
             <div className="mb-6">
               <label className="flex items-center font-semibold text-gray-900 mb-3">
                 <Download size={18} className="mr-2" />
-                {attachments.length === 1 ? 'Archivo adjunto' : `Archivos adjuntos (${attachments.length})`}
+                {attachments.length === 1
+                  ? "Archivo adjunto"
+                  : `Archivos adjuntos (${attachments.length})`}
                 {isClient && delivery.needsWatermark && (
                   <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">
                     Pendiente de pago
@@ -413,14 +448,22 @@ export default function DeliveryReview({
 
               <div className="space-y-3">
                 {attachments.map((attachment, index) => {
-                  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.filePath || attachment.fileName || '');
+                  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(
+                    attachment.filePath || attachment.fileName || "",
+                  );
                   const attachmentUrl = getAttachmentUrl(attachment);
-                  
+
                   return (
-                    <div key={attachment.id || index} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div
+                      key={attachment.id || index}
+                      className="border border-gray-200 rounded-lg overflow-hidden"
+                    >
                       {/* Preview de imagen si aplica */}
                       {isImage && attachmentUrl && (
-                        <div className="relative bg-gray-100 flex items-center justify-center" style={{ minHeight: '200px' }}>
+                        <div
+                          className="relative bg-gray-100 flex items-center justify-center"
+                          style={{ minHeight: "200px" }}
+                        >
                           <img
                             src={attachmentUrl}
                             alt={`Vista previa ${index + 1}`}
@@ -428,7 +471,7 @@ export default function DeliveryReview({
                             loading="lazy"
                           />
                           {isClient && delivery.needsWatermark && (
-                            <div 
+                            <div
                               className="absolute inset-0 pointer-events-none overflow-hidden"
                               style={{
                                 background: `repeating-linear-gradient(
@@ -437,7 +480,7 @@ export default function DeliveryReview({
                                   transparent 100px,
                                   rgba(255, 255, 255, 0.05) 100px,
                                   rgba(255, 255, 255, 0.05) 200px
-                                )`
+                                )`,
                               }}
                             >
                               <div className="absolute inset-0 flex flex-wrap items-center justify-center opacity-30">
@@ -446,8 +489,8 @@ export default function DeliveryReview({
                                     key={i}
                                     className="text-white font-bold text-4xl md:text-5xl transform rotate-[-45deg] m-8"
                                     style={{
-                                      textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-                                      userSelect: 'none'
+                                      textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+                                      userSelect: "none",
                                     }}
                                   >
                                     CONEXIA
@@ -463,9 +506,15 @@ export default function DeliveryReview({
                       {isClient && delivery.needsWatermark ? (
                         <div className="bg-yellow-50 p-4">
                           <div className="flex items-start gap-3">
-                            <FileText size={24} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <FileText
+                              size={24}
+                              className="text-yellow-600 flex-shrink-0 mt-0.5"
+                            />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 truncate" title={getAttachmentFileName(attachment)}>
+                              <p
+                                className="font-medium text-gray-900 truncate"
+                                title={getAttachmentFileName(attachment)}
+                              >
                                 {getAttachmentFileName(attachment)}
                               </p>
                               {attachment.fileSize && (
@@ -485,23 +534,32 @@ export default function DeliveryReview({
                           disabled={downloading}
                           className="w-full flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 transition-colors group disabled:opacity-50"
                         >
-                          <FileText size={24} className="text-blue-500 flex-shrink-0" />
+                          <FileText
+                            size={24}
+                            className="text-blue-500 flex-shrink-0"
+                          />
                           <div className="flex-1 text-left min-w-0">
-                            <p className="font-medium text-blue-900 group-hover:text-blue-700 truncate" title={getAttachmentFileName(attachment)}>
+                            <p
+                              className="font-medium text-blue-900 group-hover:text-blue-700 truncate"
+                              title={getAttachmentFileName(attachment)}
+                            >
                               {getAttachmentFileName(attachment)}
                             </p>
                             <p className="text-sm text-blue-600">
-                              {downloading ? 'Descargando...' : (
-                                attachment.fileSize 
+                              {downloading
+                                ? "Descargando..."
+                                : attachment.fileSize
                                   ? `${formatFileSize(attachment.fileSize)} • Click para descargar`
-                                  : 'Click para descargar'
-                              )}
+                                  : "Click para descargar"}
                             </p>
                           </div>
                           {downloading ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 flex-shrink-0"></div>
                           ) : (
-                            <Download size={20} className="text-blue-500 flex-shrink-0" />
+                            <Download
+                              size={20}
+                              className="text-blue-500 flex-shrink-0"
+                            />
                           )}
                         </button>
                       )}
@@ -528,7 +586,10 @@ export default function DeliveryReview({
                 {delivery.deliverable.estimatedDeliveryDate && (
                   <p className="text-xs text-gray-500 flex items-center">
                     <Calendar size={14} className="mr-1" />
-                    Fecha estimada: {new Date(delivery.deliverable.estimatedDeliveryDate).toLocaleDateString()}
+                    Fecha estimada:{" "}
+                    {new Date(
+                      delivery.deliverable.estimatedDeliveryDate,
+                    ).toLocaleDateString()}
                   </p>
                 )}
               </div>
@@ -536,44 +597,59 @@ export default function DeliveryReview({
           )}
 
           {/* Acciones según estado - Solo para el cliente */}
-          {isClient && delivery.status === 'delivered' && !isApproveModalOpen && !isRevisionModalOpen && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="primary"
-                onClick={() => setIsApproveModalOpen(true)}
-                className="flex-1 bg-green-600 hover:bg-green-700 flex items-center justify-center"
-                disabled={loading || hasActiveClaim}
-                title={hasActiveClaim ? 'No se puede aprobar mientras hay un reclamo activo' : ''}
-              >
-                <CheckCircle size={18} className="mr-2" />
-                Aceptar entrega
-              </Button>
-              <Button
-                variant="warning"
-                onClick={() => setIsRevisionModalOpen(true)}
-                className="flex-1 flex items-center justify-center"
-                disabled={loading || hasActiveClaim}
-                title={hasActiveClaim ? 'No se puede solicitar revisión mientras hay un reclamo activo' : ''}
-              >
-                <RefreshCw size={18} className="mr-2" />
-                Solicitar revisión
-              </Button>
-            </div>
-          )}
+          {isClient &&
+            delivery.status === "delivered" &&
+            !isApproveModalOpen &&
+            !isRevisionModalOpen && (
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="primary"
+                  onClick={() => setIsApproveModalOpen(true)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 flex items-center justify-center"
+                  disabled={loading || hasActiveClaim}
+                  title={
+                    hasActiveClaim
+                      ? "No se puede aprobar mientras hay un reclamo activo"
+                      : ""
+                  }
+                >
+                  <CheckCircle size={18} className="mr-2" />
+                  Aceptar entrega
+                </Button>
+                <Button
+                  variant="warning"
+                  onClick={() => setIsRevisionModalOpen(true)}
+                  className="flex-1 flex items-center justify-center"
+                  disabled={loading || hasActiveClaim}
+                  title={
+                    hasActiveClaim
+                      ? "No se puede solicitar revisión mientras hay un reclamo activo"
+                      : ""
+                  }
+                >
+                  <RefreshCw size={18} className="mr-2" />
+                  Solicitar revisión
+                </Button>
+              </div>
+            )}
 
           {/* Botón de pago para entregas pendientes de pago */}
-          {isClient && delivery.status === 'pending_payment' && (
+          {isClient && delivery.status === "pending_payment" && (
             <div className="space-y-4">
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <div className="flex items-start">
-                  <AlertCircle size={20} className="text-amber-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <AlertCircle
+                    size={20}
+                    className="text-amber-600 mr-3 mt-0.5 flex-shrink-0"
+                  />
                   <div>
                     <h4 className="font-semibold text-amber-900 mb-1">
                       Pago pendiente
                     </h4>
                     <p className="text-sm text-amber-800">
-                      Esta entrega ha sido aprobada pero el pago aún no se ha completado. 
-                      Haz clic en el botón de abajo para procesar el pago en MercadoPago.
+                      Esta entrega ha sido aprobada pero el pago aún no se ha
+                      completado. Haz clic en el botón de abajo para procesar el
+                      pago en MercadoPago.
                     </p>
                   </div>
                 </div>
@@ -583,7 +659,11 @@ export default function DeliveryReview({
                 onClick={handleApprove}
                 className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
                 disabled={loading || hasActiveClaim}
-                title={hasActiveClaim ? 'No se puede realizar el pago mientras hay un reclamo activo' : ''}
+                title={
+                  hasActiveClaim
+                    ? "No se puede realizar el pago mientras hay un reclamo activo"
+                    : ""
+                }
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -601,16 +681,20 @@ export default function DeliveryReview({
           )}
 
           {/* Mensaje informativo para prestador */}
-          {!isClient && delivery.status === 'delivered' && (
+          {!isClient && delivery.status === "delivered" && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
-                <AlertCircle size={20} className="text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
+                <AlertCircle
+                  size={20}
+                  className="text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                />
                 <div>
                   <h4 className="font-semibold text-blue-900 mb-1">
                     Entrega realizada
                   </h4>
                   <p className="text-sm text-blue-800">
-                    Esta entrega está esperando la revisión y aprobación del cliente.
+                    Esta entrega está esperando la revisión y aprobación del
+                    cliente.
                   </p>
                 </div>
               </div>
@@ -628,7 +712,7 @@ export default function DeliveryReview({
             isOpen={isRevisionModalOpen}
             onClose={() => {
               setIsRevisionModalOpen(false);
-              setRevisionNotes('');
+              setRevisionNotes("");
             }}
             onSubmit={handleRequestRevision}
             notes={revisionNotes}
@@ -637,7 +721,7 @@ export default function DeliveryReview({
           />
 
           {/* Estado: Aprobado */}
-          {delivery.status === 'approved' && (
+          {delivery.status === "approved" && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center">
                 <CheckCircle size={24} className="text-green-600 mr-3" />
@@ -647,11 +731,15 @@ export default function DeliveryReview({
                   </p>
                   {delivery.approvedAt && (
                     <p className="text-sm text-green-700">
-                      Aprobado el {new Date(delivery.approvedAt).toLocaleDateString('es-ES', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
+                      Aprobado el{" "}
+                      {new Date(delivery.approvedAt).toLocaleDateString(
+                        "es-ES",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        },
+                      )}
                     </p>
                   )}
                 </div>
@@ -660,10 +748,13 @@ export default function DeliveryReview({
           )}
 
           {/* Estado: Revisión solicitada */}
-          {delivery.status === 'revision_requested' && (
+          {delivery.status === "revision_requested" && (
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
               <div className="flex items-start">
-                <RefreshCw size={24} className="text-orange-600 mr-3 mt-0.5 flex-shrink-0" />
+                <RefreshCw
+                  size={24}
+                  className="text-orange-600 mr-3 mt-0.5 flex-shrink-0"
+                />
                 <div>
                   <p className="font-semibold text-orange-900 mb-2">
                     Revisión solicitada
@@ -680,7 +771,8 @@ export default function DeliveryReview({
                   )}
                   {delivery.reviewedAt && (
                     <p className="text-xs text-orange-600 mt-2">
-                      Solicitado el {new Date(delivery.reviewedAt).toLocaleDateString()}
+                      Solicitado el{" "}
+                      {new Date(delivery.reviewedAt).toLocaleDateString()}
                     </p>
                   )}
                 </div>
