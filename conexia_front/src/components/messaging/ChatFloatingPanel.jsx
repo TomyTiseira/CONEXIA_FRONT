@@ -532,8 +532,9 @@ export default function ChatFloatingPanel({
         if (normalizeType(m.type) !== "image") continue;
         const urlCandidate = m.fileUrl || m.fileName;
         if (!urlCandidate) continue;
-        // Evitar fetch para data:
-        if (String(urlCandidate).startsWith("data:")) continue;
+        // Evitar fetch para data:, blob: y URLs externas (GCS)
+        const s = String(urlCandidate);
+        if (s.startsWith("data:") || s.startsWith("blob:") || /^https?:\/\//i.test(s)) continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (imageBlobByMsgRef.current[stableId]) continue;
         try {
@@ -557,8 +558,9 @@ export default function ChatFloatingPanel({
         if (normalizeType(m.type) !== "pdf") continue;
         const urlCandidate = m.fileUrl || m.fileName;
         if (!urlCandidate) continue;
-        // Evitar fetch para data:
-        if (String(urlCandidate).startsWith("data:")) continue;
+        // Evitar fetch para data:, blob: y URLs externas (GCS)
+        const s = String(urlCandidate);
+        if (s.startsWith("data:") || s.startsWith("blob:") || /^https?:\/\//i.test(s)) continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (pdfBlobByMsgRef.current[stableId]) continue;
         try {
@@ -598,13 +600,11 @@ export default function ChatFloatingPanel({
         }
       }
       if (!href) return;
-      const a = document.createElement("a");
-      a.href = href;
-      a.download = m.fileName || "documento.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch {}
+      // Abrir en nueva pestaña en vez de descargar
+      window.open(href, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Error al abrir PDF:", err);
+    }
   };
 
   // Abrir imagen en modal (usa blob cache o fetch auth)
@@ -633,8 +633,12 @@ export default function ChatFloatingPanel({
           }
         }
       }
-      if (src) setImageModal({ url: src, name: m.fileName });
-    } catch {}
+      if (src) {
+        setImageModal({ url: src, name: m.fileName || "Imagen" });
+      }
+    } catch (err) {
+      console.error("Error al abrir imagen:", err);
+    }
   };
 
   // Limpieza de blobs al desmontar
@@ -1012,7 +1016,7 @@ export default function ChatFloatingPanel({
                           </div>
                           <button
                             type="button"
-                            title="Descargar"
+                            title="Ver PDF"
                             onClick={() => handlePdfClick(m, sid)}
                             className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity text-[12px] text-conexia-green font-medium"
                           >
@@ -1023,14 +1027,21 @@ export default function ChatFloatingPanel({
                               fill="none"
                             >
                               <path
-                                d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                stroke="#1e6e5c"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                 stroke="#1e6e5c"
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                             </svg>
-                            Descargar
+                            Ver PDF
                           </button>
                         </div>
                         {timeChip}
