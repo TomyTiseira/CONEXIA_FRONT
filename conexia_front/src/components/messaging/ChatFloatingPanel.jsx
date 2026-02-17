@@ -1213,7 +1213,7 @@ export default function ChatFloatingPanel({
       {/* Image preview modal */}
       {imageModal && (
         <div
-          className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
           onClick={() => setImageModal(null)}
         >
           <div className="relative" onClick={(e) => e.stopPropagation()}>
