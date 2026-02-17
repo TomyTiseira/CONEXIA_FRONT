@@ -534,7 +534,12 @@ export default function ChatFloatingPanel({
         if (!urlCandidate) continue;
         // Evitar fetch para data:, blob: y URLs externas (GCS)
         const s = String(urlCandidate);
-        if (s.startsWith("data:") || s.startsWith("blob:") || /^https?:\/\//i.test(s)) continue;
+        if (
+          s.startsWith("data:") ||
+          s.startsWith("blob:") ||
+          /^https?:\/\//i.test(s)
+        )
+          continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (imageBlobByMsgRef.current[stableId]) continue;
         try {
@@ -560,7 +565,12 @@ export default function ChatFloatingPanel({
         if (!urlCandidate) continue;
         // Evitar fetch para data:, blob: y URLs externas (GCS)
         const s = String(urlCandidate);
-        if (s.startsWith("data:") || s.startsWith("blob:") || /^https?:\/\//i.test(s)) continue;
+        if (
+          s.startsWith("data:") ||
+          s.startsWith("blob:") ||
+          /^https?:\/\//i.test(s)
+        )
+          continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (pdfBlobByMsgRef.current[stableId]) continue;
         try {
