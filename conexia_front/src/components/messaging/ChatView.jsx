@@ -126,6 +126,12 @@ export default function ChatView({ user, onBack }) {
     return candidates;
   };
   const fetchBlobAuthTry = async (urlOrName, signal) => {
+    // NUNCA hacer fetch a URLs de GCS - solo para archivos locales del backend
+    const s = String(urlOrName || "");
+    if (/^https?:\/\//i.test(s)) {
+      throw new Error("No se puede hacer fetch a URLs externas");
+    }
+
     const token = getAccessToken();
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const candidates = buildCandidateUrls(urlOrName);
@@ -492,6 +498,7 @@ export default function ChatView({ user, onBack }) {
   }, [messages?.length, me?.id]);
 
   // Precarga imágenes recibidas con auth → blob (receptor)
+  // SOLO para archivos locales - NO para URLs de GCS
   useEffect(() => {
     if (!messages?.length) return;
     const ctrl = new AbortController();
@@ -505,10 +512,12 @@ export default function ChatView({ user, onBack }) {
           /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.fileUrl || "");
         if (!isImg) continue;
         const src = m.fileUrl || m.fileName;
+        // NO precargar si es GCS URL, data URL, o blob URL
         if (
           !src ||
           String(src).startsWith("data:") ||
-          String(src).startsWith("blob:")
+          String(src).startsWith("blob:") ||
+          /^https?:\/\//i.test(String(src))
         )
           continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
@@ -524,6 +533,7 @@ export default function ChatView({ user, onBack }) {
   }, [messages, me?.id]);
 
   // Precarga PDFs recibidos → blob (para descarga instantánea)
+  // SOLO para archivos locales - NO para URLs de GCS
   useEffect(() => {
     if (!messages?.length) return;
     const ctrl = new AbortController();
@@ -537,10 +547,12 @@ export default function ChatView({ user, onBack }) {
           /\.pdf(\?|$)/i.test(m.fileUrl || "");
         if (!isPdf) continue;
         const src = m.fileUrl || m.fileName;
+        // NO precargar si es GCS URL, data URL, o blob URL
         if (
           !src ||
           String(src).startsWith("data:") ||
-          String(src).startsWith("blob:")
+          String(src).startsWith("blob:") ||
+          /^https?:\/\//i.test(String(src))
         )
           continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
