@@ -54,7 +54,7 @@ export async function getUnreadCount() {
 
 // Send text message
 export async function sendTextMessage({ receiverId, conversationId, content }) {
-  const url = `${API}/messaging/send-message`;
+  const url = `${API}/messaging/send`;
   const payload = { receiverId, conversationId, type: 'text', content };
   const res = await fetchWithRefresh(url, {
     method: 'POST',
@@ -77,7 +77,7 @@ export async function sendFileMessage({ receiverId, conversationId, file, type }
   const max = isImage ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
   if (file.size > max) throw new Error(isImage ? 'Imagen supera 5MB' : 'PDF supera 10MB');
 
-  const url = `${API}/messaging/send-message`;
+  const url = `${API}/messaging/send`;
   const form = new FormData();
   form.append('receiverId', String(receiverId));
   if (conversationId) form.append('conversationId', String(conversationId));
