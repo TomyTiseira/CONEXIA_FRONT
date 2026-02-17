@@ -211,18 +211,50 @@ export default function ChatView({ user, onBack }) {
         })
       : "";
 
-  // Abre modal de imagen con src dado (prioriza URL original de GCS)
-  const openImageModal = (src, name, originalMsg) => {
-    if (!src) return;
-    // Si el mensaje tiene fileUrl o content con URL de GCS, usarla
-    let finalSrc = src;
-    if (originalMsg) {
-      const directUrl = originalMsg.fileUrl || originalMsg.content || "";
-      if (typeof directUrl === "string" && /^https?:\/\//i.test(directUrl)) {
-        finalSrc = directUrl;
-      }
+  // Abre modal de imagen (siempre prioriza URL original de GCS sin transformar)
+  const openImageModal = (name, originalMsg) => {
+    if (!originalMsg) return;
+
+    // Prioridad 1: URL directa de GCS o HTTP del mensaje
+    const directUrl = originalMsg.fileUrl || originalMsg.content || "";
+    if (typeof directUrl === "string" && /^https?:\/\//i.test(directUrl)) {
+      setImageModal({ src: directUrl, name: name || "Imagen" });
+      return;
     }
-    setImageModal({ src: finalSrc, name: name || "Imagen" });
+
+    // Prioridad 2: Blob en caché
+    const stableId = originalMsg.id ?? originalMsg.messageId ?? originalMsg._id;
+    const localById = imageBlobByMsgRef.current[stableId];
+    if (localById) {
+      setImageModal({ src: localById, name: name || "Imagen" });
+      return;
+    }
+
+    const k = nameSizeKey(originalMsg.fileName, originalMsg.fileSize);
+    const localByName = sentBlobByNameRef.current[k];
+    if (localByName) {
+      setImageModal({ src: localByName, name: name || "Imagen" });
+      return;
+    }
+
+    // Prioridad 3: Data URL o blob URL
+    if (
+      typeof directUrl === "string" &&
+      (directUrl.startsWith("data:") || directUrl.startsWith("blob:"))
+    ) {
+      setImageModal({ src: directUrl, name: name || "Imagen" });
+      return;
+    }
+
+    // Prioridad 4: Construir URL local (desarrollo)
+    const fileName = directUrl || originalMsg.fileName || "";
+    if (fileName) {
+      const localUrl = normFileUrl(fileName);
+      setImageModal({ src: localUrl, name: name || "Imagen" });
+      return;
+    }
+
+    console.error("No se encontró URL de la imagen");
   };
 
   // Abre un PDF en nueva pestaña (NUNCA descarga, solo redirige)
@@ -805,7 +837,7 @@ export default function ChatView({ user, onBack }) {
                   <div className="max-w-[78%]">
                     <div
                       className="rounded-lg overflow-hidden border border-conexia-green/30 bg-white p-1 cursor-zoom-in"
-                      onClick={() => openImageModal(displaySrc, m.fileName, m)}
+                      onClick={() => openImageModal(m.fileName, m)}
                       title="Ver imagen"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
