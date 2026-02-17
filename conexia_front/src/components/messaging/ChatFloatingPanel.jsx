@@ -503,6 +503,9 @@ export default function ChatFloatingPanel({
           const src = m.fileUrl || m.fileName;
           if (typeof src === "string" && src.startsWith("data:")) {
             href = src;
+          } else if (typeof src === "string" && /^https?:\/\//i.test(src)) {
+            // URLs externas (GCS, etc.) - usar directamente sin fetch para evitar CORS
+            href = src;
           } else {
             const blob = await fetchBlobAuthTry(src);
             href = URL.createObjectURL(blob);
@@ -583,6 +586,10 @@ export default function ChatFloatingPanel({
           if (typeof src === "string" && src.startsWith("data:")) {
             href = src; // abrir/descargar directamente desde data:
             pdfBlobByMsgRef.current[stableId] = href;
+          } else if (typeof src === "string" && /^https?:\/\//i.test(src)) {
+            // URLs externas (GCS, etc.) - usar directamente sin fetch para evitar CORS
+            href = src;
+            pdfBlobByMsgRef.current[stableId] = href;
           } else {
             const blob = await fetchBlobAuthTry(src);
             href = URL.createObjectURL(blob);
@@ -614,6 +621,10 @@ export default function ChatFloatingPanel({
           const u = m.fileUrl || m.fileName;
           if (typeof u === "string" && u.startsWith("data:")) {
             src = u; // usar data: directamente
+            imageBlobByMsgRef.current[stableId] = src;
+          } else if (typeof u === "string" && /^https?:\/\//i.test(u)) {
+            // URLs externas (GCS, etc.) - usar directamente sin fetch para evitar CORS
+            src = u;
             imageBlobByMsgRef.current[stableId] = src;
           } else {
             const blob = await fetchBlobAuth(u);
