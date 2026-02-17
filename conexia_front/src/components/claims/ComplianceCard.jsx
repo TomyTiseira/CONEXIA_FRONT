@@ -4,14 +4,28 @@
  * Incluye: tipo, estado, deadline, instrucciones, evidencia y acciones
  */
 
-'use client';
+"use client";
 
-import React, { useMemo, useState } from 'react';
-import { Clock, Upload, CheckCircle, AlertTriangle, Download, Scale, ChevronDown, ChevronUp, XCircle, FileText, Calendar, Info, AlertCircle } from 'lucide-react';
-import { ComplianceStatusBadge } from './ComplianceStatusBadge';
-import { ClaimEvidenceViewer } from './ClaimEvidenceViewer';
-import { COMPLIANCE_TYPE_LABELS, COMPLIANCE_STATUS } from '@/constants/claims';
-import { config } from '@/config';
+import React, { useMemo, useState } from "react";
+import {
+  Clock,
+  Upload,
+  CheckCircle,
+  AlertTriangle,
+  Download,
+  Scale,
+  ChevronDown,
+  ChevronUp,
+  XCircle,
+  FileText,
+  Calendar,
+  Info,
+  AlertCircle,
+} from "lucide-react";
+import { ComplianceStatusBadge } from "./ComplianceStatusBadge";
+import { ClaimEvidenceViewer } from "./ClaimEvidenceViewer";
+import { COMPLIANCE_TYPE_LABELS, COMPLIANCE_STATUS } from "@/constants/claims";
+import { config } from "@/config";
 
 export const ComplianceCard = ({
   compliance,
@@ -23,7 +37,7 @@ export const ComplianceCard = ({
   claimant = null,
   otherUser = null,
   showActionButton = false,
-  actionButtonText = '',
+  actionButtonText = "",
   onAction = null,
   hideFooter = false,
   showCompactHeader = false, // Nuevo prop para ocultar el header cuando se usa en acordeón
@@ -39,11 +53,17 @@ export const ComplianceCard = ({
   const responsibleUser = useMemo(() => {
     if (!compliance.responsibleUserId) return null;
     const responsibleId = String(compliance.responsibleUserId);
-    
-    if (claimant?.profile?.id && String(claimant.profile.id) === responsibleId) {
+
+    if (
+      claimant?.profile?.id &&
+      String(claimant.profile.id) === responsibleId
+    ) {
       return claimant;
     }
-    if (otherUser?.profile?.id && String(otherUser.profile.id) === responsibleId) {
+    if (
+      otherUser?.profile?.id &&
+      String(otherUser.profile.id) === responsibleId
+    ) {
       return otherUser;
     }
     return null;
@@ -51,23 +71,26 @@ export const ComplianceCard = ({
 
   // Obtener nombre completo del responsable
   const getResponsibleName = () => {
-    if (!responsibleUser?.profile) return 'Usuario';
-    
+    if (!responsibleUser?.profile) return "Usuario";
+
     // Obtener solo el primer nombre
-    const fullName = responsibleUser.profile.name || '';
-    const firstName = fullName.trim().split(/\s+/)[0] || '';
-    
+    const fullName = responsibleUser.profile.name || "";
+    const firstName = fullName.trim().split(/\s+/)[0] || "";
+
     // Obtener solo el primer apellido
-    const fullLastName = responsibleUser.profile.lastName || '';
-    const firstLastName = fullLastName.trim().split(/\s+/)[0] || '';
-    
-    return `${firstName} ${firstLastName}`.trim() || 'Usuario';
+    const fullLastName = responsibleUser.profile.lastName || "";
+    const firstLastName = fullLastName.trim().split(/\s+/)[0] || "";
+
+    return `${firstName} ${firstLastName}`.trim() || "Usuario";
   };
 
   // Obtener avatar del responsable
   const getResponsibleAvatar = () => {
-    if (!responsibleUser?.profile?.profilePicture) return '/images/default-avatar.png';
-    return `${config.IMAGE_URL}/${responsibleUser.profile.profilePicture}`;
+    if (!responsibleUser?.profile?.profilePicture)
+      return "/images/default-avatar.png";
+    const imagePath = responsibleUser.profile.profilePicture;
+    if (imagePath.startsWith("http")) return imagePath;
+    return `${config.IMAGE_URL}/${imagePath}`;
   };
 
   // Calcular días restantes hasta el deadline
@@ -97,52 +120,66 @@ export const ComplianceCard = ({
 
   // Obtener label del tipo de compliance
   const complianceTypeLabel =
-    COMPLIANCE_TYPE_LABELS[compliance.complianceType] || compliance.complianceType;
+    COMPLIANCE_TYPE_LABELS[compliance.complianceType] ||
+    compliance.complianceType;
 
   // Formatear fecha del deadline
   const formatDate = (dateString) => {
-    if (!dateString) return 'Sin plazo';
+    if (!dateString) return "Sin plazo";
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleDateString("es-AR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Determinar si puede subir evidencia usando availableActions del backend
-  const canSubmitEvidence = compliance.availableActions?.includes('submit_evidence');
+  const canSubmitEvidence =
+    compliance.availableActions?.includes("submit_evidence");
   const showUploadButton = canUpload && canSubmitEvidence;
 
   // Determinar si puede revisar el compromiso (peer review)
-  const canPeerReview = compliance.availableActions?.includes('peer_approve') || 
-                        compliance.availableActions?.includes('peer_object');
+  const canPeerReview =
+    compliance.availableActions?.includes("peer_approve") ||
+    compliance.availableActions?.includes("peer_object");
   const showReviewButton = canPeerReview && onReviewCompliance;
 
   // Determinar si puede revisar como moderador
-  const canModeratorReview = isModerator && compliance.availableActions?.includes('review_compliance');
-  const showModeratorReviewButton = canModeratorReview && onModeratorReviewCompliance;
+  const canModeratorReview =
+    isModerator && compliance.availableActions?.includes("review_compliance");
+  const showModeratorReviewButton =
+    canModeratorReview && onModeratorReviewCompliance;
 
   // Determinar clases del contenedor según urgencia
   const containerClasses = isUrgent
-    ? 'border-red-300 bg-red-50'
+    ? "border-red-300 bg-red-50"
     : isOverdue
-      ? 'border-red-400 bg-red-50'
-      : 'border-gray-200 bg-white';
+      ? "border-red-400 bg-red-50"
+      : "border-gray-200 bg-white";
 
-  const textColorClass = isUrgent || isOverdue ? 'text-red-700' : 'text-gray-600';
+  const textColorClass =
+    isUrgent || isOverdue ? "text-red-700" : "text-gray-600";
 
   return (
-    <div className={showCompactHeader ? '' : 'bg-white border-2 border-purple-200 rounded-xl shadow-sm overflow-hidden'}>
+    <div
+      className={
+        showCompactHeader
+          ? ""
+          : "bg-white border-2 border-purple-200 rounded-xl shadow-sm overflow-hidden"
+      }
+    >
       {/* Header - Solo mostrar si no es compacto */}
       {!showCompactHeader && (
         <div className="px-5 py-4 bg-purple-100 border-b border-purple-200">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h5 className="font-bold text-lg text-gray-900">{complianceTypeLabel}</h5>
+                <h5 className="font-bold text-lg text-gray-900">
+                  {complianceTypeLabel}
+                </h5>
                 <ComplianceStatusBadge status={compliance.status} />
               </div>
             </div>
@@ -163,7 +200,12 @@ export const ComplianceCard = ({
           {/* ID del Compromiso */}
           {compliance.id && (
             <div className="pb-4 border-b border-gray-300">
-              <p className="text-xs font-medium text-gray-600 mb-2">ID del compromiso:</p>
+              <p className="text-xs font-medium text-gray-600 mb-2">
+                ID del Compromiso:
+              </p>
+              <p className="text-xs font-medium text-gray-600 mb-2">
+                ID del compromiso:
+              </p>
               <code className="text-sm bg-purple-100 text-purple-900 px-3 py-1.5 rounded-lg font-mono font-semibold border border-purple-300 inline-block">
                 {String(compliance.id)}
               </code>
@@ -172,25 +214,31 @@ export const ComplianceCard = ({
 
           {/* Responsable del Compromiso */}
           {responsibleUser && (
-            <div className={`${compliance.id ? 'pb-4 border-b border-gray-300' : 'pb-4 border-b border-gray-300'}`}>
-              <p className="text-xs font-medium text-gray-600 mb-2">Responsable:</p>
+            <div
+              className={`${compliance.id ? "pb-4 border-b border-gray-300" : "pb-4 border-b border-gray-300"}`}
+            >
+              <p className="text-xs font-medium text-gray-600 mb-2">
+                Responsable:
+              </p>
               <div className="flex items-center gap-2">
                 <img
                   src={getResponsibleAvatar()}
                   onError={(e) => {
-                    e.currentTarget.src = '/images/default-avatar.png';
+                    e.currentTarget.src = "/images/default-avatar.png";
                   }}
                   alt={getResponsibleName()}
                   className="w-8 h-8 rounded-full object-cover flex-shrink-0 border-2 border-gray-300"
                 />
-                <p className="text-sm font-semibold text-gray-900">{getResponsibleName()}</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {getResponsibleName()}
+                </p>
               </div>
             </div>
           )}
 
           {/* Deadline */}
           {compliance.deadline && (
-            <div className={responsibleUser ? '' : ''}>
+            <div className={responsibleUser ? "" : ""}>
               <div className="flex items-center gap-2 mb-2">
                 <Clock size={16} className="text-purple-600" />
                 <span className="text-sm font-medium text-gray-900">
@@ -200,33 +248,41 @@ export const ComplianceCard = ({
               {daysRemaining !== null && daysRemaining >= 0 && (
                 <div className="flex items-center gap-2 flex-wrap ml-6">
                   <span className="text-xs text-gray-600">
-                    {daysRemaining} {daysRemaining === 1 ? 'día' : 'días'} restante{daysRemaining !== 1 ? 's' : ''}
+                    {daysRemaining} {daysRemaining === 1 ? "día" : "días"}{" "}
+                    restante{daysRemaining !== 1 ? "s" : ""}
                   </span>
-                  {isResponsible && compliance.status === COMPLIANCE_STATUS.PENDING && (
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                        daysRemaining > 3
-                          ? 'bg-green-100 text-green-700 border border-green-300'
+                  {isResponsible &&
+                    compliance.status === COMPLIANCE_STATUS.PENDING && (
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                          daysRemaining > 3
+                            ? "bg-green-100 text-green-700 border border-green-300"
+                            : daysRemaining > 0
+                              ? "bg-yellow-100 text-yellow-700 border border-yellow-300"
+                              : "bg-red-100 text-red-700 border border-red-300"
+                        }`}
+                      >
+                        {daysRemaining > 3
+                          ? "✓ A tiempo"
                           : daysRemaining > 0
-                          ? 'bg-yellow-100 text-yellow-700 border border-yellow-300'
-                          : 'bg-red-100 text-red-700 border border-red-300'
-                      }`}
-                    >
-                      {daysRemaining > 3 ? '✓ A tiempo' : daysRemaining > 0 ? '⚠ Urgente' : '🚨 Vencido'}
-                    </span>
-                  )}
+                            ? "⚠ Urgente"
+                            : "🚨 Vencido"}
+                      </span>
+                    )}
                 </div>
               )}
               {isOverdue && (
                 <div className="flex items-center gap-2 flex-wrap ml-6">
                   <span className="text-xs text-red-600 font-semibold">
-                    ¡Vencido hace {Math.abs(daysRemaining)} día{Math.abs(daysRemaining) !== 1 ? 's' : ''}!
+                    ¡Vencido hace {Math.abs(daysRemaining)} día
+                    {Math.abs(daysRemaining) !== 1 ? "s" : ""}!
                   </span>
-                  {isResponsible && compliance.status === COMPLIANCE_STATUS.PENDING && (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-700 border border-red-300">
-                      Vencido
-                    </span>
-                  )}
+                  {isResponsible &&
+                    compliance.status === COMPLIANCE_STATUS.PENDING && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-700 border border-red-300">
+                        Vencido
+                      </span>
+                    )}
                 </div>
               )}
             </div>
@@ -234,7 +290,11 @@ export const ComplianceCard = ({
 
           {/* Instrucciones del Moderador */}
           {compliance.moderatorInstructions && (
-            <div className={compliance.deadline ? 'pt-4 border-t border-gray-300' : ''}>
+            <div
+              className={
+                compliance.deadline ? "pt-4 border-t border-gray-300" : ""
+              }
+            >
               <p className="text-xs font-medium text-gray-600 mb-2">
                 Instrucciones del moderador:
               </p>
@@ -246,12 +306,14 @@ export const ComplianceCard = ({
         </div>
 
         {/* Información de Vencimiento - Solo si está vencido */}
-        {!hideWarnings && compliance.overdueStatus && compliance.overdueStatus !== 'NOT_OVERDUE' && (
-          <InformacionVencimiento
-            compliance={compliance}
-            isResponsible={isResponsible}
-          />
-        )}
+        {!hideWarnings &&
+          compliance.overdueStatus &&
+          compliance.overdueStatus !== "NOT_OVERDUE" && (
+            <InformacionVencimiento
+              compliance={compliance}
+              isResponsible={isResponsible}
+            />
+          )}
 
         {/* Historial de Rechazos - Solo si hay rechazos previos y no está oculto */}
         {!hideWarnings && compliance.rejectionCount > 0 && (
@@ -262,43 +324,58 @@ export const ComplianceCard = ({
         )}
 
         {/* Información del Sistema de Intentos - Solo si no tiene rechazos pero puede subir evidencia */}
-        {!hideWarnings && compliance.rejectionCount === 0 && isResponsible && canUpload && compliance.status === COMPLIANCE_STATUS.PENDING && (
-          <div className="bg-blue-50 border-2 border-blue-300 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 bg-blue-100 border-b border-blue-300">
-              <div className="flex items-center gap-2">
-                <Info size={20} className="text-blue-700" />
-                <p className="text-base font-bold text-gray-900">
-                  Sistema de intentos
+        {!hideWarnings &&
+          compliance.rejectionCount === 0 &&
+          isResponsible &&
+          canUpload &&
+          compliance.status === COMPLIANCE_STATUS.PENDING && (
+            <div className="bg-blue-50 border-2 border-blue-300 rounded-xl overflow-hidden">
+              <div className="px-4 py-3 bg-blue-100 border-b border-blue-300">
+                <div className="flex items-center gap-2">
+                  <Info size={20} className="text-blue-700" />
+                  <p className="text-base font-bold text-gray-900">
+                    Sistema de Intentos
+                  </p>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <p className="text-sm text-gray-700">
+                  Tienes{" "}
+                  <span className="font-bold text-blue-700">3 intentos</span>{" "}
+                  para cumplir este compromiso correctamente.
+                </p>
+                <div className="bg-white border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs font-bold text-gray-700 mb-2">
+                    Consecuencias por rechazo:
+                  </p>
+                  <ul className="space-y-1.5 text-xs text-gray-700">
+                    <li className="flex items-start gap-2">
+                      <span className="text-yellow-600 font-bold">
+                        1° rechazo:
+                      </span>
+                      <span>Advertencia y oportunidad de reenviar</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 font-bold">
+                        2° rechazo:
+                      </span>
+                      <span>Suspensión de cuenta por 15 días</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-600 font-bold">
+                        3° rechazo:
+                      </span>
+                      <span>Bloqueo permanente de cuenta</span>
+                    </li>
+                  </ul>
+                </div>
+                <p className="text-xs text-blue-800 font-medium bg-white rounded px-2 py-1.5 border border-blue-300">
+                  Revisa cuidadosamente las instrucciones del moderador antes de
+                  subir tu evidencia.
                 </p>
               </div>
             </div>
-            <div className="p-4 space-y-3">
-              <p className="text-sm text-gray-700">
-                Tienes <span className="font-bold text-blue-700">3 intentos</span> para cumplir este compromiso correctamente.
-              </p>
-              <div className="bg-white border border-blue-200 rounded-lg p-3">
-                <p className="text-xs font-bold text-gray-700 mb-2">Consecuencias por rechazo:</p>
-                <ul className="space-y-1.5 text-xs text-gray-700">
-                  <li className="flex items-start gap-2">
-                    <span className="text-yellow-600 font-bold">1° rechazo:</span>
-                    <span>Advertencia y oportunidad de reenviar</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-orange-600 font-bold">2° rechazo:</span>
-                    <span>Suspensión de cuenta por 15 días</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-600 font-bold">3° rechazo:</span>
-                    <span>Bloqueo permanente de cuenta</span>
-                  </li>
-                </ul>
-              </div>
-              <p className="text-xs text-blue-800 font-medium bg-white rounded px-2 py-1.5 border border-blue-300">
-                Revisa cuidadosamente las instrucciones del moderador antes de subir tu evidencia.
-              </p>
-            </div>
-          </div>
-        )}
+          )}
 
         {/* Evidencia Subida (si existe) */}
         {compliance.evidenceUrls && compliance.evidenceUrls.length > 0 && (
@@ -312,7 +389,9 @@ export const ComplianceCard = ({
               {/* Descripción/Notas del usuario */}
               {compliance.userNotes && (
                 <div>
-                  <p className="text-xs font-bold text-gray-700 mb-2">Descripción del cumplimiento:</p>
+                  <p className="text-xs font-bold text-gray-700 mb-2">
+                    Descripción del Cumplimiento:
+                  </p>
                   <div className="bg-white border border-purple-200 rounded-lg p-3">
                     <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {compliance.userNotes}
@@ -337,65 +416,87 @@ export const ComplianceCard = ({
               )}
             </div>
           </div>
-          )}
+        )}
 
         {/* Información de Peer Review (preaprobación/prerechazo) */}
         {compliance.peerReviewReason && compliance.peerReviewedAt && (
-          <div className={`border-2 rounded-xl overflow-hidden ${
-            compliance.peerApproved 
-              ? 'bg-green-50 border-green-300' 
-              : 'bg-orange-50 border-orange-300'
-          }`}>
-            <div className={`px-4 py-3 border-b ${
-              compliance.peerApproved 
-                ? 'bg-green-100 border-green-300' 
-                : 'bg-orange-100 border-orange-300'
-            }`}>
-              <p className={`text-sm font-bold ${
-                compliance.peerApproved ? 'text-green-900' : 'text-orange-900'
-              }`}>
+          <div
+            className={`border-2 rounded-xl overflow-hidden ${
+              compliance.peerApproved
+                ? "bg-green-50 border-green-300"
+                : "bg-orange-50 border-orange-300"
+            }`}
+          >
+            <div
+              className={`px-4 py-3 border-b ${
+                compliance.peerApproved
+                  ? "bg-green-100 border-green-300"
+                  : "bg-orange-100 border-orange-300"
+              }`}
+            >
+              <p
+                className={`text-sm font-bold ${
+                  compliance.peerApproved ? "text-green-900" : "text-orange-900"
+                }`}
+              >
                 Revisión de la otra parte
               </p>
             </div>
             <div className="p-4 space-y-3">
               <div>
                 <p className="text-xs font-bold text-gray-700 mb-2">
-                  {compliance.peerApproved ? 'Estado:' : 'Estado:'}
+                  {compliance.peerApproved ? "Estado:" : "Estado:"}
                 </p>
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                  compliance.peerApproved
-                    ? 'bg-green-100 text-green-800 border border-green-400'
-                    : 'bg-orange-100 text-orange-800 border border-orange-400'
-                }`}>
-                  {compliance.peerApproved ? 'Preaprobado' : 'Prerechazado'}
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                    compliance.peerApproved
+                      ? "bg-green-100 text-green-800 border border-green-400"
+                      : "bg-orange-100 text-orange-800 border border-orange-400"
+                  }`}
+                >
+                  {compliance.peerApproved ? "Preaprobado" : "Prerechazado"}
                 </span>
               </div>
-              
+
               <div>
                 <p className="text-xs font-bold text-gray-700 mb-2">
-                  {compliance.peerApproved ? 'Comentarios:' : 'Descripción del prerechazo:'}
+                  {compliance.peerApproved
+                    ? "Comentarios:"
+                    : "Descripción del prerechazo:"}
                 </p>
-                <div className={`bg-white border-2 rounded-lg p-4 ${
-                  compliance.peerApproved ? 'border-green-300' : 'border-orange-300'
-                }`}>
+                <div
+                  className={`bg-white border-2 rounded-lg p-4 ${
+                    compliance.peerApproved
+                      ? "border-green-300"
+                      : "border-orange-300"
+                  }`}
+                >
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {compliance.peerReviewReason}
                   </p>
                 </div>
               </div>
-              
+
               {compliance.peerReviewedAt && (
-                <p className={`text-xs text-gray-600 font-medium pt-3 border-t border-dashed flex items-center gap-1 ${
-                  compliance.peerApproved ? 'border-green-300' : 'border-orange-300'
-                }`}>
+                <p
+                  className={`text-xs text-gray-600 font-medium pt-3 border-t border-dashed flex items-center gap-1 ${
+                    compliance.peerApproved
+                      ? "border-green-300"
+                      : "border-orange-300"
+                  }`}
+                >
                   <Clock size={12} />
-                  Revisado el {new Date(compliance.peerReviewedAt).toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  Revisado el{" "}
+                  {new Date(compliance.peerReviewedAt).toLocaleDateString(
+                    "es-ES",
+                    {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    },
+                  )}
                 </p>
               )}
             </div>
@@ -422,7 +523,9 @@ export const ComplianceCard = ({
               </div>
               {compliance.moderatorNotes && (
                 <div>
-                  <p className="text-xs font-bold text-gray-700 mb-2">Notas del moderador:</p>
+                  <p className="text-xs font-bold text-gray-700 mb-2">
+                    Notas del Moderador:
+                  </p>
                   <div className="bg-white border border-green-200 rounded-lg p-3">
                     <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {compliance.moderatorNotes}
@@ -445,7 +548,9 @@ export const ComplianceCard = ({
             <div className="p-4 space-y-3">
               {compliance.moderatorNotes && (
                 <div>
-                  <p className="text-xs font-bold text-gray-700 mb-2">Razón del rechazo:</p>
+                  <p className="text-xs font-bold text-gray-700 mb-2">
+                    Razón del rechazo:
+                  </p>
                   <div className="bg-white border-2 border-red-300 rounded-lg p-4">
                     <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {compliance.moderatorNotes}
@@ -453,7 +558,7 @@ export const ComplianceCard = ({
                   </div>
                 </div>
               )}
-              
+
               {/* Estado Final según Rechazos */}
               {(compliance.suspensionTriggered || compliance.banTriggered) && (
                 <div className="space-y-2">
@@ -463,31 +568,37 @@ export const ComplianceCard = ({
                         <AlertTriangle size={16} />
                         Cuenta baneada permanentemente
                       </p>
-                      <p className="text-xs mt-1">Se ha superado el límite de rechazos permitidos</p>
-                    </div>
-                  )}
-                  
-                  {compliance.suspensionTriggered && !compliance.banTriggered && (
-                    <div className="bg-orange-100 text-orange-900 p-3 rounded-lg border-2 border-orange-400">
-                      <p className="text-sm font-bold flex items-center gap-2">
-                        <AlertTriangle size={16} />
-                        Cuenta suspendida 15 días
+                      <p className="text-xs mt-1">
+                        Se ha superado el límite de rechazos permitidos
                       </p>
-                      <p className="text-xs mt-1">Siguiente rechazo resultará en ban permanente</p>
                     </div>
                   )}
+
+                  {compliance.suspensionTriggered &&
+                    !compliance.banTriggered && (
+                      <div className="bg-orange-100 text-orange-900 p-3 rounded-lg border-2 border-orange-400">
+                        <p className="text-sm font-bold flex items-center gap-2">
+                          <AlertTriangle size={16} />
+                          Cuenta suspendida 15 días
+                        </p>
+                        <p className="text-xs mt-1">
+                          Siguiente rechazo resultará en ban permanente
+                        </p>
+                      </div>
+                    )}
                 </div>
               )}
 
               {compliance.reviewedAt && (
                 <p className="text-xs text-gray-600 font-medium pt-3 border-t border-dashed border-red-300 flex items-center gap-1">
                   <Clock size={12} />
-                  Revisado el {new Date(compliance.reviewedAt).toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                  Revisado el{" "}
+                  {new Date(compliance.reviewedAt).toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </p>
               )}
@@ -505,7 +616,7 @@ export const ComplianceCard = ({
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
             >
               <CheckCircle size={16} />
-              <span>{actionButtonText || 'Seleccionar'}</span>
+              <span>{actionButtonText || "Seleccionar"}</span>
             </button>
           ) : showModeratorReviewButton ? (
             <button
@@ -520,12 +631,20 @@ export const ComplianceCard = ({
               onClick={onUploadEvidence}
               className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
                 compliance.rejectionCount > 0
-                  ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-                  : 'bg-purple-600 text-white hover:bg-purple-700'
+                  ? "bg-yellow-600 text-white hover:bg-yellow-700"
+                  : "bg-purple-600 text-white hover:bg-purple-700"
               }`}
             >
               <Upload size={16} />
-              <span>{compliance.rejectionCount > 0 ? 'Reenviar evidencia (Intento ' + compliance.currentAttempt + '/' + compliance.maxAttempts + ')' : 'Subir evidencia'}</span>
+              <span>
+                {compliance.rejectionCount > 0
+                  ? "Reenviar evidencia (Intento " +
+                    compliance.currentAttempt +
+                    "/" +
+                    compliance.maxAttempts +
+                    ")"
+                  : "Subir evidencia"}
+              </span>
             </button>
           ) : showReviewButton ? (
             <button
@@ -545,12 +664,14 @@ export const ComplianceCard = ({
               <CheckCircle size={16} className="flex-shrink-0" />
               <span>Compromiso cumplido y aprobado</span>
             </div>
-          ) : (compliance.status === COMPLIANCE_STATUS.OVERDUE ||
-              compliance.status === COMPLIANCE_STATUS.WARNING ||
-              compliance.status === COMPLIANCE_STATUS.ESCALATED) ? (
+          ) : compliance.status === COMPLIANCE_STATUS.OVERDUE ||
+            compliance.status === COMPLIANCE_STATUS.WARNING ||
+            compliance.status === COMPLIANCE_STATUS.ESCALATED ? (
             <div className="flex items-center gap-2 text-red-700 text-sm font-bold bg-red-50 px-3 py-2 rounded-lg border-2 border-red-200">
               <AlertTriangle size={16} className="flex-shrink-0" />
-              <span>Compromiso vencido - Contacta al moderador urgentemente</span>
+              <span>
+                Compromiso vencido - Contacta al moderador urgentemente
+              </span>
             </div>
           ) : null}
         </div>
@@ -566,55 +687,58 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
   // Determinar configuración según el estado
   const getVencimientoConfig = () => {
     switch (overdueStatus) {
-      case 'FIRST_WARNING':
+      case "FIRST_WARNING":
         return {
-          bgColor: 'bg-yellow-50',
-          borderColor: 'border-yellow-400',
-          headerBg: 'bg-yellow-100',
-          headerBorder: 'border-yellow-300',
-          iconColor: 'text-yellow-700',
-          title: 'Primera advertencia - Plazo vencido',
+          bgColor: "bg-yellow-50",
+          borderColor: "border-yellow-400",
+          headerBg: "bg-yellow-100",
+          headerBorder: "border-yellow-300",
+          iconColor: "text-yellow-700",
+          title: "Primera Advertencia - Plazo Vencido",
           diasAdicionales: 3,
-          mensaje: isResponsible 
-            ? 'Tu plazo venció. Se te otorgaron 3 días adicionales para cumplir.'
-            : 'El plazo venció. Se otorgaron 3 días adicionales para cumplir.',
-          consecuencia: 'Si no se cumple en los próximos 3 días, la cuenta será suspendida por 15 días.',
-          alertColor: 'bg-yellow-100 text-yellow-900 border-yellow-400',
+          mensaje: isResponsible
+            ? "Tu plazo venció. Se te otorgaron 3 días adicionales para cumplir."
+            : "El plazo venció. Se otorgaron 3 días adicionales para cumplir.",
+          consecuencia:
+            "Si no se cumple en los próximos 3 días, la cuenta será suspendida por 15 días.",
+          alertColor: "bg-yellow-100 text-yellow-900 border-yellow-400",
         };
-      
-      case 'SUSPENDED':
+
+      case "SUSPENDED":
         return {
-          bgColor: 'bg-orange-50',
-          borderColor: 'border-orange-500',
-          headerBg: 'bg-orange-100',
-          headerBorder: 'border-orange-400',
-          iconColor: 'text-orange-700',
-          title: 'Cuenta suspendida - Última oportunidad',
+          bgColor: "bg-orange-50",
+          borderColor: "border-orange-500",
+          headerBg: "bg-orange-100",
+          headerBorder: "border-orange-400",
+          iconColor: "text-orange-700",
+          title: "Cuenta Suspendida - Última Oportunidad",
           diasAdicionales: 2,
           mensaje: isResponsible
-            ? 'Tu cuenta fue suspendida por 15 días. Tienes 2 días adicionales finales para subir evidencia.'
-            : 'La cuenta fue suspendida por 15 días. Hay 2 días adicionales finales para subir evidencia.',
-          consecuencia: 'Si no se cumple en los próximos 2 días, la cuenta será baneada permanentemente.',
-          alertColor: 'bg-orange-100 text-orange-900 border-orange-500',
+            ? "Tu cuenta fue suspendida por 15 días. Tienes 2 días adicionales finales para subir evidencia."
+            : "La cuenta fue suspendida por 15 días. Hay 2 días adicionales finales para subir evidencia.",
+          consecuencia:
+            "Si no se cumple en los próximos 2 días, la cuenta será baneada permanentemente.",
+          alertColor: "bg-orange-100 text-orange-900 border-orange-500",
         };
-      
-      case 'BANNED':
+
+      case "BANNED":
         return {
-          bgColor: 'bg-red-50',
-          borderColor: 'border-red-600',
-          headerBg: 'bg-red-100',
-          headerBorder: 'border-red-500',
-          iconColor: 'text-red-700',
-          titleColor: 'text-red-900',
-          title: 'Usuario baneado permanentemente',
+          bgColor: "bg-red-50",
+          borderColor: "border-red-600",
+          headerBg: "bg-red-100",
+          headerBorder: "border-red-500",
+          iconColor: "text-red-700",
+          titleColor: "text-red-900",
+          title: "Usuario Baneado Permanentemente",
           mensaje: isResponsible
-            ? 'Tu cuenta fue baneada permanentemente por incumplimiento grave.'
-            : 'La cuenta fue baneada permanentemente por incumplimiento grave.',
-          consecuencia: 'Ya no se puede subir evidencia ni acceder a la plataforma. Contactar con soporte si esto es un error.',
-          alertColor: 'bg-red-100 text-red-900 border-red-600',
-          textColor: 'text-red-800',
+            ? "Tu cuenta fue baneada permanentemente por incumplimiento grave."
+            : "La cuenta fue baneada permanentemente por incumplimiento grave.",
+          consecuencia:
+            "Ya no se puede subir evidencia ni acceder a la plataforma. Contactar con soporte si esto es un error.",
+          alertColor: "bg-red-100 text-red-900 border-red-600",
+          textColor: "text-red-800",
         };
-      
+
       default:
         return null;
     }
@@ -623,14 +747,20 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
   const config = getVencimientoConfig();
   if (!config) return null;
 
-  const isBanned = overdueStatus === 'BANNED';
+  const isBanned = overdueStatus === "BANNED";
 
   return (
-    <div className={`border-2 rounded-xl overflow-hidden shadow-md ${config.bgColor} ${config.borderColor}`}>
-      <div className={`px-4 py-3 border-b ${config.headerBg} ${config.headerBorder}`}>
+    <div
+      className={`border-2 rounded-xl overflow-hidden shadow-md ${config.bgColor} ${config.borderColor}`}
+    >
+      <div
+        className={`px-4 py-3 border-b ${config.headerBg} ${config.headerBorder}`}
+      >
         <div className="flex items-center gap-2">
           <AlertCircle size={20} className={config.iconColor} />
-          <p className={`text-base font-bold ${config.titleColor || 'text-gray-900'}`}>
+          <p
+            className={`text-base font-bold ${config.titleColor || "text-gray-900"}`}
+          >
             {config.title}
           </p>
         </div>
@@ -638,14 +768,20 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
 
       <div className="p-4 space-y-4">
         {/* Información de días vencidos */}
-        <div className={`border-2 rounded-lg p-4 ${isBanned ? 'bg-white border-red-500' : 'bg-white'} ${config.borderColor}`}>
+        <div
+          className={`border-2 rounded-lg p-4 ${isBanned ? "bg-white border-red-500" : "bg-white"} ${config.borderColor}`}
+        >
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className={`text-xs font-medium mb-1 ${isBanned ? 'text-red-600' : 'text-gray-600'}`}>
+              <p
+                className={`text-xs font-medium mb-1 ${isBanned ? "text-red-600" : "text-gray-600"}`}
+              >
                 Días vencidos:
               </p>
-              <p className={`text-2xl font-bold ${isBanned ? 'text-red-700' : 'text-red-700'}`}>
-                {daysOverdue} {daysOverdue === 1 ? 'día' : 'días'}
+              <p
+                className={`text-2xl font-bold ${isBanned ? "text-red-700" : "text-red-700"}`}
+              >
+                {daysOverdue} {daysOverdue === 1 ? "día" : "días"}
               </p>
             </div>
             {!isBanned && config.diasAdicionales && (
@@ -653,16 +789,22 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
                 <p className="text-xs font-medium text-gray-600 mb-1">
                   Días adicionales:
                 </p>
-                <p className={`text-2xl font-bold ${
-                  overdueStatus === 'FIRST_WARNING' ? 'text-yellow-700' : 'text-orange-700'
-                }`}>
+                <p
+                  className={`text-2xl font-bold ${
+                    overdueStatus === "FIRST_WARNING"
+                      ? "text-yellow-700"
+                      : "text-orange-700"
+                  }`}
+                >
                   {config.diasAdicionales}
                 </p>
               </div>
             )}
           </div>
 
-          <p className={`text-sm ${isBanned ? config.textColor : 'text-gray-700'}`}>
+          <p
+            className={`text-sm ${isBanned ? config.textColor : "text-gray-700"}`}
+          >
             {config.mensaje}
           </p>
         </div>
@@ -674,11 +816,9 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
               <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold mb-1">
-                  {isBanned ? 'Consecuencias' : 'Advertencia'}
+                  {isBanned ? "Consecuencias" : "Advertencia"}
                 </p>
-                <p className="text-sm">
-                  {config.consecuencia}
-                </p>
+                <p className="text-sm">{config.consecuencia}</p>
               </div>
             </div>
           </div>
@@ -686,19 +826,26 @@ const InformacionVencimiento = ({ compliance, isResponsible }) => {
 
         {/* Estado de capacidad de envío */}
         {!isBanned && canStillSubmit !== undefined && (
-          <div className={`border-2 rounded-lg p-3 ${
-            canStillSubmit 
-              ? 'bg-blue-50 border-blue-300' 
-              : 'bg-gray-100 border-gray-400'
-          }`}>
+          <div
+            className={`border-2 rounded-lg p-3 ${
+              canStillSubmit
+                ? "bg-blue-50 border-blue-300"
+                : "bg-gray-100 border-gray-400"
+            }`}
+          >
             <div className="flex items-center gap-2">
-              <Info size={16} className={canStillSubmit ? 'text-blue-700' : 'text-gray-700'} />
-              <p className={`text-sm font-medium ${
-                canStillSubmit ? 'text-blue-900' : 'text-gray-700'
-              }`}>
-                {canStillSubmit 
-                  ? 'Aún puedes subir evidencia para cumplir este compromiso'
-                  : 'El plazo para subir evidencia ha expirado completamente'}
+              <Info
+                size={16}
+                className={canStillSubmit ? "text-blue-700" : "text-gray-700"}
+              />
+              <p
+                className={`text-sm font-medium ${
+                  canStillSubmit ? "text-blue-900" : "text-gray-700"
+                }`}
+              >
+                {canStillSubmit
+                  ? "Aún puedes subir evidencia para cumplir este compromiso"
+                  : "El plazo para subir evidencia ha expirado completamente"}
               </p>
             </div>
           </div>
@@ -730,123 +877,165 @@ const HistorialRechazos = ({ compliance, isResponsible }) => {
   const submissions = compliance.submissions || [];
 
   const getSiguienteConsequencia = () => {
-    if (rejectionCount === 0) return 'Advertencia';
-    if (rejectionCount === 1) return 'Suspensión de cuenta por 15 días';
-    if (rejectionCount === 2) return 'Bloqueo permanente de cuenta';
+    if (rejectionCount === 0) return "Advertencia";
+    if (rejectionCount === 1) return "Suspensión de cuenta por 15 días";
+    if (rejectionCount === 2) return "Bloqueo permanente de cuenta";
     return null;
   };
 
   // Formatear fecha
   const formatDate = (dateString) => {
-    if (!dateString) return 'Sin fecha';
+    if (!dateString) return "Sin fecha";
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-ES', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Intl.DateTimeFormat("es-ES", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(date);
   };
 
   return (
-    <div className={`border-2 rounded-xl overflow-hidden shadow-md ${
-      rejectionCount === 1 ? 'bg-yellow-50 border-yellow-400' :
-      rejectionCount === 2 ? 'bg-red-50 border-red-500' :
-      'bg-yellow-50 border-yellow-300'
-    }`}>
-      <div className={`px-4 py-3 border-b ${
-        rejectionCount === 1 ? 'bg-yellow-100 border-yellow-300' :
-        rejectionCount === 2 ? 'bg-red-100 border-red-400' :
-        'bg-yellow-100 border-yellow-300'
-      }`}>
+    <div
+      className={`border-2 rounded-xl overflow-hidden shadow-md ${
+        rejectionCount === 1
+          ? "bg-yellow-50 border-yellow-400"
+          : rejectionCount === 2
+            ? "bg-red-50 border-red-500"
+            : "bg-yellow-50 border-yellow-300"
+      }`}
+    >
+      <div
+        className={`px-4 py-3 border-b ${
+          rejectionCount === 1
+            ? "bg-yellow-100 border-yellow-300"
+            : rejectionCount === 2
+              ? "bg-red-100 border-red-400"
+              : "bg-yellow-100 border-yellow-300"
+        }`}
+      >
         <div className="flex items-center gap-2">
-          <AlertTriangle size={20} className={
-            rejectionCount === 1 ? 'text-yellow-700' :
-            rejectionCount === 2 ? 'text-red-700' :
-            'text-yellow-700'
-          } />
+          <AlertTriangle
+            size={20}
+            className={
+              rejectionCount === 1
+                ? "text-yellow-700"
+                : rejectionCount === 2
+                  ? "text-red-700"
+                  : "text-yellow-700"
+            }
+          />
           <p className="text-base font-bold text-gray-900">
-            {isResponsible ? 'Advertencia de reenvío' : 'Información de intentos'}
+            {isResponsible
+              ? "Advertencia de Reenvío"
+              : "Información de Intentos"}
           </p>
         </div>
       </div>
 
       <div className="p-4 space-y-4">
         {/* Información del intento actual - VISIBLE PARA TODOS */}
-        <div className={`border-2 rounded-lg p-4 ${
-          rejectionCount === 1 ? 'bg-white border-yellow-300' :
-          rejectionCount === 2 ? 'bg-white border-red-400' :
-          'bg-white border-yellow-300'
-        }`}>
+        <div
+          className={`border-2 rounded-lg p-4 ${
+            rejectionCount === 1
+              ? "bg-white border-yellow-300"
+              : rejectionCount === 2
+                ? "bg-white border-red-400"
+                : "bg-white border-yellow-300"
+          }`}
+        >
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1">Intento actual:</p>
+              <p className="text-xs font-medium text-gray-600 mb-1">
+                Intento actual:
+              </p>
               <p className="text-2xl font-bold text-purple-700">
                 {currentAttempt} de {maxAttempts}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs font-medium text-gray-600 mb-1">Rechazos previos:</p>
+              <p className="text-xs font-medium text-gray-600 mb-1">
+                Rechazos previos:
+              </p>
               <p className="text-2xl font-bold text-red-700">
                 {rejectionCount}
               </p>
             </div>
           </div>
-          
+
           {/* Barra de progreso */}
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden mb-3">
             <div
               className={`h-full transition-all duration-300 ${
-                currentAttempt === 1 ? 'bg-green-500' :
-                currentAttempt === 2 ? 'bg-yellow-500' :
-                'bg-red-500'
+                currentAttempt === 1
+                  ? "bg-green-500"
+                  : currentAttempt === 2
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
               }`}
               style={{ width: `${(currentAttempt / maxAttempts) * 100}%` }}
             />
           </div>
 
           <p className="text-sm text-gray-700">
-            {isResponsible 
-              ? 'Tu compromiso fue rechazado. Corrige la evidencia y reenvíala cuidadosamente.' 
-              : 'Este compromiso ha sido rechazado y está en proceso de reenvío.'}
+            {isResponsible
+              ? "Tu compromiso fue rechazado. Corrige la evidencia y reenvíala cuidadosamente."
+              : "Este compromiso ha sido rechazado y está en proceso de reenvío."}
           </p>
         </div>
 
         {/* SIGUIENTE CONSECUENCIA - VISIBLE PARA TODOS */}
         {getSiguienteConsequencia() && (
-          <div className={`border-2 rounded-lg p-4 ${
-            rejectionCount === 1 ? 'bg-orange-50 border-orange-400' :
-            rejectionCount === 2 ? 'bg-red-50 border-red-500' :
-            'bg-yellow-50 border-yellow-400'
-          }`}>
+          <div
+            className={`border-2 rounded-lg p-4 ${
+              rejectionCount === 1
+                ? "bg-orange-50 border-orange-400"
+                : rejectionCount === 2
+                  ? "bg-red-50 border-red-500"
+                  : "bg-yellow-50 border-yellow-400"
+            }`}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle size={18} className={
-                rejectionCount === 1 ? 'text-orange-700' : 'text-red-700'
-              } />
+              <AlertTriangle
+                size={18}
+                className={
+                  rejectionCount === 1 ? "text-orange-700" : "text-red-700"
+                }
+              />
               <p className="text-sm font-bold text-gray-900">
                 Siguiente paso de advertencia
               </p>
             </div>
-            <p className={`text-sm font-bold ${
-              rejectionCount === 1 ? 'text-orange-900' :
-              rejectionCount === 2 ? 'text-red-900' :
-              'text-yellow-900'
-            }`}>
-              {isResponsible ? 'Si tu próximo envío es rechazado:' : 'Si el próximo envío es rechazado:'}
+            <p
+              className={`text-sm font-bold ${
+                rejectionCount === 1
+                  ? "text-orange-900"
+                  : rejectionCount === 2
+                    ? "text-red-900"
+                    : "text-yellow-900"
+              }`}
+            >
+              {isResponsible
+                ? "Si tu próximo envío es rechazado:"
+                : "Si el próximo envío es rechazado:"}
             </p>
-            <p className={`text-base font-bold mt-1 ${
-              rejectionCount === 1 ? 'text-orange-900' :
-              rejectionCount === 2 ? 'text-red-900' :
-              'text-yellow-900'
-            }`}>
+            <p
+              className={`text-base font-bold mt-1 ${
+                rejectionCount === 1
+                  ? "text-orange-900"
+                  : rejectionCount === 2
+                    ? "text-red-900"
+                    : "text-yellow-900"
+              }`}
+            >
               {getSiguienteConsequencia()}
             </p>
             {rejectionCount === 2 && (
               <p className="text-xs text-red-800 mt-2 font-medium bg-white rounded px-2 py-1 border border-red-300">
-                {isResponsible 
-                  ? 'Esta es tu última oportunidad. Revisa cuidadosamente antes de enviar.' 
-                  : 'Esta es la última oportunidad antes de un bloqueo permanente.'}
+                {isResponsible
+                  ? "Esta es tu última oportunidad. Revisa cuidadosamente antes de enviar."
+                  : "Esta es la última oportunidad antes de un bloqueo permanente."}
               </p>
             )}
           </div>
@@ -855,12 +1044,18 @@ const HistorialRechazos = ({ compliance, isResponsible }) => {
         {/* Razón del último rechazo */}
         {compliance.moderatorNotes && (
           <div>
-            <p className="text-xs font-bold text-gray-700 mb-2">Razón del último rechazo:</p>
-            <div className={`border-2 rounded-lg p-3 ${
-              rejectionCount === 1 ? 'bg-white border-yellow-300' :
-              rejectionCount === 2 ? 'bg-white border-red-400' :
-              'bg-white border-yellow-300'
-            }`}>
+            <p className="text-xs font-bold text-gray-700 mb-2">
+              Razón del último rechazo:
+            </p>
+            <div
+              className={`border-2 rounded-lg p-3 ${
+                rejectionCount === 1
+                  ? "bg-white border-yellow-300"
+                  : rejectionCount === 2
+                    ? "bg-white border-red-400"
+                    : "bg-white border-yellow-300"
+              }`}
+            >
               <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                 {compliance.moderatorNotes}
               </p>
@@ -911,12 +1106,29 @@ const SubmissionHistoryCard = ({ submission, formatDate }) => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      pending_review: { color: 'bg-blue-100 text-blue-700 border-blue-300', text: 'En revisión' },
-      approved: { color: 'bg-green-100 text-green-700 border-green-300', text: 'Aprobado' },
-      rejected: { color: 'bg-red-100 text-red-700 border-red-300', text: 'Rechazado' },
-      requires_adjustment: { color: 'bg-yellow-100 text-yellow-700 border-yellow-300', text: 'Requiere ajustes' },
+      pending_review: {
+        color: "bg-blue-100 text-blue-700 border-blue-300",
+        text: "En Revisión",
+      },
+      approved: {
+        color: "bg-green-100 text-green-700 border-green-300",
+        text: "Aprobado",
+      },
+      rejected: {
+        color: "bg-red-100 text-red-700 border-red-300",
+        text: "Rechazado",
+      },
+      requires_adjustment: {
+        color: "bg-yellow-100 text-yellow-700 border-yellow-300",
+        text: "Requiere Ajustes",
+      },
     };
-    return badges[status] || { color: 'bg-gray-100 text-gray-700 border-gray-300', text: status };
+    return (
+      badges[status] || {
+        color: "bg-gray-100 text-gray-700 border-gray-300",
+        text: status,
+      }
+    );
   };
 
   const statusBadge = getStatusBadge(submission.status);
@@ -934,7 +1146,9 @@ const SubmissionHistoryCard = ({ submission, formatDate }) => {
             <h4 className="text-sm font-bold text-gray-900">
               Intento {submission.attemptNumber}
             </h4>
-            <span className={`text-xs px-2 py-1 rounded-full font-semibold border ${statusBadge.color}`}>
+            <span
+              className={`text-xs px-2 py-1 rounded-full font-semibold border ${statusBadge.color}`}
+            >
               {statusBadge.text}
             </span>
           </div>
@@ -952,16 +1166,22 @@ const SubmissionHistoryCard = ({ submission, formatDate }) => {
       {isExpanded && (
         <div className="p-5 space-y-4">
           {/* Evidencia Enviada (Explicación + Evidencias en un solo componente) */}
-          {(submission.userNotes || (submission.evidenceUrls && submission.evidenceUrls.length > 0)) && (
+          {(submission.userNotes ||
+            (submission.evidenceUrls &&
+              submission.evidenceUrls.length > 0)) && (
             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg">
               <div className="px-4 py-2 bg-blue-100 border-b border-blue-200">
-                <p className="text-xs font-bold text-gray-900">Evidencia enviada</p>
+                <p className="text-xs font-bold text-gray-900">
+                  Evidencia enviada
+                </p>
               </div>
               <div className="p-4 space-y-4">
                 {/* Explicación */}
                 {submission.userNotes && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-700 mb-2">Explicación del cumplimiento:</p>
+                    <p className="text-xs font-semibold text-gray-700 mb-2">
+                      Explicación del cumplimiento:
+                    </p>
                     <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {submission.userNotes}
                     </p>
@@ -969,14 +1189,17 @@ const SubmissionHistoryCard = ({ submission, formatDate }) => {
                 )}
 
                 {/* Evidencias Adjuntas */}
-                {submission.evidenceUrls && submission.evidenceUrls.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-700 mb-2">
-                      Archivos adjuntos ({submission.evidenceUrls.length}):
-                    </p>
-                    <ClaimEvidenceViewer evidenceUrls={submission.evidenceUrls} />
-                  </div>
-                )}
+                {submission.evidenceUrls &&
+                  submission.evidenceUrls.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-700 mb-2">
+                        Archivos adjuntos ({submission.evidenceUrls.length}):
+                      </p>
+                      <ClaimEvidenceViewer
+                        evidenceUrls={submission.evidenceUrls}
+                      />
+                    </div>
+                  )}
 
                 {/* Fecha de envío */}
                 {submission.submittedAt && (
@@ -990,36 +1213,52 @@ const SubmissionHistoryCard = ({ submission, formatDate }) => {
 
           {/* Revisión de la Contraparte */}
           {submission.peerReviewedBy && (
-            <div className={`border-2 rounded-lg overflow-hidden ${
-              submission.peerApproved 
-                ? 'bg-green-50 border-green-300' 
-                : 'bg-orange-50 border-orange-300'
-            }`}>
-              <div className={`px-4 py-2 border-b ${
-                submission.peerApproved 
-                  ? 'bg-green-100 border-green-300' 
-                  : 'bg-orange-100 border-orange-300'
-              }`}>
-                <p className="text-xs font-bold text-gray-900">Revisión de la contraparte</p>
+            <div
+              className={`border-2 rounded-lg overflow-hidden ${
+                submission.peerApproved
+                  ? "bg-green-50 border-green-300"
+                  : "bg-orange-50 border-orange-300"
+              }`}
+            >
+              <div
+                className={`px-4 py-2 border-b ${
+                  submission.peerApproved
+                    ? "bg-green-100 border-green-300"
+                    : "bg-orange-100 border-orange-300"
+                }`}
+              >
+                <p className="text-xs font-bold text-gray-900">
+                  Revisión de la contraparte
+                </p>
               </div>
               <div className="p-4 space-y-2">
-                <p className={`text-sm font-bold ${
-                  submission.peerApproved ? 'text-green-700' : 'text-orange-700'
-                }`}>
-                  {submission.peerApproved ? 'Pre-aprobado' : 'Objetado'}
+                <p
+                  className={`text-sm font-bold ${
+                    submission.peerApproved
+                      ? "text-green-700"
+                      : "text-orange-700"
+                  }`}
+                >
+                  {submission.peerApproved ? "Pre-aprobado" : "Objetado"}
                 </p>
                 {submission.peerReviewReason && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-700 mb-1">Comentario:</p>
+                    <p className="text-xs font-semibold text-gray-700 mb-1">
+                      Comentario:
+                    </p>
                     <p className="text-sm text-gray-700 whitespace-pre-wrap">
                       {submission.peerReviewReason}
                     </p>
                   </div>
                 )}
                 {submission.peerReviewedAt && (
-                  <p className={`text-xs text-gray-600 font-medium pt-3 border-t ${
-                    submission.peerApproved ? 'border-green-200' : 'border-orange-200'
-                  }`}>
+                  <p
+                    className={`text-xs text-gray-600 font-medium pt-3 border-t ${
+                      submission.peerApproved
+                        ? "border-green-200"
+                        : "border-orange-200"
+                    }`}
+                  >
                     Revisado el: {formatDate(submission.peerReviewedAt)}
                   </p>
                 )}
@@ -1029,44 +1268,65 @@ const SubmissionHistoryCard = ({ submission, formatDate }) => {
 
           {/* Decisión del Moderador */}
           {submission.reviewedBy && (
-            <div className={`border-2 rounded-lg overflow-hidden ${
-              submission.moderatorDecision === 'approve' ? 'bg-green-50 border-green-300' :
-              submission.moderatorDecision === 'reject' ? 'bg-red-50 border-red-300' :
-              'bg-yellow-50 border-yellow-300'
-            }`}>
-              <div className={`px-4 py-2 border-b ${
-                submission.moderatorDecision === 'approve' ? 'bg-green-100 border-green-300' :
-                submission.moderatorDecision === 'reject' ? 'bg-red-100 border-red-300' :
-                'bg-yellow-100 border-yellow-300'
-              }`}>
-                <p className="text-xs font-bold text-gray-900">Decisión del moderador</p>
+            <div
+              className={`border-2 rounded-lg overflow-hidden ${
+                submission.moderatorDecision === "approve"
+                  ? "bg-green-50 border-green-300"
+                  : submission.moderatorDecision === "reject"
+                    ? "bg-red-50 border-red-300"
+                    : "bg-yellow-50 border-yellow-300"
+              }`}
+            >
+              <div
+                className={`px-4 py-2 border-b ${
+                  submission.moderatorDecision === "approve"
+                    ? "bg-green-100 border-green-300"
+                    : submission.moderatorDecision === "reject"
+                      ? "bg-red-100 border-red-300"
+                      : "bg-yellow-100 border-yellow-300"
+                }`}
+              >
+                <p className="text-xs font-bold text-gray-900">
+                  Decisión del moderador
+                </p>
               </div>
               <div className="p-4 space-y-2">
-                <p className={`text-sm font-bold ${
-                  submission.moderatorDecision === 'approve' ? 'text-green-700' :
-                  submission.moderatorDecision === 'reject' ? 'text-red-700' :
-                  'text-yellow-700'
-                }`}>
-                  {submission.moderatorDecision === 'approve' && 'Aprobado'}
-                  {submission.moderatorDecision === 'reject' && 'Rechazado'}
-                  {submission.moderatorDecision === 'adjust' && 'Requiere ajustes'}
+                <p
+                  className={`text-sm font-bold ${
+                    submission.moderatorDecision === "approve"
+                      ? "text-green-700"
+                      : submission.moderatorDecision === "reject"
+                        ? "text-red-700"
+                        : "text-yellow-700"
+                  }`}
+                >
+                  {submission.moderatorDecision === "approve" && "Aprobado"}
+                  {submission.moderatorDecision === "reject" && "Rechazado"}
+                  {submission.moderatorDecision === "adjust" &&
+                    "Requiere ajustes"}
                 </p>
-                
+
                 {submission.moderatorNotes && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-700 mb-1">Motivo:</p>
+                    <p className="text-xs font-semibold text-gray-700 mb-1">
+                      Motivo:
+                    </p>
                     <p className="text-sm text-gray-700 whitespace-pre-wrap">
                       {submission.moderatorNotes}
                     </p>
                   </div>
                 )}
-                
+
                 {submission.reviewedAt && (
-                  <p className={`text-xs text-gray-600 font-medium pt-3 border-t ${
-                    submission.moderatorDecision === 'approve' ? 'border-green-200' :
-                    submission.moderatorDecision === 'reject' ? 'border-red-200' :
-                    'border-yellow-200'
-                  }`}>
+                  <p
+                    className={`text-xs text-gray-600 font-medium pt-3 border-t ${
+                      submission.moderatorDecision === "approve"
+                        ? "border-green-200"
+                        : submission.moderatorDecision === "reject"
+                          ? "border-red-200"
+                          : "border-yellow-200"
+                    }`}
+                  >
                     Revisado el: {formatDate(submission.reviewedAt)}
                   </p>
                 )}

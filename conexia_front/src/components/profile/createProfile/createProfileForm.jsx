@@ -1437,7 +1437,7 @@ export default function CreateProfileForm() {
 
     {/* Redes Sociales */}
     <div>
-      <h4 className="font-semibold text-conexia-green">Redes Sociales (Opcional)</h4>
+      <h4 className="font-semibold text-conexia-green">Redes sociales (Opcional)</h4>
       {form.socialLinks.length === 0 && (
         <button type="button" onClick={handleAddSocial} className="mt-2 text-sm text-conexia-green hover:underline">+ Agregar red social</button>
       )}

@@ -11,19 +11,14 @@ export default function SubscriptionLimitsIndicator({ className = '', showOnly =
   const { 
     projectsLimit, 
     servicesLimit, 
-    isLoading, 
+    isLoading,
+    hasData, // Nuevo flag para saber si ya tenemos datos reales
     planName 
   } = useSubscriptionLimits();
 
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-        <><div className="h-6 bg-gray-200 rounded mb-4 w-1/3"></div><div className="space-y-3">
-          <div className="h-16 bg-gray-100 rounded"></div>
-          {showOnly === 'both' && <div className="h-16 bg-gray-100 rounded"></div>}
-        </div></>
-      </div>
-    );
+  // No mostrar nada hasta tener datos reales - evita el flash de "0 de 0"
+  if (isLoading || !hasData) {
+    return null;
   }
 
   const getProgressColor = (current, limit) => {

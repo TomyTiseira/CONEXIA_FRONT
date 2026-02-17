@@ -1,58 +1,81 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { X, Star, FileText, Calendar, User } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import { createServiceReview } from '@/service/serviceReviews';
-import { config } from '@/config';
-import { getUserDisplayName } from '@/utils/formatUserName';
+import { useState } from "react";
+import { X, Star, FileText, Calendar, User } from "lucide-react";
+import Button from "@/components/ui/Button";
+import { createServiceReview } from "@/service/serviceReviews";
+import { config } from "@/config";
+import { getUserDisplayName } from "@/utils/formatUserName";
 
-export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess, onError }) {
+export default function ServiceReviewModal({
+  hiring,
+  isOpen,
+  onClose,
+  onSuccess,
+  onError,
+}) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen || !hiring) return null;
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'No disponible';
-    return new Date(dateString).toLocaleDateString('es-AR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    if (!dateString) return "No disponible";
+    return new Date(dateString).toLocaleDateString("es-AR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Derivar información del dueño del servicio
-  const ownerRaw = hiring.owner || hiring.service?.owner || hiring.service?.user || null;
+  const ownerRaw =
+    hiring.owner || hiring.service?.owner || hiring.service?.user || null;
   const ownerNameFromFull = (fullName) => {
-    const parts = (fullName || '').trim().split(/\s+/);
+    const parts = (fullName || "").trim().split(/\s+/);
     return {
-      name: parts[0] || '',
-      lastName: parts[1] || ''
+      name: parts[0] || "",
+      lastName: parts[1] || "",
     };
   };
   const ownerNameFields = ownerRaw?.fullName
     ? ownerNameFromFull(ownerRaw.fullName)
-    : { name: ownerRaw?.firstName ?? ownerRaw?.name ?? '', lastName: ownerRaw?.lastName ?? '' };
+    : {
+        name: ownerRaw?.firstName ?? ownerRaw?.name ?? "",
+        lastName: ownerRaw?.lastName ?? "",
+      };
   const ownerDisplayName = ownerRaw
-    ? getUserDisplayName({ name: ownerNameFields.name, lastName: ownerNameFields.lastName })
-    : 'Usuario';
+    ? getUserDisplayName({
+        name: ownerNameFields.name,
+        lastName: ownerNameFields.lastName,
+      })
+    : "Usuario";
   const ownerImage = ownerRaw?.profileImage || ownerRaw?.profilePicture || null;
+
+  const getProfileImageSrc = () => {
+    if (!ownerImage) {
+      return "/images/default-avatar.png";
+    }
+    if (ownerImage.startsWith("http")) {
+      return ownerImage;
+    }
+    return `${config.IMAGE_URL}/${ownerImage}`;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (rating === 0) {
-      onError?.('Debes seleccionar una calificación');
+      onError?.("Debes seleccionar una calificación");
       return;
     }
 
     if (comment.trim().length < 10) {
-      onError?.('El comentario debe tener al menos 10 caracteres');
+      onError?.("El comentario debe tener al menos 10 caracteres");
       return;
     }
 
@@ -65,16 +88,16 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
         comment: comment.trim(),
       });
 
-      onSuccess?.('Reseña enviada exitosamente');
-      
+      onSuccess?.("Reseña enviada exitosamente");
+
       setTimeout(() => {
         onClose();
         // Resetear el formulario
         setRating(0);
-        setComment('');
+        setComment("");
       }, 1500);
     } catch (error) {
-      onError?.(error.message || 'Error al enviar la reseña');
+      onError?.(error.message || "Error al enviar la reseña");
     } finally {
       setIsSubmitting(false);
     }
@@ -116,11 +139,13 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
               </div>
               {ownerRaw && (
                 <div>
-                  <span className="font-medium text-gray-700">Dueño del servicio:</span>
+                  <span className="font-medium text-gray-700">
+                    Dueño del servicio:
+                  </span>
                   <div className="mt-2 flex items-center gap-2">
                     {ownerImage ? (
                       <img
-                        src={`${config.IMAGE_URL}/${ownerImage}`}
+                        src={getProfileImageSrc()}
                         alt={ownerDisplayName}
                         className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
                       />
@@ -129,7 +154,9 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
                         <User size={16} className="text-gray-500" />
                       </div>
                     )}
-                    <span className="text-gray-900 font-medium">{ownerDisplayName}</span>
+                    <span className="text-gray-900 font-medium">
+                      {ownerDisplayName}
+                    </span>
                   </div>
                 </div>
               )}
@@ -158,8 +185,8 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
                       size={40}
                       className={
                         star <= (hoverRating || rating)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
                       }
                     />
                   </button>
@@ -167,11 +194,11 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
               </div>
               {rating > 0 && (
                 <p className="text-sm text-center text-gray-600 mt-2">
-                  {rating === 1 && 'Muy insatisfecho'}
-                  {rating === 2 && 'Insatisfecho'}
-                  {rating === 3 && 'Neutral'}
-                  {rating === 4 && 'Satisfecho'}
-                  {rating === 5 && 'Muy satisfecho'}
+                  {rating === 1 && "Muy insatisfecho"}
+                  {rating === 2 && "Insatisfecho"}
+                  {rating === 3 && "Neutral"}
+                  {rating === 4 && "Satisfecho"}
+                  {rating === 5 && "Muy satisfecho"}
                 </p>
               )}
             </div>
@@ -205,7 +232,8 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
             {/* Info adicional */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-700">
-                <strong>Nota:</strong> Tu reseña será visible públicamente y ayudará a otros usuarios a tomar decisiones informadas.
+                <strong>Nota:</strong> Tu reseña será visible públicamente y
+                ayudará a otros usuarios a tomar decisiones informadas.
               </p>
             </div>
           </form>
@@ -214,11 +242,7 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
         {/* Footer */}
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-xl flex-shrink-0">
           <div className="flex gap-3 justify-end">
-            <Button
-              variant="cancel"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button variant="cancel" onClick={onClose} disabled={isSubmitting}>
               Cancelar
             </Button>
             <Button
@@ -226,7 +250,7 @@ export default function ServiceReviewModal({ hiring, isOpen, onClose, onSuccess,
               disabled={isSubmitting || !isFormValid}
               className="bg-conexia-green hover:bg-conexia-green/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Enviando...' : 'Enviar Reseña'}
+              {isSubmitting ? "Enviando..." : "Enviar Reseña"}
             </Button>
           </div>
         </div>

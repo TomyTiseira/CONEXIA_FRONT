@@ -1,22 +1,32 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { fetchMyProjects } from '@/service/projects/projectsFetch';
-import Navbar from '@/components/navbar/Navbar';
-import Pagination from '@/components/common/Pagination';
-import Button from '@/components/ui/Button';
-import { getUserDisplayName } from '@/utils/formatUserName';
-import { Briefcase, Calendar, Users, AlertCircle, Eye, TrendingUp, FileText, ArrowDown, ArrowUp } from 'lucide-react';
-import { ROLES } from '@/constants/roles';
-import NavbarCommunity from '@/components/navbar/NavbarCommunity';
-import NavbarAdmin from '@/components/navbar/NavbarAdmin';
-import NavbarModerator from '@/components/navbar/NavbarModerator';
-import { PlanComparisonBanner } from '@/components/plans';
-import { UpgradePlanButton } from '@/components/plans';
-import { config } from '@/config';
-import { useAccountStatus } from '@/hooks/useAccountStatus';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { fetchMyProjects } from "@/service/projects/projectsFetch";
+import Navbar from "@/components/navbar/Navbar";
+import Pagination from "@/components/common/Pagination";
+import Button from "@/components/ui/Button";
+import { getUserDisplayName } from "@/utils/formatUserName";
+import {
+  Briefcase,
+  Calendar,
+  Users,
+  AlertCircle,
+  Eye,
+  TrendingUp,
+  FileText,
+  ArrowDown,
+  ArrowUp,
+} from "lucide-react";
+import { ROLES } from "@/constants/roles";
+import NavbarCommunity from "@/components/navbar/NavbarCommunity";
+import NavbarAdmin from "@/components/navbar/NavbarAdmin";
+import NavbarModerator from "@/components/navbar/NavbarModerator";
+import { PlanComparisonBanner } from "@/components/plans";
+import { UpgradePlanButton } from "@/components/plans";
+import { config } from "@/config";
+import { useAccountStatus } from "@/hooks/useAccountStatus";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -25,24 +35,24 @@ export default function MyProjectsPage() {
   const { user } = useAuth();
   const { canCreateContent, suspensionMessage } = useAccountStatus();
   const [projects, setProjects] = useState([]);
-  const [pagination, setPagination] = useState({ 
-    currentPage: 1, 
-    itemsPerPage: ITEMS_PER_PAGE, 
-    totalItems: 0, 
-    totalPages: 1 
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: ITEMS_PER_PAGE,
+    totalItems: 0,
+    totalPages: 1,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showInactive, setShowInactive] = useState(false);
   const [filters, setFilters] = useState({
-    page: 1
+    page: 1,
   });
   const [totalPostulations, setTotalPostulations] = useState(0);
   const [activeProjects, setActiveProjects] = useState(0);
   const [totalAllProjects, setTotalAllProjects] = useState(0);
   const [sortConfig, setSortConfig] = useState({
-    key: 'postulations',
-    direction: 'desc'
+    key: "postulations",
+    direction: "desc",
   });
 
   const loadProjects = useCallback(async () => {
@@ -53,34 +63,37 @@ export default function MyProjectsPage() {
       // Si showInactive es false, solo mostrar activos (active: true)
       // Si showInactive es true, mostrar todos (active: false para que includeDeleted sea true)
       const activeFilter = showInactive ? false : true;
-      const res = await fetchMyProjects({ 
-        ownerId: user.id, 
-        active: activeFilter, 
-        page: filters.page, 
-        limit: ITEMS_PER_PAGE 
+      const res = await fetchMyProjects({
+        ownerId: user.id,
+        active: activeFilter,
+        page: filters.page,
+        limit: ITEMS_PER_PAGE,
       });
       setProjects(res.projects || []);
       setPagination((prev) => res.pagination || prev);
-      
+
       // Obtener el total de TODOS los proyectos (activos + inactivos) para la estadística
-      const resAll = await fetchMyProjects({ 
-        ownerId: user.id, 
+      const resAll = await fetchMyProjects({
+        ownerId: user.id,
         active: false, // includeDeleted = true, trae todos
-        page: 1, 
-        limit: 1 // Solo necesitamos el totalItems
+        page: 1,
+        limit: 1, // Solo necesitamos el totalItems
       });
       setTotalAllProjects(resAll.pagination?.totalItems || 0);
-      
+
       // Calcular estadísticas de solicitudes
       const projects = res.projects || [];
-      const total = projects.reduce((sum, project) => sum + (project.postulationsCount || 0), 0);
+      const total = projects.reduce(
+        (sum, project) => sum + (project.postulationsCount || 0),
+        0,
+      );
       setTotalPostulations(total);
       // Contar proyectos activos
-      const activos = projects.filter(p => p.active).length;
+      const activos = projects.filter((p) => p.active).length;
       setActiveProjects(activos);
     } catch (err) {
-      console.error('Error loading projects:', err);
-      setError('Error al cargar los proyectos');
+      console.error("Error loading projects:", err);
+      setError("Error al cargar los proyectos");
     } finally {
       setLoading(false);
     }
@@ -91,7 +104,7 @@ export default function MyProjectsPage() {
   }, [loadProjects]);
 
   const handlePageChange = (newPage) => {
-    setFilters(prev => ({ ...prev, page: newPage }));
+    setFilters((prev) => ({ ...prev, page: newPage }));
   };
 
   const handleShowInactiveChange = (e) => {
@@ -104,36 +117,43 @@ export default function MyProjectsPage() {
   };
 
   const handleSort = (key) => {
-    setSortConfig(prev => {
+    setSortConfig((prev) => {
       // Si es la misma columna, alternar dirección
       if (prev.key === key) {
-        if (prev.direction === 'desc') {
-          return { key, direction: 'asc' };
+        if (prev.direction === "desc") {
+          return { key, direction: "asc" };
         } else {
-          return { key, direction: 'desc' };
+          return { key, direction: "desc" };
         }
       }
       // Si es una columna diferente, empezar con descendente
-      return { key, direction: 'desc' };
+      return { key, direction: "desc" };
     });
+  };
+
+  // Helper para URLs de imagen del proyecto
+  const getProjectImageUrl = (img) => {
+    if (!img) return null;
+    if (img.startsWith("http")) return img;
+    return `${config.IMAGE_URL}/projects/images/${img}`;
   };
 
   const sortedProjects = useMemo(() => {
     if (!sortConfig.key) return projects;
-    
+
     // Crear una copia antes de ordenar para no mutar el estado
     return [...projects].sort((a, b) => {
-      if (sortConfig.key === 'postulations') {
+      if (sortConfig.key === "postulations") {
         const countA = a.postulationsCount || 0;
         const countB = b.postulationsCount || 0;
-        return sortConfig.direction === 'desc' 
-          ? countB - countA 
+        return sortConfig.direction === "desc"
+          ? countB - countA
           : countA - countB;
-      } else if (sortConfig.key === 'status') {
-        const statusA = a.active ? 'Activo' : 'Inactivo';
-        const statusB = b.active ? 'Activo' : 'Inactivo';
+      } else if (sortConfig.key === "status") {
+        const statusA = a.active ? "Activo" : "Inactivo";
+        const statusB = b.active ? "Activo" : "Inactivo";
         const comparison = statusA.localeCompare(statusB);
-        return sortConfig.direction === 'desc' ? -comparison : comparison;
+        return sortConfig.direction === "desc" ? -comparison : comparison;
       }
       return 0;
     });
@@ -218,11 +238,13 @@ export default function MyProjectsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total proyectos</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalAllProjects}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {totalAllProjects}
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg p-4 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-blue-100 rounded-lg">
@@ -230,11 +252,13 @@ export default function MyProjectsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Solicitudes totales</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalPostulations}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {totalPostulations}
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg p-4 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-orange-100 rounded-lg">
@@ -242,7 +266,9 @@ export default function MyProjectsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Activos</p>
-                  <p className="text-2xl font-bold text-gray-900">{activeProjects}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {activeProjects}
+                  </p>
                 </div>
               </div>
             </div>
@@ -259,59 +285,69 @@ export default function MyProjectsPage() {
                     onChange={handleShowInactiveChange}
                     className="rounded border-gray-300 text-conexia-green focus:ring-conexia-green"
                   />
-                  <span className="text-sm text-gray-700">Incluir inactivos</span>
+                  <span className="text-sm text-gray-700">
+                    Incluir inactivos
+                  </span>
                 </label>
               </div>
-              
+
               <div className="flex flex-wrap gap-2 items-center">
                 {/* Ordenamiento */}
-                <span className="text-sm font-medium text-gray-700">Ordenar:</span>
-                
+                <span className="text-sm font-medium text-gray-700">
+                  Ordenar:
+                </span>
+
                 {/* Botón ordenar por solicitudes */}
                 <button
-                  onClick={() => handleSort('postulations')}
+                  onClick={() => handleSort("postulations")}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
-                    sortConfig.key === 'postulations'
-                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                    sortConfig.key === "postulations"
+                      ? "border-conexia-green bg-conexia-green text-white shadow-sm"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
                   }`}
-                  title={sortConfig.key === 'postulations' 
-                    ? `Ordenado por solicitudes ${sortConfig.direction === 'desc' ? 'descendente' : 'ascendente'}` 
-                    : 'Ordenar por solicitudes'}
+                  title={
+                    sortConfig.key === "postulations"
+                      ? `Ordenado por solicitudes ${sortConfig.direction === "desc" ? "descendente" : "ascendente"}`
+                      : "Ordenar por solicitudes"
+                  }
                 >
                   <Users size={16} />
                   <span className="text-sm font-medium">Solicitudes</span>
-                  {sortConfig.key === 'postulations' && (
-                    sortConfig.direction === 'desc' 
-                      ? <ArrowDown size={16} className="opacity-90" />
-                      : <ArrowUp size={16} className="opacity-90" />
-                  )}
+                  {sortConfig.key === "postulations" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={16} className="opacity-90" />
+                    ) : (
+                      <ArrowUp size={16} className="opacity-90" />
+                    ))}
                 </button>
 
                 {/* Botón ordenar por estado */}
                 <button
-                  onClick={() => handleSort('status')}
+                  onClick={() => handleSort("status")}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
-                    sortConfig.key === 'status'
-                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                    sortConfig.key === "status"
+                      ? "border-conexia-green bg-conexia-green text-white shadow-sm"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
                   }`}
-                  title={sortConfig.key === 'status' 
-                    ? `Ordenado por estado ${sortConfig.direction === 'desc' ? 'Z-A' : 'A-Z'}` 
-                    : 'Ordenar por estado'}
+                  title={
+                    sortConfig.key === "status"
+                      ? `Ordenado por estado ${sortConfig.direction === "desc" ? "Z-A" : "A-Z"}`
+                      : "Ordenar por estado"
+                  }
                 >
                   <FileText size={16} />
                   <span className="text-sm font-medium">Estado</span>
-                  {sortConfig.key === 'status' && (
-                    sortConfig.direction === 'desc' 
-                      ? <ArrowDown size={16} className="opacity-90" />
-                      : <ArrowUp size={16} className="opacity-90" />
-                  )}
+                  {sortConfig.key === "status" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={16} className="opacity-90" />
+                    ) : (
+                      <ArrowUp size={16} className="opacity-90" />
+                    ))}
                 </button>
 
                 {canCreateContent ? (
                   <button
-                    onClick={() => router.push('/project/create')}
+                    onClick={() => router.push("/project/create")}
                     className="bg-conexia-green text-white px-4 py-2 rounded-lg hover:bg-conexia-green/90 transition flex items-center gap-2"
                   >
                     <Briefcase size={16} />
@@ -355,9 +391,9 @@ export default function MyProjectsPage() {
                 No tienes proyectos
               </h3>
               <p className="text-gray-600">
-                {showInactive 
-                  ? 'No se encontraron proyectos.' 
-                  : 'No tienes proyectos activos.'}
+                {showInactive
+                  ? "No se encontraron proyectos."
+                  : "No tienes proyectos activos."}
               </p>
             </div>
           )}
@@ -391,19 +427,22 @@ export default function MyProjectsPage() {
                       <tr key={project.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="flex items-start gap-3">
-                            {project.image ? (
-                              <img 
-                                src={`${config.IMAGE_URL}/projects/images/${project.image}`}
+                            {getProjectImageUrl(project.image) ? (
+                              <img
+                                src={getProjectImageUrl(project.image)}
                                 alt={project.title}
                                 className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                                 onError={(e) => {
                                   e.target.onerror = null;
-                                  e.target.src = '/images/default-project.png';
+                                  e.target.src = "/images/default-project.png";
                                 }}
                               />
                             ) : (
                               <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                                <Briefcase size={20} className="text-gray-400" />
+                                <Briefcase
+                                  size={20}
+                                  className="text-gray-400"
+                                />
                               </div>
                             )}
                             <div className="min-w-0">
@@ -419,12 +458,14 @@ export default function MyProjectsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                            project.active 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {project.active ? 'Activo' : 'Inactivo'}
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                              project.active
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {project.active ? "Activo" : "Inactivo"}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -456,16 +497,19 @@ export default function MyProjectsPage() {
               {/* Vista Mobile: Cards */}
               <div className="lg:hidden space-y-4">
                 {sortedProjects.map((project) => (
-                  <div key={project.id} className="bg-white rounded-lg shadow-sm p-4">
+                  <div
+                    key={project.id}
+                    className="bg-white rounded-lg shadow-sm p-4"
+                  >
                     <div className="flex items-start gap-3 mb-3">
-                      {project.image ? (
-                        <img 
-                          src={`${config.IMAGE_URL}/projects/images/${project.image}`}
+                      {getProjectImageUrl(project.image) ? (
+                        <img
+                          src={getProjectImageUrl(project.image)}
                           alt={project.title}
                           className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = '/images/default-project.png';
+                            e.target.src = "/images/default-project.png";
                           }}
                         />
                       ) : (
@@ -474,13 +518,17 @@ export default function MyProjectsPage() {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 mb-1">{project.title}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                          project.active 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {project.active ? 'Activo' : 'Inactivo'}
+                        <h3 className="font-semibold text-gray-900 mb-1">
+                          {project.title}
+                        </h3>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                            project.active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {project.active ? "Activo" : "Inactivo"}
                         </span>
                       </div>
                     </div>
@@ -497,9 +545,11 @@ export default function MyProjectsPage() {
                       <div className="flex items-center gap-2 text-gray-600">
                         <Calendar size={16} />
                         <span>
-                          {project.updatedAt 
-                            ? new Date(project.updatedAt).toLocaleDateString('es-ES')
-                            : '-'}
+                          {project.updatedAt
+                            ? new Date(project.updatedAt).toLocaleDateString(
+                                "es-ES",
+                              )
+                            : "-"}
                         </span>
                       </div>
                     </div>
@@ -526,7 +576,9 @@ export default function MyProjectsPage() {
                 currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages || 1}
                 hasPreviousPage={pagination.currentPage > 1}
-                hasNextPage={pagination.currentPage < (pagination.totalPages || 1)}
+                hasNextPage={
+                  pagination.currentPage < (pagination.totalPages || 1)
+                }
                 onPageChange={handlePageChange}
               />
             </div>

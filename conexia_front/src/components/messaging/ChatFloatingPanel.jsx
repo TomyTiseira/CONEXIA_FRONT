@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import EmojiPicker from "emoji-picker-react";
 import AttachmentPreview from "./AttachmentPreview";
 import { useMessaging } from "@/hooks/messaging/useMessaging";
@@ -503,6 +504,9 @@ export default function ChatFloatingPanel({
           const src = m.fileUrl || m.fileName;
           if (typeof src === "string" && src.startsWith("data:")) {
             href = src;
+          } else if (typeof src === "string" && /^https?:\/\//i.test(src)) {
+            // URLs externas (GCS, etc.) - usar directamente sin fetch para evitar CORS
+            href = src;
           } else {
             const blob = await fetchBlobAuthTry(src);
             href = URL.createObjectURL(blob);
@@ -529,8 +533,14 @@ export default function ChatFloatingPanel({
         if (normalizeType(m.type) !== "image") continue;
         const urlCandidate = m.fileUrl || m.fileName;
         if (!urlCandidate) continue;
-        // Evitar fetch para data:
-        if (String(urlCandidate).startsWith("data:")) continue;
+        // Evitar fetch para data:, blob: y URLs externas (GCS)
+        const s = String(urlCandidate);
+        if (
+          s.startsWith("data:") ||
+          s.startsWith("blob:") ||
+          /^https?:\/\//i.test(s)
+        )
+          continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (imageBlobByMsgRef.current[stableId]) continue;
         try {
@@ -554,8 +564,14 @@ export default function ChatFloatingPanel({
         if (normalizeType(m.type) !== "pdf") continue;
         const urlCandidate = m.fileUrl || m.fileName;
         if (!urlCandidate) continue;
-        // Evitar fetch para data:
-        if (String(urlCandidate).startsWith("data:")) continue;
+        // Evitar fetch para data:, blob: y URLs externas (GCS)
+        const s = String(urlCandidate);
+        if (
+          s.startsWith("data:") ||
+          s.startsWith("blob:") ||
+          /^https?:\/\//i.test(s)
+        )
+          continue;
         const stableId = m.id ?? m.messageId ?? m._id ?? `idx-${idx}`;
         if (pdfBlobByMsgRef.current[stableId]) continue;
         try {
@@ -583,6 +599,10 @@ export default function ChatFloatingPanel({
           if (typeof src === "string" && src.startsWith("data:")) {
             href = src; // abrir/descargar directamente desde data:
             pdfBlobByMsgRef.current[stableId] = href;
+          } else if (typeof src === "string" && /^https?:\/\//i.test(src)) {
+            // URLs externas (GCS, etc.) - usar directamente sin fetch para evitar CORS
+            href = src;
+            pdfBlobByMsgRef.current[stableId] = href;
           } else {
             const blob = await fetchBlobAuthTry(src);
             href = URL.createObjectURL(blob);
@@ -591,13 +611,11 @@ export default function ChatFloatingPanel({
         }
       }
       if (!href) return;
-      const a = document.createElement("a");
-      a.href = href;
-      a.download = m.fileName || "documento.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch {}
+      // Abrir en nueva pestaña en vez de descargar
+      window.open(href, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Error al abrir PDF:", err);
+    }
   };
 
   // Abrir imagen en modal (usa blob cache o fetch auth)
@@ -615,6 +633,10 @@ export default function ChatFloatingPanel({
           if (typeof u === "string" && u.startsWith("data:")) {
             src = u; // usar data: directamente
             imageBlobByMsgRef.current[stableId] = src;
+          } else if (typeof u === "string" && /^https?:\/\//i.test(u)) {
+            // URLs externas (GCS, etc.) - usar directamente sin fetch para evitar CORS
+            src = u;
+            imageBlobByMsgRef.current[stableId] = src;
           } else {
             const blob = await fetchBlobAuth(u);
             src = URL.createObjectURL(blob);
@@ -622,8 +644,12 @@ export default function ChatFloatingPanel({
           }
         }
       }
-      if (src) setImageModal({ url: src, name: m.fileName });
-    } catch {}
+      if (src) {
+        setImageModal({ url: src, name: m.fileName || "Imagen" });
+      }
+    } catch (err) {
+      console.error("Error al abrir imagen:", err);
+    }
   };
 
   // Limpieza de blobs al desmontar
@@ -1001,7 +1027,7 @@ export default function ChatFloatingPanel({
                           </div>
                           <button
                             type="button"
-                            title="Descargar"
+                            title="Ver PDF"
                             onClick={() => handlePdfClick(m, sid)}
                             className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity text-[12px] text-conexia-green font-medium"
                           >
@@ -1012,14 +1038,21 @@ export default function ChatFloatingPanel({
                               fill="none"
                             >
                               <path
-                                d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                stroke="#1e6e5c"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                 stroke="#1e6e5c"
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                             </svg>
-                            Descargar
+                            Ver PDF
                           </button>
                         </div>
                         {timeChip}
@@ -1177,37 +1210,6 @@ export default function ChatFloatingPanel({
             )}
           </div>
         </button>
-      )}
-      {/* Image preview modal */}
-      {imageModal && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4"
-          onClick={() => setImageModal(null)}
-        >
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button
-              aria-label="Cerrar"
-              className="absolute -top-3 -right-3 bg-white rounded-full shadow p-1 text-gray-700 hover:text-gray-900"
-              onClick={() => setImageModal(null)}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M18 6L6 18M6 6l12 12"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageModal.url}
-              alt={imageModal.name || "Imagen"}
-              className="max-h-[82vh] max-w-[82vw] object-contain rounded-lg"
-            />
-          </div>
-        </div>
       )}
       {/* Input de mensaje + emojis */}
       {!collapsed && (
@@ -1439,6 +1441,43 @@ export default function ChatFloatingPanel({
           scrollbar-width: thin;
         }
       `}</style>
+      {/* Image preview modal - rendered outside chat container using portal */}
+      {imageModal &&
+        typeof window !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setImageModal(null)}
+          >
+            <div
+              className="relative bg-white rounded-lg shadow-2xl p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                aria-label="Cerrar"
+                className="absolute -top-3 -right-3 bg-white rounded-full shadow-lg p-1.5 text-gray-700 hover:text-gray-900 z-10"
+                onClick={() => setImageModal(null)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6l12 12"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageModal.url}
+                alt={imageModal.name || "Imagen"}
+                className="max-h-[80vh] max-w-[80vw] object-contain rounded"
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
