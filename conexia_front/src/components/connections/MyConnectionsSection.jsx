@@ -3,6 +3,7 @@ import React from 'react';
 import ConnectionFriendCard from '@/components/connections/ConnectionFriendCard';
 import { useUserStore } from '@/store/userStore';
 import { useUserFriends } from '@/hooks/connections/useUserFriends';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function MyConnectionsSection() {
   const { user } = useUserStore();
@@ -50,7 +51,7 @@ export default function MyConnectionsSection() {
       </div>
       <div className="text-conexia-green/80 mb-6">Personas con las que ya conectaste en Conexia.</div>
       {loading && localFriends.length === 0 ? (
-        <div className="text-conexia-green/70 text-center py-8">Cargando...</div>
+        <LoadingSpinner message="Cargando conexiones..." fullScreen={false} />
       ) : error ? (
         <div className="text-conexia-green/70 text-center py-8">{error}</div>
       ) : localFriends.length === 0 ? (
@@ -63,7 +64,7 @@ export default function MyConnectionsSection() {
             ))}
           </div>
           {loading && localFriends.length > 0 && (
-            <div className="text-conexia-green/70 text-center py-4">Cargando más amigos...</div>
+            <LoadingSpinner message="Cargando más amigos..." fullScreen={false} />
           )}
           {!pagination?.hasNextPage && localFriends.length > 0 && (
             <div className="text-conexia-green/60 py-4 text-center">No hay más amigos.</div>

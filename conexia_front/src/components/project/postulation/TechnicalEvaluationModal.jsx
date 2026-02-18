@@ -76,7 +76,7 @@ export default function TechnicalEvaluationModal({
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-800">
-                  Evaluación Técnica
+                  Evaluación técnica
                 </h2>
                 <p className="text-sm text-gray-600">
                   Rol:{" "}

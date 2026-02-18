@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAnalyzedReports } from '@/hooks/moderation/useAnalyzedReports';
 import ReportsTable from './ReportsTable';
 import Button from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 /**
  * Modal para mostrar todos los reportes analizados por la IA
@@ -91,10 +92,7 @@ export default function AnalyzedReportsModal({ analysisId, userId, classificatio
         {/* Loading State */}
         {loading && (
           <div className="flex-1 flex items-center justify-center py-12">
-            <div className="text-center">
-              <Loader2 className="w-12 h-12 text-conexia-green animate-spin mx-auto mb-4" />
-              <p className="text-gray-600">Cargando reportes...</p>
-            </div>
+            <LoadingSpinner message="Cargando reportes..." fullScreen={false} />
           </div>
         )}
 

@@ -10,6 +10,7 @@ import { fetchProjectById } from '@/service/projects/projectsFetch';
 import Pagination from '@/components/common/Pagination';
 import { ROLES } from '@/constants/roles';
 import { Filter, Calendar, ArrowDown, ArrowUp, FileText } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function MyPostulationsPage() {
   const { user } = useAuth();
@@ -29,6 +30,10 @@ export default function MyPostulationsPage() {
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' }); // Ordenamiento
 
   useEffect(() => {
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (roleName !== ROLES.USER) {
       router.push('/project');
       return;
@@ -211,12 +216,7 @@ export default function MyPostulationsPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-            <p className="text-conexia-green">Cargando mis postulaciones...</p>
-          </div>
-        </div>
+        <LoadingSpinner message="Cargando mis postulaciones..." fullScreen={true} />
       </>
     );
   }
@@ -414,7 +414,7 @@ export default function MyPostulationsPage() {
                                 onClick={() => router.push(`/project/${postulation.projectId}/evaluation/${postulation.id}`)}
                                 className="bg-conexia-green text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-conexia-green/90 transition"
                               >
-                                Completar Evaluación
+                                Completar evaluación técnica
                               </button>
                             ) : postulation.status.code === 'activo' ? (
                               <button
@@ -462,7 +462,7 @@ export default function MyPostulationsPage() {
                           onClick={() => router.push(`/project/${postulation.projectId}/evaluation/${postulation.id}`)}
                           className="bg-conexia-green text-white px-4 py-2 rounded text-sm font-medium hover:bg-conexia-green/90 transition w-full"
                         >
-                          Completar Evaluación Técnica
+                          Completar evaluación técnica
                         </button>
                       ) : postulation.status.code === 'activo' ? (
                         <button

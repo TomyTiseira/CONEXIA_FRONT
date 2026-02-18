@@ -38,6 +38,10 @@ export default function CommentReportsContent({ commentId }) {
   // Cargar reportes del comentario
   useEffect(() => {
     if (!commentId) return;
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
 
     setLoading(true);
 

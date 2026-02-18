@@ -63,17 +63,48 @@ export default function ProjectRoles({ roles = [], onApply, isOwner = false }) {
               </div>
 
               <div className="flex items-center gap-3">
-                {!isOwner && onApply && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onApply(role, index);
-                    }}
-                    className="px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors text-sm font-semibold"
-                  >
-                    Postularme
-                  </button>
-                )}
+                {!isOwner && onApply && (() => {
+                  const status = role.userPostulationStatus;
+                  const statusCode = status?.code;
+                  
+                  // Determinar si el botón debe estar deshabilitado
+                  const isDisabled = ['activo', 'pendiente_evaluacion', 'evaluacion_expirada', 'aceptada'].includes(statusCode);
+                  
+                  // Determinar el texto del botón
+                  let buttonText = 'Postularme';
+                  let buttonClass = 'px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors text-sm font-semibold';
+                  
+                  if (statusCode === 'activo') {
+                    buttonText = 'Postulación enviada';
+                    buttonClass = 'px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
+                  } else if (statusCode === 'pendiente_evaluacion') {
+                    buttonText = 'Evaluación pendiente';
+                    buttonClass = 'px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
+                  } else if (statusCode === 'evaluacion_expirada') {
+                    buttonText = 'Evaluación expirada';
+                    buttonClass = 'px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
+                  } else if (statusCode === 'aceptada') {
+                    buttonText = 'Aceptado ✓';
+                    buttonClass = 'px-4 py-2 bg-green-500 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
+                  }
+                  // Para null, rechazada, cancelada, cancelled_by_moderation, cancelled_by_suspension
+                  // el botón mantiene el texto "Postularme" y está habilitado
+                  
+                  return (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isDisabled) {
+                          onApply(role, index);
+                        }
+                      }}
+                      disabled={isDisabled}
+                      className={buttonClass}
+                    >
+                      {buttonText}
+                    </button>
+                  );
+                })()}
                 {expandedRoles[index] ? (
                   <FiChevronUp className="w-5 h-5 text-gray-400" />
                 ) : (

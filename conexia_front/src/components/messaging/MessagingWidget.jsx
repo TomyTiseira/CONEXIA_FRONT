@@ -13,6 +13,7 @@ import { useMessaging } from "@/hooks/messaging/useMessaging";
 import { getMessagingSocket } from "@/lib/socket/messagingSocket";
 import { useChatMessages } from "@/hooks/messaging/useChatMessages";
 import { useChatWidgets } from "@/context/ChatWidgetsContext";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function MessagingWidget({
   avatar = "/images/default-avatar.png",
@@ -563,9 +564,7 @@ export default function MessagingWidget({
                       ))
                     )}
                     {loading && (
-                      <div className="p-2 text-conexia-green/70 text-center">
-                        Cargando...
-                      </div>
+                      <LoadingSpinner message="Cargando contactos..." fullScreen={false} />
                     )}
                     {!pagination?.hasNextPage && friends.length > 0 && (
                       <div className="p-2 text-conexia-green/60 text-center"></div>

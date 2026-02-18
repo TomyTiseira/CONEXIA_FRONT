@@ -36,6 +36,10 @@ export default function ProjectApplicationPage() {
   const roleId = params.roleId;
 
   useEffect(() => {
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -424,7 +428,7 @@ export default function ProjectApplicationPage() {
                 const labels = { 
                   'CV': 'CV', 
                   'QUESTIONS': 'Preguntas', 
-                  'EVALUATION': 'Evaluación Técnica',
+                  'EVALUATION': 'Evaluación técnica',
                   'PARTNER': 'Socio',
                   'INVESTOR': 'Inversor'
                 };

@@ -3,6 +3,7 @@
 import Pagination from '@/components/common/Pagination';
 import Button from '@/components/ui/Button';
 import { ROLES_NAME } from '@/constants/roles';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function InternalUsersTable({
   users = [],
@@ -31,8 +32,8 @@ export default function InternalUsersTable({
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="5" className="p-4 text-center text-conexia-green">
-                Cargando usuarios...
+              <td colSpan="5" className="p-4 text-center">
+                <LoadingSpinner message="Cargando usuarios..." fullScreen={false} />
               </td>
             </tr>
           ) : showEmptyMessage ? (

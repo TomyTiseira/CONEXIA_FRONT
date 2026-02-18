@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { fetchCategories, fetchCollabTypes, fetchContractTypes } from '@/service/projects/filtersFetch';
 import { getRubros, getSkillsByRubro } from '@/service/projects/rubrosFetch';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ProjectSearchFilters({ filters, onChange }) {
   const [categories, setCategories] = useState([]);
@@ -185,7 +186,7 @@ export default function ProjectSearchFilters({ filters, onChange }) {
   };
 
   if (loading) {
-    return <div className="text-conexia-green text-center py-8">Cargando filtros...</div>;
+    return <LoadingSpinner message="Cargando filtros..." fullScreen={false} />;
   }
 
   return (

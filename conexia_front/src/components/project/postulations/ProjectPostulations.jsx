@@ -12,6 +12,7 @@ import PostulationsTable from './PostulationsTable';
 import PostulationEvaluationModal from './PostulationEvaluationModal';
 import Toast from '@/components/ui/Toast';
 import Pagination from '@/components/common/Pagination';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ProjectPostulations({ projectId }) {
   const { user } = useAuth();
@@ -203,11 +204,7 @@ export default function ProjectPostulations({ projectId }) {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-conexia-green">Cargando...</div>
-      </div>
-    );
+    return <LoadingSpinner message="Cargando postulaciones..." fullScreen={true} />;
   }
 
   if (!project) {
@@ -304,9 +301,7 @@ export default function ProjectPostulations({ projectId }) {
           {/* Tabla de postulaciones */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             {loadingProfiles ? (
-              <div className="p-8 text-center text-conexia-green">
-                Cargando postulaciones...
-              </div>
+              <LoadingSpinner message="Cargando postulaciones..." fullScreen={false} />
             ) : (
               <PostulationsTable
                 postulations={postulations}

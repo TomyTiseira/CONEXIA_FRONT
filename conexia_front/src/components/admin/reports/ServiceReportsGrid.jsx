@@ -3,6 +3,7 @@ import { fetchReportedServices } from '@/service/reports/fetchReportedServices';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/common/Pagination';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ServiceReportsGrid() {
   const [services, setServices] = useState([]);
@@ -13,6 +14,10 @@ export default function ServiceReportsGrid() {
   const [pagination, setPagination] = useState({});
 
   useEffect(() => {
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     setLoading(true);
     fetchReportedServices({ page, orderBy })
       .then(data => {
@@ -37,7 +42,7 @@ export default function ServiceReportsGrid() {
         </select>
       </div>
       {loading ? (
-        <p className="text-conexia-green">Cargando servicios reportados...</p>
+        <LoadingSpinner message="Cargando servicios reportados..." fullScreen={false} />
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : services.length === 0 ? (
