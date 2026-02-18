@@ -28,6 +28,7 @@ import MessagingWidget from "@/components/messaging/MessagingWidget";
 import ModerationAlert from "@/components/common/ModerationAlert";
 import { isProjectModerated } from "@/constants/serviceHirings";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import OwnerSuspensionAlert from "@/components/common/OwnerSuspensionAlert";
 
 // Componente para mostrar cada rol individualmente
@@ -438,9 +439,7 @@ ${messageText.trim()}`;
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Cargando...
-      </div>
+      <LoadingSpinner message="Cargando proyecto" fullScreen={false} />
     );
   if (!project)
     return (

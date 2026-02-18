@@ -384,80 +384,7 @@ export const ClaimDetailModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <p className="text-xs font-medium text-gray-600 mb-1.5">
-                ID del Reclamo
-              </p>
-              <p className="text-sm font-mono font-medium text-gray-900">
-                {data.claim.id}
-              </p>
-            </div>
-            <div className="sm:col-span-2">
-              <p className="text-xs font-medium text-gray-600 mb-1.5">
-                Moderador asignado
-              </p>
-              {data.assignedModerator?.email ? (
-                <div className="flex items-center gap-2 mt-1">
-                  <img
-                    src={DEFAULT_AVATAR_SRC}
-                    alt="Moderador"
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                  />
-                  <p className="text-sm font-medium text-gray-900">
-                    {getModeratorNameFromEmail(data.assignedModerator.email)}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 italic mt-1">Sin asignar</p>
-              )}
-            </div>
-            {data.hiring?.service && (
-              <div className="sm:col-span-2">
-                <p className="text-xs font-medium text-gray-600 mb-1.5">
-                  Servicio
-                </p>
-                <Link
-                  href={`/services/${data.hiring.service.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-conexia-green hover:text-[#48a6a7] hover:underline flex items-center gap-1 transition-colors"
-                >
-                  {data.hiring.service.title}
-                </Link>
-              </div>
-            )}
-            <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">
-                Tipo de Reclamo
-              </p>
-              <ClaimTypeBadge
-                claimType={data.claim.claimType}
-                labelOverride={getClaimTypeLabelWithOtherReason(data.claim)}
-              />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">Estado</p>
-              <ClaimStatusBadge status={data.claim.status} />
-            </div>
-            {data.claim.userRole && (
-              <div>
-                <p className="text-xs font-medium text-gray-600 mb-1.5">
-                  Tu Rol
-                </p>
-                <ClaimRoleBadge role={data.claim.userRole} />
-              </div>
-            )}
-            <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">
-                Fecha de Creación
-              </p>
-              <p className="text-sm font-medium text-gray-900">
-                {formatClaimDateTime(data.claim.createdAt)}
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <p className="text-xs font-medium text-gray-600 mb-1.5">
-                ID del reclamo
+                ID del declamo
               </p>
               <p className="text-sm font-mono font-medium text-gray-900">
                 {data.claim.id}
@@ -520,7 +447,7 @@ export const ClaimDetailModal = ({
             )}
             <div>
               <p className="text-xs font-medium text-gray-600 mb-1.5">
-                Fecha de creación
+                Fecha de Creación
               </p>
               <p className="text-sm font-medium text-gray-900">
                 {formatClaimDateTime(data.claim.createdAt)}
@@ -782,7 +709,7 @@ export const ClaimDetailModal = ({
                           : "text-yellow-600"
                   }
                 />
-                {isRejected ? "Reclamo Rechazado" : "Resolución del Reclamo"}
+                {isRejected ? "Reclamo rechazado" : "Resolución del reclamo"}
               </h3>
             </div>
 
@@ -807,7 +734,7 @@ export const ClaimDetailModal = ({
                 {data.claim.resolutionType && (
                   <div>
                     <p className="text-xs font-medium text-gray-600 mb-1.5">
-                      Tipo de Resolución
+                      Tipo de resolución
                     </p>
                     <div
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm ${
@@ -849,7 +776,7 @@ export const ClaimDetailModal = ({
               {data.claim.resolvedAt && (
                 <div>
                   <p className="text-xs font-medium text-gray-600 mb-1.5">
-                    Fecha de Resolución
+                    Fecha de resolución
                   </p>
                   <p className="text-sm font-medium text-gray-900">
                     {formatClaimDateTime(data.claim.resolvedAt)}
@@ -860,7 +787,7 @@ export const ClaimDetailModal = ({
               {/* Explicación */}
               <div>
                 <p className="text-xs font-medium text-gray-600 mb-2">
-                  Explicación de la Resolución
+                  Explicación de la resolución
                 </p>
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
@@ -1031,7 +958,7 @@ export const ClaimDetailModal = ({
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-conexia-green to-emerald-600 flex-shrink-0">
-          <h2 className="text-xl font-bold text-white">Detalle del Reclamo</h2>
+          <h2 className="text-xl font-bold text-white">Detalle del reclamo</h2>
           <button
             onClick={onClose}
             className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"

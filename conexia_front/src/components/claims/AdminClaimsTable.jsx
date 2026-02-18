@@ -347,7 +347,7 @@ export const AdminClaimsTable = ({ claims, onViewDetail, onOpenActions }) => {
                   </div>
                   <div className="mb-2">
                     <p className="text-xs text-gray-600 mb-1">
-                      Tipo de Reclamo
+                      Tipo de reclamo
                     </p>
                     <p className="text-xs text-gray-600 mb-1">
                       Tipo de reclamo

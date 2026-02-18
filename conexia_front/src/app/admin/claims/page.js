@@ -18,6 +18,7 @@ import { ClaimResolutionModal } from '@/components/claims/ClaimResolutionModal';
 import { ClaimRejectionModal } from '@/components/claims/ClaimRejectionModal';
 import { SelectComplianceModal } from '@/components/claims/SelectComplianceModal';
 import { UploadComplianceEvidenceModal } from '@/components/claims/UploadComplianceEvidenceModal';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { SelectComplianceForReviewModal } from '@/components/claims/SelectComplianceForReviewModal';
 import { ReviewComplianceModal } from '@/components/claims/ReviewComplianceModal';
 import Navbar from '@/components/navbar/Navbar';
@@ -277,10 +278,7 @@ function AdminClaimsContent() {
         />
 
         {loading && (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-            <Loader2 size={48} className="animate-spin text-conexia-green mx-auto mb-4" />
-            <p className="text-gray-600">Cargando reclamos...</p>
-          </div>
+          <LoadingSpinner message="Cargando reclamos" fullScreen={false} />
         )}
 
         {error && !loading && (
