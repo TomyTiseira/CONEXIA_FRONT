@@ -6,17 +6,11 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { ROLES } from '@/constants/roles';
 import { NotFound } from '@/components/ui';
 import { Suspense } from 'react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ReportsPage() {
 	return (
-		<Suspense fallback={
-			<div className="min-h-screen flex items-center justify-center bg-[#eaf5f2]">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-					<p className="text-conexia-green">Cargando reportes...</p>
-				</div>
-			</div>
-		}>
+		<Suspense fallback={<LoadingSpinner message="Cargando reportes" />}>
 			<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]} fallbackComponent={<NotFound />}>
 				<Navbar />
 				<ReportsList />

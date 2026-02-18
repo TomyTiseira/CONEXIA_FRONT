@@ -8,6 +8,7 @@ import Toast from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { useUserStore } from '@/store/userStore';
 import { Star } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ReviewsSection({ profileUserId }) {
   const { user } = useAuth();
@@ -118,7 +119,7 @@ export default function ReviewsSection({ profileUserId }) {
 
       <div className="mt-4">
         {loading ? (
-          <p className="text-gray-500 text-center py-8">Cargando reseñas...</p>
+          <LoadingSpinner message="Cargando reseñas" fullScreen={false} />
         ) : reviewsData.reviews && reviewsData.reviews.length > 0 ? (
           <div className="space-y-4">
             {reviewsData.reviews.map(r => (

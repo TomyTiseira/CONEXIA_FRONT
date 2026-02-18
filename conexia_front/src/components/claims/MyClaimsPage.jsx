@@ -18,6 +18,7 @@ import { ClaimDetailModal } from "./ClaimDetailModal";
 import { SubmitObservationsModal } from "./SubmitObservationsModal";
 import { SubmitComplianceModal } from "./SubmitComplianceModal";
 import { SubsanarClaimModal } from "./SubsanarClaimModal";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ClaimActionsModal } from "./ClaimActionsModal";
 import { SelectComplianceModal } from "./SelectComplianceModal";
 import { UploadComplianceEvidenceModal } from "./UploadComplianceEvidenceModal";
@@ -360,10 +361,7 @@ export default function MyClaimsPage() {
 
         {/* Loading */}
         {loading && (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-conexia-green mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando reclamos...</p>
-          </div>
+          <LoadingSpinner message="Cargando reclamos" fullScreen={false} />
         )}
 
         {/* Error */}

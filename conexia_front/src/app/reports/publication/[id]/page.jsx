@@ -5,12 +5,13 @@ import PublicationReportsGrid from '@/components/admin/reports/PublicationReport
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { ROLES } from '@/constants/roles';
 import { NotFound } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function PublicationReportsPage({ params }) {
   const { id } = React.use(params);
   
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando reportes...</div>}>
+    <Suspense fallback={<LoadingSpinner message="Cargando reportes" />}>
       <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]} fallbackComponent={<NotFound />}>
         <Navbar />
         <PublicationReportsGrid publicationId={id} />
