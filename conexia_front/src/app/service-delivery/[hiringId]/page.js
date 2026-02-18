@@ -151,10 +151,7 @@ export default function ServiceDeliveryPage() {
         <Navbar />
         <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
           <div className="max-w-7xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-conexia-green mx-auto"></div>
-              <p className="text-gray-600 mt-4">Cargando entregas...</p>
-            </div>
+            <LoadingSpinner message="Cargando entregas" fullScreen={false} />
           </div>
         </div>
       </>

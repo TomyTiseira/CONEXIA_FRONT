@@ -28,7 +28,7 @@ export const ClaimButton = ({
           title={reason}
         >
           <AlertTriangle size={18} />
-          Realizar Reclamo
+          Realizar reclamo
         </button>
         {reason && (
           <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
@@ -45,7 +45,7 @@ export const ClaimButton = ({
       className={`flex items-center gap-2 px-4 py-2 border-2 border-red-500 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium ${className}`}
     >
       <AlertTriangle size={18} />
-      Realizar Reclamo
+      Realizar reclamo
     </button>
   );
 };

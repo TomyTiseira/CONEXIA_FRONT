@@ -112,7 +112,7 @@ export default function ServiceReviewModal({
         <div className="px-6 py-4 border-b border-gray-200 rounded-t-xl flex-shrink-0">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-conexia-green">
-              Calificar Servicio
+              Calificar servicio
             </h2>
             <button
               onClick={onClose}
@@ -130,7 +130,7 @@ export default function ServiceReviewModal({
           <div className="bg-blue-50 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <FileText size={20} className="text-conexia-green" />
-              Servicio Solicitado
+              Servicio solicitado
             </h3>
             <div className="space-y-3">
               <div>
@@ -250,7 +250,7 @@ export default function ServiceReviewModal({
               disabled={isSubmitting || !isFormValid}
               className="bg-conexia-green hover:bg-conexia-green/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Enviando..." : "Enviar Reseña"}
+              {isSubmitting ? "Enviando..." : "Enviar reseña"}
             </Button>
           </div>
         </div>

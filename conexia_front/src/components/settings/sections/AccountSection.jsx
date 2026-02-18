@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getProfileById } from "@/service/profiles/profilesFetch";
 import { useUserStore } from "@/store/userStore";
 import { ROLES } from "@/constants/roles";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function AccountSection() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -51,9 +52,7 @@ export default function AccountSection() {
 
   if (profileLoading) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">Cargando información de la cuenta...</p>
-      </div>
+      <LoadingSpinner message="Cargando información de la cuenta" fullScreen={false} />
     );
   }
 

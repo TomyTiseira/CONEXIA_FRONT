@@ -53,7 +53,7 @@ export default function ProviderRequestDetailModal({
       revision_requested: "Revisión Solicitada",
       completed: "Completado",
       expired: "Vencida",
-      in_claim: "En Reclamo",
+      in_claim: "En reclamo",
       cancelled_by_claim: "Cancelado por reclamo",
       completed_by_claim: "Finalizado por reclamo",
       completed_with_agreement: "Finalizado con acuerdo",

@@ -27,6 +27,7 @@ import { PlanComparisonBanner } from "@/components/plans";
 import { UpgradePlanButton } from "@/components/plans";
 import { config } from "@/config";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -369,10 +370,7 @@ export default function MyProjectsPage() {
 
           {/* Contenido */}
           {loading && (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-conexia-green mx-auto"></div>
-              <p className="text-gray-600 mt-4">Cargando proyectos...</p>
-            </div>
+            <LoadingSpinner message="Cargando proyectos" fullScreen={false} />
           )}
 
           {error && (

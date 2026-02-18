@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import TimeoutClient from "@/components/auth/TimeoutClient";
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function TimeoutPage() {
   return (
-    <Suspense fallback={<div className="text-center py-20">Cargando...</div>}>
+    <Suspense fallback={<LoadingSpinner message="Cargando" />}>
       <TimeoutClient />
     </Suspense>
   );

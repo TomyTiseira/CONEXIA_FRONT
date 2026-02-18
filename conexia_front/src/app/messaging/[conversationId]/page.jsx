@@ -63,7 +63,7 @@ export default function MessagingConversationPage() {
       <main className="h-[calc(100vh-64px-56px)] md:h-[calc(100vh-64px)] overflow-hidden bg-[#f3f9f8] px-2 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))] md:pt-4 md:pb-4 flex justify-center">
         <div className="w-full max-w-3xl h-full min-h-0 bg-white border border-[#c6e3e4] rounded-xl md:rounded-2xl shadow overflow-hidden">
           {panelUser && (
-            <Suspense fallback={<div className="p-4 text-center text-conexia-green">Cargando chat...</div>}>
+            <Suspense fallback={<LoadingSpinner message="Cargando chat" fullScreen={false} />}>
               <ChatView user={panelUser} onBack={() => router.push('/messaging')} />
             </Suspense>
           )}
