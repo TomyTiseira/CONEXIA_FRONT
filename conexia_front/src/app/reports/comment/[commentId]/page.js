@@ -18,7 +18,7 @@ export default function CommentReportsPage({ params: promiseParams }) {
     isLoggingOut = window.__CONEXIA_LOGGING_OUT__ === true;
   }
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando reportes del comentario...</div>}>
+    <Suspense fallback={<LoadingSpinner message="Cargando reportes del comentario..." fullScreen={true} />}>
       <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]} fallbackComponent={isLoggingOut ? <LoadingSpinner message="Cerrando sesión..." size="large" /> : <NotFound />}>
         <Navbar />
         <CommentReportsContent commentId={commentId} />

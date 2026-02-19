@@ -16,7 +16,7 @@ export default function ServiceReportsPage({ params }) {
     isLoggingOut = window.__CONEXIA_LOGGING_OUT__ === true;
   }
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando reportes del servicio...</div>}>
+    <Suspense fallback={<LoadingSpinner message="Cargando reportes del servicio..." fullScreen={true} />}>
       <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]} fallbackComponent={isLoggingOut ? <LoadingSpinner message="Cerrando sesión..." size="large" /> : <NotFound />}>
         <Navbar />
         <ServiceReportsDetailGrid serviceId={id} />
