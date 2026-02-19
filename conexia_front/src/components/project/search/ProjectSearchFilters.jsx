@@ -12,6 +12,7 @@ export default function ProjectSearchFilters({ filters, onChange }) {
   const [skillsByRubro, setSkillsByRubro] = useState({});
   const [collabTypes, setCollabTypes] = useState([]);
   const [contractTypes, setContractTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
   // By default, all collapsed (mobile). We'll expand on desktop in useEffect.
   const [expandedSections, setExpandedSections] = useState({
     category: false,
@@ -72,6 +73,7 @@ export default function ProjectSearchFilters({ filters, onChange }) {
 
   useEffect(() => {
     async function loadFilters() {
+      setLoading(true);
       try {
         const [cat, col, cont, rubrosList] = await Promise.all([
           fetchCategories(),
@@ -109,6 +111,8 @@ export default function ProjectSearchFilters({ filters, onChange }) {
         setContractTypes([]);
         setRubros([]);
         setSkillsByRubro({});
+      } finally {
+        setLoading(false);
       }
     }
     loadFilters();
@@ -238,39 +242,55 @@ export default function ProjectSearchFilters({ filters, onChange }) {
         </div>
         {expandedSections.category && (
           <div className="flex flex-col gap-1 ml-1">
-            <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
-              <input
-                type="checkbox"
-                checked={isAllSelected(categories, filters.category)}
-                onChange={() => {
-                  setTouched((t) => ({ ...t, category: true }));
-                  handleCategory("all");
-                }}
-                className="accent-conexia-green"
-              />
-              <span className="font-medium">Todas</span>
-            </label>
-            {categories.map((cat) => {
-              // Si está en modo 'Todas', los individuales no se marcan visualmente
-              const checked = isAllSelected(categories, filters.category)
-                ? false
-                : Array.isArray(filters.category) &&
-                  filters.category.includes(cat.id);
-              return (
-                <label
-                  key={cat.id}
-                  className="flex items-center gap-2 text-sm cursor-pointer"
-                >
+            {loading ? (
+              <>
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div
+                      className="h-3.5 bg-gray-200 rounded animate-pulse"
+                      style={{ width: `${60 + i * 15}px` }}
+                    />
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
                   <input
                     type="checkbox"
-                    checked={checked}
-                    onChange={() => handleCategory(cat.id)}
+                    checked={isAllSelected(categories, filters.category)}
+                    onChange={() => {
+                      setTouched((t) => ({ ...t, category: true }));
+                      handleCategory("all");
+                    }}
                     className="accent-conexia-green"
                   />
-                  {cat.name}
+                  <span className="font-medium">Todas</span>
                 </label>
-              );
-            })}
+                {categories.map((cat) => {
+                  // Si está en modo 'Todas', los individuales no se marcan visualmente
+                  const checked = isAllSelected(categories, filters.category)
+                    ? false
+                    : Array.isArray(filters.category) &&
+                      filters.category.includes(cat.id);
+                  return (
+                    <label
+                      key={cat.id}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => handleCategory(cat.id)}
+                        className="accent-conexia-green"
+                      />
+                      {cat.name}
+                    </label>
+                  );
+                })}
+              </>
+            )}
           </div>
         )}
       </div>
@@ -308,163 +328,196 @@ export default function ProjectSearchFilters({ filters, onChange }) {
         </div>
         {expandedSections.skills && (
           <div className="flex flex-col gap-1 ml-1">
-            {/* Checkbox Todas general */}
-            <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
-              <input
-                type="checkbox"
-                ref={allSkillsRef}
-                checked={(() => {
-                  // General 'Todas' está activo si todas las skills de todos los rubros están seleccionadas
-                  const allSkillIds = rubros.flatMap((rubro) =>
-                    (skillsByRubro[rubro.id] || []).map((skill) => skill.id),
+            {loading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div
+                      className="h-3.5 bg-gray-200 rounded animate-pulse"
+                      style={{ width: `${50 + i * 20}px` }}
+                    />
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                {/* Checkbox Todas general */}
+                <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
+                  <input
+                    type="checkbox"
+                    ref={allSkillsRef}
+                    checked={(() => {
+                      // General 'Todas' está activo si todas las skills de todos los rubros están seleccionadas
+                      const allSkillIds = rubros.flatMap((rubro) =>
+                        (skillsByRubro[rubro.id] || []).map(
+                          (skill) => skill.id,
+                        ),
+                      );
+                      return (
+                        Array.isArray(filters.skills) &&
+                        allSkillIds.length > 0 &&
+                        allSkillIds.every((id) => filters.skills.includes(id))
+                      );
+                    })()}
+                    onChange={() => {
+                      const allSkillIds = rubros.flatMap((rubro) =>
+                        (skillsByRubro[rubro.id] || []).map(
+                          (skill) => skill.id,
+                        ),
+                      );
+                      const allSelected =
+                        Array.isArray(filters.skills) &&
+                        allSkillIds.length > 0 &&
+                        allSkillIds.every((id) => filters.skills.includes(id));
+                      if (allSelected) {
+                        onChange({ ...filters, skills: [] });
+                      } else {
+                        onChange({ ...filters, skills: [...allSkillIds] });
+                      }
+                    }}
+                    className="accent-conexia-green"
+                  />
+                  <span className="font-medium">Todas</span>
+                </label>
+                {rubros.map((rubro) => {
+                  const rubroSkills = skillsByRubro[rubro.id] || [];
+                  const rubroSkillIds = rubroSkills.map((skill) => skill.id);
+                  // El check 'Todas' de rubro está activo si todas las skills de ese rubro están seleccionadas
+                  const allSkillIds = rubros.flatMap((r) =>
+                    (skillsByRubro[r.id] || []).map((skill) => skill.id),
                   );
-                  return (
-                    Array.isArray(filters.skills) &&
-                    allSkillIds.length > 0 &&
-                    allSkillIds.every((id) => filters.skills.includes(id))
-                  );
-                })()}
-                onChange={() => {
-                  const allSkillIds = rubros.flatMap((rubro) =>
-                    (skillsByRubro[rubro.id] || []).map((skill) => skill.id),
-                  );
-                  const allSelected =
+                  const allGeneralSelected =
                     Array.isArray(filters.skills) &&
                     allSkillIds.length > 0 &&
                     allSkillIds.every((id) => filters.skills.includes(id));
-                  if (allSelected) {
-                    onChange({ ...filters, skills: [] });
-                  } else {
-                    onChange({ ...filters, skills: [...allSkillIds] });
-                  }
-                }}
-                className="accent-conexia-green"
-              />
-              <span className="font-medium">Todas</span>
-            </label>
-            {rubros.map((rubro) => {
-              const rubroSkills = skillsByRubro[rubro.id] || [];
-              const rubroSkillIds = rubroSkills.map((skill) => skill.id);
-              // El check 'Todas' de rubro está activo si todas las skills de ese rubro están seleccionadas
-              const allSkillIds = rubros.flatMap((r) =>
-                (skillsByRubro[r.id] || []).map((skill) => skill.id),
-              );
-              const allGeneralSelected =
-                Array.isArray(filters.skills) &&
-                allSkillIds.length > 0 &&
-                allSkillIds.every((id) => filters.skills.includes(id));
-              const onlyThisRubro =
-                Array.isArray(filters.skills) &&
-                rubroSkillIds.length > 0 &&
-                rubroSkillIds.every((id) => filters.skills.includes(id));
-              return (
-                <div
-                  key={rubro.id}
-                  className="border-b border-conexia-green/20 pb-1 mb-1"
-                >
-                  <button
-                    type="button"
-                    className="flex items-center w-full justify-between py-1 px-2 hover:bg-conexia-green/5 rounded"
-                    onClick={() =>
-                      setExpandedSections((prev) => ({
-                        ...prev,
-                        [`rubro_${rubro.id}`]: !prev[`rubro_${rubro.id}`],
-                      }))
-                    }
-                    aria-expanded={!!expandedSections[`rubro_${rubro.id}`]}
-                  >
-                    <span className="font-semibold text-conexia-green text-sm">
-                      {rubro.name}
-                    </span>
-                    <svg
-                      className={`w-4 h-4 transition-transform duration-200 ${expandedSections[`rubro_${rubro.id}`] ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  const onlyThisRubro =
+                    Array.isArray(filters.skills) &&
+                    rubroSkillIds.length > 0 &&
+                    rubroSkillIds.every((id) => filters.skills.includes(id));
+                  return (
+                    <div
+                      key={rubro.id}
+                      className="border-b border-conexia-green/20 pb-1 mb-1"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-                  {expandedSections[`rubro_${rubro.id}`] && (
-                    <div className="flex flex-col gap-1 pl-4 mt-1">
-                      {/* Checkbox Todas por rubro */}
-                      <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
-                        <input
-                          type="checkbox"
-                          checked={onlyThisRubro || allGeneralSelected}
-                          onChange={() => {
-                            let currentSkills = Array.isArray(filters.skills)
-                              ? [...filters.skills]
-                              : [];
-                            if (onlyThisRubro || allGeneralSelected) {
-                              // Quitar todas las skills de este rubro
-                              currentSkills = currentSkills.filter(
-                                (id) => !rubroSkillIds.includes(id),
-                              );
-                            } else {
-                              // Agregar todas las skills de este rubro
-                              currentSkills = Array.from(
-                                new Set([...currentSkills, ...rubroSkillIds]),
-                              );
-                            }
-                            onChange({ ...filters, skills: currentSkills });
-                          }}
-                          className="accent-conexia-green"
-                        />
-                        <span className="font-medium">Todas</span>
-                      </label>
-                      {rubroSkills.map((skill) => {
-                        // Si está en modo 'Todas' de este rubro o general, los individuales no se marcan visualmente
-                        const checked =
-                          onlyThisRubro || allGeneralSelected
-                            ? false
-                            : Array.isArray(filters.skills) &&
-                              filters.skills.includes(skill.id);
-                        return (
-                          <label
-                            key={skill.id}
-                            className="flex items-center gap-2 text-sm cursor-pointer"
-                          >
+                      <button
+                        type="button"
+                        className="flex items-center w-full justify-between py-1 px-2 hover:bg-conexia-green/5 rounded"
+                        onClick={() =>
+                          setExpandedSections((prev) => ({
+                            ...prev,
+                            [`rubro_${rubro.id}`]: !prev[`rubro_${rubro.id}`],
+                          }))
+                        }
+                        aria-expanded={!!expandedSections[`rubro_${rubro.id}`]}
+                      >
+                        <span className="font-semibold text-conexia-green text-sm">
+                          {rubro.name}
+                        </span>
+                        <svg
+                          className={`w-4 h-4 transition-transform duration-200 ${expandedSections[`rubro_${rubro.id}`] ? "rotate-180" : ""}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                      {expandedSections[`rubro_${rubro.id}`] && (
+                        <div className="flex flex-col gap-1 pl-4 mt-1">
+                          {/* Checkbox Todas por rubro */}
+                          <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
                             <input
                               type="checkbox"
-                              checked={checked}
+                              checked={onlyThisRubro || allGeneralSelected}
                               onChange={() => {
                                 let currentSkills = Array.isArray(
                                   filters.skills,
                                 )
                                   ? [...filters.skills]
                                   : [];
-                                // Si estaba en 'Todas' general o de rubro, seleccionar solo la nueva
                                 if (onlyThisRubro || allGeneralSelected) {
-                                  onChange({ ...filters, skills: [skill.id] });
-                                  return;
-                                }
-                                const exists = currentSkills.includes(skill.id);
-                                if (exists) {
+                                  // Quitar todas las skills de este rubro
                                   currentSkills = currentSkills.filter(
-                                    (id) => id !== skill.id,
+                                    (id) => !rubroSkillIds.includes(id),
                                   );
                                 } else {
-                                  currentSkills.push(skill.id);
+                                  // Agregar todas las skills de este rubro
+                                  currentSkills = Array.from(
+                                    new Set([
+                                      ...currentSkills,
+                                      ...rubroSkillIds,
+                                    ]),
+                                  );
                                 }
                                 onChange({ ...filters, skills: currentSkills });
                               }}
                               className="accent-conexia-green"
                             />
-                            {skill.name}
+                            <span className="font-medium">Todas</span>
                           </label>
-                        );
-                      })}
+                          {rubroSkills.map((skill) => {
+                            // Si está en modo 'Todas' de este rubro o general, los individuales no se marcan visualmente
+                            const checked =
+                              onlyThisRubro || allGeneralSelected
+                                ? false
+                                : Array.isArray(filters.skills) &&
+                                  filters.skills.includes(skill.id);
+                            return (
+                              <label
+                                key={skill.id}
+                                className="flex items-center gap-2 text-sm cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => {
+                                    let currentSkills = Array.isArray(
+                                      filters.skills,
+                                    )
+                                      ? [...filters.skills]
+                                      : [];
+                                    // Si estaba en 'Todas' general o de rubro, seleccionar solo la nueva
+                                    if (onlyThisRubro || allGeneralSelected) {
+                                      onChange({
+                                        ...filters,
+                                        skills: [skill.id],
+                                      });
+                                      return;
+                                    }
+                                    const exists = currentSkills.includes(
+                                      skill.id,
+                                    );
+                                    if (exists) {
+                                      currentSkills = currentSkills.filter(
+                                        (id) => id !== skill.id,
+                                      );
+                                    } else {
+                                      currentSkills.push(skill.id);
+                                    }
+                                    onChange({
+                                      ...filters,
+                                      skills: currentSkills,
+                                    });
+                                  }}
+                                  className="accent-conexia-green"
+                                />
+                                {skill.name}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </>
+            )}
           </div>
         )}
       </div>
@@ -505,38 +558,54 @@ export default function ProjectSearchFilters({ filters, onChange }) {
         </div>
         {expandedSections.contract && (
           <div className="flex flex-col gap-1 ml-1">
-            <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
-              <input
-                type="checkbox"
-                checked={isAllSelected(contractTypes, filters.contract)}
-                onChange={() => {
-                  setTouched((t) => ({ ...t, contract: true }));
-                  handleContract("all");
-                }}
-                className="accent-conexia-green"
-              />
-              <span className="font-medium">Todos</span>
-            </label>
-            {contractTypes.map((type) => {
-              const checked = isAllSelected(contractTypes, filters.contract)
-                ? false
-                : Array.isArray(filters.contract) &&
-                  filters.contract.includes(type.id);
-              return (
-                <label
-                  key={type.id}
-                  className="flex items-center gap-2 text-sm cursor-pointer"
-                >
+            {loading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div
+                      className="h-3.5 bg-gray-200 rounded animate-pulse"
+                      style={{ width: `${55 + i * 18}px` }}
+                    />
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
                   <input
                     type="checkbox"
-                    checked={checked}
-                    onChange={() => handleContract(type.id)}
+                    checked={isAllSelected(contractTypes, filters.contract)}
+                    onChange={() => {
+                      setTouched((t) => ({ ...t, contract: true }));
+                      handleContract("all");
+                    }}
                     className="accent-conexia-green"
                   />
-                  {type.name}
+                  <span className="font-medium">Todos</span>
                 </label>
-              );
-            })}
+                {contractTypes.map((type) => {
+                  const checked = isAllSelected(contractTypes, filters.contract)
+                    ? false
+                    : Array.isArray(filters.contract) &&
+                      filters.contract.includes(type.id);
+                  return (
+                    <label
+                      key={type.id}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => handleContract(type.id)}
+                        className="accent-conexia-green"
+                      />
+                      {type.name}
+                    </label>
+                  );
+                })}
+              </>
+            )}
           </div>
         )}
       </div>
@@ -578,38 +647,57 @@ export default function ProjectSearchFilters({ filters, onChange }) {
         </div>
         {expandedSections.collaboration && (
           <div className="flex flex-col gap-1 ml-1">
-            <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
-              <input
-                type="checkbox"
-                checked={isAllSelected(collabTypes, filters.collaboration)}
-                onChange={() => {
-                  setTouched((t) => ({ ...t, collaboration: true }));
-                  handleCollab("all");
-                }}
-                className="accent-conexia-green"
-              />
-              <span className="font-medium">Todas</span>
-            </label>
-            {collabTypes.map((type) => {
-              const checked = isAllSelected(collabTypes, filters.collaboration)
-                ? false
-                : Array.isArray(filters.collaboration) &&
-                  filters.collaboration.includes(type.id);
-              return (
-                <label
-                  key={type.id}
-                  className="flex items-center gap-2 text-sm cursor-pointer"
-                >
+            {loading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div
+                      className="h-3.5 bg-gray-200 rounded animate-pulse"
+                      style={{ width: `${60 + i * 15}px` }}
+                    />
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
                   <input
                     type="checkbox"
-                    checked={checked}
-                    onChange={() => handleCollab(type.id)}
+                    checked={isAllSelected(collabTypes, filters.collaboration)}
+                    onChange={() => {
+                      setTouched((t) => ({ ...t, collaboration: true }));
+                      handleCollab("all");
+                    }}
                     className="accent-conexia-green"
                   />
-                  {type.name}
+                  <span className="font-medium">Todas</span>
                 </label>
-              );
-            })}
+                {collabTypes.map((type) => {
+                  const checked = isAllSelected(
+                    collabTypes,
+                    filters.collaboration,
+                  )
+                    ? false
+                    : Array.isArray(filters.collaboration) &&
+                      filters.collaboration.includes(type.id);
+                  return (
+                    <label
+                      key={type.id}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => handleCollab(type.id)}
+                        className="accent-conexia-green"
+                      />
+                      {type.name}
+                    </label>
+                  );
+                })}
+              </>
+            )}
           </div>
         )}
       </div>
