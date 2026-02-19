@@ -5,7 +5,8 @@ export const LoadingSpinner = ({
   message = "Cargando...", 
   fullScreen = true, 
   size = "default",
-  showLogo = true 
+  showLogo = true,
+  showSubtext = true 
 }) => {
   const sizeClasses = {
     small: "w-8 h-8",
@@ -58,7 +59,9 @@ export const LoadingSpinner = ({
             <h2 className="text-xl font-bold text-conexia-green">
               {message}
             </h2>
-            <p className="text-sm text-gray-600">Por favor, esperá un momento...</p>
+            {showSubtext && (
+              <p className="text-sm text-gray-600">Por favor, esperá un momento...</p>
+            )}
             
             {/* Barra de progreso animada */}
             <div className="w-64 h-1.5 bg-gray-200 rounded-full overflow-hidden mx-auto">

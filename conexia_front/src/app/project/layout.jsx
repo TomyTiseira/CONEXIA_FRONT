@@ -10,7 +10,7 @@ export default function ProjectLayout({ children }) {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-[#eaf5f2]">
-        <LoadingSpinner message="Cargando proyectos..." fullScreen={true} />
+        <LoadingSpinner message="Cargando..." fullScreen={true} showSubtext={false} />
       </div>
     }>
       <ProtectedRoute 

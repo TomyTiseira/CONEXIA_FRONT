@@ -5,13 +5,13 @@ import { motion } from 'framer-motion';
 import { 
   BarChart3, 
   Users,
-  AlertCircle,
-  Loader2
+  AlertCircle
 } from 'lucide-react';
 import { useProjectStatistics } from '@/hooks/project/useProjectStatistics';
 import { RoleStatsCard } from '@/components/project/statistics';
 import Navbar from '@/components/navbar/Navbar';
 import { fetchProjectById } from '@/service/projects/projectsFetch';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 /**
  * Página de estadísticas de postulaciones de un proyecto
@@ -45,10 +45,10 @@ export default function ProjectStatisticsPage({ params }) {
       <>
         <Navbar />
         <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-[#48a6a7] mx-auto mb-4" />
-            <p className="text-gray-600">Cargando estadísticas...</p>
-          </div>
+          <LoadingSpinner 
+            message="Cargando estadísticas..." 
+            fullScreen={false}
+          />
         </div>
       </>
     );
