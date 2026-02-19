@@ -1,20 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useServiceCategories } from '@/hooks/services';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { MdCleaningServices } from 'react-icons/md';
+import { useState, useEffect } from "react";
+import { useServiceCategories } from "@/hooks/services";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { MdCleaningServices } from "react-icons/md";
 
-const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} }) => {
+const ServiceFilters = ({
+  onFiltersChange,
+  loading = false,
+  currentFilters = {},
+}) => {
   const { categories, loading: categoriesLoading } = useServiceCategories();
   const [filters, setFilters] = useState({
     category: currentFilters.category || [],
-    priceMin: currentFilters.priceMin || '',
-    priceMax: currentFilters.priceMax || '',
-    sortBy: currentFilters.sortBy || '',
-    minRating: currentFilters.minRating || 1
+    priceMin: currentFilters.priceMin || "",
+    priceMax: currentFilters.priceMax || "",
+    sortBy: currentFilters.sortBy || "",
+    minRating: currentFilters.minRating || 1,
   });
   // Estados locales de inputs de precio para permitir tipear varios dígitos
-  const [priceMinInput, setPriceMinInput] = useState(currentFilters.priceMin || '');
-  const [priceMaxInput, setPriceMaxInput] = useState(currentFilters.priceMax || '');
+  const [priceMinInput, setPriceMinInput] = useState(
+    currentFilters.priceMin || "",
+  );
+  const [priceMaxInput, setPriceMaxInput] = useState(
+    currentFilters.priceMax || "",
+  );
 
   // Estados para colapsar secciones - detectar si es mobile
   const [isMobile, setIsMobile] = useState(false);
@@ -44,29 +52,30 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
     };
 
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Sincronizar con filtros externos
   useEffect(() => {
     setFilters({
       category: currentFilters.category || [],
-      priceMin: currentFilters.priceMin || '',
-      priceMax: currentFilters.priceMax || '',
-      sortBy: currentFilters.sortBy || '',
-      minRating: currentFilters.minRating !== undefined ? currentFilters.minRating : 1
+      priceMin: currentFilters.priceMin || "",
+      priceMax: currentFilters.priceMax || "",
+      sortBy: currentFilters.sortBy || "",
+      minRating:
+        currentFilters.minRating !== undefined ? currentFilters.minRating : 1,
     });
-    setPriceMinInput(currentFilters.priceMin || '');
-    setPriceMaxInput(currentFilters.priceMax || '');
+    setPriceMinInput(currentFilters.priceMin || "");
+    setPriceMaxInput(currentFilters.priceMax || "");
   }, [currentFilters]);
 
   const sortOptions = [
-    { value: '', label: 'Predeterminado' },
-    { value: 'price_asc', label: 'Precio: Menor a mayor' },
-    { value: 'price_desc', label: 'Precio: Mayor a menor' },
-    { value: 'newest', label: 'Más recientes' },
-    { value: 'oldest', label: 'Más antiguos' }
+    { value: "", label: "Predeterminado" },
+    { value: "price_asc", label: "Precio: Menor a mayor" },
+    { value: "price_desc", label: "Precio: Mayor a menor" },
+    { value: "newest", label: "Más recientes" },
+    { value: "oldest", label: "Más antiguos" },
   ];
 
   const handleFilterChange = (key, value) => {
@@ -78,52 +87,54 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
   const handleCategoryChange = (categoryId) => {
     const currentCategories = filters.category || [];
     let newCategories;
-    
-    if (categoryId === 'all') {
+
+    if (categoryId === "all") {
       // Si selecciona "Todas", limpia todas las demás
       newCategories = [];
     } else if (currentCategories.includes(categoryId)) {
-      newCategories = currentCategories.filter(id => id !== categoryId);
+      newCategories = currentCategories.filter((id) => id !== categoryId);
     } else {
       newCategories = [...currentCategories, categoryId];
     }
-    
-    handleFilterChange('category', newCategories);
+
+    handleFilterChange("category", newCategories);
   };
 
   // Commit helpers para precio (blur o Enter)
   const commitPriceMin = () => {
     // Permitir vacío
-    const val = priceMinInput === '' ? '' : String(priceMinInput).replace(/[^0-9]/g, '');
+    const val =
+      priceMinInput === "" ? "" : String(priceMinInput).replace(/[^0-9]/g, "");
     setPriceMinInput(val);
-    handleFilterChange('priceMin', val);
+    handleFilterChange("priceMin", val);
   };
   const commitPriceMax = () => {
-    const val = priceMaxInput === '' ? '' : String(priceMaxInput).replace(/[^0-9]/g, '');
+    const val =
+      priceMaxInput === "" ? "" : String(priceMaxInput).replace(/[^0-9]/g, "");
     setPriceMaxInput(val);
-    handleFilterChange('priceMax', val);
+    handleFilterChange("priceMax", val);
   };
 
   const clearFilters = () => {
     const clearedFilters = {
       category: [],
-      priceMin: '',
-      priceMax: '',
-      sortBy: '',
-      minRating: 1
+      priceMin: "",
+      priceMax: "",
+      sortBy: "",
+      minRating: 1,
     };
     setFilters(clearedFilters);
-    setPriceMinInput('');
-    setPriceMaxInput('');
+    setPriceMinInput("");
+    setPriceMaxInput("");
     onFiltersChange(clearedFilters);
   };
 
-  const hasActiveFilters = 
-    filters.category.length > 0 || 
-    filters.priceMin || 
-    filters.priceMax || 
+  const hasActiveFilters =
+    filters.category.length > 0 ||
+    filters.priceMin ||
+    filters.priceMax ||
     filters.sortBy ||
-    filters.minRating !== null && filters.minRating !== undefined;
+    (filters.minRating !== null && filters.minRating !== undefined);
 
   return (
     <div className="bg-white rounded-xl shadow p-5 mb-4">
@@ -146,22 +157,27 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
           className="flex items-center justify-between w-full mb-3 cursor-pointer md:hidden"
           onClick={() => setShowSort(!showSort)}
         >
-          <h3 className="text-base font-medium text-conexia-green">Ordenamiento</h3>
+          <h3 className="text-base font-medium text-conexia-green">
+            Ordenamiento
+          </h3>
           <div>
             {showSort ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
         </button>
-        
+
         {/* En desktop siempre visible, en mobile colapsable */}
-        <div className={`space-y-2 ${showSort ? 'block' : 'hidden'} md:block`}>
-          {sortOptions.map(option => (
-            <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+        <div className={`space-y-2 ${showSort ? "block" : "hidden"} md:block`}>
+          {sortOptions.map((option) => (
+            <label
+              key={option.value}
+              className="flex items-center gap-2 cursor-pointer"
+            >
               <input
                 type="radio"
                 name="sortBy"
                 value={option.value}
                 checked={filters.sortBy === option.value}
-                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                onChange={(e) => handleFilterChange("sortBy", e.target.value)}
                 className="accent-conexia-green"
               />
               <span className="text-sm text-conexia-green">{option.label}</span>
@@ -181,40 +197,65 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
           className="flex items-center justify-between w-full mb-3 cursor-pointer"
           onClick={() => setShowCategories(!showCategories)}
         >
-          <h3 className="text-base font-medium text-conexia-green">Categorías</h3>
+          <h3 className="text-base font-medium text-conexia-green">
+            Categorías
+          </h3>
           <div>
-            {showCategories ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            {showCategories ? (
+              <ChevronUp size={20} />
+            ) : (
+              <ChevronDown size={20} />
+            )}
           </div>
         </button>
-        
-        <div className={`space-y-2 ${showCategories ? 'block' : 'hidden'}`}>
+
+        <div className={`space-y-2 ${showCategories ? "block" : "hidden"}`}>
           {/* Opción "Todas" */}
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={filters.category.length === 0}
-              onChange={() => handleCategoryChange('all')}
+              onChange={() => handleCategoryChange("all")}
               className="accent-conexia-green"
             />
-            <span className="text-sm text-conexia-green font-medium">Todas</span>
+            <span className="text-sm text-conexia-green font-medium">
+              Todas
+            </span>
           </label>
-          
+
           {categoriesLoading ? (
-            <div className="text-sm text-gray-500">Cargando categorías...</div>
+            <>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+                  <div
+                    className="h-3.5 bg-gray-200 rounded animate-pulse"
+                    style={{ width: `${60 + i * 15}px` }}
+                  />
+                </div>
+              ))}
+            </>
           ) : categories?.length > 0 ? (
-            categories.map(category => (
-              <label key={category.id} className="flex items-center gap-2 cursor-pointer">
+            categories.map((category) => (
+              <label
+                key={category.id}
+                className="flex items-center gap-2 cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   checked={filters.category.includes(category.id)}
                   onChange={() => handleCategoryChange(category.id)}
                   className="accent-conexia-green"
                 />
-                <span className="text-sm text-conexia-green">{category.name}</span>
+                <span className="text-sm text-conexia-green">
+                  {category.name}
+                </span>
               </label>
             ))
           ) : (
-            <div className="text-sm text-gray-500">No hay categorías disponibles</div>
+            <div className="text-sm text-gray-500">
+              No hay categorías disponibles
+            </div>
           )}
         </div>
       </div>
@@ -225,19 +266,23 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
           className="flex items-center justify-between w-full mb-3 cursor-pointer"
           onClick={() => setShowRating(!showRating)}
         >
-          <h3 className="text-base font-medium text-conexia-green">Calificaciones</h3>
+          <h3 className="text-base font-medium text-conexia-green">
+            Calificaciones
+          </h3>
           <div>
             {showRating ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
         </button>
-        
-        <div className={`space-y-2 ${showRating ? 'block' : 'hidden'}`}>
+
+        <div className={`space-y-2 ${showRating ? "block" : "hidden"}`}>
           {/* Solo 5 estrellas */}
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={filters.minRating === 5}
-              onChange={() => handleFilterChange('minRating', filters.minRating === 5 ? 1 : 5)}
+              onChange={() =>
+                handleFilterChange("minRating", filters.minRating === 5 ? 1 : 5)
+              }
               className="accent-conexia-green"
             />
             <div className="flex items-center gap-1.5">
@@ -261,7 +306,9 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
             <input
               type="checkbox"
               checked={filters.minRating === 4}
-              onChange={() => handleFilterChange('minRating', filters.minRating === 4 ? 1 : 4)}
+              onChange={() =>
+                handleFilterChange("minRating", filters.minRating === 4 ? 1 : 4)
+              }
               className="accent-conexia-green"
             />
             <div className="flex items-center gap-1.5">
@@ -275,7 +322,10 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ))}
-                <svg className="w-3.5 h-3.5 fill-gray-300 text-gray-300" viewBox="0 0 24 24">
+                <svg
+                  className="w-3.5 h-3.5 fill-gray-300 text-gray-300"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
               </div>
@@ -288,7 +338,9 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
             <input
               type="checkbox"
               checked={filters.minRating === 3}
-              onChange={() => handleFilterChange('minRating', filters.minRating === 3 ? 1 : 3)}
+              onChange={() =>
+                handleFilterChange("minRating", filters.minRating === 3 ? 1 : 3)
+              }
               className="accent-conexia-green"
             />
             <div className="flex items-center gap-1.5">
@@ -303,7 +355,11 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
                   </svg>
                 ))}
                 {[4, 5].map((star) => (
-                  <svg key={star} className="w-3.5 h-3.5 fill-gray-300 text-gray-300" viewBox="0 0 24 24">
+                  <svg
+                    key={star}
+                    className="w-3.5 h-3.5 fill-gray-300 text-gray-300"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ))}
@@ -317,7 +373,9 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
             <input
               type="checkbox"
               checked={filters.minRating === 2}
-              onChange={() => handleFilterChange('minRating', filters.minRating === 2 ? 1 : 2)}
+              onChange={() =>
+                handleFilterChange("minRating", filters.minRating === 2 ? 1 : 2)
+              }
               className="accent-conexia-green"
             />
             <div className="flex items-center gap-1.5">
@@ -332,7 +390,11 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
                   </svg>
                 ))}
                 {[3, 4, 5].map((star) => (
-                  <svg key={star} className="w-3.5 h-3.5 fill-gray-300 text-gray-300" viewBox="0 0 24 24">
+                  <svg
+                    key={star}
+                    className="w-3.5 h-3.5 fill-gray-300 text-gray-300"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ))}
@@ -346,7 +408,7 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
             <input
               type="checkbox"
               checked={filters.minRating === 1}
-              onChange={() => handleFilterChange('minRating', 1)}
+              onChange={() => handleFilterChange("minRating", 1)}
               className="accent-conexia-green"
             />
             <div className="flex items-center gap-1.5">
@@ -358,7 +420,11 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
                 {[2, 3, 4, 5].map((star) => (
-                  <svg key={star} className="w-3.5 h-3.5 fill-gray-300 text-gray-300" viewBox="0 0 24 24">
+                  <svg
+                    key={star}
+                    className="w-3.5 h-3.5 fill-gray-300 text-gray-300"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ))}
@@ -380,10 +446,12 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
             {showPrice ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
         </button>
-        
-        <div className={`space-y-3 ${showPrice ? 'block' : 'hidden'}`}>
+
+        <div className={`space-y-3 ${showPrice ? "block" : "hidden"}`}>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Precio mínimo</label>
+            <label className="block text-xs text-gray-500 mb-1">
+              Precio mínimo
+            </label>
             <input
               type="text"
               inputMode="numeric"
@@ -391,17 +459,23 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
               placeholder="Min"
               value={priceMinInput}
               onChange={(e) => {
-                const onlyDigits = e.target.value.replace(/[^0-9]/g, '');
+                const onlyDigits = e.target.value.replace(/[^0-9]/g, "");
                 setPriceMinInput(onlyDigits);
               }}
               onBlur={commitPriceMin}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green/50 focus:border-conexia-green"
               disabled={loading}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Precio máximo</label>
+            <label className="block text-xs text-gray-500 mb-1">
+              Precio máximo
+            </label>
             <input
               type="text"
               inputMode="numeric"
@@ -409,11 +483,15 @@ const ServiceFilters = ({ onFiltersChange, loading = false, currentFilters = {} 
               placeholder="Max"
               value={priceMaxInput}
               onChange={(e) => {
-                const onlyDigits = e.target.value.replace(/[^0-9]/g, '');
+                const onlyDigits = e.target.value.replace(/[^0-9]/g, "");
                 setPriceMaxInput(onlyDigits);
               }}
               onBlur={commitPriceMax}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green/50 focus:border-conexia-green"
               disabled={loading}
             />
