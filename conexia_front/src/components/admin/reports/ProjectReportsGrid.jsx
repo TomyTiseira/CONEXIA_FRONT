@@ -5,6 +5,7 @@ import BackButton from '@/components/ui/BackButton';
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchProjectReports } from '@/service/reports/reportsFetch';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ProjectReportsGrid({ projectId }) {
   const [reports, setReports] = useState([]);
@@ -22,6 +23,10 @@ export default function ProjectReportsGrid({ projectId }) {
 
   useEffect(() => {
     if (!projectId) return;
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     setLoading(true);
     fetchProjectReports(projectId, page)
       .then(data => {
@@ -71,7 +76,9 @@ export default function ProjectReportsGrid({ projectId }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" className="p-6 text-center text-conexia-green">Cargando reportes...</td>
+                <td colSpan="6" className="p-6 text-center">
+                  <LoadingSpinner message="Cargando reportes..." fullScreen={false} />
+                </td>
               </tr>
             ) : reports.length === 0 ? (
               <tr>

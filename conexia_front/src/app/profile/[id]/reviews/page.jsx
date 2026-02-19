@@ -45,6 +45,10 @@ export default function ReviewsPage() {
   useEffect(() => {
     let mounted = true;
     async function loadProfile() {
+      // No cargar si está en proceso de logout
+      if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+        return;
+      }
       try {
         const data = await getProfileById(id);
         if (!mounted) return;

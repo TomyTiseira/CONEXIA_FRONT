@@ -51,14 +51,7 @@ export default function UserConnectionsPage() {
   }, [loading, pagination?.hasNextPage, loadMore, page]);
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fcfc]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-          <p className="text-conexia-green">Cargando conexiones...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingSpinner message="Cargando conexiones..." fullScreen={true} />}>
       <ProtectedRoute
         allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR]}
         fallbackComponent={<NotFound />}
@@ -89,7 +82,7 @@ export default function UserConnectionsPage() {
                   )}
                 </div>
                 {loading && friends.length === 0 ? (
-                  <div className="text-conexia-green/70 text-center py-8">Cargando conexiones...</div>
+                  <LoadingSpinner message="Cargando conexiones..." fullScreen={false} />
                 ) : error ? (
                   <div className="text-conexia-green/70 text-center py-8">{error}</div>
                 ) : friends.length === 0 ? (
@@ -102,7 +95,7 @@ export default function UserConnectionsPage() {
                   </div>
                 )}
                 {loading && friends.length > 0 && (
-                  <div className="text-conexia-green/70 text-center py-4">Cargando más conexiones...</div>
+                  <LoadingSpinner message="Cargando más conexiones..." fullScreen={false} />
                 )}
                 {!pagination?.hasNextPage && friends.length > 0 && (
                   <div className="text-conexia-green/60 py-4 text-center">No hay más conexiones.</div>

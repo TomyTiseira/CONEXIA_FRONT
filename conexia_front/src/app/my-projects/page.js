@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { fetchMyProjects } from "@/service/projects/projectsFetch";
@@ -15,9 +15,6 @@ import {
   AlertCircle,
   Eye,
   TrendingUp,
-  FileText,
-  ArrowDown,
-  ArrowUp,
 } from "lucide-react";
 import { ROLES } from "@/constants/roles";
 import NavbarCommunity from "@/components/navbar/NavbarCommunity";
@@ -27,6 +24,7 @@ import { PlanComparisonBanner } from "@/components/plans";
 import { UpgradePlanButton } from "@/components/plans";
 import { config } from "@/config";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -50,13 +48,13 @@ export default function MyProjectsPage() {
   const [totalPostulations, setTotalPostulations] = useState(0);
   const [activeProjects, setActiveProjects] = useState(0);
   const [totalAllProjects, setTotalAllProjects] = useState(0);
-  const [sortConfig, setSortConfig] = useState({
-    key: "postulations",
-    direction: "desc",
-  });
 
   const loadProjects = useCallback(async () => {
     if (!user?.id) return;
+    // No hacer llamadas si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -100,6 +98,10 @@ export default function MyProjectsPage() {
   }, [user?.id, filters.page, showInactive]);
 
   useEffect(() => {
+    // No cargar proyectos si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     loadProjects();
   }, [loadProjects]);
 
@@ -116,21 +118,6 @@ export default function MyProjectsPage() {
     router.push(`/project/${projectId}?from=my-projects`);
   };
 
-  const handleSort = (key) => {
-    setSortConfig((prev) => {
-      // Si es la misma columna, alternar dirección
-      if (prev.key === key) {
-        if (prev.direction === "desc") {
-          return { key, direction: "asc" };
-        } else {
-          return { key, direction: "desc" };
-        }
-      }
-      // Si es una columna diferente, empezar con descendente
-      return { key, direction: "desc" };
-    });
-  };
-
   // Helper para URLs de imagen del proyecto
   const getProjectImageUrl = (img) => {
     if (!img) return null;
@@ -138,26 +125,6 @@ export default function MyProjectsPage() {
     return `${config.IMAGE_URL}/projects/images/${img}`;
   };
 
-  const sortedProjects = useMemo(() => {
-    if (!sortConfig.key) return projects;
-
-    // Crear una copia antes de ordenar para no mutar el estado
-    return [...projects].sort((a, b) => {
-      if (sortConfig.key === "postulations") {
-        const countA = a.postulationsCount || 0;
-        const countB = b.postulationsCount || 0;
-        return sortConfig.direction === "desc"
-          ? countB - countA
-          : countA - countB;
-      } else if (sortConfig.key === "status") {
-        const statusA = a.active ? "Activo" : "Inactivo";
-        const statusB = b.active ? "Activo" : "Inactivo";
-        const comparison = statusA.localeCompare(statusB);
-        return sortConfig.direction === "desc" ? -comparison : comparison;
-      }
-      return 0;
-    });
-  }, [projects, sortConfig]);
 
   const renderNavbar = () => {
     if (user?.role === ROLES.ADMIN) {
@@ -292,59 +259,6 @@ export default function MyProjectsPage() {
               </div>
 
               <div className="flex flex-wrap gap-2 items-center">
-                {/* Ordenamiento */}
-                <span className="text-sm font-medium text-gray-700">
-                  Ordenar:
-                </span>
-
-                {/* Botón ordenar por solicitudes */}
-                <button
-                  onClick={() => handleSort("postulations")}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
-                    sortConfig.key === "postulations"
-                      ? "border-conexia-green bg-conexia-green text-white shadow-sm"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                  title={
-                    sortConfig.key === "postulations"
-                      ? `Ordenado por solicitudes ${sortConfig.direction === "desc" ? "descendente" : "ascendente"}`
-                      : "Ordenar por solicitudes"
-                  }
-                >
-                  <Users size={16} />
-                  <span className="text-sm font-medium">Solicitudes</span>
-                  {sortConfig.key === "postulations" &&
-                    (sortConfig.direction === "desc" ? (
-                      <ArrowDown size={16} className="opacity-90" />
-                    ) : (
-                      <ArrowUp size={16} className="opacity-90" />
-                    ))}
-                </button>
-
-                {/* Botón ordenar por estado */}
-                <button
-                  onClick={() => handleSort("status")}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
-                    sortConfig.key === "status"
-                      ? "border-conexia-green bg-conexia-green text-white shadow-sm"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                  title={
-                    sortConfig.key === "status"
-                      ? `Ordenado por estado ${sortConfig.direction === "desc" ? "Z-A" : "A-Z"}`
-                      : "Ordenar por estado"
-                  }
-                >
-                  <FileText size={16} />
-                  <span className="text-sm font-medium">Estado</span>
-                  {sortConfig.key === "status" &&
-                    (sortConfig.direction === "desc" ? (
-                      <ArrowDown size={16} className="opacity-90" />
-                    ) : (
-                      <ArrowUp size={16} className="opacity-90" />
-                    ))}
-                </button>
-
                 {canCreateContent ? (
                   <button
                     onClick={() => router.push("/project/create")}
@@ -369,10 +283,7 @@ export default function MyProjectsPage() {
 
           {/* Contenido */}
           {loading && (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-conexia-green mx-auto"></div>
-              <p className="text-gray-600 mt-4">Cargando proyectos...</p>
-            </div>
+            <LoadingSpinner message="Cargando proyectos" fullScreen={false} />
           )}
 
           {error && (
@@ -423,7 +334,7 @@ export default function MyProjectsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {sortedProjects.map((project) => (
+                    {projects.map((project) => (
                       <tr key={project.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="flex items-start gap-3">
@@ -496,7 +407,7 @@ export default function MyProjectsPage() {
 
               {/* Vista Mobile: Cards */}
               <div className="lg:hidden space-y-4">
-                {sortedProjects.map((project) => (
+                {projects.map((project) => (
                   <div
                     key={project.id}
                     className="bg-white rounded-lg shadow-sm p-4"

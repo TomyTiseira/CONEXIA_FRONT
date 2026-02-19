@@ -29,6 +29,10 @@ export default function CompliancesPage() {
 
   // Configurar userId cuando esté disponible
   useEffect(() => {
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (user?.id) {
       setFilters(prev => ({ ...prev, userId: user.id }));
       fetchStats();
@@ -77,6 +81,10 @@ export default function CompliancesPage() {
 
   // Redirect si no está autenticado
   useEffect(() => {
+    // No redirigir si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (!authLoading && !user) {
       router.push('/login');
     }

@@ -1,5 +1,5 @@
 'use client';
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -11,6 +11,7 @@ import {
 import { useProjectStatistics } from '@/hooks/project/useProjectStatistics';
 import { RoleStatsCard } from '@/components/project/statistics';
 import Navbar from '@/components/navbar/Navbar';
+import { fetchProjectById } from '@/service/projects/projectsFetch';
 
 /**
  * Página de estadísticas de postulaciones de un proyecto
@@ -21,6 +22,22 @@ export default function ProjectStatisticsPage({ params }) {
   const router = useRouter();
   const { data, isLoading, error } = useProjectStatistics(projectId);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
+  const [project, setProject] = useState(null);
+
+  useEffect(() => {
+    const loadProject = async () => {
+      try {
+        const projectData = await fetchProjectById(projectId);
+        setProject(projectData);
+      } catch (err) {
+        console.error('Error loading project:', err);
+      }
+    };
+    
+    if (projectId) {
+      loadProject();
+    }
+  }, [projectId]);
 
   // Loading state
   if (isLoading) {
@@ -156,126 +173,144 @@ export default function ProjectStatisticsPage({ params }) {
               <div className="w-10"></div>
             </div>
 
-            <div className="text-left">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-1">
-                {projectTitle}
-              </h2>
-              <p className="text-gray-600 text-sm">
-                Análisis detallado de las postulaciones recibidas
-              </p>
-            </div>
           </div>
 
-        {/* Resumen General */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
-        >
-          <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Users className="w-6 h-6 text-[#48a6a7]" />
-            Resumen general
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Total de postulaciones */}
-            <div className="bg-gradient-to-br from-[#edf6f6] to-white rounded-lg p-4 border-2 border-[#48a6a7]/20">
-              <div className="text-4xl font-bold text-[#48a6a7] mb-1">
-                {totalPostulations}
-              </div>
-              <div className="text-sm font-medium text-gray-700">
-                Postulaciones totales
-              </div>
-            </div>
-
-            {/* Postulaciones por rol */}
-            {postulationsByRole && postulationsByRole.map((role) => {
-              return (
-                <div
-                  key={role.roleId}
-                  className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-4 border-2 border-blue-200"
-                >
-                  <div className="text-3xl font-bold text-blue-600 mb-1">
-                    {role.totalPostulations}
-                  </div>
-                  <div className="text-sm font-medium text-gray-700">
-                    {role.roleName}
-                  </div>
+          {/* Información del proyecto */}
+          {project && (
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Proyecto</p>
+                  <h2 className="text-lg font-semibold text-conexia-green mb-1 break-words">
+                    {project.title}
+                  </h2>
+                  <p className="text-sm text-gray-500 break-words whitespace-pre-line">
+                    {project.description && project.description.length > 180
+                      ? `${project.description.substring(0, 180)}...`
+                      : project.description || 'Sin descripción'}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
-        </motion.div>
 
-        {/* Sin postulaciones */}
-        {totalPostulations === 0 && (
+                <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center min-w-[180px] w-full md:w-auto md:flex-shrink-0 max-w-[280px] mx-auto md:mx-0 md:max-w-none">
+                  <p className="text-sm text-gray-600">Total de postulaciones</p>
+                  <p className="text-3xl font-bold text-gray-900 leading-tight mt-1">
+                    {totalPostulations}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Resumen General */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white rounded-xl shadow-lg p-12 text-center"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-white rounded-xl shadow-lg p-6 mb-8"
           >
-            <Users className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">
-              Aún no hay postulaciones
+            <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Users className="w-6 h-6 text-[#48a6a7]" />
+              Resumen general
             </h3>
-            <p className="text-gray-600 mb-6">
-              Este proyecto aún no ha recibido postulaciones. Compártelo para atraer colaboradores.
-            </p>
-            <button
-              onClick={() => router.push(`/project/${projectId}`)}
-              className="bg-[#48a6a7] hover:bg-[#419596] text-white px-6 py-3 rounded-lg font-semibold transition"
-            >
-              Ver proyecto
-            </button>
-          </motion.div>
-        )}
 
-        {/* Tabs de roles */}
-        {evaluationStatsByRole && evaluationStatsByRole.length > 0 && (
-          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Total de postulaciones */}
+              <div className="bg-gradient-to-br from-[#edf6f6] to-white rounded-lg p-4 border-2 border-[#48a6a7]/20">
+                <div className="text-4xl font-bold text-[#48a6a7] mb-1">
+                  {totalPostulations}
+                </div>
+                <div className="text-sm font-medium text-gray-700">
+                  Postulaciones totales
+                </div>
+              </div>
+
+              {/* Postulaciones por rol */}
+              {postulationsByRole && postulationsByRole.map((role) => {
+                return (
+                  <div
+                    key={role.roleId}
+                    className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-4 border-2 border-blue-200"
+                  >
+                    <div className="text-3xl font-bold text-blue-600 mb-1">
+                      {role.totalPostulations}
+                    </div>
+                    <div className="text-sm font-medium text-gray-700">
+                      {role.roleName}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Sin postulaciones */}
+          {totalPostulations === 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="mb-6"
+              className="bg-white rounded-xl shadow-lg p-12 text-center"
             >
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
-                Estadísticas por rol
+              <Users className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                Aún no hay postulaciones
               </h3>
-              <div className="flex flex-wrap gap-3">
-                {evaluationStatsByRole.map((roleStat) => (
-                  <button
-                    key={roleStat.roleId}
-                    onClick={() => setSelectedRoleId(roleStat.roleId)}
-                    className={`
-                      px-6 py-3 rounded-lg font-semibold transition-all duration-200
-                      ${effectiveSelectedRoleId === roleStat.roleId
-                        ? 'bg-[#48a6a7] text-white shadow-lg scale-105'
-                        : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-[#48a6a7]'
-                      }
-                    `}
-                  >
-                    {roleStat.roleName}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Estadísticas del rol seleccionado */}
-            {selectedRoleStats && (
-              <motion.div
-                key={effectiveSelectedRoleId}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4 }}
+              <p className="text-gray-600 mb-6">
+                Este proyecto aún no ha recibido postulaciones. Compártelo para atraer colaboradores.
+              </p>
+              <button
+                onClick={() => router.push(`/project/${projectId}`)}
+                className="bg-[#48a6a7] hover:bg-[#419596] text-white px-6 py-3 rounded-lg font-semibold transition"
               >
-                <RoleStatsCard roleStats={{ ...selectedRoleStats, projectId }} />
+                Ver proyecto
+              </button>
+            </motion.div>
+          )}
+
+          {/* Tabs de roles */}
+          {evaluationStatsByRole && evaluationStatsByRole.length > 0 && (
+            <>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mb-6"
+              >
+                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  Estadísticas por rol
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {evaluationStatsByRole.map((roleStat) => (
+                    <button
+                      key={roleStat.roleId}
+                      onClick={() => setSelectedRoleId(roleStat.roleId)}
+                      className={`
+                        px-6 py-3 rounded-lg font-semibold transition-all duration-200
+                        ${effectiveSelectedRoleId === roleStat.roleId
+                          ? 'bg-[#48a6a7] text-white shadow-lg scale-105'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-[#48a6a7]'
+                        }
+                      `}
+                    >
+                      {roleStat.roleName}
+                    </button>
+                  ))}
+                </div>
               </motion.div>
-            )}
-          </>
-        )}
+
+              {/* Estadísticas del rol seleccionado */}
+              {selectedRoleStats && (
+                <motion.div
+                  key={effectiveSelectedRoleId}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <RoleStatsCard roleStats={{ ...selectedRoleStats, projectId }} />
+                </motion.div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </>

@@ -9,6 +9,7 @@ import Navbar from '@/components/navbar/Navbar';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
 import Toast from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { config } from '@/config';
 
 export default function ProjectApplicationPage() {
@@ -36,6 +37,10 @@ export default function ProjectApplicationPage() {
   const roleId = params.roleId;
 
   useEffect(() => {
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -54,47 +59,39 @@ export default function ProjectApplicationPage() {
         
         setRole(selectedRole);
 
-        // Verificar si ya tiene postulaciones a este rol
-        try {
-          const postulations = await getMyPostulationsByProjectAndRole(projectId, roleId);
-          setExistingPostulations(postulations);
+        // Optimización: Usar userPostulationStatus del rol en lugar de hacer llamada al API
+        const userStatus = selectedRole.userPostulationStatus;
+        if (userStatus && userStatus.code) {
+          const statusCode = userStatus.code.toLowerCase();
+          const statusName = userStatus.name || 'en proceso';
           
-          // NUEVA REGLA: No puede volver a postularse si ya existe CUALQUIER postulación previa
-          if (postulations && postulations.length > 0) {
-            const lastPostulation = postulations[0]; // La más reciente
-            const statusCode = lastPostulation.status?.code?.toLowerCase() || '';
-            const statusName = lastPostulation.status?.name || 'en proceso';
-            
-            let message = '';
-            if (statusCode === 'rechazada' || statusCode === 'rejected') {
-              message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
-            } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
-              message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
-            } else if (statusCode === 'cancelada' || statusCode === 'cancelled') {
-              message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
-            } else if (statusCode === 'expirada' || statusCode === 'expired') {
-              message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
-            } else if (statusCode === 'pendiente' || statusCode === 'pending' || statusCode === 'activo' || statusCode === 'active') {
-              message = `Ya tienes una postulación ${statusName} para este rol.`;
-            } else {
-              message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
-            }
-            
-            setHasExistingPostulation(true);
-            setToast({ 
-              type: 'error', 
-              message: message
-            });
-            
-            // Redirigir inmediatamente al detalle del proyecto
-            setLoading(false);
-            setTimeout(() => {
-              router.push(`/project/${projectId}`);
-            }, 2000);
-            return; // Detener la carga del proyecto
+          let message = '';
+          if (statusCode === 'rechazada' || statusCode === 'rejected') {
+            message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
+          } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
+            message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
+          } else if (statusCode === 'cancelada' || statusCode === 'cancelled' || statusCode === 'cancelled_by_moderation' || statusCode === 'cancelled_by_suspension') {
+            message = `Tu postulación fue cancelada. No puedes volver a postularte a este rol.`;
+          } else if (statusCode === 'evaluacion_expirada' || statusCode === 'expirada' || statusCode === 'expired') {
+            message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
+          } else if (statusCode === 'pendiente_evaluacion' || statusCode === 'pendiente' || statusCode === 'pending' || statusCode === 'activo' || statusCode === 'active') {
+            message = `Ya tienes una postulación ${statusName} para este rol.`;
+          } else {
+            message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
           }
-        } catch (error) {
-          console.error('Error checking postulations:', error);
+          
+          setHasExistingPostulation(true);
+          setToast({ 
+            type: 'error', 
+            message: message
+          });
+          
+          // Redirigir inmediatamente al detalle del proyecto
+          setLoading(false);
+          setTimeout(() => {
+            router.push(`/project/${projectId}`);
+          }, 2000);
+          return; // Detener la carga del proyecto
         }
 
         // Inicializar respuestas si hay preguntas
@@ -121,6 +118,24 @@ export default function ProjectApplicationPage() {
   const handleFileChange = (e, fileType = 'cv') => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validar tamaño del archivo (máximo 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+      if (file.size > maxSize) {
+        setFieldErrors(prev => ({
+          ...prev,
+          [fileType]: 'El archivo es demasiado grande. Máximo permitido: 10MB'
+        }));
+        e.target.value = null; // Limpiar el input
+        return;
+      }
+      
+      // Limpiar error si existía
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fileType];
+        return newErrors;
+      });
+      
       setApplicationData(prev => ({
         ...prev,
         [fileType]: file
@@ -157,31 +172,8 @@ export default function ProjectApplicationPage() {
                           applicationTypes.includes('INVESTOR') ||
                           role.title?.toLowerCase().includes('inversor');
 
-    // Verificar si ya tiene CUALQUIER postulación previa (nueva regla)
-    if (existingPostulations && existingPostulations.length > 0) {
-      const lastPostulation = existingPostulations[0];
-      const statusCode = lastPostulation.status?.code?.toLowerCase() || '';
-      const statusName = lastPostulation.status?.name || 'en proceso';
-      
-      let message = '';
-      if (statusCode === 'cancelada' || statusCode === 'cancelled') {
-        message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
-      } else if (statusCode === 'rechazada' || statusCode === 'rejected') {
-        message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
-      } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
-        message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
-      } else if (statusCode === 'expirada' || statusCode === 'expired') {
-        message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
-      } else {
-        message = `Ya tienes una postulación ${statusName} para este rol. No puedes volver a postularte.`;
-      }
-      
-      setToast({ 
-        type: 'error', 
-        message: message
-      });
-      return false;
-    }
+    // Esta validación ya no es necesaria porque se hace en el useEffect con userPostulationStatus
+    // Se eliminó para mejorar performance
 
     // Validar CV si es requerido (para CV, PARTNER, INVESTOR)
     if ((applicationTypes.includes('CV') || applicationType === 'CV' || isPartnerRole || isInvestorRole) && !applicationData.cv) {
@@ -313,7 +305,9 @@ export default function ProjectApplicationPage() {
       
       const errorMsg = error.message?.toLowerCase() || '';
       
-      if (errorMsg.includes('already applied') || errorMsg.includes('ya postulado') || errorMsg.includes('ya te postulaste')) {
+      if (errorMsg.includes('reached the maximum number of collaborators') || errorMsg.includes('máximo de colaboradores')) {
+        errorMessage = 'Este rol ya alcanzó el número máximo de colaboradores. No hay vacantes disponibles.';
+      } else if (errorMsg.includes('already applied') || errorMsg.includes('ya postulado') || errorMsg.includes('ya te postulaste')) {
         errorMessage = 'Ya te has postulado anteriormente a este rol.';
       } else if (errorMsg.includes('project not found') || errorMsg.includes('proyecto no encontrado')) {
         errorMessage = 'El proyecto no está disponible en este momento.';
@@ -347,7 +341,7 @@ export default function ProjectApplicationPage() {
       <div className="min-h-screen bg-[#f3f9f8]">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="text-conexia-green">Cargando...</div>
+          <LoadingSpinner message="Cargando formulario de postulación..." fullScreen={false} />
         </div>
       </div>
     );
@@ -424,7 +418,7 @@ export default function ProjectApplicationPage() {
                 const labels = { 
                   'CV': 'CV', 
                   'QUESTIONS': 'Preguntas', 
-                  'EVALUATION': 'Evaluación Técnica',
+                  'EVALUATION': 'Evaluación técnica',
                   'PARTNER': 'Socio',
                   'INVESTOR': 'Inversor'
                 };
@@ -624,16 +618,21 @@ export default function ProjectApplicationPage() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="bg-conexia-green hover:bg-conexia-green/90"
+                className="bg-conexia-green hover:bg-conexia-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting 
-                  ? 'Enviando...' 
-                  : (role?.applicationTypes?.includes('EVALUATION') || 
-                     role?.applicationType === 'EVALUATION' || 
-                     role?.applicationType === 'MIXED')
-                    ? 'Continuar con prueba técnica'
-                    : 'Enviar postulación'
-                }
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enviando...
+                  </span>
+                ) : (role?.applicationTypes?.includes('EVALUATION') || 
+                   role?.applicationType === 'EVALUATION' || 
+                   role?.applicationType === 'MIXED')
+                  ? 'Continuar con prueba técnica'
+                  : 'Enviar postulación'}
               </Button>
             </div>
           </form>
@@ -681,9 +680,17 @@ export default function ProjectApplicationPage() {
               <button
                 onClick={handleConfirmSubmit}
                 disabled={submitting}
-                className="flex-1 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting ? 'Enviando...' : 'Confirmar y enviar'}
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {applicationData.cv ? 'Subiendo archivo...' : 'Enviando postulación...'}
+                  </span>
+                ) : 'Confirmar y enviar'}
               </button>
             </div>
           </div>

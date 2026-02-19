@@ -9,6 +9,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { ROLES } from '@/constants/roles';
 import { useState } from 'react';
 import { NotFound } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function SettingsLayout({ children }) {
   const activeSection = useSelectedLayoutSegment() || 'account';
@@ -17,14 +18,7 @@ export default function SettingsLayout({ children }) {
   const toggleMobileMenu = () => setMenuOpen((prev) => !prev);
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-conexia-soft">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-          <p className="text-conexia-green">Cargando configuraciones...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingSpinner message="Cargando configuraciones" />}>
       <ProtectedRoute 
         allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MODERATOR]}
         fallbackComponent={<NotFound />}

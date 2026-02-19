@@ -33,6 +33,7 @@ import { ShieldCheck } from "lucide-react";
 import { PlanBadge } from "@/components/plans";
 import UpgradeBanner from "@/components/plans/UpgradeBanner";
 import UserRestrictionAlert from "@/components/common/UserRestrictionAlert";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function UserProfile() {
   const [accepting, setAccepting] = useState(false);
@@ -172,7 +173,7 @@ export default function UserProfile() {
     }
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
+  if (loading) return <LoadingSpinner message="Cargando perfil" />;
 
   if (error) {
     return <NotFound showHomeButton={true} showBackButton={true} />;

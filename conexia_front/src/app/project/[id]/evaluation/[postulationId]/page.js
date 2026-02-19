@@ -35,6 +35,10 @@ export default function TechnicalEvaluationPage() {
   const postulationId = params.postulationId;
 
   useEffect(() => {
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -241,7 +245,7 @@ export default function TechnicalEvaluationPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-conexia-green mb-2">
-              Evaluación Técnica
+              Evaluación técnica
             </h1>
             <p className="text-gray-600">
               Proyecto: <span className="font-medium">{project.title}</span>
@@ -273,7 +277,7 @@ export default function TechnicalEvaluationPage() {
                     href={role.evaluation.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline ml-2 text-sm"
+                    className="text-blue-600 hover:underline ml-2 text-sm break-all"
                   >
                     {role.evaluation.link}
                   </a>

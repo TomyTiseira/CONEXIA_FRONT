@@ -10,6 +10,7 @@ import { useFetch } from '@/hooks/useFetch';
 import { fetchPaymentAccounts, deleteBankAccount, fetchBankAccountById, editAccountAliasAndName, addBankAccount, addDigitalAccount } from '@/service/payment/paymentFetch';
 import EditAccountModal from './EditAccountModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function PaymentAccountsSection() {
   const { isInitialLoading, hasAnyRole } = useRoleValidation();
@@ -177,7 +178,7 @@ export default function PaymentAccountsSection() {
           </div>
           <div className="mt-4">
             {isLoading ? (
-              <div className="text-gray-500">Cargando cuentas bancarias...</div>
+              <LoadingSpinner message="Cargando cuentas bancarias..." fullScreen={false} />
             ) : error ? (
               <div className="text-red-600">Error al cargar cuentas</div>
             ) : bankAccounts.length === 0 ? (
@@ -245,7 +246,7 @@ export default function PaymentAccountsSection() {
           </div>
           <div className="mt-4">
             {isLoading ? (
-              <div className="text-gray-500">Cargando cuentas digitales...</div>
+              <LoadingSpinner message="Cargando cuentas digitales..." fullScreen={false} />
             ) : error ? (
               <div className="text-red-600">Error al cargar cuentas</div>
             ) : digitalAccounts.length === 0 ? (

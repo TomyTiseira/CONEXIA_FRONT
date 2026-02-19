@@ -14,14 +14,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore } from '@/store/userStore';
 import { ROLES } from '@/constants/roles';
 import { Sparkles } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const FILTERS = [
   { label: 'Proyectos', value: 'projects' },
   { label: 'Publicaciones', value: 'publications' },
   { label: 'Comentarios', value: 'comments' },
   { label: 'Servicios', value: 'services'},
-  { label: 'Reseñas de Usuarios', value: 'reviews'},
-  { label: 'Reseñas de Servicios', value: 'service-reviews'},
+  { label: 'Reseñas de usuarios', value: 'reviews'},
+  { label: 'Reseñas de servicios', value: 'service-reviews'},
 ];
 
 const ORDER_OPTIONS = [
@@ -66,6 +67,10 @@ export default function ReportsList() {
 
   useEffect(() => {
     if (!initialized) return;
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     setLoading(true);
     // Clear stale pagination while loading a different dataset
     setPagination(null);
@@ -231,7 +236,9 @@ export default function ReportsList() {
             <tbody>
               {loading ? (
                 <tr key="loading">
-                  <td colSpan="4" className="p-6 text-center text-conexia-green">Cargando reportes...</td>
+                  <td colSpan="4" className="p-6 text-center">
+                    <LoadingSpinner message="Cargando reportes..." fullScreen={false} />
+                  </td>
                 </tr>
               ) : filter === 'projects' ? (
                 projects.length === 0 ? (

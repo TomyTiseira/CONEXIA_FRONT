@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import BackButton from '@/components/ui/BackButton';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/navbar/Navbar';
@@ -12,6 +11,8 @@ import PostulationsTable from './PostulationsTable';
 import PostulationEvaluationModal from './PostulationEvaluationModal';
 import Toast from '@/components/ui/Toast';
 import Pagination from '@/components/common/Pagination';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Filter } from 'lucide-react';
 
 export default function ProjectPostulations({ projectId }) {
   const { user } = useAuth();
@@ -203,110 +204,225 @@ export default function ProjectPostulations({ projectId }) {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-conexia-green">Cargando...</div>
-      </div>
-    );
+    return <LoadingSpinner message="Cargando postulaciones..." fullScreen={true} />;
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">Proyecto no encontrado</div>
-      </div>
+      <>
+        <Navbar />
+        <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] flex items-center justify-center">
+          <div className="text-red-500">Proyecto no encontrado</div>
+        </div>
+      </>
     );
   }
 
   if (!isOwner) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">No tienes permisos para ver las postulaciones de este proyecto</div>
-      </div>
+      <>
+        <Navbar />
+        <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] flex items-center justify-center">
+          <div className="text-red-500">No tienes permisos para ver las postulaciones de este proyecto</div>
+        </div>
+      </>
     );
   }
 
   return (
     <>
       <Navbar />
-      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-6 md:px-6 pb-20 md:pb-8 flex flex-col items-center">
-        <div className="w-full max-w-7xl flex flex-col gap-6">
-          {/* Header */}
-          <div className="flex items-center mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-conexia-green">
-              Postulaciones
-            </h1>
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            {/* Mobile layout: botón atrás + título en primera fila, estadísticas abajo */}
+            <div className="flex flex-col gap-3 md:hidden">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => router.back()}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  title="Volver atrás"
+                >
+                  <div className="relative w-6 h-6">
+                    <svg
+                      className="w-6 h-6 text-conexia-green"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle
+                        cx="10"
+                        cy="10"
+                        r="8.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <line
+                        x1="6.5"
+                        y1="10"
+                        x2="13.5"
+                        y2="10"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <polyline
+                        points="9,7 6,10 9,13"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </button>
+                <h1 className="text-2xl font-bold text-conexia-green flex-1 text-center">
+                  Postulaciones
+                </h1>
+                <div className="w-10"></div>
+              </div>
+
+              <button
+                onClick={() => router.push(`/project/${projectId}/stats`)}
+                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-4 py-2 rounded-lg text-sm font-bold hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-[0_4px_15px_rgba(72,166,167,0.35)] hover:shadow-[0_6px_20px_rgba(65,149,150,0.45)] transform hover:scale-[1.02] whitespace-nowrap w-full"
+                title="Ver estadísticas de postulaciones"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>Estadísticas</span>
+              </button>
+            </div>
+
+            {/* Desktop layout: grid de 3 columnas */}
+            <div className="hidden md:grid md:grid-cols-[auto_1fr_auto] items-center gap-3">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+
+              <h1 className="text-2xl font-bold text-conexia-green text-center">
+                Postulaciones
+              </h1>
+
+              <button
+                onClick={() => router.push(`/project/${projectId}/stats`)}
+                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#48a6a7] to-[#419596] text-white px-4 py-2 rounded-lg text-sm font-bold hover:from-[#419596] hover:to-[#367d7d] transition-all shadow-[0_4px_15px_rgba(72,166,167,0.35)] hover:shadow-[0_6px_20px_rgba(65,149,150,0.45)] transform hover:scale-[1.02] whitespace-nowrap"
+                title="Ver estadísticas de postulaciones"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>Estadísticas</span>
+              </button>
+            </div>
           </div>
 
-          {/* Filtros y Botón de Estadísticas */}
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-            {/* Filtro por rol */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Filtrar por rol:</label>
-              <select
-                value={selectedRole}
-                onChange={(e) => handleRoleChange(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
-              >
-                <option value="">Todos los roles</option>
-                {projectRoles && projectRoles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.title || role.name || `Rol ${role.id}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Filtro por estado */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Filtrar por estado:</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-conexia-green"
-              >
-                                 
-                <option value="">Todos los estados</option>
-                {postulationStatuses.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Información del proyecto */}
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-700 mb-1">Proyecto</p>
+                <h2 className="text-lg font-semibold text-conexia-green mb-1 break-words">
+                  {project.title}
+                </h2>
+                <p className="text-sm text-gray-500 break-words whitespace-pre-line">
+                  {project.description && project.description.length > 180
+                    ? `${project.description.substring(0, 180)}...`
+                    : project.description || 'Sin descripción'}
+                </p>
+              </div>
 
-            {/* Botón de Estadísticas */}
-            <button
-              onClick={() => router.push(`/project/${projectId}/stats`)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2"
-              title="Ver estadísticas de postulaciones"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              Estadísticas
-            </button>
+              <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center min-w-[180px] w-full md:w-auto md:flex-shrink-0 max-w-[280px] mx-auto md:mx-0 md:max-w-none">
+                <p className="text-sm text-gray-600">Total de postulaciones</p>
+                <p className="text-3xl font-bold text-gray-900 leading-tight mt-1">
+                  {pagination?.totalItems ?? postulations.length}
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Project info */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold text-conexia-green mb-2">
-              {project.title}
-            </h2>
-            <p className="text-gray-600 text-sm break-words whitespace-pre-line max-w-full overflow-x-auto">
-              {project.description && project.description.length > 150
-                ? `${project.description.substring(0, 150)}...`
-                : project.description || 'Sin descripción'
-              }
-            </p>
+          {/* Filtros + acción */}
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter size={20} className="text-gray-500" />
+                  <span className="font-medium text-gray-700">Filtros:</span>
+                </div>
+
+                <select
+                  value={selectedRole}
+                  onChange={(e) => handleRoleChange(e.target.value)}
+                  className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green"
+                >
+                  <option value="">Todos los roles</option>
+                  {projectRoles && projectRoles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.title || role.name || `Rol ${role.id}`}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green"
+                >
+                  <option value="">Todos los estados</option>
+                  {postulationStatuses.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Tabla de postulaciones */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             {loadingProfiles ? (
-              <div className="p-8 text-center text-conexia-green">
-                Cargando postulaciones...
-              </div>
+              <LoadingSpinner message="Cargando postulaciones..." fullScreen={false} />
             ) : (
               <PostulationsTable
                 postulations={postulations}
@@ -327,11 +443,6 @@ export default function ProjectPostulations({ projectId }) {
               />
             </div>
           )}
-
-          {/* Botón Atrás */}
-          <div className="flex justify-start mt-6">
-            <BackButton onClick={() => router.push(`/project/${projectId}`)} />
-          </div>
         </div>
       </div>
 

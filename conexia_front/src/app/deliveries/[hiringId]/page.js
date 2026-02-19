@@ -33,6 +33,10 @@ export default function DeliverablesPage() {
   const [accessDenied, setAccessDenied] = useState(null);
 
   useEffect(() => {
+    // No cargar hiring si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (hiringId) {
       loadHiring().catch(() => null);
     }
@@ -51,6 +55,10 @@ export default function DeliverablesPage() {
   // Cargar entregables con validaciones
   useEffect(() => {
     const loadDeliverablesWithValidation = async () => {
+      // No cargar si está en proceso de logout
+      if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+        return;
+      }
       if (!hiringId || !hiring) return;
       if (authLoading || accessDenied) return;
 

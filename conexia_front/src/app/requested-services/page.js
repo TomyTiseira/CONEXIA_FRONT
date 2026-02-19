@@ -13,6 +13,7 @@ import { getUserDisplayName } from '@/utils/formatUserName';
 import { getUnitLabelPlural } from '@/utils/timeUnit';
 import { useUserStore } from '@/store/userStore';
 import Toast from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -163,10 +164,7 @@ export default function RequestedServicesPage() {
 
           {/* Contenido */}
           {loading && (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-conexia-green mx-auto"></div>
-              <p className="text-gray-600 mt-4">Cargando servicios...</p>
-            </div>
+            <LoadingSpinner message="Cargando servicios..." fullScreen={false} />
           )}
 
           {error && (

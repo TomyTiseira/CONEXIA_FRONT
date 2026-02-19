@@ -42,6 +42,10 @@ export default function MyPlanPage() {
 
   // Efecto para hacer scroll a la sección cuando viene desde hash
   useEffect(() => {
+    // No hacer scroll si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     // Verificar si hay hash en la URL
     const hash = window.location.hash;
     if (hash) {
