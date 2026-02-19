@@ -277,7 +277,7 @@ export default function TechnicalEvaluationPage() {
                     href={role.evaluation.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline ml-2 text-sm"
+                    className="text-blue-600 hover:underline ml-2 text-sm break-all"
                   >
                     {role.evaluation.link}
                   </a>

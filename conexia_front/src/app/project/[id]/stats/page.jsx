@@ -4,8 +4,6 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, 
-  ArrowLeft, 
-  Download, 
   Users,
   AlertCircle,
   Loader2
@@ -80,15 +78,53 @@ export default function ProjectStatisticsPage({ params }) {
   const selectedRoleStats = evaluationStatsByRole?.find(r => r.roleId === effectiveSelectedRoleId);
 
   return (
-    <div className="min-h-screen bg-[#f3f9f8] py-8">
-      <div className="container mx-auto px-4 max-w-7xl">
+    <div className="min-h-screen bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <BackButton
-            text="Volver al proyecto"
-            onClick={() => router.push(`/project/${projectId}`)}
-            className="mb-4"
-          />
+        <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Volver atrás"
+            >
+              <div className="relative w-6 h-6">
+                <svg
+                  className="w-6 h-6 text-conexia-green"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    cx="10"
+                    cy="10"
+                    r="8.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    fill="none"
+                  />
+                  <line
+                    x1="6.5"
+                    y1="10"
+                    x2="13.5"
+                    y2="10"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <polyline
+                    points="9,7 6,10 9,13"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </button>
+            <div className="flex-1"></div>
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: -20 }}
