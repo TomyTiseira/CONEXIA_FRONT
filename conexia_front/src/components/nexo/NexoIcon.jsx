@@ -31,15 +31,14 @@ export default function NexoIcon({ onClick, hasNewMessage, isMinimized }) {
         <span className="relative text-xl sm:text-3xl z-10">🦊</span>
       </div>
       
-      {/* Badge de conexión/estado - fuera del overflow-hidden */}
-      <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white shadow-md" />
-      
-      {/* Badge de notificación */}
-      {hasNewMessage && (
-        <div className="absolute -top-2 -right-2 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full border-2 border-white 
-                        flex items-center justify-center animate-pulse shadow-md">
-          <span className="text-[10px] sm:text-xs text-white font-bold">!</span>
-        </div>
+      {/* Badge de conexión/estado o notificación */}
+      {hasNewMessage ? (
+        /* Badge de notificación - reemplaza al verde cuando hay mensaje nuevo */
+        <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-[#48a6a7] rounded-full border-2 border-white 
+                        animate-pulse shadow-lg" />
+      ) : (
+        /* Badge de conexión/estado - se muestra cuando no hay mensajes nuevos */
+        <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white shadow-md" />
       )}
       
       {/* Tooltip: always show a single short label */}
