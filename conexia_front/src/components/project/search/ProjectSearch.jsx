@@ -27,6 +27,7 @@ import EmptyRecommendationsState from "./EmptyRecommendationsState";
 import RecommendationsLoading from "./RecommendationsLoading";
 import NoRecommendationsFound from "./NoRecommendationsFound";
 import CompactNoRecommendations from "./CompactNoRecommendations";
+import ProjectListSkeleton from "./ProjectListSkeleton";
 import MessagingWidget from "@/components/messaging/MessagingWidget";
 import { config } from "@/config";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
@@ -64,6 +65,7 @@ export default function ProjectSearch() {
   const pageSize = 12;
   const [allProjectsList, setAllProjectsList] = useState([]);
   const [isLoadingAllProjects, setIsLoadingAllProjects] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   // Toast state (e.g., for project created redirect)
   const [toast, setToast] = useState({
     visible: false,
@@ -177,6 +179,7 @@ export default function ProjectSearch() {
         // Si es "todas" (sin otros filtros), buscar todos los proyectos al backend con paginación real
         setSearched(true);
         setShowRecommendations(false);
+        setIsSearching(true);
         const params = {
           page,
           limit: pageSize,
@@ -191,10 +194,13 @@ export default function ProjectSearch() {
           setPagination(pag);
         } catch (error) {
           console.error("Error en fetchProjects:", error);
+        } finally {
+          setIsSearching(false);
         }
       } else if (hasAllFilters || hasActiveFilters) {
         setSearched(true);
         setShowRecommendations(false);
+        setIsSearching(true);
         // Normalizar filtros: si el array contiene 'all', enviar array vacío
         const normalizeArray = (arr) =>
           Array.isArray(arr)
@@ -211,13 +217,19 @@ export default function ProjectSearch() {
           page,
           limit: pageSize,
         };
-        const { projects, pagination: pag } = await fetchProjects(params);
-        // Limpiar duplicados y proyectos inválidos, sin limitar (el backend ya pagina y filtra)
-        const cleaned = removeDuplicateProjects(projects).filter(
-          (project) => project && project.id,
-        );
-        setResults(cleaned);
-        setPagination(pag);
+        try {
+          const { projects, pagination: pag } = await fetchProjects(params);
+          // Limpiar duplicados y proyectos inválidos, sin limitar (el backend ya pagina y filtra)
+          const cleaned = removeDuplicateProjects(projects).filter(
+            (project) => project && project.id,
+          );
+          setResults(cleaned);
+          setPagination(pag);
+        } catch (error) {
+          console.error("Error en fetchProjects:", error);
+        } finally {
+          setIsSearching(false);
+        }
       } else {
         // Si no hay filtros activos, resetear a estado inicial con recomendaciones
         setSearched(false);
@@ -399,7 +411,10 @@ export default function ProjectSearch() {
                           </div>
                         </>
                         {isLoadingAllProjects ? (
-                          <LoadingSpinner message="Cargando proyectos..." fullScreen={false} />
+                          <LoadingSpinner
+                            message="Cargando proyectos..."
+                            fullScreen={false}
+                          />
                         ) : allProjectsList.length > 0 ? (
                           <div className="min-h-[900px] flex flex-col">
                             <div className="flex-1">
@@ -439,7 +454,10 @@ export default function ProjectSearch() {
                 (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
                   <div>
                     {isLoadingAllProjects ? (
-                      <LoadingSpinner message="Cargando proyectos..." fullScreen={false} />
+                      <LoadingSpinner
+                        message="Cargando proyectos..."
+                        fullScreen={false}
+                      />
                     ) : allProjectsList.length > 0 ? (
                       <div className="min-h-[900px] flex flex-col">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">
@@ -522,17 +540,26 @@ export default function ProjectSearch() {
 
                   <div className="min-h-[900px] flex flex-col">
                     <div className="flex-1">
-                      <ProjectList projects={results} reserveGridSpace={true} />
+                      {isSearching ? (
+                        <ProjectListSkeleton count={6} />
+                      ) : (
+                        <ProjectList
+                          projects={results}
+                          reserveGridSpace={true}
+                        />
+                      )}
                     </div>
-                    <div className="mt-8 flex justify-center">
-                      <Pagination
-                        currentPage={pagination.currentPage}
-                        hasPreviousPage={pagination.hasPreviousPage}
-                        hasNextPage={pagination.hasNextPage}
-                        onPageChange={setPage}
-                        totalPages={pagination.totalPages}
-                      />
-                    </div>
+                    {!isSearching && (
+                      <div className="mt-8 flex justify-center">
+                        <Pagination
+                          currentPage={pagination.currentPage}
+                          hasPreviousPage={pagination.hasPreviousPage}
+                          hasNextPage={pagination.hasNextPage}
+                          onPageChange={setPage}
+                          totalPages={pagination.totalPages}
+                        />
+                      </div>
+                    )}
                   </div>
                 </>
               )}
