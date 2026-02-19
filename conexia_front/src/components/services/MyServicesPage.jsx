@@ -6,7 +6,7 @@ import { fetchUserServices } from '@/service/services/servicesFetch';
 import { fetchMyServiceRequests } from '@/service/service-hirings/serviceHiringsFetch';
 import { useUserStore } from '@/store/userStore';
 import { useAccountStatus } from '@/hooks/useAccountStatus';
-import { Briefcase, Users, Calendar, TrendingUp, ChevronUp, ChevronDown, ChevronsUpDown, ArrowDown, ArrowUp, FileText } from 'lucide-react';
+import { Briefcase, Users, Calendar, TrendingUp } from 'lucide-react';
 import { FaRegEye, FaFileInvoiceDollar, FaEllipsisH, FaExchangeAlt } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import { getUnitLabel } from '@/utils/timeUnit';
@@ -38,10 +38,6 @@ export default function MyServicesPage() {
   const [filters, setFilters] = useState({
     page: 1,
     includeInactive: false
-  });
-  const [sortConfig, setSortConfig] = useState({
-    key: 'updatedAt',
-    direction: 'desc'
   });
 
   useEffect(() => {
@@ -121,68 +117,6 @@ export default function MyServicesPage() {
     }));
   };
 
-  const handleSort = (key) => {
-    setSortConfig(prev => {
-      // Si es la misma columna, alternar dirección
-      if (prev.key === key) {
-        if (prev.direction === 'desc') {
-          return { key, direction: 'asc' };
-        } else {
-          return { key, direction: 'desc' };
-        }
-      }
-      // Si es una columna diferente, empezar con descendente
-      return { key, direction: 'desc' };
-    });
-  };
-
-  const getSortIcon = (columnKey) => {
-    if (sortConfig.key !== columnKey) {
-      return <ChevronsUpDown size={14} className="text-gray-400" />;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUp size={14} className="text-conexia-green" />
-      : <ChevronDown size={14} className="text-conexia-green" />;
-  };
-
-  const sortedServices = React.useMemo(() => {
-    if (!sortConfig.key) return services;
-    
-    return [...services].sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (sortConfig.key) {
-        case 'price':
-          aValue = a.price || 0;
-          bValue = b.price || 0;
-          break;
-        case 'requests':
-          aValue = (requestsCounts[a.id] || { total: 0 }).total;
-          bValue = (requestsCounts[b.id] || { total: 0 }).total;
-          break;
-        case 'updatedAt':
-          aValue = new Date(a.updatedAt);
-          bValue = new Date(b.updatedAt);
-          break;
-        case 'status': {
-          aValue = a.status || '';
-          bValue = b.status || '';
-          const comparison = aValue.localeCompare(bValue);
-          return sortConfig.direction === 'desc' ? -comparison : comparison;
-        }
-        default:
-          return 0;
-      }
-      
-      if (aValue < bValue) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-  }, [services, sortConfig, requestsCounts]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -348,51 +282,6 @@ export default function MyServicesPage() {
               </div>
               
               <div className="flex flex-wrap gap-2 items-center">
-                {/* Ordenamiento */}
-                <span className="text-sm font-medium text-gray-700">Ordenar:</span>
-                
-                {/* Botón ordenar por fecha */}
-                <button
-                  onClick={() => handleSort('updatedAt')}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
-                    sortConfig.key === 'updatedAt'
-                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                  }`}
-                  title={sortConfig.key === 'updatedAt' 
-                    ? `Ordenado por fecha ${sortConfig.direction === 'desc' ? 'descendente' : 'ascendente'}` 
-                    : 'Ordenar por fecha'}
-                >
-                  <Calendar size={16} />
-                  <span className="text-sm font-medium">Fecha</span>
-                  {sortConfig.key === 'updatedAt' && (
-                    sortConfig.direction === 'desc' 
-                      ? <ArrowDown size={16} className="opacity-90" />
-                      : <ArrowUp size={16} className="opacity-90" />
-                  )}
-                </button>
-
-                {/* Botón ordenar por estado */}
-                <button
-                  onClick={() => handleSort('status')}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${
-                    sortConfig.key === 'status'
-                      ? 'border-conexia-green bg-conexia-green text-white shadow-sm'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                  }`}
-                  title={sortConfig.key === 'status' 
-                    ? `Ordenado por estado ${sortConfig.direction === 'desc' ? 'Z-A' : 'A-Z'}` 
-                    : 'Ordenar por estado'}
-                >
-                  <FileText size={16} />
-                  <span className="text-sm font-medium">Estado</span>
-                  {sortConfig.key === 'status' && (
-                    sortConfig.direction === 'desc' 
-                      ? <ArrowDown size={16} className="opacity-90" />
-                      : <ArrowUp size={16} className="opacity-90" />
-                  )}
-                </button>
-
                 <RequireVerification action="publicar un servicio">
                   {canCreateContent ? (
                     <button
@@ -479,29 +368,11 @@ export default function MyServicesPage() {
                         >
                             Precio
                         </th>
-                        <th 
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors select-none group"
-                          onClick={() => handleSort('requests')}
-                          title="Click para ordenar por número de solicitudes"
-                        >
-                          <div className="flex items-center gap-2">
-                            Solicitudes
-                            <span className="group-hover:scale-110 transition-transform">
-                              {getSortIcon('requests')}
-                            </span>
-                          </div>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Solicitudes
                         </th>
-                        <th 
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors select-none group"
-                          onClick={() => handleSort('updatedAt')}
-                          title="Click para ordenar por fecha de actualización"
-                        >
-                          <div className="flex items-center gap-2">
-                            Última Actualización
-                            <span className="group-hover:scale-110 transition-transform">
-                              {getSortIcon('updatedAt')}
-                            </span>
-                          </div>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Última Actualización
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Acciones
@@ -509,7 +380,7 @@ export default function MyServicesPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {sortedServices.map((service) => {
+                      {services.map((service) => {
                         const counts = requestsCounts[service.id] || { total: 0, pending: 0 };
                         
                         return (
@@ -597,7 +468,7 @@ export default function MyServicesPage() {
 
                 {/* Cards para mobile */}
                 <div className="md:hidden space-y-4 p-4">
-                  {sortedServices.map((service) => {
+                  {services.map((service) => {
                     const counts = requestsCounts[service.id] || { total: 0, pending: 0 };
                     return (
                       <div key={service.id} className="bg-gray-50 rounded-lg p-4">
