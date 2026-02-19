@@ -1,28 +1,32 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { CheckCircle, X, FileText, Info } from 'lucide-react';
-import { usePostulation } from '@/hooks/postulations';
-import { ROLES } from '@/constants/roles';
-import PostulationModal from './PostulationModal';
-import Toast from '@/components/ui/Toast';
-import RequireVerification from '@/components/common/RequireVerification';
-import { useAccountStatus } from '@/hooks/useAccountStatus';
+import { useState } from "react";
+import { CheckCircle, X, FileText, Info } from "lucide-react";
+import { usePostulation } from "@/hooks/postulations";
+import { ROLES } from "@/constants/roles";
+import PostulationModal from "./PostulationModal";
+import Toast from "@/components/ui/Toast";
+import RequireVerification from "@/components/common/RequireVerification";
+import { useAccountStatus } from "@/hooks/useAccountStatus";
 
-export default function PostulationButton({ 
-  projectId, 
-  projectTitle, 
+export default function PostulationButton({
+  projectId,
+  projectTitle,
   project = null,
-  isOwner, 
+  isOwner,
   userRole,
   initialIsApplied = false,
-  className = '' 
+  className = "",
 }) {
   const [showModal, setShowModal] = useState(false);
-  const [toast, setToast] = useState({ visible: false, type: 'success', message: '' });
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "success",
+    message: "",
+  });
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const { canCreateContent, suspensionMessage } = useAccountStatus();
-  
+
   const {
     isApplied,
     loading,
@@ -33,11 +37,18 @@ export default function PostulationButton({
     checkingStatus,
     postulationStatus,
     initialLoad,
-  } = usePostulation(projectId, isOwner, initialIsApplied);
+  } = usePostulation(projectId, null, isOwner, initialIsApplied);
 
   // No mostrar botón si es owner, no es USER, está finalizado o el cupo está completo
-  const isFinished = project && project.endDate && require('@/utils/postulationValidation').isProjectFinished(project);
-  const isFull = project && typeof project.maxCollaborators === 'number' && typeof project.approvedApplications === 'number' && project.approvedApplications >= project.maxCollaborators;
+  const isFinished =
+    project &&
+    project.endDate &&
+    require("@/utils/postulationValidation").isProjectFinished(project);
+  const isFull =
+    project &&
+    typeof project.maxCollaborators === "number" &&
+    typeof project.approvedApplications === "number" &&
+    project.approvedApplications >= project.maxCollaborators;
   // Mostrar botón deshabilitado si el cupo está lleno y el usuario no está postulado
   if (isOwner || userRole !== ROLES.USER || isFinished) {
     return null;
@@ -47,7 +58,11 @@ export default function PostulationButton({
     const success = await handleApply(cvFile, project);
     if (success) {
       setShowModal(false);
-      setToast({ visible: true, type: 'success', message: 'Postulación enviada correctamente.' });
+      setToast({
+        visible: true,
+        type: "success",
+        message: "Postulación enviada correctamente.",
+      });
     }
   };
 
@@ -55,7 +70,11 @@ export default function PostulationButton({
     const success = await handleCancel();
     if (success) {
       setShowCancelConfirm(false);
-      setToast({ visible: true, type: 'success', message: 'Postulación cancelada correctamente.' });
+      setToast({
+        visible: true,
+        type: "success",
+        message: "Postulación cancelada correctamente.",
+      });
     }
   };
 
@@ -72,26 +91,28 @@ export default function PostulationButton({
           </div>
         ),
         disabled: true,
-        onClick: null
+        onClick: null,
       };
     }
 
     if (postulationStatus) {
       switch (postulationStatus.code) {
-        case 'activo':
+        case "activo":
           return {
             className: `bg-orange-500 text-white px-4 py-2 rounded font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed ${className}`,
             content: (
               <div className="flex items-center gap-1.5">
                 <X size={14} />
-                <span>{loading ? 'Cancelando...' : 'Cancelar postulación'}</span>
+                <span>
+                  {loading ? "Cancelando..." : "Cancelar postulación"}
+                </span>
               </div>
             ),
             disabled: loading,
-            onClick: () => setShowCancelConfirm(true)
+            onClick: () => setShowCancelConfirm(true),
           };
-        
-        case 'aceptada':
+
+        case "aceptada":
           return {
             className: `bg-green-600 text-white px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
             content: (
@@ -101,10 +122,10 @@ export default function PostulationButton({
               </div>
             ),
             disabled: true,
-            onClick: null
+            onClick: null,
           };
-        
-        case 'rechazada':
+
+        case "rechazada":
           return {
             className: `bg-red-600 text-white px-4 py-2 rounded font-semibold cursor-not-allowed ${className}`,
             content: (
@@ -114,10 +135,10 @@ export default function PostulationButton({
               </div>
             ),
             disabled: true,
-            onClick: null
+            onClick: null,
           };
-        
-        case 'cancelada':
+
+        case "cancelada":
           // Permitir postularse nuevamente si fue cancelada
           break;
       }
@@ -134,10 +155,10 @@ export default function PostulationButton({
           </div>
         ),
         disabled: true,
-        onClick: null
+        onClick: null,
       };
     }
-    
+
     // Verificar si el usuario está suspendido
     if (!canCreateContent) {
       return {
@@ -150,16 +171,16 @@ export default function PostulationButton({
         ),
         disabled: true,
         onClick: null,
-        title: suspensionMessage
+        title: suspensionMessage,
       };
     }
-    
+
     return {
       className: `bg-conexia-green text-white px-4 py-2 rounded font-semibold hover:bg-conexia-green/90 transition disabled:opacity-50 disabled:cursor-not-allowed ${className}`,
       content: (
         <div className="flex items-center gap-1.5">
           <FileText size={14} />
-          <span>{loading ? 'Postulando...' : 'Postularse'}</span>
+          <span>{loading ? "Postulando..." : "Postularse"}</span>
         </div>
       ),
       disabled: loading,
@@ -167,7 +188,7 @@ export default function PostulationButton({
         setError(null);
         setShowModal(false); // Cierra primero para reiniciar el estado interno
         setTimeout(() => setShowModal(true), 0); // Reabre el modal en el siguiente ciclo
-      }
+      },
     };
   };
 
@@ -177,7 +198,7 @@ export default function PostulationButton({
     <>
       {/* Botón principal */}
       <RequireVerification action="postularte a este proyecto">
-        <div title={buttonConfig.title || ''}>
+        <div title={buttonConfig.title || ""}>
           <button
             onClick={buttonConfig.onClick}
             disabled={buttonConfig.disabled}
@@ -211,7 +232,8 @@ export default function PostulationButton({
                 Cancelar postulación
               </h3>
               <p className="text-gray-600 mb-6">
-                ¿Estás seguro que deseas cancelar tu postulación al proyecto "{projectTitle}"?
+                ¿Estás seguro que deseas cancelar tu postulación al proyecto "
+                {projectTitle}"?
               </p>
               {error && (
                 <div className="mb-4 text-red-600 bg-red-50 p-3 rounded-lg text-sm">
@@ -236,7 +258,7 @@ export default function PostulationButton({
                   className="bg-red-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400/40 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   aria-label="Confirmar cancelación de la postulación"
                 >
-                  {loading ? 'Cancelando…' : 'Cancelar postulación'}
+                  {loading ? "Cancelando…" : "Cancelar postulación"}
                 </button>
               </div>
             </div>
@@ -249,7 +271,7 @@ export default function PostulationButton({
         type={toast.type}
         message={toast.message}
         isVisible={toast.visible}
-        onClose={() => setToast(t => ({ ...t, visible: false }))}
+        onClose={() => setToast((t) => ({ ...t, visible: false }))}
         duration={5000}
         position="top-center"
       />

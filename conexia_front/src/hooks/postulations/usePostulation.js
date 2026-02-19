@@ -31,18 +31,20 @@ export const usePostulation = (
   const [isApplied, setIsApplied] = useState(initialIsApplied);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [checkingStatus, setCheckingStatus] = useState(true);
-  const [postulationStatus, setPostulationStatus] = useState(null);
-  const [postulations, setPostulations] = useState([]); // Todas las postulaciones del proyecto
-  const [rolePostulation, setRolePostulation] = useState(null); // Postulación del rol específico
-  const [initialLoad, setInitialLoad] = useState(true);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  const [postulationStatus, setPostulationStatus] = useState(
+    initialIsApplied ? { code: "activo", name: "Activa" } : null,
+  );
+  const [postulations, setPostulations] = useState([]);
+  const [rolePostulation, setRolePostulation] = useState(null);
+  const [initialLoad, setInitialLoad] = useState(false);
   const { user } = useAuth();
 
   // Obtener el rol del usuario
   const userId = user?.roleId || null;
   const { role: userRole } = useRole(userId);
 
-  // Función para verificar estado de postulación al cargar
+  // Función para verificar estado de postulación (solo se usa bajo demanda, ej: después de cancelar)
   const checkPostulationStatus = React.useCallback(async () => {
     if (!user || isOwner || userRole !== ROLES.USER) {
       setCheckingStatus(false);
@@ -54,7 +56,6 @@ export const usePostulation = (
       setCheckingStatus(true);
 
       if (roleId) {
-        // Si se especifica un roleId, verificar postulación para ese rol específico
         const rolePostulations = await getMyPostulationsByProjectAndRole(
           projectId,
           roleId,
@@ -62,7 +63,6 @@ export const usePostulation = (
         setPostulations(rolePostulations);
 
         if (rolePostulations.length > 0) {
-          // Usar la postulación más reciente
           const latestPostulation = rolePostulations[0];
           setRolePostulation(latestPostulation);
           setPostulationStatus(latestPostulation.status);
@@ -73,7 +73,6 @@ export const usePostulation = (
           setIsApplied(false);
         }
       } else {
-        // Sin roleId, verificar si existe cualquier postulación para este proyecto
         const anyPostulation = await getMyPostulationByProject(projectId);
         if (anyPostulation) {
           setPostulationStatus(anyPostulation.status);
@@ -93,19 +92,8 @@ export const usePostulation = (
     }
   }, [user, isOwner, userRole, projectId, roleId, initialIsApplied]);
 
-  useEffect(() => {
-    if (user && userRole !== undefined) {
-      checkPostulationStatus();
-    }
-  }, [
-    projectId,
-    roleId,
-    user,
-    isOwner,
-    userRole,
-    initialIsApplied,
-    checkPostulationStatus,
-  ]);
+  // Ya NO se llama checkPostulationStatus al montar.
+  // Se confía en initialIsApplied del servidor y el backend valida duplicados al crear.
 
   // Función para postularse (versión antigua mantenida por compatibilidad)
   const handleApply = async (cvFile, project = null) => {
