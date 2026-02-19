@@ -167,7 +167,9 @@ export const usePostulation = (projectId, roleId = null, isOwner = false, initia
       console.error('Error al postularse:', err);
       
       // Manejar errores específicos del backend
-      if (err.message.includes('Only PDF files are allowed')) {
+      if (err.message.includes('reached the maximum number of collaborators')) {
+        setError('Este rol ya alcanzó el número máximo de colaboradores. No hay vacantes disponibles.');
+      } else if (err.message.includes('Only PDF files are allowed')) {
         setError('Solo se permiten archivos PDF para el CV');
       } else if (err.message.includes('CV file is required')) {
         setError('El archivo CV es requerido');
@@ -230,8 +232,17 @@ export const usePostulation = (projectId, roleId = null, isOwner = false, initia
       }
     } catch (err) {
       console.error('Error al postularse:', err);
-      setError(err.message || 'Error al postularse al proyecto');
-      return { success: false, error: err.message };
+      
+      // Manejar errores específicos
+      let errorMessage = err.message || 'Error al postularse al proyecto';
+      if (err.message.includes('reached the maximum number of collaborators')) {
+        errorMessage = 'Este rol ya alcanzó el número máximo de colaboradores. No hay vacantes disponibles.';
+      } else if (err.message.includes('already applied') || err.message.includes('already exists')) {
+        errorMessage = 'Ya te has postulado a este rol anteriormente';
+      }
+      
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }

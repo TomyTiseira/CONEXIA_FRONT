@@ -68,7 +68,7 @@ export default function ProjectRoles({ roles = [], onApply, isOwner = false }) {
                   const statusCode = status?.code;
                   
                   // Determinar si el botón debe estar deshabilitado
-                  const isDisabled = ['activo', 'pendiente_evaluacion', 'evaluacion_expirada', 'aceptada'].includes(statusCode);
+                  const isDisabled = ['activo', 'pendiente_evaluacion', 'evaluacion_expirada', 'aceptada', 'cancelada', 'rechazada', 'cancelled_by_moderation', 'cancelled_by_suspension'].includes(statusCode);
                   
                   // Determinar el texto del botón
                   let buttonText = 'Postularme';
@@ -86,9 +86,20 @@ export default function ProjectRoles({ roles = [], onApply, isOwner = false }) {
                   } else if (statusCode === 'aceptada') {
                     buttonText = 'Aceptado ✓';
                     buttonClass = 'px-4 py-2 bg-green-500 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
+                  } else if (statusCode === 'cancelada') {
+                    buttonText = 'Postulación cancelada';
+                    buttonClass = 'px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
+                  } else if (statusCode === 'rechazada') {
+                    buttonText = 'Postulación rechazada';
+                    buttonClass = 'px-4 py-2 bg-red-400 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
+                  } else if (statusCode === 'cancelled_by_moderation') {
+                    buttonText = 'Cancelado por moderación';
+                    buttonClass = 'px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
+                  } else if (statusCode === 'cancelled_by_suspension') {
+                    buttonText = 'Cancelado por suspensión';
+                    buttonClass = 'px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm font-semibold';
                   }
-                  // Para null, rechazada, cancelada, cancelled_by_moderation, cancelled_by_suspension
-                  // el botón mantiene el texto "Postularme" y está habilitado
+                  // Para null o estados desconocidos - el botón mantiene el texto "Postularme" y está habilitado
                   
                   return (
                     <button

@@ -99,9 +99,11 @@ function RoleCard({
     const status = role.userPostulationStatus;
     const statusCode = status?.code;
 
-    // Si hay un estado que no permite postular, mostrar mensaje
-    if (['activo', 'pendiente_evaluacion', 'evaluacion_expirada', 'aceptada'].includes(statusCode)) {
+    // Si hay un estado que no permite postular, mostrar mensaje sin redirigir
+    if (statusCode) {
       let message = "";
+      let shouldBlock = true;
+      
       if (statusCode === 'activo') {
         message = `Ya tienes una postulación activa para este rol.`;
       } else if (statusCode === 'pendiente_evaluacion') {
@@ -110,16 +112,29 @@ function RoleCard({
         message = `Tu evaluación técnica para este rol ha expirado.`;
       } else if (statusCode === 'aceptada') {
         message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
+      } else if (statusCode === 'cancelada') {
+        message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
+      } else if (statusCode === 'rechazada') {
+        message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
+      } else if (statusCode === 'cancelled_by_moderation') {
+        message = `Tu postulación fue cancelada por moderación. No puedes volver a postularte a este rol.`;
+      } else if (statusCode === 'cancelled_by_suspension') {
+        message = `Tu postulación fue cancelada debido a una suspensión. No puedes volver a postularte a este rol.`;
+      } else {
+        // Si es un estado desconocido pero existe, permitir la postulación
+        shouldBlock = false;
       }
 
-      setToast({
-        type: "error",
-        message: message,
-      });
-      return;
+      if (shouldBlock) {
+        setToast({
+          type: "error",
+          message: message,
+        });
+        return;
+      }
     }
 
-    // Si no hay impedimento (null, rechazada, cancelada, etc.), redirigir al formulario de aplicación
+    // Si no hay impedimento (null o estado desconocido), redirigir al formulario de aplicación
     router.push(`/project/${projectId}/apply/${role.id}`);
   };
 
@@ -353,8 +368,24 @@ function RoleCard({
                 buttonText = 'Aceptado ✓';
                 buttonClass += 'bg-green-500 text-white cursor-not-allowed';
                 isButtonDisabled = true;
+              } else if (statusCode === 'cancelada') {
+                buttonText = 'Postulación cancelada';
+                buttonClass += 'bg-gray-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'rechazada') {
+                buttonText = 'Postulación rechazada';
+                buttonClass += 'bg-red-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'cancelled_by_moderation') {
+                buttonText = 'Cancelado por moderación';
+                buttonClass += 'bg-gray-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'cancelled_by_suspension') {
+                buttonText = 'Cancelado por suspensión';
+                buttonClass += 'bg-gray-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
               } else {
-                // Para null, rechazada, cancelada, cancelled_by_moderation, cancelled_by_suspension
+                // Para null o estados desconocidos - permitir postulación
                 buttonClass += 'bg-conexia-green text-white hover:bg-conexia-green/90';
               }
               

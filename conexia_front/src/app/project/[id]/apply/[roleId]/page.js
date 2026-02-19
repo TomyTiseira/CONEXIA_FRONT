@@ -9,6 +9,7 @@ import Navbar from '@/components/navbar/Navbar';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/form/InputField';
 import Toast from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { config } from '@/config';
 
 export default function ProjectApplicationPage() {
@@ -58,47 +59,39 @@ export default function ProjectApplicationPage() {
         
         setRole(selectedRole);
 
-        // Verificar si ya tiene postulaciones a este rol
-        try {
-          const postulations = await getMyPostulationsByProjectAndRole(projectId, roleId);
-          setExistingPostulations(postulations);
+        // Optimización: Usar userPostulationStatus del rol en lugar de hacer llamada al API
+        const userStatus = selectedRole.userPostulationStatus;
+        if (userStatus && userStatus.code) {
+          const statusCode = userStatus.code.toLowerCase();
+          const statusName = userStatus.name || 'en proceso';
           
-          // NUEVA REGLA: No puede volver a postularse si ya existe CUALQUIER postulación previa
-          if (postulations && postulations.length > 0) {
-            const lastPostulation = postulations[0]; // La más reciente
-            const statusCode = lastPostulation.status?.code?.toLowerCase() || '';
-            const statusName = lastPostulation.status?.name || 'en proceso';
-            
-            let message = '';
-            if (statusCode === 'rechazada' || statusCode === 'rejected') {
-              message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
-            } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
-              message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
-            } else if (statusCode === 'cancelada' || statusCode === 'cancelled') {
-              message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
-            } else if (statusCode === 'expirada' || statusCode === 'expired') {
-              message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
-            } else if (statusCode === 'pendiente' || statusCode === 'pending' || statusCode === 'activo' || statusCode === 'active') {
-              message = `Ya tienes una postulación ${statusName} para este rol.`;
-            } else {
-              message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
-            }
-            
-            setHasExistingPostulation(true);
-            setToast({ 
-              type: 'error', 
-              message: message
-            });
-            
-            // Redirigir inmediatamente al detalle del proyecto
-            setLoading(false);
-            setTimeout(() => {
-              router.push(`/project/${projectId}`);
-            }, 2000);
-            return; // Detener la carga del proyecto
+          let message = '';
+          if (statusCode === 'rechazada' || statusCode === 'rejected') {
+            message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
+          } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
+            message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
+          } else if (statusCode === 'cancelada' || statusCode === 'cancelled' || statusCode === 'cancelled_by_moderation' || statusCode === 'cancelled_by_suspension') {
+            message = `Tu postulación fue cancelada. No puedes volver a postularte a este rol.`;
+          } else if (statusCode === 'evaluacion_expirada' || statusCode === 'expirada' || statusCode === 'expired') {
+            message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
+          } else if (statusCode === 'pendiente_evaluacion' || statusCode === 'pendiente' || statusCode === 'pending' || statusCode === 'activo' || statusCode === 'active') {
+            message = `Ya tienes una postulación ${statusName} para este rol.`;
+          } else {
+            message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
           }
-        } catch (error) {
-          console.error('Error checking postulations:', error);
+          
+          setHasExistingPostulation(true);
+          setToast({ 
+            type: 'error', 
+            message: message
+          });
+          
+          // Redirigir inmediatamente al detalle del proyecto
+          setLoading(false);
+          setTimeout(() => {
+            router.push(`/project/${projectId}`);
+          }, 2000);
+          return; // Detener la carga del proyecto
         }
 
         // Inicializar respuestas si hay preguntas
@@ -161,31 +154,8 @@ export default function ProjectApplicationPage() {
                           applicationTypes.includes('INVESTOR') ||
                           role.title?.toLowerCase().includes('inversor');
 
-    // Verificar si ya tiene CUALQUIER postulación previa (nueva regla)
-    if (existingPostulations && existingPostulations.length > 0) {
-      const lastPostulation = existingPostulations[0];
-      const statusCode = lastPostulation.status?.code?.toLowerCase() || '';
-      const statusName = lastPostulation.status?.name || 'en proceso';
-      
-      let message = '';
-      if (statusCode === 'cancelada' || statusCode === 'cancelled') {
-        message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
-      } else if (statusCode === 'rechazada' || statusCode === 'rejected') {
-        message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
-      } else if (statusCode === 'aceptada' || statusCode === 'accepted') {
-        message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
-      } else if (statusCode === 'expirada' || statusCode === 'expired') {
-        message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
-      } else {
-        message = `Ya tienes una postulación ${statusName} para este rol. No puedes volver a postularte.`;
-      }
-      
-      setToast({ 
-        type: 'error', 
-        message: message
-      });
-      return false;
-    }
+    // Esta validación ya no es necesaria porque se hace en el useEffect con userPostulationStatus
+    // Se eliminó para mejorar performance
 
     // Validar CV si es requerido (para CV, PARTNER, INVESTOR)
     if ((applicationTypes.includes('CV') || applicationType === 'CV' || isPartnerRole || isInvestorRole) && !applicationData.cv) {
@@ -317,7 +287,9 @@ export default function ProjectApplicationPage() {
       
       const errorMsg = error.message?.toLowerCase() || '';
       
-      if (errorMsg.includes('already applied') || errorMsg.includes('ya postulado') || errorMsg.includes('ya te postulaste')) {
+      if (errorMsg.includes('reached the maximum number of collaborators') || errorMsg.includes('máximo de colaboradores')) {
+        errorMessage = 'Este rol ya alcanzó el número máximo de colaboradores. No hay vacantes disponibles.';
+      } else if (errorMsg.includes('already applied') || errorMsg.includes('ya postulado') || errorMsg.includes('ya te postulaste')) {
         errorMessage = 'Ya te has postulado anteriormente a este rol.';
       } else if (errorMsg.includes('project not found') || errorMsg.includes('proyecto no encontrado')) {
         errorMessage = 'El proyecto no está disponible en este momento.';
@@ -351,7 +323,7 @@ export default function ProjectApplicationPage() {
       <div className="min-h-screen bg-[#f3f9f8]">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="text-conexia-green">Cargando...</div>
+          <LoadingSpinner message="Cargando formulario de postulación..." fullScreen={false} />
         </div>
       </div>
     );
