@@ -4,15 +4,13 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, 
-  ArrowLeft, 
-  Download, 
   Users,
   AlertCircle,
   Loader2
 } from 'lucide-react';
 import { useProjectStatistics } from '@/hooks/project/useProjectStatistics';
 import { RoleStatsCard } from '@/components/project/statistics';
-import BackButton from '@/components/ui/BackButton';
+import Navbar from '@/components/navbar/Navbar';
 
 /**
  * Página de estadísticas de postulaciones de un proyecto
@@ -27,50 +25,59 @@ export default function ProjectStatisticsPage({ params }) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f3f9f8] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-[#48a6a7] mx-auto mb-4" />
-          <p className="text-gray-600">Cargando estadísticas...</p>
+      <>
+        <Navbar />
+        <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-[#48a6a7] mx-auto mb-4" />
+            <p className="text-gray-600">Cargando estadísticas...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-[#f3f9f8] flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => router.back()}
-            className="bg-[#48a6a7] hover:bg-[#419596] text-white px-6 py-3 rounded-lg font-semibold transition"
-          >
-            Volver
-          </button>
+      <>
+        <Navbar />
+        <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button
+              onClick={() => router.back()}
+              className="bg-[#48a6a7] hover:bg-[#419596] text-white px-6 py-3 rounded-lg font-semibold transition"
+            >
+              Volver
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // No data
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#f3f9f8] flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Sin datos</h2>
-          <p className="text-gray-600 mb-6">No se encontraron estadísticas para este proyecto</p>
-          <button
-            onClick={() => router.back()}
-            className="bg-[#48a6a7] hover:bg-[#419596] text-white px-6 py-3 rounded-lg font-semibold transition"
-          >
-            Volver
-          </button>
+      <>
+        <Navbar />
+        <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Sin datos</h2>
+            <p className="text-gray-600 mb-6">No se encontraron estadísticas para este proyecto</p>
+            <button
+              onClick={() => router.back()}
+              className="bg-[#48a6a7] hover:bg-[#419596] text-white px-6 py-3 rounded-lg font-semibold transition"
+            >
+              Volver
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -86,35 +93,78 @@ export default function ProjectStatisticsPage({ params }) {
   const selectedRoleStats = evaluationStatsByRole?.find(r => r.roleId === effectiveSelectedRoleId);
 
   return (
-    <div className="min-h-screen bg-[#f3f9f8] py-8">
-      <div className="container mx-auto px-4 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <BackButton
-            text="Volver al proyecto"
-            onClick={() => router.push(`/project/${projectId}`)}
-            className="mb-4"
-          />
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] py-8 px-4 md:px-6 pb-20 md:pb-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header con título centrado y botón atrás */}
+          <div className="bg-white px-6 py-4 rounded-xl shadow-sm mb-6">
+            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 mb-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Volver atrás"
+              >
+                <div className="relative w-6 h-6">
+                  <svg
+                    className="w-6 h-6 text-conexia-green"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <line
+                      x1="6.5"
+                      y1="10"
+                      x2="13.5"
+                      y2="10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <polyline
+                      points="9,7 6,10 9,13"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
 
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <BarChart3 className="w-8 h-8 text-[#48a6a7]" />
-              <h1 className="text-3xl md:text-4xl font-extrabold text-[#48a6a7]">
-                Estadísticas del proyecto
-              </h1>
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex items-center justify-center gap-3"
+              >
+                <BarChart3 className="w-7 h-7 text-[#48a6a7]" />
+                <h1 className="text-2xl md:text-3xl font-extrabold text-[#48a6a7]">
+                  Estadísticas del proyecto
+                </h1>
+              </motion.div>
+
+              <div className="w-10"></div>
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
-              {projectTitle}
-            </h2>
-            <p className="text-gray-600">
-              Análisis detallado de las postulaciones recibidas
-            </p>
-          </motion.div>
-        </div>
+
+            <div className="text-left">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-1">
+                {projectTitle}
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Análisis detallado de las postulaciones recibidas
+              </p>
+            </div>
+          </div>
 
         {/* Resumen General */}
         <motion.div
@@ -226,7 +276,8 @@ export default function ProjectStatisticsPage({ params }) {
             )}
           </>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
