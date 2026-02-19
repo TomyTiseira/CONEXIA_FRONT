@@ -118,6 +118,24 @@ export default function ProjectApplicationPage() {
   const handleFileChange = (e, fileType = 'cv') => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validar tamaño del archivo (máximo 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+      if (file.size > maxSize) {
+        setFieldErrors(prev => ({
+          ...prev,
+          [fileType]: 'El archivo es demasiado grande. Máximo permitido: 10MB'
+        }));
+        e.target.value = null; // Limpiar el input
+        return;
+      }
+      
+      // Limpiar error si existía
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fileType];
+        return newErrors;
+      });
+      
       setApplicationData(prev => ({
         ...prev,
         [fileType]: file
@@ -600,16 +618,21 @@ export default function ProjectApplicationPage() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="bg-conexia-green hover:bg-conexia-green/90"
+                className="bg-conexia-green hover:bg-conexia-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting 
-                  ? 'Enviando...' 
-                  : (role?.applicationTypes?.includes('EVALUATION') || 
-                     role?.applicationType === 'EVALUATION' || 
-                     role?.applicationType === 'MIXED')
-                    ? 'Continuar con prueba técnica'
-                    : 'Enviar postulación'
-                }
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enviando...
+                  </span>
+                ) : (role?.applicationTypes?.includes('EVALUATION') || 
+                   role?.applicationType === 'EVALUATION' || 
+                   role?.applicationType === 'MIXED')
+                  ? 'Continuar con prueba técnica'
+                  : 'Enviar postulación'}
               </Button>
             </div>
           </form>
@@ -657,9 +680,17 @@ export default function ProjectApplicationPage() {
               <button
                 onClick={handleConfirmSubmit}
                 disabled={submitting}
-                className="flex-1 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-conexia-green text-white rounded-lg hover:bg-conexia-green/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting ? 'Enviando...' : 'Confirmar y enviar'}
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {applicationData.cv ? 'Subiendo archivo...' : 'Enviando postulación...'}
+                  </span>
+                ) : 'Confirmar y enviar'}
               </button>
             </div>
           </div>
