@@ -1,21 +1,34 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { Upload, FileText, CheckCircle, AlertCircle, ChevronLeft, DollarSign } from 'lucide-react';
-import { APPLICATION_TYPES } from '@/components/project/roles/ProjectRolesManager';
-import Button from '@/components/ui/Button';
-import InputField from '@/components/form/InputField';
+import { useState, useRef } from "react";
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  ChevronLeft,
+  DollarSign,
+} from "lucide-react";
+import { APPLICATION_TYPES } from "@/components/project/roles/ProjectRolesManager";
+import Button from "@/components/ui/Button";
+import InputField from "@/components/form/InputField";
 
 /**
  * Formulario dinámico de postulación según tipo de rol
  */
-export default function ApplicationForm({ role, onSubmit, onBack, loading, error }) {
+export default function ApplicationForm({
+  role,
+  onSubmit,
+  onBack,
+  loading,
+  error,
+}) {
   const [formData, setFormData] = useState({
     cvFile: null,
     answers: {}, // Para preguntas: { questionIndex: answer }
-    investmentAmount: '', // Para inversores
-    investmentDescription: '', // Para inversores
-    partnerContribution: '', // Para socios
+    investmentAmount: "", // Para inversores
+    investmentDescription: "", // Para inversores
+    partnerContribution: "", // Para socios
   });
 
   const [errors, setErrors] = useState({});
@@ -43,29 +56,35 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
 
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      setErrors(prev => ({ ...prev, [type]: 'El archivo no puede superar los 10MB' }));
+      setErrors((prev) => ({
+        ...prev,
+        [type]: "El archivo no puede superar los 10MB",
+      }));
       return;
     }
 
-    if (type === 'cvFile' && file.type !== 'application/pdf') {
-      setErrors(prev => ({ ...prev, cvFile: 'Solo se permiten archivos PDF para el CV' }));
+    if (type === "cvFile" && file.type !== "application/pdf") {
+      setErrors((prev) => ({
+        ...prev,
+        cvFile: "Solo se permiten archivos PDF para el CV",
+      }));
       return;
     }
 
-    setFormData(prev => ({ ...prev, [type]: file }));
-    setErrors(prev => ({ ...prev, [type]: null }));
+    setFormData((prev) => ({ ...prev, [type]: file }));
+    setErrors((prev) => ({ ...prev, [type]: null }));
   };
 
   // Manejo de respuestas a preguntas
   const handleAnswerChange = (questionIndex, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       answers: {
         ...prev.answers,
-        [questionIndex]: value
-      }
+        [questionIndex]: value,
+      },
     }));
-    setTouched(prev => ({ ...prev, [`question_${questionIndex}`]: true }));
+    setTouched((prev) => ({ ...prev, [`question_${questionIndex}`]: true }));
   };
 
   // Validación
@@ -73,28 +92,36 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
     const newErrors = {};
 
     if (requiresCV && !formData.cvFile) {
-      newErrors.cvFile = 'El CV es requerido';
+      newErrors.cvFile = "El CV es requerido";
     }
 
     if (requiresQuestions && role.questions) {
       role.questions.forEach((question, index) => {
-        if (!formData.answers[index] || formData.answers[index].trim() === '') {
-          newErrors[`question_${index}`] = 'Esta pregunta es requerida';
+        if (!formData.answers[index] || formData.answers[index].trim() === "") {
+          newErrors[`question_${index}`] = "Esta pregunta es requerida";
         }
       });
     }
 
     if (isInvestor) {
       if (!formData.investmentAmount || formData.investmentAmount <= 0) {
-        newErrors.investmentAmount = 'El monto de inversión es requerido';
+        newErrors.investmentAmount = "El monto de inversión es requerido";
       }
-      if (!formData.investmentDescription || formData.investmentDescription.trim() === '') {
-        newErrors.investmentDescription = 'La descripción es requerida';
+      if (
+        !formData.investmentDescription ||
+        formData.investmentDescription.trim() === ""
+      ) {
+        newErrors.investmentDescription = "La descripción es requerida";
       }
     }
 
-    if (isPartner && (!formData.partnerContribution || formData.partnerContribution.trim() === '')) {
-      newErrors.partnerContribution = 'Debes describir cómo podrías ayudar al proyecto';
+    if (
+      isPartner &&
+      (!formData.partnerContribution ||
+        formData.partnerContribution.trim() === "")
+    ) {
+      newErrors.partnerContribution =
+        "Debes describir cómo podrías ayudar al proyecto";
     }
 
     setErrors(newErrors);
@@ -103,7 +130,7 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Marcar todos como touched
     const allTouched = { cvFile: true };
     if (requiresQuestions && role.questions) {
@@ -119,11 +146,11 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
+    const sizes = ["Bytes", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   return (
@@ -131,14 +158,19 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
       <div className="space-y-4">
         {/* Información del rol */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-          <h3 className="font-semibold text-conexia-green mb-1">{role.title}</h3>
+          <h3 className="font-semibold text-conexia-green mb-1">
+            {role.title}
+          </h3>
           <p className="text-sm text-gray-700">{role.description}</p>
         </div>
 
         {/* Error general */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={18} />
+            <AlertCircle
+              className="text-red-600 flex-shrink-0 mt-0.5"
+              size={18}
+            />
             <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
@@ -149,21 +181,31 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Currículum Vitae (PDF) <span className="text-red-600">*</span>
             </label>
-            <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-              errors.cvFile ? 'border-red-500' : 'border-gray-300 hover:border-gray-400'
-            }`}>
+            <div
+              className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                errors.cvFile
+                  ? "border-red-500"
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
+            >
               {formData.cvFile ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <CheckCircle className="text-green-500" size={24} />
                     <div className="text-left">
-                      <p className="text-sm font-semibold text-gray-800">{formData.cvFile.name}</p>
-                      <p className="text-xs text-gray-500">{formatFileSize(formData.cvFile.size)}</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {formData.cvFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(formData.cvFile.size)}
+                      </p>
                     </div>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, cvFile: null }))}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, cvFile: null }))
+                    }
                     className="text-red-600 hover:text-red-700 text-sm"
                   >
                     Quitar
@@ -186,11 +228,13 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
                 ref={cvFileInputRef}
                 type="file"
                 accept=".pdf"
-                onChange={(e) => handleFileSelect(e.target.files[0], 'cvFile')}
+                onChange={(e) => handleFileSelect(e.target.files[0], "cvFile")}
                 className="hidden"
               />
             </div>
-            {errors.cvFile && <p className="text-xs text-red-600 mt-1">{errors.cvFile}</p>}
+            {errors.cvFile && (
+              <p className="text-xs text-red-600 mt-1">{errors.cvFile}</p>
+            )}
           </div>
         )}
 
@@ -202,19 +246,26 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
               {role.questions.map((question, index) => (
                 <div key={index} className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {index + 1}. {question.question} <span className="text-red-600">*</span>
-                    {question.type === 'multiple' && (
-                      <span className="text-xs text-gray-500 ml-2">(Opción múltiple)</span>
+                    {index + 1}. {question.question}{" "}
+                    <span className="text-red-600">*</span>
+                    {question.type === "multiple" && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        (Opción múltiple)
+                      </span>
                     )}
                   </label>
-                  
-                  {question.type === 'open' ? (
+
+                  {question.type === "open" ? (
                     <textarea
-                      value={formData.answers[index] || ''}
-                      onChange={(e) => handleAnswerChange(index, e.target.value)}
+                      value={formData.answers[index] || ""}
+                      onChange={(e) =>
+                        handleAnswerChange(index, e.target.value)
+                      }
                       rows={3}
                       className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                        errors[`question_${index}`] ? 'border-red-500' : 'border-gray-300'
+                        errors[`question_${index}`]
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       placeholder="Escribe tu respuesta aquí..."
                     />
@@ -225,8 +276,8 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
                           key={optIndex}
                           className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
                             formData.answers[index] === option.text
-                              ? 'border-conexia-green bg-green-50'
-                              : 'border-gray-300 hover:border-gray-400'
+                              ? "border-conexia-green bg-green-50"
+                              : "border-gray-300 hover:border-gray-400"
                           }`}
                         >
                           <input
@@ -234,17 +285,23 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
                             name={`question_${index}`}
                             value={option.text}
                             checked={formData.answers[index] === option.text}
-                            onChange={(e) => handleAnswerChange(index, e.target.value)}
+                            onChange={(e) =>
+                              handleAnswerChange(index, e.target.value)
+                            }
                             className="mr-3"
                           />
-                          <span className="text-sm text-gray-700">{option.text}</span>
+                          <span className="text-sm text-gray-700">
+                            {option.text}
+                          </span>
                         </label>
                       ))}
                     </div>
                   )}
-                  
+
                   {errors[`question_${index}`] && (
-                    <p className="text-xs text-red-600 mt-1">{errors[`question_${index}`]}</p>
+                    <p className="text-xs text-red-600 mt-1">
+                      {errors[`question_${index}`]}
+                    </p>
                   )}
                 </div>
               ))}
@@ -255,46 +312,76 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
         {/* Campos para Inversor */}
         {isInvestor && (
           <div className="border-t pt-4 space-y-4">
-            <h4 className="font-semibold text-gray-900 mb-3">Detalles de inversión</h4>
-            
+            <h4 className="font-semibold text-gray-900 mb-3">
+              Detalles de inversión
+            </h4>
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Monto a invertir (USD) <span className="text-red-600">*</span>
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <DollarSign
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
                 <input
                   type="number"
                   min="0"
                   step="100"
                   value={formData.investmentAmount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, investmentAmount: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      investmentAmount: e.target.value,
+                    }))
+                  }
                   className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                    errors.investmentAmount ? 'border-red-500' : 'border-gray-300'
+                    errors.investmentAmount
+                      ? "border-red-500"
+                      : "border-gray-300"
                   }`}
                   placeholder="10000"
                 />
               </div>
-              {errors.investmentAmount && <p className="text-xs text-red-600 mt-1">{errors.investmentAmount}</p>}
+              {errors.investmentAmount && (
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.investmentAmount}
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Describe tu propuesta de inversión <span className="text-red-600">*</span>
+                Describe tu propuesta de inversión{" "}
+                <span className="text-red-600">*</span>
               </label>
               <textarea
                 value={formData.investmentDescription}
-                onChange={(e) => setFormData(prev => ({ ...prev, investmentDescription: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    investmentDescription: e.target.value,
+                  }))
+                }
                 rows={4}
                 maxLength={500}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                  errors.investmentDescription ? 'border-red-500' : 'border-gray-300'
+                  errors.investmentDescription
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
                 placeholder="Explica qué esperas a cambio de tu inversión, en qué condiciones, y cómo puedes aportar valor adicional al proyecto..."
               />
               <div className="flex justify-between items-center mt-1">
-                {errors.investmentDescription && <p className="text-xs text-red-600">{errors.investmentDescription}</p>}
-                <p className="text-xs text-gray-500 ml-auto">{formData.investmentDescription.length}/500</p>
+                {errors.investmentDescription && (
+                  <p className="text-xs text-red-600">
+                    {errors.investmentDescription}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500 ml-auto">
+                  {formData.investmentDescription.length}/500
+                </p>
               </div>
             </div>
           </div>
@@ -303,25 +390,41 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
         {/* Campos para Socio */}
         {isPartner && (
           <div className="border-t pt-4">
-            <h4 className="font-semibold text-gray-900 mb-3">Tu propuesta como Socio</h4>
-            
+            <h4 className="font-semibold text-gray-900 mb-3">
+              Tu propuesta como Socio
+            </h4>
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ¿Cómo podrías ayudar al proyecto? <span className="text-red-600">*</span>
+                ¿Cómo podrías ayudar al proyecto?{" "}
+                <span className="text-red-600">*</span>
               </label>
               <textarea
                 value={formData.partnerContribution}
-                onChange={(e) => setFormData(prev => ({ ...prev, partnerContribution: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    partnerContribution: e.target.value,
+                  }))
+                }
                 rows={5}
                 maxLength={500}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-conexia-green ${
-                  errors.partnerContribution ? 'border-red-500' : 'border-gray-300'
+                  errors.partnerContribution
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
                 placeholder="Describe tus habilidades, experiencia, red de contactos, recursos que puedes aportar, visión para el proyecto, disponibilidad, etc..."
               />
               <div className="flex justify-between items-center mt-1">
-                {errors.partnerContribution && <p className="text-xs text-red-600">{errors.partnerContribution}</p>}
-                <p className="text-xs text-gray-500 ml-auto">{formData.partnerContribution.length}/500</p>
+                {errors.partnerContribution && (
+                  <p className="text-xs text-red-600">
+                    {errors.partnerContribution}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500 ml-auto">
+                  {formData.partnerContribution.length}/500
+                </p>
               </div>
             </div>
           </div>
@@ -340,14 +443,14 @@ export default function ApplicationForm({ role, onSubmit, onBack, loading, error
           <ChevronLeft size={18} />
           Volver
         </Button>
-        
+
         <Button
           type="submit"
           variant="primary"
           disabled={loading}
           className="flex-1"
         >
-          {loading ? 'Enviando...' : 'Enviar postulación'}
+          {loading ? "Enviando..." : "Enviar postulación"}
         </Button>
       </div>
     </form>
