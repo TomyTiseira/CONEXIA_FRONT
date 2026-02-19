@@ -12,6 +12,7 @@ import useDeleteInternalUser from '@/hooks/internal-users/useDeleteInternalUser'
 import DeleteInternalUserModal from '@/components/admin/internal-users/DeleteInternalUserModal';
 import EditInternalUserModal from '@/components/admin/internal-users/EditInternalUserModal';
 import Toast from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 function InternalUsersContent() {
   const internalUsers = useInternalUsers();
@@ -118,14 +119,7 @@ function InternalUsersContent() {
 
 export default function InternalUsersPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#eaf5f2]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-          <p className="text-conexia-green">Cargando usuarios internos...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingSpinner message="Cargando usuarios internos..." fullScreen={true} />}>
       <InternalUsersContent />
     </Suspense>
   );

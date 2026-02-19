@@ -5,6 +5,7 @@ import { useConnectionRequests } from '@/hooks/connections/useConnectionRequests
 import { useRejectConnectionRequest } from '@/hooks/connections/useRejectConnectionRequest';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Toast from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function ConnectionRequestsSection() {
   const { requests, loading, error, refreshRequests } = useConnectionRequests();
@@ -71,7 +72,7 @@ export default function ConnectionRequestsSection() {
       <div className="text-conexia-green text-2xl font-bold mb-1">Solicitudes de conexión</div>
       <div className="text-conexia-green/80 mb-6">Gestiona las invitaciones que recibiste de otros usuarios.</div>
       {loading ? (
-        <div className="text-conexia-green/70 text-center py-8">Cargando...</div>
+        <LoadingSpinner message="Cargando solicitudes..." fullScreen={false} />
       ) : error ? (
         <div className="text-conexia-green/70 text-center py-8">{error}</div>
       ) : localRequests.length === 0 ? (

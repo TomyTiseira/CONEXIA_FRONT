@@ -76,6 +76,10 @@ export default function ModeratorCompliancesPage() {
 
   // Verificar permisos de moderador
   useEffect(() => {
+    // No redirigir si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (!authLoading && (!user || user.role !== 'moderator')) {
       router.push('/');
     }

@@ -18,6 +18,7 @@ import { HiOutlineClipboardList } from "react-icons/hi";
 import { MdCleaningServices } from "react-icons/md";
 import { PlanComparisonBanner, UpgradePlanButton } from "@/components/plans";
 import ProjectSearchFilters from "./ProjectSearchFilters";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import ProjectSearchBar from "./ProjectSearchBar";
 import RequireVerification from "@/components/common/RequireVerification";
 import ProjectList from "./ProjectList";
@@ -398,9 +399,7 @@ export default function ProjectSearch() {
                           </div>
                         </>
                         {isLoadingAllProjects ? (
-                          <div className="text-conexia-green text-center py-8">
-                            Cargando proyectos...
-                          </div>
+                          <LoadingSpinner message="Cargando proyectos..." fullScreen={false} />
                         ) : allProjectsList.length > 0 ? (
                           <div className="min-h-[900px] flex flex-col">
                             <div className="flex-1">
@@ -440,9 +439,7 @@ export default function ProjectSearch() {
                 (roleName === ROLES.ADMIN || roleName === ROLES.MODERATOR) && (
                   <div>
                     {isLoadingAllProjects ? (
-                      <div className="text-conexia-green text-center py-8">
-                        Cargando proyectos...
-                      </div>
+                      <LoadingSpinner message="Cargando proyectos..." fullScreen={false} />
                     ) : allProjectsList.length > 0 ? (
                       <div className="min-h-[900px] flex flex-col">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">

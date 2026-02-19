@@ -35,6 +35,10 @@ export default function TechnicalEvaluationPage() {
   const postulationId = params.postulationId;
 
   useEffect(() => {
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     if (!isAuthenticated) {
       router.push("/login");
       return;

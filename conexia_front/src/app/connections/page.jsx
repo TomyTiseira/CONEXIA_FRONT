@@ -11,6 +11,8 @@ import { ROLES } from "@/constants/roles";
 import { useRecommendations } from "@/hooks/connections/useRecommendations";
 import { sendConnectionRequest } from "@/service/connections/sendConnectionRequest";
 import { useRouter } from "next/navigation";
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+
 function RecommendedSection() {
   const { recommendations, loading, error, refetch } = useRecommendations();
   const router = useRouter();
@@ -30,10 +32,7 @@ function RecommendedSection() {
       <div className="w-full">
         <div className="text-conexia-green text-2xl font-bold mb-1">Personas recomendadas</div>
         <div className="text-conexia-green/80 mb-6">Conecta con personas sugeridas según tus intereses y actividad en Conexia.</div>
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green"></div>
-          <span className="ml-3 text-conexia-green">Cargando recomendaciones...</span>
-        </div>
+        <LoadingSpinner message="Cargando recomendaciones..." fullScreen={false} />
       </div>
     );
   }
@@ -104,14 +103,7 @@ export default function ConnectionsPage() {
   }, []);
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#f3f9f8]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-          <p className="text-conexia-green">Cargando conexiones...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingSpinner message="Cargando conexiones..." fullScreen={true} />}>
       <ProtectedRoute
         allowedRoles={[ROLES.USER]}
         fallbackComponent={<NotFound />}

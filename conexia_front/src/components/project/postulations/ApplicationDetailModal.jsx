@@ -47,7 +47,7 @@ export default function ApplicationDetailModal({
           <div className="flex items-start justify-between p-6 border-b border-gray-200">
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Detalle de Postulación
+                Detalle de postulación
               </h2>
               <div className="flex items-center gap-4 text-sm">
                 <span className="text-gray-600">
@@ -74,7 +74,7 @@ export default function ApplicationDetailModal({
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <User size={18} />
-                  Información del Candidato
+                  Información del candidato
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2 text-sm">
@@ -132,7 +132,7 @@ export default function ApplicationDetailModal({
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <MessageSquare size={18} />
-                    Respuestas a Preguntas
+                    Respuestas a preguntas
                   </h3>
                   <div className="space-y-4">
                     {role.questions?.map((question, index) => (
@@ -171,7 +171,7 @@ export default function ApplicationDetailModal({
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <FileText size={18} />
-                    Solución de Evaluación Técnica
+                    Solución de evaluación técnica
                   </h3>
                   
                   {/* Descripción de la evaluación */}
@@ -206,7 +206,7 @@ export default function ApplicationDetailModal({
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <DollarSign size={18} />
-                    Propuesta de Inversión
+                    Propuesta de inversión
                   </h3>
                   <div className="space-y-3">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -230,7 +230,7 @@ export default function ApplicationDetailModal({
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <User size={18} />
-                    Propuesta como Socio/Cofundador
+                    Propuesta como socio/cofundador
                   </h3>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-sm font-medium text-gray-900 mb-2">Cómo puede ayudar al proyecto:</p>

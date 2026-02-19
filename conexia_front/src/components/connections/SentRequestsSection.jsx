@@ -6,6 +6,7 @@ import { useCancelConnectionRequest } from '@/hooks/connections/useCancelConnect
 import SentConnectionRequestCard from '@/components/connections/SentConnectionRequestCard';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Toast from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function SentRequestsSection() {
   const [requests, setRequests] = useState([]);
@@ -70,7 +71,7 @@ export default function SentRequestsSection() {
       <div className="text-conexia-green/80 mb-6">Solicitudes de conexión que enviaste a otros usuarios.</div>
       
       {loading ? (
-        <div className="text-conexia-green/70 text-center py-8">Cargando...</div>
+        <LoadingSpinner message="Cargando solicitudes..." fullScreen={false} />
       ) : error ? (
         <div className="text-conexia-green/70 text-center py-8">{error}</div>
       ) : requests.length === 0 ? (

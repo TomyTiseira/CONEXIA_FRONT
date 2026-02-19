@@ -12,6 +12,7 @@ import { config } from '@/config';
 import ChatView from '@/components/messaging/ChatView';
 import { useChatMessages } from '@/hooks/messaging/useChatMessages'; // <- NUEVO
 import { getMessagingSocket } from '@/lib/socket/messagingSocket';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function MessagingHomePage() {
   const router = useRouter();
@@ -298,7 +299,7 @@ export default function MessagingHomePage() {
                       }}
                     />
                   ))}
-                  {loading && <div className="p-3 text-conexia-green/60 text-center text-sm">Cargando...</div>}
+                  {loading && <LoadingSpinner message="Cargando contactos..." fullScreen={false} />}
                 </div>
               )}
             </div>

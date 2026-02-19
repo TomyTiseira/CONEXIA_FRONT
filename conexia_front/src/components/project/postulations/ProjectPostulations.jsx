@@ -11,6 +11,7 @@ import PostulationsTable from './PostulationsTable';
 import PostulationEvaluationModal from './PostulationEvaluationModal';
 import Toast from '@/components/ui/Toast';
 import Pagination from '@/components/common/Pagination';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Filter } from 'lucide-react';
 
 export default function ProjectPostulations({ projectId }) {
@@ -203,17 +204,7 @@ export default function ProjectPostulations({ projectId }) {
   };
 
   if (loading) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-[calc(100vh-64px)] bg-[#f3f9f8] flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-conexia-green mx-auto mb-4"></div>
-            <p className="text-conexia-green">Cargando postulaciones...</p>
-          </div>
-        </div>
-      </>
-    );
+    return <LoadingSpinner message="Cargando postulaciones..." fullScreen={true} />;
   }
 
   if (!project) {
@@ -431,9 +422,7 @@ export default function ProjectPostulations({ projectId }) {
           {/* Tabla de postulaciones */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             {loadingProfiles ? (
-              <div className="p-8 text-center text-conexia-green">
-                Cargando postulaciones...
-              </div>
+              <LoadingSpinner message="Cargando postulaciones..." fullScreen={false} />
             ) : (
               <PostulationsTable
                 postulations={postulations}

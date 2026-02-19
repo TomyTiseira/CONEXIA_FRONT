@@ -19,6 +19,10 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // No redirigir si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     // Redirigir al login si no está autenticado
     if (!isLoading && !isAuthenticated) {
       router.push('/login?redirect=/dashboard');

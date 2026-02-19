@@ -15,7 +15,7 @@ export default function ReviewReportsPage() {
     isLoggingOut = window.__CONEXIA_LOGGING_OUT__ === true;
   }
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando reportes de reseñas...</div>}>
+    <Suspense fallback={<LoadingSpinner message="Cargando reportes de reseñas..." fullScreen={true} />}>
       <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]} fallbackComponent={isLoggingOut ? <LoadingSpinner message="Cerrando sesión..." size="large" /> : <NotFound />}>
         <Navbar />
         <ReviewReportsList />

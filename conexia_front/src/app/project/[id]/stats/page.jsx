@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { useProjectStatistics } from '@/hooks/project/useProjectStatistics';
 import { RoleStatsCard } from '@/components/project/statistics';
+import BackButton from '@/components/ui/BackButton';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 /**
  * Página de estadísticas de postulaciones de un proyecto
@@ -23,14 +25,7 @@ export default function ProjectStatisticsPage({ params }) {
 
   // Loading state
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#f3f9f8] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-[#48a6a7] mx-auto mb-4" />
-          <p className="text-gray-600">Cargando estadísticas...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Cargando estad\u00edsticas..." fullScreen={true} />;
   }
 
   // Error state
