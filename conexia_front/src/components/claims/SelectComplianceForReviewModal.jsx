@@ -12,6 +12,7 @@ import { ComplianceStatusBadge } from './ComplianceStatusBadge';
 import { COMPLIANCE_TYPE_LABELS } from '@/constants/claims';
 import { getClaimDetail } from '@/service/claims';
 import Button from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export const SelectComplianceForReviewModal = ({
   claimId,
@@ -127,10 +128,7 @@ export const SelectComplianceForReviewModal = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
           {loading && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 size={48} className="animate-spin text-purple-600 mb-4" />
-              <p className="text-gray-600">Cargando compromisos...</p>
-            </div>
+            <LoadingSpinner message="Cargando compromisos..." fullScreen={false} />
           )}
 
           {error && (

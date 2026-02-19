@@ -2,9 +2,11 @@
 import Button from "@/components/ui/Button";
 import Pagination from '@/components/common/Pagination';
 import BackButton from '@/components/ui/BackButton';
+import Link from 'next/link';
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchPublicationReports } from '@/service/reports/publicationReportsFetch';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function PublicationReportsGrid({ publicationId }) {
   const [reports, setReports] = useState([]);
@@ -21,6 +23,10 @@ export default function PublicationReportsGrid({ publicationId }) {
   const returnPage = searchParams?.get('returnPage') || '1';
   useEffect(() => {
     if (!publicationId) return;
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     setLoading(true);
     fetchPublicationReports(publicationId, page)
       .then(data => {
@@ -70,7 +76,9 @@ export default function PublicationReportsGrid({ publicationId }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" className="p-6 text-center text-conexia-green">Cargando reportes...</td>
+                <td colSpan="6" className="p-6 text-center">
+                  <LoadingSpinner message="Cargando reportes..." fullScreen={false} />
+                </td>
               </tr>
             ) : reports.length === 0 ? (
               <tr>
@@ -80,7 +88,18 @@ export default function PublicationReportsGrid({ publicationId }) {
               reports.map(r => (
                 <tr key={r.id} className="border-b hover:bg-gray-50 h-auto align-top">
                   <td className="p-4 align-top break-words max-w-[60px] text-left">{r.id}</td>
-                  <td className="p-4 align-top break-words max-w-[180px] text-left">{r.reporter?.email || r.reporterId}</td>
+                  <td className="p-4 align-top break-words max-w-[180px] text-left">
+                    {r.reporterName && r.reporterLastName ? (
+                      <Link 
+                        href={`/profile/userProfile/${r.reporterId}`}
+                        className="text-conexia-green hover:underline font-medium"
+                      >
+                        {r.reporterName} {r.reporterLastName}
+                      </Link>
+                    ) : (
+                      r.reporter?.email || r.reporterId
+                    )}
+                  </td>
                   <td className="p-4 align-top break-words max-w-[160px] text-left">{r.reason}{r.reason === "Otro" && r.otherReason ? ` (${r.otherReason})` : ""}</td>
                   <td className="p-4 align-top break-words max-w-[320px] text-left">
                     <div className="line-clamp-4 overflow-hidden" title={r.description}>

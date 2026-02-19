@@ -42,6 +42,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRole } from "@/hooks/useRole";
 import { ROLES } from "@/constants/roles";
 import Toast from "@/components/ui/Toast";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export const ClaimDetailModal = ({
   claim: initialClaim,
@@ -970,13 +971,7 @@ export const ClaimDetailModal = ({
         {/* Content */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {loading && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2
-                size={48}
-                className="animate-spin text-conexia-green mb-4"
-              />
-              <p className="text-gray-600">Cargando detalles del reclamo...</p>
-            </div>
+            <LoadingSpinner message="Cargando detalles del reclamo..." fullScreen={false} />
           )}
 
           {error && (

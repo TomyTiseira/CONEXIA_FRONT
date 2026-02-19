@@ -15,6 +15,7 @@ import BackButton from "@/components/ui/BackButton";
 import MessagingWidget from "@/components/messaging/MessagingWidget";
 import { useUserStore } from "@/store/userStore";
 import { config } from "@/config";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function MyProjectsView({ userId }) {
   const { user: authUser } = useAuth();
@@ -160,9 +161,7 @@ export default function MyProjectsView({ userId }) {
 
           {/* Lista de proyectos */}
           {loading ? (
-            <div className="text-conexia-green text-center py-8">
-              Cargando proyectos...
-            </div>
+            <LoadingSpinner message="Cargando proyectos..." fullScreen={false} />
           ) : (
             <>
               <ProjectList

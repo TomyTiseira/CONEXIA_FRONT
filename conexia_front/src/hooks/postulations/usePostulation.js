@@ -166,22 +166,21 @@ export const usePostulation = (
       console.error("Error al postularse:", err);
 
       // Manejar errores específicos del backend
-      if (err.message.includes("Only PDF files are allowed")) {
-        setError("Solo se permiten archivos PDF para el CV");
-      } else if (err.message.includes("CV file is required")) {
-        setError("El archivo CV es requerido");
-      } else if (err.message.includes("CV file size cannot exceed 10MB")) {
-        setError("El archivo CV no puede superar los 10MB");
-      } else if (
-        err.message.includes("already exists for this project") ||
-        err.message.includes("already applied")
-      ) {
-        // El backend confirmó que ya existe: actualizar estado local sin re-paginar
-        setIsApplied(true);
-        setPostulationStatus({ code: "activo", name: "Activa" });
-        setError("Ya te has postulado a este rol anteriormente");
+      if (err.message.includes('reached the maximum number of collaborators')) {
+        setError('Este rol ya alcanzó el número máximo de colaboradores. No hay vacantes disponibles.');
+      } else if (err.message.includes('Only PDF files are allowed')) {
+        setError('Solo se permiten archivos PDF para el CV');
+      } else if (err.message.includes('CV file is required')) {
+        setError('El archivo CV es requerido');
+      } else if (err.message.includes('CV file size cannot exceed 10MB')) {
+        setError('El archivo CV no puede superar los 10MB');
+      } else if (err.message.includes('already exists for this project') || err.message.includes('already applied')) {
+        // Si el backend dice que ya existe una postulación
+        // Actualizar el estado local para reflejar que ya se postuló
+        await checkPostulationStatus();
+        setError('Ya te has postulado a este rol anteriormente');
       } else {
-        setError("Error al postularse al proyecto. Intenta nuevamente.");
+        setError('Error al postularse al proyecto. Intenta nuevamente.');
       }
 
       return false;
@@ -229,9 +228,18 @@ export const usePostulation = (
         return { success: false, error: result.message };
       }
     } catch (err) {
-      console.error("Error al postularse:", err);
-      setError(err.message || "Error al postularse al proyecto");
-      return { success: false, error: err.message };
+      console.error('Error al postularse:', err);
+      
+      // Manejar errores específicos
+      let errorMessage = err.message || 'Error al postularse al proyecto';
+      if (err.message.includes('reached the maximum number of collaborators')) {
+        errorMessage = 'Este rol ya alcanzó el número máximo de colaboradores. No hay vacantes disponibles.';
+      } else if (err.message.includes('already applied') || err.message.includes('already exists')) {
+        errorMessage = 'Ya te has postulado a este rol anteriormente';
+      }
+      
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }

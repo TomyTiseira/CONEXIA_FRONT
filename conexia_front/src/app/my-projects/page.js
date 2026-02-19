@@ -51,6 +51,10 @@ export default function MyProjectsPage() {
 
   const loadProjects = useCallback(async () => {
     if (!user?.id) return;
+    // No hacer llamadas si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -94,6 +98,10 @@ export default function MyProjectsPage() {
   }, [user?.id, filters.page, showInactive]);
 
   useEffect(() => {
+    // No cargar proyectos si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     loadProjects();
   }, [loadProjects]);
 

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { openFileInNewTab } from "@/utils/fileUtils";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function PostulationsTable({
   postulations,
@@ -51,11 +52,7 @@ export default function PostulationsTable({
   };
 
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-conexia-green">
-        Cargando postulaciones...
-      </div>
-    );
+    return <LoadingSpinner message="Cargando postulaciones..." fullScreen={false} />;
   }
 
   if (postulations.length === 0) {

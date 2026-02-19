@@ -21,6 +21,10 @@ function SuccessContent() {
 
   useEffect(() => {
     const fetchData = async () => {
+      // No cargar si está en proceso de logout
+      if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+        return;
+      }
       try {
         // 1️⃣ Capturar parámetros de MercadoPago
         const preapprovalId = searchParams.get('preapproval_id');

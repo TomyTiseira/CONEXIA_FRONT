@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Pagination from '@/components/common/Pagination';
 import BackButton from '@/components/ui/BackButton';
 import Toast from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function CommentReportsContent({ commentId }) {
   const router = useRouter();
@@ -38,6 +39,10 @@ export default function CommentReportsContent({ commentId }) {
   // Cargar reportes del comentario
   useEffect(() => {
     if (!commentId) return;
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
 
     setLoading(true);
 
@@ -148,7 +153,9 @@ export default function CommentReportsContent({ commentId }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="4" className="p-6 text-center text-conexia-green">Cargando reportes...</td>
+                <td colSpan="4" className="p-6">
+                  <LoadingSpinner message="Cargando reportes..." fullScreen={false} />
+                </td>
               </tr>
             ) : reports.length === 0 ? (
               <tr>

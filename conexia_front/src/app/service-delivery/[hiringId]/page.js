@@ -46,6 +46,11 @@ export default function ServiceDeliveryPage() {
     let cancelled = false;
 
     const run = async () => {
+      // No hacer llamadas si está en proceso de logout
+      if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+        return;
+      }
+      
       if (!hiringId) return;
 
       // Esperar a que el usuario esté cargado para evitar denegar por falso negativo

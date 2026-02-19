@@ -9,7 +9,7 @@ import {
   fetchProjectReports,
 } from "@/service/reports/reportsFetch";
 import { fetchProjectById } from "@/service/projects/projectsFetch";
-import { getMyPostulationsByProjectAndRole } from "@/service/postulations/postulationService";
+import { getMyPostulationsByProjectAndRole, cancelPostulation, getMyActivePostulationByProject } from "@/service/postulations/postulationService";
 import { useAuth } from "@/context/AuthContext";
 import { useUserStore } from "@/store/userStore";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -41,11 +41,14 @@ function RoleCard({
   isModerated,
   isOwnerRestricted,
   canUserApply,
+  onPostulationCancelled,
 }) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [toast, setToast] = useState(null);
-  const [checkingPostulation, setCheckingPostulation] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [navigating, setNavigating] = useState(false);
 
   const getApplicationTypesText = (applicationTypes, applicationType) => {
     // Si no hay applicationTypes array pero hay applicationType, usar ese
@@ -56,7 +59,7 @@ function RoleCard({
       const typeLabels = {
         CV: "CV",
         QUESTIONS: "Preguntas",
-        EVALUATION: "Evaluación Técnica",
+        EVALUATION: "Evaluación técnica",
         PARTNER: "Socio",
         INVESTOR: "Inversor",
       };
@@ -69,7 +72,7 @@ function RoleCard({
     const typeLabels = {
       CV: "CV",
       QUESTIONS: "Preguntas",
-      EVALUATION: "Evaluación Técnica",
+      EVALUATION: "Evaluación técnica",
       PARTNER: "Socio",
       INVESTOR: "Inversor",
     };
@@ -93,59 +96,89 @@ function RoleCard({
       return;
     }
 
-    // Verificar si ya está postulado
-    setCheckingPostulation(true);
-    try {
-      const postulations = await getMyPostulationsByProjectAndRole(
-        projectId,
-        role.id,
-      );
+    // Verificar el estado de postulación desde el campo userPostulationStatus
+    const status = role.userPostulationStatus;
+    const statusCode = status?.code;
 
-      // NUEVA REGLA: Verificar si ya tiene CUALQUIER postulación previa
-      if (postulations && postulations.length > 0) {
-        const lastPostulation = postulations[0];
-        const statusCode = lastPostulation.status?.code?.toLowerCase() || "";
-        const statusName = lastPostulation.status?.name || "en proceso";
+    // Si hay un estado que no permite postular, mostrar mensaje sin redirigir
+    if (statusCode) {
+      let message = "";
+      let shouldBlock = true;
+      
+      if (statusCode === 'activo') {
+        message = `Ya tienes una postulación activa para este rol.`;
+      } else if (statusCode === 'pendiente_evaluacion') {
+        message = `Tienes una evaluación técnica pendiente para este rol.`;
+      } else if (statusCode === 'evaluacion_expirada') {
+        message = `Tu evaluación técnica para este rol ha expirado.`;
+      } else if (statusCode === 'aceptada') {
+        message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
+      } else if (statusCode === 'cancelada') {
+        message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
+      } else if (statusCode === 'rechazada') {
+        message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
+      } else if (statusCode === 'cancelled_by_moderation') {
+        message = `Tu postulación fue cancelada por moderación. No puedes volver a postularte a este rol.`;
+      } else if (statusCode === 'cancelled_by_suspension') {
+        message = `Tu postulación fue cancelada debido a una suspensión. No puedes volver a postularte a este rol.`;
+      } else {
+        // Si es un estado desconocido pero existe, permitir la postulación
+        shouldBlock = false;
+      }
 
-        let message = "";
-        if (statusCode === "rechazada" || statusCode === "rejected") {
-          message = `Tu postulación anterior fue rechazada. No puedes volver a postularte a este rol.`;
-        } else if (statusCode === "aceptada" || statusCode === "accepted") {
-          message = `Tu postulación fue aceptada. Ya formas parte de este rol.`;
-        } else if (statusCode === "cancelada" || statusCode === "cancelled") {
-          message = `Cancelaste tu postulación anterior. No puedes volver a postularte a este rol.`;
-        } else if (statusCode === "expirada" || statusCode === "expired") {
-          message = `Tu postulación anterior expiró. No puedes volver a postularte a este rol.`;
-        } else if (
-          statusCode === "pendiente" ||
-          statusCode === "pending" ||
-          statusCode === "activo" ||
-          statusCode === "active"
-        ) {
-          message = `Ya tienes una postulación ${statusName} para este rol.`;
-        } else {
-          message = `Ya te postulaste anteriormente a este rol. No puedes volver a postularte.`;
-        }
-
+      if (shouldBlock) {
         setToast({
           type: "error",
           message: message,
         });
-        setCheckingPostulation(false);
         return;
       }
+    }
 
-      // Si no hay postulaciones previas, redirigir al formulario de aplicación
-      setCheckingPostulation(false);
-      router.push(`/project/${projectId}/apply/${role.id}`);
+    // Si no hay impedimento (null o estado desconocido), redirigir al formulario de aplicación
+    setNavigating(true);
+    router.push(`/project/${projectId}/apply/${role.id}`);
+  };
+
+  const handleCancelPostulation = async () => {
+    try {
+      setCancelling(true);
+      
+      // Buscar la postulación activa del usuario para este rol
+      const postulations = await getMyPostulationsByProjectAndRole(projectId, role.id);
+      const activePostulation = postulations.find(p => p.status?.code === 'activo');
+      
+      if (!activePostulation || !activePostulation.id) {
+        setShowCancelModal(false);
+        setToast({
+          type: "error",
+          message: "No se pudo encontrar la postulación activa",
+        });
+        setCancelling(false);
+        return;
+      }
+      
+      await cancelPostulation(activePostulation.id);
+      
+      setShowCancelModal(false);
+      setToast({
+        type: "success",
+        message: "Postulación cancelada exitosamente",
+      });
+      
+      // Notificar al componente padre para recargar los datos
+      if (onPostulationCancelled) {
+        onPostulationCancelled();
+      }
     } catch (error) {
-      console.error("Error checking postulations:", error);
+      console.error('Error cancelling postulation:', error);
+      setShowCancelModal(false);
       setToast({
         type: "error",
-        message:
-          "Error al verificar postulaciones. Por favor, intenta nuevamente.",
+        message: error.message || 'Error al cancelar la postulación',
       });
-      setCheckingPostulation(false);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -263,7 +296,7 @@ function RoleCard({
             {isOwner && role.evaluation && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 overflow-hidden">
                 <h4 className="font-medium text-blue-900 mb-2">
-                  Evaluación Técnica
+                  Evaluación técnica
                 </h4>
                 <p className="text-blue-800 text-sm mb-2 break-words overflow-wrap-anywhere">
                   {role.evaluation.description}
@@ -303,34 +336,81 @@ function RoleCard({
               </div>
             )}
 
-            {!isOwner && (
-              <div className="pt-4 border-t border-gray-200">
-                <button
-                  onClick={handleApply}
-                  disabled={
-                    checkingPostulation ||
-                    isModerated ||
-                    isOwnerRestricted ||
-                    !canUserApply
-                  }
-                  className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
-                    isModerated || isOwnerRestricted || !canUserApply
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : checkingPostulation
-                        ? "bg-conexia-green text-white opacity-50 cursor-not-allowed"
-                        : "bg-conexia-green text-white hover:bg-conexia-green/90"
-                  }`}
-                >
-                  {checkingPostulation
-                    ? "Verificando..."
-                    : isModerated
-                      ? "Proyecto No Disponible"
-                      : isOwnerRestricted || !canUserApply
-                        ? "No Disponible"
-                        : "Postularme a este rol"}
-                </button>
-              </div>
-            )}
+            {!isOwner && (() => {
+              const status = role.userPostulationStatus;
+              const statusCode = status?.code;
+              
+              // Determinar el texto, estilo y acción del botón
+              let buttonText = 'Postularme a este rol';
+              let buttonClass = 'w-full px-6 py-3 rounded-lg font-medium transition-colors ';
+              let buttonAction = handleApply;
+              let isButtonDisabled = false;
+              
+              if (isModerated) {
+                buttonText = 'Proyecto No Disponible';
+                buttonClass += 'bg-gray-300 text-gray-500 cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (isOwnerRestricted || !canUserApply) {
+                buttonText = 'No Disponible';
+                buttonClass += 'bg-gray-300 text-gray-500 cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'activo') {
+                buttonText = 'Cancelar postulación';
+                buttonClass += 'bg-red-600 text-white hover:bg-red-700';
+                buttonAction = () => setShowCancelModal(true);
+              } else if (statusCode === 'pendiente_evaluacion') {
+                buttonText = 'Evaluación pendiente';
+                buttonClass += 'bg-gray-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'evaluacion_expirada') {
+                buttonText = 'Evaluación expirada';
+                buttonClass += 'bg-gray-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'aceptada') {
+                buttonText = 'Aceptado ✓';
+                buttonClass += 'bg-green-500 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'cancelada') {
+                buttonText = 'Postulación cancelada';
+                buttonClass += 'bg-gray-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'rechazada') {
+                buttonText = 'Postulación rechazada';
+                buttonClass += 'bg-red-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'cancelled_by_moderation') {
+                buttonText = 'Cancelado por moderación';
+                buttonClass += 'bg-gray-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else if (statusCode === 'cancelled_by_suspension') {
+                buttonText = 'Cancelado por suspensión';
+                buttonClass += 'bg-gray-400 text-white cursor-not-allowed';
+                isButtonDisabled = true;
+              } else {
+                // Para null o estados desconocidos - permitir postulación
+                buttonClass += 'bg-conexia-green text-white hover:bg-conexia-green/90';
+              }
+              
+              return (
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    onClick={buttonAction}
+                    disabled={isButtonDisabled || navigating}
+                    className={buttonClass}
+                  >
+                    {navigating ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Cargando...
+                      </span>
+                    ) : buttonText}
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -345,6 +425,38 @@ function RoleCard({
           position="top-center"
           duration={4000}
         />
+      )}
+      
+      {/* Modal de confirmación para cancelar postulación */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                Cancelar postulación
+              </h3>
+              <p className="text-gray-600 mb-6">
+                ¿Estás seguro que deseas cancelar tu postulación para el rol "{role.title}" en este proyecto?
+              </p>
+              <div className="flex flex-row space-x-3">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="flex-1 bg-[#f5f6f6] text-[#777d7d] px-4 py-2 rounded font-medium hover:bg-[#f1f2f2] transition border border-[#e1e4e4]"
+                  disabled={cancelling}
+                >
+                  Volver
+                </button>
+                <button
+                  onClick={handleCancelPostulation}
+                  disabled={cancelling}
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {cancelling ? 'Cancelando...' : 'Cancelar postulación'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -436,6 +548,16 @@ ${messageText.trim()}`;
         });
     }
   }, [projectId, user, roleName]);
+
+  // Función para recargar el proyecto después de cancelar una postulación
+  const reloadProject = async () => {
+    try {
+      const data = await fetchProjectById(projectId);
+      setProject(data);
+    } catch (error) {
+      console.error("Error reloading project:", error);
+    }
+  };
 
   if (loading)
     return (
@@ -1026,6 +1148,7 @@ ${messageText.trim()}`;
                         isModerated={isModerated}
                         isOwnerRestricted={isOwnerRestricted}
                         canUserApply={canUserApply}
+                        onPostulationCancelled={reloadProject}
                       />
                     ))}
                   </div>

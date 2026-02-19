@@ -4,6 +4,8 @@ import { fetchServiceReportsDetail } from '@/service/reports/fetchServiceReports
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/common/Pagination';
 import BackButton from '@/components/ui/BackButton';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import Link from 'next/link';
 
 export default function ServiceReportsDetailGrid({ serviceId }) {
   const [reports, setReports] = useState([]);
@@ -20,6 +22,10 @@ export default function ServiceReportsDetailGrid({ serviceId }) {
   const returnPage = searchParams?.get('returnPage') || '1';
 
   useEffect(() => {
+    // No cargar si está en proceso de logout
+    if (typeof window !== 'undefined' && window.__CONEXIA_LOGGING_OUT__ === true) {
+      return;
+    }
     setLoading(true);
     fetchServiceReportsDetail(serviceId, page)
       .then(data => {
@@ -82,7 +88,9 @@ export default function ServiceReportsDetailGrid({ serviceId }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="5" className="p-6 text-center text-conexia-green">Cargando reportes...</td>
+                <td colSpan="5" className="p-6 text-center">
+                  <LoadingSpinner message="Cargando reportes..." fullScreen={false} />
+                </td>
               </tr>
             ) : reports.length === 0 ? (
               <tr>
@@ -92,7 +100,18 @@ export default function ServiceReportsDetailGrid({ serviceId }) {
               reports.map(r => (
                 <tr key={r.id} className="border-b hover:bg-gray-50 h-auto align-top">
                   <td className="p-4 align-top break-words max-w-[60px] text-left">{r.id}</td>
-                  <td className="p-4 align-top break-words max-w-[180px] text-left">{r.reporter?.email || r.reporterId}</td>
+                  <td className="p-4 align-top break-words max-w-[180px] text-left">
+                    {r.reporterName && r.reporterLastName ? (
+                      <Link 
+                        href={`/profile/userProfile/${r.reporterId}`}
+                        className="text-conexia-green hover:underline font-medium"
+                      >
+                        {r.reporterName} {r.reporterLastName}
+                      </Link>
+                    ) : (
+                      r.reporter?.email || r.reporterId
+                    )}
+                  </td>
                   <td className="p-4 align-top break-words max-w-[160px] text-left">{r.reason}{r.reason === 'Otro' && r.otherReason ? ` (${r.otherReason})` : ''}</td>
                   <td className="p-4 align-top break-words max-w-[320px] text-left">
                     <div className="line-clamp-4 overflow-hidden" title={r.description}>
